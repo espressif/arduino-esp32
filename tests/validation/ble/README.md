@@ -39,7 +39,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 13 | blestream | NUS ownership rejection, failed-client-begin paired connect/disconnect callbacks, writeTo/onData/peers, ping/pong, peek, bulk, full `end()` cleanup + re-begin, disconnect-race terminal handling, callback-context `end()` vs in-flight `writeChunks` handle reset, callback-context `end()` deferral/restart, final-public-owner destruction from a stack callback, deterministic worker/teardown failure recovery with admission held closed, and partial-start cleanup ownership/recovery |
 | 14 | l2cap_coc | L2CAP CoC connect + echo |
 | 15 | introspection_and_permissions | client introspection, fail-closed masking, descriptor perms |
-| 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering |
+| 16 | conninfo_and_params | `BLEConnInfo` matrix + MTU / conn-params callbacks + ordering + **peer-initiated MTU before CONNECT must not break `connect()` or lose `onMtuChanged` (NimBLE); a connect-time MTU send failure must not break `connect()` (Bluedroid)** |
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |
@@ -52,15 +52,17 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 26 | ble5_legacy_over_ext | legacy advertising routed over the extended engine (BLE5) |
 | 27 | ble5_legacy_plus_ext | concurrent legacy + user extended set on the reserved instance |
 | 28 | l2cap_bulk_reconnect | L2CAP CoC late-connect cleanup + bulk/credit-stall reconnect + peer-disconnect operation race + 64 retained-shell event-pool churn/final-handle drops + `end()` during a stalled write and exact `NotConnected` shell status after rebegin |
+
 | 29 | conn_params_reject | central rejects the peripheral's conn-param update from its pre-accept hook (NimBLE) |
 | 30 | deletebond_roundtrip | `deleteBond` during a finite scan (completion stays near the original deadline, neither early nor fully restarted), superseded-session completion isolation → verify empty → re-pair round trip + GATT tree empty after `end()`/`begin()` |
 | 31 | nc_reject | central rejects Numeric Comparison; pairing aborts, link stays unencrypted/unbonded |
 | 32 | passkey_entry | Passkey-entry pairing (peripheral DisplayOnly + static passkey, central KeyboardOnly) |
 | 33 | indication_busy_retry | Service Changed invalidates stale remote handles, client rediscovery restores subscriptions, and indications sent behind the stack indication are retried in order |
-| 34 | periodic_adv_lifecycle | periodic-adv terminate + supervision-timeout sync-lost transitions (BLE5) |
+| 34 | periodic_adv_lifecycle | periodic-adv parameter validation (`InvalidParam`), cancelled-create `onPeriodicSync` suppression, terminate + supervision-timeout sync-lost transitions (BLE5) |
 | 35 | pending_send_edges | CCCD notify-vs-indicate bit routing on one ACL, indication confirmation not stolen by a reserved-but-unsubmitted notification, `removeService` of a service with in-flight indications returns `Busy`, concurrent long-read/service-removal parent retention, late completion isolation after read/confirmed-write/write-command timeouts, notify flood + disconnect terminal-status ordering, BlueDroid terminal-close final-owner release serialized before host deinit (including worker-start failure), and BLEStream client-role final-owner release serialized against concurrent `BLE.end()` |
 | 36 | directed_adv_and_oob | directed high-duty advertising with a non-zero InitA (`setDirectedAddress`) connects within 1.28 s; directed `start()` without a peer is `InvalidParam`; legacy OOB (`BLE_SM_IOACT_OOB`) and OOB-SC pairing are rejected (no encryption, no bond) |
-| 37 | memory_release | heap reclaimed on release; reinit blocked while released |
+| 37 | l2cap_full_mtu | one L2CAP CoC channel at MTU 512 with two concurrent writer tasks exchanging patterned full-MTU SDUs while server-channel callbacks are concurrently re-bound (regression for server SDU pool sizing, TX mbuf ownership, and `chan->mtx` callback locking; packaged NimBLE `COC_MAX_NUM=1` cannot open two channels) |
+| 38 | memory_release | heap reclaimed on release; reinit blocked while released |
 
 Phase 20 also runs a single-device regression guard for the advertisement-data
 payload limits: a too-long complete name must degrade to a Shortened Local Name
@@ -146,6 +148,22 @@ payload.
 - The test verifies PIN match between server and client via assertion.
 - BLE5 phases (2, 11, 24, 26, 27, 34) and L2CAP (14, 28) self-skip on targets or builds without support, so the suite runs unchanged on non-BLE5 silicon.
 - The conn-param reject phase (29) self-skips on Bluedroid, which negotiates connection-parameter updates inside L2CAP and exposes no application pre-accept hook.
+
+## Benign stack logs (expected `E` lines, not failures)
+
+Phases intentionally trigger negative paths, so NimBLE prints `E` logs while
+the suite still passes — the assertions check `BTStatus`/behavior, not log
+absence. Do not "fix" the tests to avoid these; filter them in the harness:
+
+- Phase 2 `clearWhileLive`: `ble_gap_ext_adv_clear rc=15` (`BLE_HS_EBUSY`,
+  clear-while-enabled per Vol 4 Part E §7.8.60; Arduino returns `Fail`).
+- Phase 5 malformed CCCD: `ble_gatts_clt_cfg_access_locked rc=13`
+  (`ATT_INVALID_ATTR_VALUE_LEN`, 1-byte CCCD per Vol 3 Part G §3.3.3.3).
+- Phase 36 OOB reject: `No record found ... rc=5` (`BLE_HS_ENOENT`, bond
+  cleanup with no bond).
+- Phase 37 full-MTU CoC: `ble_l2cap_coc_send rc=15` (`EBUSY`, credit
+  flow-control slot busy per Vol 3 Part A §4; Arduino parks in
+  `writePendingMbuf` and resumes on `TX_UNSTALLED`, 16/16 echoed).
 
 ## Coverage gaps (HITL-pending)
 

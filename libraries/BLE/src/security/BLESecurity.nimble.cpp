@@ -63,19 +63,18 @@
  *       (Vol 3, Part H, §3.6.1, Table 3.8).
  */
 void BLESecurity::Impl::applySecurityParams() const {
-  // ioCap/mitm come from the BLESecurityImplCommon base; bonding/sc/*KeyDist are NimBLE's.
   ble_hs_cfg.sm_io_cap = static_cast<uint8_t>(ioCap);
   ble_hs_cfg.sm_bonding = bonding ? 1 : 0;
   ble_hs_cfg.sm_mitm = mitm ? 1 : 0;
-  ble_hs_cfg.sm_sc = sc ? 1 : 0;
+  ble_hs_cfg.sm_sc = secureConnection ? 1 : 0;
   ble_hs_cfg.sm_oob_data_flag = 0;
 #if BLE_VALIDATION_HOOKS
   if (BLEHooks.security.advertiseOob.load(std::memory_order_relaxed)) {
     ble_hs_cfg.sm_oob_data_flag = 1;
   }
 #endif
-  ble_hs_cfg.sm_our_key_dist = initKeyDist;
-  ble_hs_cfg.sm_their_key_dist = respKeyDist;
+  ble_hs_cfg.sm_our_key_dist = static_cast<uint8_t>(initiatorKeys);
+  ble_hs_cfg.sm_their_key_dist = static_cast<uint8_t>(responderKeys);
 }
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
@@ -234,20 +233,6 @@ int BLESecurity::Impl::handleGapEvent(struct ble_gap_event *event) {
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-void BLESecurity::setIOCapability(BLEIOCapability cap) {
-  BLE_CHECK_IMPL();
-  impl.ioCap = cap;
-  impl.applySecurityParams();
-}
-
-void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConnection) {
-  BLE_CHECK_IMPL();
-  impl.bonding = bonding;
-  impl.mitm = mitm;
-  impl.sc = secureConnection;
-  impl.applySecurityParams();
-}
-
 // A static passkey is reduced modulo 1000000 to enforce the 6-digit (0–999999) range.
 void BLESecurity::setPassKey(bool isStatic, uint32_t passkey) {
   BLE_CHECK_IMPL();
@@ -264,26 +249,6 @@ void BLESecurity::setStaticPassKey(uint32_t passkey) {
 
 void BLESecurity::setRandomPassKey() {
   setPassKey(false);
-}
-
-uint32_t BLESecurity::getPassKey() const {
-  if (!_impl) {
-    return 0;
-  }
-  BLELockGuard lock(_impl->mtx);
-  return _impl->passKey;
-}
-
-void BLESecurity::setInitiatorKeys(KeyDist keys) {
-  BLE_CHECK_IMPL();
-  impl.initKeyDist = static_cast<uint8_t>(keys);
-  impl.applySecurityParams();
-}
-
-void BLESecurity::setResponderKeys(KeyDist keys) {
-  BLE_CHECK_IMPL();
-  impl.respKeyDist = static_cast<uint8_t>(keys);
-  impl.applySecurityParams();
 }
 
 // Bounded scan: stops after 100 stored bonds to avoid unbounded store iteration.
@@ -338,6 +303,16 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
     return BTStatus::InvalidState;
   }
   int rc = ble_gap_security_initiate(connHandle);
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Security: procedure already in progress on handle=%u", connHandle);
+    return BTStatus::OK;
+  }
+  if (rc == BLE_HS_ENOTCONN) {
+    return BTStatus::NotConnected;
+  }
+  if (rc == BLE_HS_EINVAL) {
+    return BTStatus::InvalidParam;
+  }
   if (rc != 0) {
     log_e("Security: ble_gap_security_initiate handle=%u rc=%d", connHandle, rc);
     return BTStatus::Fail;
@@ -345,14 +320,11 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   return BTStatus::OK;
 }
 
-void BLESecurity::resetSecurity() {
-  BLE_CHECK_IMPL();
-  impl.ioCap = BLEIOCapability::NoInputNoOutput;
-  impl.bonding = true;
-  impl.mitm = false;
-  impl.sc = true;
-  impl.forceAuth = false;
-  impl.applySecurityParams();
+BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return startSecurity(peer.getHandle());
 }
 
 // --------------------------------------------------------------------------
@@ -360,10 +332,6 @@ void BLESecurity::resetSecurity() {
 // --------------------------------------------------------------------------
 
 uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &conn) {
-  // passKey/regenOnConnect/notifyPasskeyDisplay come from the BLESecurityImplCommon base.
-  // Read/regenerate passKey under mtx (matching the setters and
-  // resolvePasskeyForInput), then dispatch the display callback with the lock
-  // released (notifyPasskeyDisplay snapshots its handler under mtx internally).
   uint32_t pk;
   {
     BLELockGuard lock(mtx);
@@ -377,65 +345,7 @@ uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &conn) {
   return pk;
 }
 
-#else /* !BLE_SMP_SUPPORTED -- stubs */
-
-// Stubs for BLE_SMP_SUPPORTED == 0: log where useful; return NotSupported, empty, or 0.
-
-void BLESecurity::setIOCapability(BLEIOCapability) {
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setAuthenticationMode(bool, bool, bool) {
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setPassKey(bool, uint32_t) {
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setStaticPassKey(uint32_t) {
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setRandomPassKey() {
-  log_w("SMP not supported");
-}
-
-uint32_t BLESecurity::getPassKey() const {
-  return 0;
-}
-
-void BLESecurity::setInitiatorKeys(KeyDist) {
-  log_w("SMP not supported");
-}
-
-void BLESecurity::setResponderKeys(KeyDist) {
-  log_w("SMP not supported");
-}
-
-std::vector<BTAddress> BLESecurity::getBondedDevices() const {
-  log_w("SMP not supported");
-  return {};
-}
-
-BTStatus BLESecurity::deleteBond(const BTAddress &) {
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLESecurity::deleteAllBonds() {
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLESecurity::startSecurity(uint16_t) {
-  log_w("SMP not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLESecurity::resetSecurity() {
-  log_w("SMP not supported");
-}
+#else /* !BLE_SMP_SUPPORTED -- NimBLE-only Impl stubs */
 
 uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &) {
   return 0;

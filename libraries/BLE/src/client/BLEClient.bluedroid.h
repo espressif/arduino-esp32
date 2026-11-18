@@ -41,6 +41,13 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // they are atomic for well-defined concurrent access without locking across
   // callbacks (mirrors the atomic `connected` in the common base).
   std::atomic<uint16_t> connId{0xFFFF};
+  /// HCI ACL (connection) handle of this link, from the GATTC CONNECT event.
+  /// The ISO transport layers key their connection table by this handle, so
+  /// BLEIso::connectCis() translates a library conn id through it.
+  std::atomic<uint16_t> aclHandle{0xFFFF};
+  /// ACL link role: true when the local controller is the central. Bluedroid
+  /// broadcasts CONNECT to every GATTC app, including on peer-initiated links.
+  std::atomic<bool> central{true};
   esp_gatt_if_t gattcIf = ESP_GATT_IF_NONE;
   uint16_t appId = 0;
   std::atomic<uint16_t> mtu{23};
@@ -53,10 +60,14 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync{"regSync"};                // For blocking GATTC app registration
-  BLESync connectSync{"connectSync"};        // For blocking connect
-  BLESync disconnectSync{"disconnectSync"};  // For blocking disconnect
-  BLESync discoverSync{"discoverSync"};      // For blocking service discovery
+  BLESync regSync{"regSync"};  // For blocking GATTC app registration
+  // Bluedroid BTA runs its own GATT auto-discovery on uncached (re)connects
+  // (DIS_SRVC_CMPL_EVT), racing our MTU exchange and service search. The sync
+  // below serializes them: armed (take + done=false) before enh_open, signaled
+  // by DIS_SRVC_CMPL_EVT. Cached reconnects skip the wait (see the
+  // get_attr_count cache probe). Best effort with a 2 s budget — see DESIGN.md.
+  BLESync autoDiscSync{"autoDiscSync"};  // Waits for Bluedroid BTA auto-discovery (DIS_SRVC_CMPL_EVT) when uncached
+  std::atomic<bool> autoDiscDone{true};  // True when BTA already held a server cache at OPEN_EVT or auto-discovery finished
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};
@@ -67,7 +78,6 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // cannot replace the pending handle/sync state while another is waiting.
   StaticSemaphore_t gattOpMtxStorage{};
   SemaphoreHandle_t gattOpMtx = xSemaphoreCreateRecursiveMutexStatic(&gattOpMtxStorage);
-  BLESync mtuSync{"mtuSync"};    // For MTU exchange
   BLESync rssiSync{"rssiSync"};  // For RSSI read
 #if BLE5_SUPPORTED
   // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.
@@ -122,5 +132,17 @@ struct BLEClient::Impl : BLEClientImplCommon {
  * @return true on successful registration; false on allocation or registration failure.
  */
 bool bluedroidRegisterClient(const std::shared_ptr<BLEClient::Impl> &impl);
+
+namespace BLEClientInternal {
+
+/**
+ * Bluedroid GATT-client connection helpers for cross-component use (currently
+ * the ISO transport's ACL resolution). Namespaced like every other internal
+ * helper; C++ linkage only (all callers are C++).
+ */
+bool connLive(uint16_t connId);
+uint16_t aclHandle(uint16_t connId);
+
+}  // namespace BLEClientInternal
 
 #endif /* BLE_BLUEDROID */

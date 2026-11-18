@@ -402,7 +402,11 @@ BLECharacteristic chr = svc.createCharacteristic(
 
 - [MIGRATION.md](MIGRATION.md) — v3.x → v4.0 API mapping
 - [DESIGN.md](DESIGN.md) — architecture, backend contract, ordering invariants (maintainers)
-- [BLEStream](src/stream/BLEStream.h) — Nordic UART over Arduino `Stream`; multi-central server APIs (`peerCount`, `writeTo`, `onPeerData`); see `examples/MultiClientUART`
+- [BLEAudio DESIGN.md](../BLEAudio/DESIGN.md) — LE Audio subsystem architecture, engine boundary, per-role guards and spec obligations (maintainers)
+- [BLEStream](src/stream/BLEStream.h) — Nordic UART over Arduino `Stream`; multi-central server APIs (`peerCount`, `writeTo`, `onPeerData`); NUS has a single owner at a time (second `begin()` returns `Busy`); see `examples/MultiClientUART`
+- L2CAP CoC — connection-oriented channels for bulk transfer (NimBLE); see `examples/L2CAP_Server` + `examples/L2CAP_Client`
+- [BLEIso](src/iso/BLEIso.h) — raw isochronous channels (CIS / BIS) for time-bounded custom data; see the `examples/ISO_*` sketches
+- LE Audio — Auracast + unicast + control/top-level profiles; separate `BLEAudio` library, include `<BLEAudio.h>` and see its [`examples/*`](../BLEAudio/examples)
 - Backend notes: [NimBLE](docs/backend-nimble.md) · [Bluedroid](docs/backend-bluedroid.md)
 
 ---

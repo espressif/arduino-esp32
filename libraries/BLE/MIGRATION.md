@@ -214,6 +214,10 @@ BTAddress addr = dev.getAddress();
 String str = addr.toString();  // Arduino String
 ```
 
+`BTAddress` always stores the address LSB-first (the on-air order). Application
+code never needs the backend byte order: public APIs take `BTAddress`, and the
+library converts to `esp_bd_addr_t`/NimBLE's layout internally.
+
 ### 8. Numbered Descriptor Subclasses Replaced
 
 Numbered descriptor subclasses (`BLE2901`, `BLE2902`, `BLE2904`) are replaced by a unified `BLEDescriptor` class with static factories and convenience methods.
@@ -360,6 +364,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pServer->getConnectedCount()` | `server.getConnectedCount()` | |
 | N/A | `server.getConnections()` | New: returns `vector<BLEConnInfo>` |
 | N/A | `server.getConnInfo(connHandle)` | New: returns refreshed `BLEConnInfo` for `connHandle` |
+| N/A | `BLE.getConnHandle(peerAddr)` / `BLE.getConnections(peerAddr)` | New: find the live handle and ACL descriptor for a connected peer |
 | `pServer->disconnect(connId)` | `server.disconnect(connHandle)` | |
 | `pServer->advertiseOnDisconnect(bool)` | `server.advertiseOnDisconnect(bool)` | |
 | `pServer->getPeerMTU(connId)` | `server.getPeerMTU(connHandle)` | |
@@ -561,7 +566,7 @@ Note:
 | N/A | `scan.startExtended(dur, coded, uncoded)` | New: BLE5 extended scan |
 | N/A | `scan.stopExtended()` | New: stop BLE5 extended scan |
 | N/A | `scan.createPeriodicSync(addr, sid)` | New: BLE5 periodic sync |
-| N/A | `scan.cancelPeriodicSync()` | New: cancel pending sync |
+| N/A | `scan.cancelPeriodicSyncCreate()` | New: cancel pending sync |
 | N/A | `scan.terminatePeriodicSync(handle)` | New: terminate established sync |
 | N/A | `scan.onPeriodicSync(lambda)` | New |
 | N/A | `scan.onPeriodicReport(lambda)` | New |
@@ -734,11 +739,11 @@ Note:
 | N/A | `hid.bootInput()` → `BLECharacteristic` | New: Boot Keyboard Input (singleton, lazy-created) |
 | N/A | `hid.bootOutput()` → `BLECharacteristic` | New: Boot Keyboard Output (singleton, lazy-created) |
 | Manual `adv.addServiceUUID(0x1812)` | Automatic | HID Service UUID added to advertising by `BLEHIDDevice` constructor |
-| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `hid/HIDTypes.h` (reachable via `<BLE.h>`) |
+| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `advertising/BLEAppearance.h` (reachable via `<BLE.h>`) |
 | No included-service support | Battery Service auto-included in HID Service | Per HIDS 1.0 §3 |
 | No External Report Reference | Auto-added on Report Map (references Battery Level) | Per HIDS 1.0 §3.6 |
 
-**HID Appearance Constants** (defined in `hid/HIDTypes.h`, pulled in transitively by `<BLE.h>`):
+**HID Appearance Constants** (defined in `advertising/BLEAppearance.h`, reachable via `<BLE.h>`):
 
 | Constant | Value |
 |---|---|
@@ -747,7 +752,7 @@ Note:
 | `BLE_APPEARANCE_HID_MOUSE` | `0x03C2` |
 | `BLE_APPEARANCE_HID_JOYSTICK` | `0x03C3` |
 | `BLE_APPEARANCE_HID_GAMEPAD` | `0x03C4` |
-| `BLE_APPEARANCE_HID_DIGITIZER` | `0x03C5` |
+| `BLE_APPEARANCE_HID_DIGITIZER_TABLET` | `0x03C5` |
 | `BLE_APPEARANCE_HID_CARD_READER` | `0x03C6` |
 | `BLE_APPEARANCE_HID_DIGITAL_PEN` | `0x03C7` |
 | `BLE_APPEARANCE_HID_BARCODE_SCANNER` | `0x03C8` |
@@ -1134,6 +1139,9 @@ adv.start();
 | `BLEEddystoneURL.h` (separate) | Merged into `BLEEddystone.h` |
 | `BLEEddystoneTLM.h` (separate) | Merged into `BLEEddystone.h` |
 | `std::string` in public API | `String` (Arduino) in all public methods |
+| `BLEServer::connect()` (Bluedroid-only) | `BLEClient::connect()` — a GATT server does not initiate links |
+| `BLEStream::connected()` | `BLEStream::isConnected()` |
+| `BLEAudioUnicastClient::connect(connHandle)` | `BLEAudioUnicastClient::connectAndStart(connHandle)` |
 
 ---
 
@@ -1170,14 +1178,16 @@ These features are new and were not available in v3.x:
 | Identity (RPA resolved) callback | `server.onIdentity(lambda)`, `client.onIdentity(lambda)` |
 | Stack identification | `BLE.getStack()`, `BLE.getStackName()` |
 | Hosted BLE (ESP32-P4) | `BLE.setPins(...)`, `BLE.isHostedBLE()` |
-| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)` |
+| Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSyncCreate()`, `scan.terminatePeriodicSync(handle)`; PAST receive (both stacks): `scan.receivePeriodicSync(connHandle)`, `scan.stopPeriodicSyncReceive(connHandle)` — take the handle from `BLEClient::getHandle()` or `BLEConnInfo::getHandle()` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
-| L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` |
+| L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
+| Isochronous channels (raw CIS / BIS) | `BLEIso iso = BLE.getIsoController()`, then `iso.begin()` and `iso.connectCis(connHandle, qos)` / `iso.listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `iso.createBig(advHandle, qos)` / `iso.syncBig(bisIndex, qos)` (BIS). Channels are shared handles returned by value: copies share the channel, and a handle outliving its channel (disconnect, `end()`, slot reuse) becomes a detached shell whose operations fail safe. Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |
+| LE Audio (GAF) | Include `<BLEAudio.h>` from the separate `BLEAudio` library (in addition to `<BLE.h>`). `BLE.getAudioController()` → `audio.begin()`, `audio.create*()` role handles, `audio.start()`; `audio.connect(addr)` + `audio.onLinkReady()` for central links (required on Bluedroid). Roles: BAP unicast server/client (multi-stream), broadcast source/sink (1–2 BIS, Scan Delegator), Broadcast Assistant; CAP acceptor/initiator/commander incl. unicast↔broadcast handover; CSIP; VCP/MICP/MCP (GMCS)/CCP (GTBS); TMAP/GMAP/HAS/PBP. Audio flows through `BLEAudioStream` handles (`write()`, `onReceive()`); LC3 via `BLEAudioPlayer`/`BLEAudioRecorder` attached to streams (I2S or PCM callback). See the `libraries/BLEAudio/examples/*` sketches and [BLEAudio/DESIGN.md](../BLEAudio/DESIGN.md). |
 | BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Server mode accepts multiple centrals; `write()` broadcasts, `read()` merges RX. Per-peer: `peerCount()`, `peers()`, `writeTo()`, `onPeerData()`. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
 | Boot Protocol characteristics | `hid.bootInput()`, `hid.bootOutput()` — singleton, lazy-created |
-| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `hid/HIDTypes.h` |
+| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `advertising/BLEAppearance.h` |
 
 ---
 
@@ -1212,6 +1222,19 @@ These features are new and were not available in v3.x:
 14. **Rebuild the GATT database after `BLE.end()`** -- `createServer()` still returns the same server object, but `end()` drops its services. After `begin()`, call `createService()` again (and `start()`) before advertising. Handles kept from the previous session are shells.
 
 15. **Do not call blocking GATT operations inside `subscribe()` callbacks** -- `BLERemoteCharacteristic::NotifyCallback` runs on the BLE stack task. Calling blocking GATT operations (`readValue()`, confirmed `writeValue()`, `subscribe()`) on the characteristic from inside the callback waits for a response delivered by that same task and will time out (and `readValue()` replaces the buffer `data` points into). Defer such work to another task or `loop()`.
+
+16. **Stage classic GATT before `audio.start()`** -- On NimBLE, LE Audio and
+classic `BLEServer` services share one coordinated table. Create the audio
+roles and classic services first, call `server.start()` to stage them, then
+call `audio.start()` once. Late additions return `InvalidState`; removing a
+previously committed classic service remains supported through visibility plus
+Service Changed.
+
+17. **Let `BLE.end()` own terminal audio/ISO teardown** -- `audio.end()` keeps
+the BLE host running and is refused while streams are live. For whole-stack
+shutdown, stop live streams and call `BLE.end()`; it releases an active audio
+controller and any standalone `BLEIso` session before disabling the host, and
+is safe to request from a BLE callback through its deferred worker.
 
 ---
 

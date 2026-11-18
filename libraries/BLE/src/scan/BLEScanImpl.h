@@ -21,42 +21,77 @@
 
 #include "scan/BLEAdvertisedDeviceImpl.h"
 #include "scan/BLEScan.h"
+#include "core/BLEAdmission.h"
+#include "core/BLEMutex.h"
+#include "core/BLESync.h"
 #include <algorithm>
+#include <atomic>
 #include <memory>
+#include <utility>
+#include <vector>
 
 /**
- * @brief Backend-agnostic privileged helpers for scan result assembly.
- *
- * Backend scan parsers (@c BLEScan::Impl, in impl/<stack>/) build
- * @c BLEAdvertisedDevice handles and merge scan-response payloads into the result
- * list, both of which touch private members of @c BLEAdvertisedDevice and
- * @c BLEScan::Results. @c BLEScan::Impl is a nested member of @c BLEScan, but C++ does not
- * grant a nested class the enclosing class's friendships, so the parsers cannot reach those
- * privates directly. This friended, agnostically-named helper (mirroring the
- * @c *ImplCommon::makeHandle pattern) provides that access with no backend type in the public headers.
+ * @brief Shared, stack-agnostic base for @c BLEScan::Impl plus privileged scan-result helpers.
  */
 struct BLEScanImplCommon {
+  static constexpr uint8_t kMaxPeriodicAdvSid = 0x0F;
+  static constexpr uint16_t kMaxPeriodicSyncSkip = 0x01F3;
+  static constexpr uint16_t kMinPeriodicSyncTimeoutMs = 100;
+
+  // 0x30 = 48 units x 0.625 ms = 30 ms (continuous scan by default on both stacks).
+  uint16_t interval = 0x30;
+  uint16_t window = 0x30;
+  bool activeScan = true;
+  bool filterDuplicates = true;
+  std::atomic<bool> isScanning{false};
+  BLEAdmissionGate nativeAdmission;
+
+  BLEScan::Results results;
+  std::vector<std::pair<BTAddress, uint8_t>> duplicateKeys;
+  BLESync scanSync{"scanSync"};
+  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+
+  BLEScan::ResultHandler onResultCb = nullptr;
+  BLEScan::CompleteHandler onCompleteCb = nullptr;
+  BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;
+  BLEScan::PeriodicReportHandler periodicReportCb = nullptr;
+  BLEScan::PeriodicLostHandler periodicLostCb = nullptr;
+
+#if BLE_PERIODIC_ADV_SUPPORTED
+  std::vector<uint16_t> periodicSyncs;
+#endif
+
+  ~BLEScanImplCommon() {
+    if (mtx) {
+      vSemaphoreDelete(mtx);
+    }
+  }
+
+  bool duplicateKeySeen(const BTAddress &address, uint8_t sid) const {
+    return std::any_of(duplicateKeys.begin(), duplicateKeys.end(), [&](const auto &key) {
+      return key.first == address && key.second == sid;
+    });
+  }
+
+  void markDuplicateKey(const BTAddress &address, uint8_t sid) {
+    if (!duplicateKeySeen(address, sid)) {
+      duplicateKeys.emplace_back(address, sid);
+    }
+  }
+
+  static bool periodicSyncParamsValid(uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
+    return sid <= kMaxPeriodicAdvSid && skipCount <= kMaxPeriodicSyncSkip && timeoutMs >= kMinPeriodicSyncTimeoutMs;
+  }
+
+  static bool pastParamsValid(uint16_t skipCount, uint16_t timeoutMs) {
+    return skipCount <= kMaxPeriodicSyncSkip && timeoutMs >= kMinPeriodicSyncTimeoutMs;
+  }
+
   /// Mint a public advertised-device handle from its implementation.
   static BLEAdvertisedDevice makeAdvertisedDeviceHandle(std::shared_ptr<BLEAdvertisedDevice::Impl> impl) {
     return BLEAdvertisedDevice(std::move(impl));
   }
 
-  /**
-   * @brief Merge scan-response bytes into an existing result matched by (address, SID).
-   * @param results  Result list to search/update in place.
-   * @param addr     Advertiser address to match.
-   * @param sid      Advertising SID (ADI) of the scan response; 0xFF for legacy PDUs.
-   * @param data     Scan-response AD payload.
-   * @param len      Payload length in bytes.
-   * @param rssi     RSSI reported with the scan response.
-   * @param merged   Set to the updated device when a match is found.
-   * @return true if a matching device was found and merged; false otherwise.
-   *
-   * The scan response is matched to the advertising set that solicited it, not
-   * merely the address: a single advertiser may run several sets (see
-   * BLEScan::Results::appendOrReplace), and each set's response carries its own
-   * SID. Legacy responses report SID 0xFF and merge into the legacy entry.
-   */
   static bool mergeScanResponse(
     BLEScan::Results &results, const BTAddress &addr, uint8_t sid, const uint8_t *data, size_t len, int8_t rssi, BLEAdvertisedDevice &merged
   ) {
@@ -70,24 +105,9 @@ struct BLEScanImplCommon {
     return false;
   }
 
-  /**
-   * @brief Merge the cached scan-response suffix into a fresh primary report.
-   * @param current Fresh primary advertising report.
-   * @param cached Previously cached report for the same advertising set.
-   * @param merged Receives a deep copy of @p current with the cached scan
-   *        response appended.
-   * @return true when @p cached contained a merged scan response.
-   *
-   * The fresh report remains the source of primary payload and metadata
-   * (notably RSSI). Only the scan-response suffix is retained.
-   */
   static bool preserveScanResponse(const BLEAdvertisedDevice &current, const BLEAdvertisedDevice &cached, BLEAdvertisedDevice &merged) {
-    if (!current._impl
-        || !cached._impl
-        // Some backends deliver a complete fresh ADV+SCAN_RSP report. Its
-        // current suffix supersedes the cached response and must not be
-        // replaced with stale bytes.
-        || current._impl->advPayloadLen < current._impl->payload.size() || cached._impl->advPayloadLen >= cached._impl->payload.size()) {
+    if (!current._impl || !cached._impl || current._impl->advPayloadLen < current._impl->payload.size()
+        || cached._impl->advPayloadLen >= cached._impl->payload.size()) {
       return false;
     }
     auto impl = std::make_shared<BLEAdvertisedDevice::Impl>(*current._impl);

@@ -1,0 +1,18 @@
+tags:
+  - two_duts
+
+fqbn_append: PartitionScheme=huge_app
+
+multi_device:
+  device0: server
+  device1: client
+
+platforms:
+  wokwi: false
+  qemu: false
+  hardware:
+    esp32p4: false # No two_duts runners using ESP-Hosted
+
+requires_any:
+  - CONFIG_SOC_BLE_SUPPORTED=y
+  - CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y

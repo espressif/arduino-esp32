@@ -35,6 +35,7 @@ class BLEValidationHooks {
 public:
   struct Lifecycle {
     std::atomic<int> endWorkerStartFailures{0};
+    std::atomic<int> preEndAbortFailures{0};
   } lifecycle;
 
   struct Stream {
@@ -99,6 +100,14 @@ public:
     std::atomic<bool> nimbleRefAssigned{false};
     std::atomic<bool> nimbleRefEmptyOnConnect{false};
     std::atomic<bool> resetWhileConnected{false};
+    // Queues the ATT MTU exchange inside the CONNECT event, before the client
+    // publishes the connection handle, so the library's later exchange returns
+    // BLE_HS_EALREADY with a pre-CONNECT MTU result to latch (peer-first case).
+    std::atomic<bool> injectPeerMtuBeforeConnect{false};
+    // Forces the Bluedroid connect-time esp_ble_gattc_send_mtu_req() to be
+    // treated as failed, proving connect() still succeeds when the MTU
+    // exchange cannot be started (peer-first worst case).
+    std::atomic<bool> injectMtuSendFailure{false};
   } client;
 
   struct Security {

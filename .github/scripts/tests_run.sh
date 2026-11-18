@@ -14,6 +14,32 @@ elif [ -d "$REPO_ROOT/.venv" ]; then
     echo "Using virtual environment from $REPO_ROOT/.venv"
 fi
 
+USAGE="
+USAGE:
+    ${0} -s sketch_name <run_opts>
+        Example: ${0} -s hello_world -t esp32
+    ${0} -s sketch1,sketch2 -t target1,target2
+        Example: ${0} -s hello_world,gpio -t esp32,esp32s3
+    ${0} -s ble -t esp32s31|esp32s31
+        Mixed-target multi-DUT: device0 and device1 for the listed SoCs.
+        Requires ESPPORT1 and ESPPORT2.
+    ${0} -c -type <test_type> <chunk_run_opts>
+        Example: ${0} -c -type validation -t esp32 -i 0 -m 15
+
+    Options:
+        -e                 Erase flash before running
+        --skip-autoflash   Do not flash (binaries already on the DUT)
+        --no-retry         Do not rerun pytest when the first attempt fails
+        --skip-rerun       Alias for --no-retry
+        -type <type>       Test type directory under tests/ (e.g. validation)
+        -wifi-ssid <ssid>
+        -wifi-password <password>
+        -h                 Show this help
+
+    If no -t target is specified, runs for all TEST_TARGETS
+    If no -s sketch is specified, runs all sketches (chunk mode)
+"
+
 # Check if a test is a multi-device test
 function is_multi_device_test {
     local test_dir=$1
@@ -262,19 +288,24 @@ function run_multi_device_test {
         printf "\n"
 
         if [ $result -ne 0 ]; then
-            result=0
-            printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$test_name" "$fqbn"
-            printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
-
-            set +e
-            "${pytest_cmd[@]}"
-            result=$?
-            set -e
-            printf "\n"
-
-            if [ $result -ne 0 ]; then
-                printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$test_name" "$fqbn"
+            if [ "${skip_retry:-0}" -eq 1 ]; then
+                printf "\033[91mFailed test: %s -- Config: %s (retry skipped)\033[0m\n\n" "$test_name" "$fqbn"
                 error=$result
+            else
+                result=0
+                printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$test_name" "$fqbn"
+                printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+
+                set +e
+                "${pytest_cmd[@]}"
+                result=$?
+                set -e
+                printf "\n"
+
+                if [ $result -ne 0 ]; then
+                    printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$test_name" "$fqbn"
+                    error=$result
+                fi
             fi
         fi
     done
@@ -469,21 +500,26 @@ function run_test {
         set -e
         printf "\n"
         if [ $result -ne 0 ]; then
-            result=0
-            if [ $platform == "wokwi" ]; then
-                # Give the simulation server time to recover from transient connection drops
-                sleep 10
-            fi
-            printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
-            printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
-            set +e
-            "${pytest_cmd[@]}"
-            result=$?
-            set -e
-            printf "\n"
-            if [ $result -ne 0 ]; then
-                printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
+            if [ "${skip_retry:-0}" -eq 1 ]; then
+                printf "\033[91mFailed test: %s -- Config: %s (retry skipped)\033[0m\n\n" "$sketchname" "$i"
                 error=$result
+            else
+                result=0
+                if [ $platform == "wokwi" ]; then
+                    # Give the simulation server time to recover from transient connection drops
+                    sleep 10
+                fi
+                printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
+                printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+                set +e
+                "${pytest_cmd[@]}"
+                result=$?
+                set -e
+                printf "\n"
+                if [ $result -ne 0 ]; then
+                    printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
+                    error=$result
+                fi
             fi
         fi
     done
@@ -498,6 +534,7 @@ chunk_run=0
 options=0
 erase=0
 skip_autoflash=0
+skip_retry=0
 wifi_ssid=""
 wifi_password=""
 
@@ -571,6 +608,9 @@ while [ -n "$1" ]; do
         ;;
     --skip-autoflash )
         skip_autoflash=1
+        ;;
+    --no-retry | --skip-rerun )
+        skip_retry=1
         ;;
     -h )
         echo "$USAGE"
@@ -649,6 +689,9 @@ if [ ! $platform == "qemu" ]; then
 fi
 
 source "${SCRIPTS_DIR}/tests_utils.sh"
+
+# ci.yml parsing relies on mikefarah/yq (yq-go); fail early with a clear message.
+require_yq_go || exit 1
 
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then

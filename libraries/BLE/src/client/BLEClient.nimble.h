@@ -45,12 +45,11 @@ struct BLEClient::Impl : BLEClientImplCommon {
   // ENC_CHANGE); this latches after the first onIdentity dispatch so the callback
   // fires at most once per connection. Reset on each CONNECT event. Guarded by mtx.
   bool identityDispatched = false;
-  BLESync connectSync{"connectSync"};
-  BLESync disconnectSync{"disconnectSync"};
-  // Lets the blocking connect() wait for the initial ATT MTU exchange to finish
-  // so getMTU() is accurate as soon as connect() returns (ordering contract in
-  // DESIGN.md). Signaled by mtuExchangeCb.
-  BLESync mtuSync{"mtuSync"};
+  // A peripheral can start the ATT MTU exchange before NimBLE delivers
+  // BLE_GAP_EVENT_CONNECT (CONNECT is deferred behind the LL feature/version
+  // reads). Latch the negotiated value here and replay it from the CONNECT
+  // handler after onConnect so onMtuChanged is not lost. Guarded by mtx.
+  uint16_t pendingMtuValue = 0;
 
   // Prevent destruction while NimBLE holds our raw pointer.
   // Set before ble_gap_connect(); moved off this member before unblocking the
@@ -58,12 +57,20 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::shared_ptr<BLEClient::Impl> nimbleRef;
 
   bool discovering = false;
-  BLESync discoverSync{"discoverSync"};
   BLESync authSync{"clientAuthSync"};
 
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
   static int serviceDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
   static int mtuExchangeCb(uint16_t connHandle, const struct ble_gatt_error *error, uint16_t mtu, void *arg);
+
+  /**
+   * @brief Handle a BLE_GAP_EVENT_MTU for this client.
+   *
+   * Dispatches onMtuChanged when the event belongs to the live connection, or
+   * latches the value when a peer-initiated exchange completed before CONNECT
+   * was delivered (the CONNECT handler replays it after onConnect).
+   */
+  void handleMtuEvent(uint16_t handle, uint16_t value);
 };
 
 #endif /* BLE_NIMBLE */

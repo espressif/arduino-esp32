@@ -62,14 +62,14 @@ static const uint8_t REPORT_ID_CONSUMER = 3;  // Consumer Control (media)
 // learn how to decode every subsequent Input report.
 //
 // The macros (USAGE_PAGE, COLLECTION, HIDINPUT, etc.) are defined in
-// HIDTypes.h. Each macro produces the HID short-item prefix byte; the
+// HIDTypes.h. Each macro produces the HID short-item prefix byte. The
 // parameter is the number of data bytes that follow (usually 1). See
 // HIDTypes.h for a full explanation of the encoding.
 //
 // Key concepts used here:
 //   Usage Page   -- broad category (Generic Desktop, Keyboard, Button, Consumer)
 //   Usage        -- specific function within the page (Keyboard, Mouse, etc.)
-//   Collection   -- groups related items; Application (0x01) = top-level device
+//   Collection   -- groups related items. Application (0x01) = top-level device
 //   Report ID    -- 1-byte tag prepended to each report for demultiplexing
 //   Report Size  -- width of each field in bits
 //   Report Count -- number of fields of that size
@@ -418,13 +418,13 @@ void loop() {
     {
       if (step % 40 == 0) {
         Serial.println("[Keyboard] Sending 'H' (Shift + h)");
-        // HID key code 0x0B = 'h'; modifier 0x02 = Left Shift held
+        // HID key code 0x0B = 'h'. Modifier 0x02 = Left Shift held
         uint8_t keys[6] = {0x0B, 0, 0, 0, 0, 0};
         sendKeyboardReport(0x02, keys);
       } else if (step % 40 == 10) {
         releaseAllKeys();
         Serial.println("[Keyboard] Sending 'i'");
-        // HID key code 0x0C = 'i'; no modifier
+        // HID key code 0x0C = 'i'. No modifier
         uint8_t keys[6] = {0x0C, 0, 0, 0, 0, 0};
         sendKeyboardReport(0x00, keys);
       } else if (step % 40 == 20) {

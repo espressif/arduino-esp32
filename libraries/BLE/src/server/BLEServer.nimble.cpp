@@ -30,11 +30,13 @@
 #include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
+#include "gatt/BLEGattDatabase.nimble.h"
 #include "types/BLEConnInfo.nimble.h"
 #include "security/BLESecurity.h"
 #include "types/BLEConnInfoData.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
+#include "core/BLEAudioHooks.h"
 #include "core/BLEValidationHooks.h"
 #include "esp32-hal-log.h"
 
@@ -42,10 +44,8 @@
 
 #if BLE_GATT_SERVER_SUPPORTED
 
-#include "gatt/BLECharacteristicValidation.h"
 #include <host/ble_hs.h>
 #include <host/ble_att.h>
-#include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 #include <nimble/nimble_port.h>
 
@@ -167,97 +167,17 @@ void nimbleResetReAdvertiseEvent() {
  * @note Unlike Bluedroid, registration always uses a full @c ble_gatts_reset and re-register
  *       of all services; per-service create/delete is not used.
  */
-static void nimbleClearGattRegistration(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
-  BLELockGuard lock(impl.mtx);
-  impl.started = false;
-  for (auto &s : services) {
-    s->started = false;
-    s->handle = 0;
-    for (auto &c : s->characteristics) {
-      c->handle = 0;
-      BLELockGuard chrLock(c->mtx);
-      for (auto &d : c->descriptors) {
-        d->handle = 0;
-      }
-    }
-  }
-}
-
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
-  // Snapshot the service tree under mtx; registration below iterates the
-  // snapshot while createCharacteristic/createDescriptor may run on user tasks.
-  std::vector<std::shared_ptr<BLEService::Impl>> services;
-  {
-    BLELockGuard lock(impl.mtx);
-    services = impl.services;
+  if (BLEGattDatabase::audioModeFrozen()) {
+    log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+    return BTStatus::InvalidState;
   }
-  for (const auto &svc : services) {
-    std::vector<std::shared_ptr<BLECharacteristic::Impl>> chrs;
-    {
-      BLELockGuard lock(impl.mtx);
-      chrs = svc->characteristics;
-    }
-    for (const auto &chr : chrs) {
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
-        log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
-        return BTStatus::InvalidState;
-      }
-    }
+  if (BLEGattDatabase::audioModeActive()) {
+    // The engine owns the single ble_gatts_start; the classic server only
+    // stages its services between audio.begin() and audio.start().
+    return BLEGattDatabase::stageServer(impl);
   }
-
-  // ble_gatts_reset() is EBUSY while a central is connected or GAP is active
-  // (adv/scan/connect). Ignoring that and calling ble_svc_gap_init() panics
-  // inside ble_gatts_add_svcs (SYSINIT_PANIC_ASSERT rc==0).
-  int rc = ble_gatts_reset();
-  if (rc != 0) {
-    log_w("ble_gatts_reset: rc=%d (GATT table immutable while connected or advertising)", rc);
-    return rc == BLE_HS_EBUSY ? BTStatus::Busy : BTStatus::Fail;
-  }
-  ble_svc_gap_init();
-  ble_svc_gatt_init();
-
-#if BLE_VALIDATION_HOOKS
-  if (BLEValidationHooks::consumeFailure(BLEHooks.gatt.injectRebuildFails)) {
-    log_e("nimbleRebuildGattDatabase: injected fail after reset");
-    nimbleClearGattRegistration(impl, services);
-    return BTStatus::Fail;
-  }
-#endif
-
-  if (!services.empty()) {
-    rc = nimbleRegisterGattServices(services);
-    if (rc != 0) {
-      log_e("nimbleRegisterGattServices: rc=%d", rc);
-      nimbleClearGattRegistration(impl, services);
-      return BTStatus::Fail;
-    }
-    for (auto &s : services) {
-      s->started = true;
-    }
-  } else {
-    nimbleClearRetainedGattDefs();
-  }
-
-  rc = ble_gatts_start();
-  if (rc != 0) {
-    log_e("ble_gatts_start: rc=%d", rc);
-    nimbleClearGattRegistration(impl, services);
-    return BTStatus::Fail;
-  }
-
-  for (auto &s : services) {
-    if (ble_gatts_find_svc(&s->nimbleUUID.u, &s->handle) != 0) {
-      s->handle = 0;
-    }
-  }
-
-  String name = BLE.getDeviceName();
-  if (name.length() > 0) {
-    ble_svc_gap_device_name_set(name.c_str());
-  }
-
-  impl.started = true;
-  return BTStatus::OK;
+  return BLEGattDatabase::commitServerStandalone(impl);
 }
 
 // Re-registration is driven by new characteristics (handle 0); the entire GATT is rebuilt via
@@ -364,18 +284,13 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t reason) {
 }
 
 // Not used on NimBLE (server role only); always returns BTStatus::NotSupported.
-BTStatus BLEServer::connect(const BTAddress &address) {
-  log_w("Server: connect not supported on NimBLE (server role only)");
-  return BTStatus::NotSupported;
-}
-
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   return ble_att_mtu(connHandle);
 }
 
 static thread_local bool sInIndicateSend = false;
 
-BLEIndicationSend bleServerSendIndication(
+BLEServerInternal::IndicationSend BLEServerInternal::sendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
   {
@@ -383,7 +298,7 @@ BLEIndicationSend bleServerSendIndication(
     if (!impl->active || !impl->started || !impl->connFind(connHandle)) {
       status = BLECharacteristic::ERROR_NO_CLIENT;
       code = BLE_HS_ENOTCONN;
-      return BLEIndicationSend::Failed;
+      return BLEServerInternal::IndicationSend::Failed;
     }
   }
   struct os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
@@ -391,7 +306,7 @@ BLEIndicationSend bleServerSendIndication(
     log_e("Server: indicate - no memory for mbuf (conn=%u)", connHandle);
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = BLE_HS_ENOMEM;
-    return BLEIndicationSend::Failed;
+    return BLEServerInternal::IndicationSend::Failed;
   }
   // EALREADY: the connection's indication slot is held by one NimBLE sent
   // itself (e.g. Service Changed); the queue retries when that one completes.
@@ -402,17 +317,17 @@ BLEIndicationSend bleServerSendIndication(
   int rc = ble_gatts_indicate_custom(connHandle, attrHandle, om);
   sInIndicateSend = false;
   if (rc == 0) {
-    return BLEIndicationSend::Sent;
+    return BLEServerInternal::IndicationSend::Sent;
   }
   if (rc == BLE_HS_EALREADY) {
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = BLE_HS_EALREADY;
-    return BLEIndicationSend::Busy;
+    return BLEServerInternal::IndicationSend::Busy;
   }
   log_w("Server: indicate failed for conn=%u handle=%u rc=%d", connHandle, attrHandle, rc);
   status = (rc == BLE_HS_ENOTCONN) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_INDICATE_FAILURE;
   code = rc;
-  return BLEIndicationSend::Failed;
+  return BLEServerInternal::IndicationSend::Failed;
 }
 
 // Parameters are validated locally against the BT Core Spec ranges (v5.x, Vol 6, Part B,
@@ -441,22 +356,17 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   return BTStatus::OK;
 }
 
-BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
   int rc = ble_gap_set_prefered_le_phy(connHandle, static_cast<uint8_t>(txPhy), static_cast<uint8_t>(rxPhy), 0);
   if (rc != 0) {
     log_e("Server: ble_gap_set_prefered_le_phy handle=%u rc=%d", connHandle, rc);
     return BTStatus::Fail;
   }
   return BTStatus::OK;
-#else
-  log_w("Server: setPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
 
 BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) const {
-#if BLE5_SUPPORTED
   uint8_t tx, rx;
   int rc = ble_gap_read_le_phy(connHandle, &tx, &rx);
   if (rc == 0) {
@@ -466,13 +376,8 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
   }
   log_e("Server: ble_gap_read_le_phy handle=%u rc=%d", connHandle, rc);
   return BTStatus::Fail;
-#else
-  txPhy = BLEPhy::PHY_1M;
-  rxPhy = BLEPhy::PHY_1M;
-  log_w("Server: getPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t txTime) {
   int rc = ble_gap_set_data_len(connHandle, txOctets, txTime);
@@ -817,7 +722,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       }
 
       // A notification completion consumes the pending entry registered by
-      // bleCharacteristicSendNotify() before native submission. An event with
+      // characteristicSendNotify() before native submission. An event with
       // no pending entry is not one of ours (already consumed on a failed
       // synchronous submission); do not report it twice.
       bool wasPending = false;
@@ -872,7 +777,7 @@ int BLEServer::handleGapEvent(void *rawEvent) {
 
 // NimBLE has no single-service delete; a started server rebuilds the entire GATT database
 // (like BLEServer::start), unlike Bluedroid's esp_ble_gatts_delete_service.
-BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
   }
@@ -922,13 +827,31 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   }
 
   if (!svc->started || !impl->started) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
+    return BTStatus::OK;
+  }
+
+  // The engine owns the committed table in audio mode. Never reset it; hide
+  // the removed range and signal Service Changed instead.
+  if (BLEGattDatabase::audioModeFrozen()) {
+    if (startHandle == 0 && ble_gatts_find_svc(&svc->nimbleUUID.u, &startHandle) == 0) {
+      svc->handle = startHandle;
+    }
+    if (startHandle == 0 || ble_gatts_svc_set_visibility(startHandle, 0) != 0) {
+      BLELockGuard lock(impl->mtx);
+      size_t insertIndex = originalIndex < impl->services.size() ? originalIndex : impl->services.size();
+      impl->services.insert(impl->services.begin() + insertIndex, svc);
+      return BTStatus::Busy;
+    }
+    BLEGattInternal::detachLocalService(svc);
+    ble_svc_gatt_changed(startHandle, endHandle);
+    log_i("Server: service hidden in audio GATT table (handle=%u..%u)", startHandle, endHandle);
     return BTStatus::OK;
   }
 
   BTStatus st = nimbleRebuildGattDatabase(*impl);
   if (st == BTStatus::OK) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     // Handles were reassigned by the rebuild; advertise the full ATT range
     // rather than the pre-reset values (Vol 3, Part G, §7.1).
     ble_svc_gatt_changed(0x0001, 0xFFFF);
@@ -941,7 +864,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   // ATT server and emit the Service Changed (0x2A05) indication so runtime
   // removal works identically to Bluedroid.
   if (st == BTStatus::Busy && startHandle != 0 && ble_gatts_svc_set_visibility(startHandle, 0) == 0) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     ble_svc_gatt_changed(startHandle, endHandle);
     log_i("Server: service hidden while active (handle=%u..%u), %u service(s) registered", startHandle, endHandle, (unsigned)impl->services.size());
     return BTStatus::OK;
@@ -962,54 +885,6 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
     }
   }
   return st;
-}
-
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
-
-// Stubs for BLE_GATT_SERVER_SUPPORTED == 0: log; return NotSupported, 0, or empty. getPhy() may not
-// set out-parameters; check return or initialize.
-
-BTStatus BLEServer::start() {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::connect(const BTAddress &) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-uint16_t BLEServer::getPeerMTU(uint16_t) const {
-  return 0;
-}
-
-BTStatus BLEServer::updateConnParams(uint16_t, const BLEConnParams &) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setPhy(uint16_t, BLEPhy, BLEPhy) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::getPhy(uint16_t, BLEPhy &, BLEPhy &) const {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setDataLen(uint16_t, uint16_t, uint16_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-int BLEServer::handleGapEvent(void *) {
-  return 0;
 }
 
 #endif /* BLE_GATT_SERVER_SUPPORTED */

@@ -23,6 +23,7 @@
 #if BLE_BLUEDROID
 
 #include "types/BLEConnInfo.bluedroid.h"
+#include "core/BLEAddressUtil.h"
 
 #include <esp_gap_ble_api.h>
 
@@ -41,7 +42,7 @@ bool authModeIsBonded(uint8_t authMode) {
 }  // namespace
 
 BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const uint8_t bda[6], uint16_t mtu, bool central, BTAddress::Type addrType) {
-  return make(connId, BTAddress::fromEspBdAddr(bda, addrType), mtu, central);
+  return make(connId, BLEAddressUtil::fromNative(bda, addrType), mtu, central);
 }
 
 BLEConnInfo BLEConnInfoImpl::make(uint16_t connId, const BTAddress &address, uint16_t mtu, bool central) {
@@ -116,6 +117,16 @@ void BLEConnInfoImpl::setPhy(BLEConnInfo &info, uint8_t txPhy, uint8_t rxPhy) {
   auto *d = info.data();
   d->txPhy = txPhy;
   d->rxPhy = rxPhy;
+}
+
+void BLEConnInfoImpl::clearVolatile(BLEConnInfo &info) {
+  if (!info) {
+    return;
+  }
+  auto *d = info.data();
+  d->txPhy = 1;
+  d->rxPhy = 1;
+  d->rssi = 0;
 }
 
 #endif /* BLE_BLUEDROID */

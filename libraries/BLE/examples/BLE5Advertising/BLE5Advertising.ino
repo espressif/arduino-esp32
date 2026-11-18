@@ -21,7 +21,7 @@
 
 // BLE 5 supports multiple simultaneous advertising sets. Each set is
 // identified by an instance index (0, 1, 2, ...). This example uses
-// a single set; change the value to run several sets in parallel.
+// a single set. Change the value to run several sets in parallel.
 static const uint8_t ADV_INSTANCE = 0;
 
 // Short 16-bit UUIDs (custom, for demo purposes only -- use 128-bit UUIDs in production)

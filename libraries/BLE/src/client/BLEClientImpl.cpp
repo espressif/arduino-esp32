@@ -62,17 +62,12 @@ void BLEClientImplCommon::dispatchConnect(const BLEConnInfo &connInfo) {
   cb(clientHandle, connInfo);
 }
 
-void BLEClientImplCommon::dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason) {
-  decltype(onDisconnectCb) cb;
-  {
-    BLELockGuard lock(mtx);
-    if (!onDisconnectCb) {
-      return;
-    }
-    cb = onDisconnectCb;
+void BLEClientImplCommon::dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason, const BLEClient::DisconnectHandler &handler) {
+  if (!handler) {
+    return;
   }
   BLEClient clientHandle(shared_from_this());
-  cb(clientHandle, connInfo, reason);
+  handler(clientHandle, connInfo, reason);
 }
 
 void BLEClientImplCommon::dispatchConnectFail(int reason) {

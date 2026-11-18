@@ -66,17 +66,11 @@ struct BLEL2CAPChannel::Impl {
   BLESync operationSync{"l2capOperationSync"};
   BLESync connectSync{"l2capConnectSync"};
 
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
-  SemaphoreHandle_t operationMtx = xSemaphoreCreateRecursiveMutex();
+  BLESharedMutex mtx;
+  BLESharedMutex operationMtx;
 
   ~Impl() {
     nimbleReleaseL2CAPOperationEvent(this);
-    if (operationMtx) {
-      vSemaphoreDelete(operationMtx);
-    }
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
   }
 };
 
@@ -94,14 +88,11 @@ struct BLEL2CAPServer::Impl {
   BLEL2CAPServer::DisconnectHandler onDisconnectCb = nullptr;
 
   std::vector<std::shared_ptr<BLEL2CAPChannel::Impl>> channels;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  BLESharedMutex mtx;
 
   ~Impl() {
     if (sduMem) {
       free(sduMem);
-    }
-    if (mtx) {
-      vSemaphoreDelete(mtx);
     }
   }
 

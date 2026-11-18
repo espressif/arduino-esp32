@@ -21,6 +21,8 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddressUtil.h"
+#include "types/BLEConnInfo.bluedroid.h"
 #if BLE_BLUEDROID
 
 #include "BLE.h"
@@ -40,7 +42,12 @@
 #if BLE_SMP_SUPPORTED
 #include "security/BLESecurity.bluedroid.h"
 #endif
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.h"
+#include "iso/BLEIsoHost.h"
+#endif
 #include "core/BLEImplHelpers.h"
+#include "core/BLEAudioHooks.h"
 #include "core/BLEMutex.h"
 #include "core/BLETask.h"
 #include "core/BLEValidationHooks.h"
@@ -59,26 +66,28 @@
 #endif
 #include <esp_gatt_common_api.h>
 #include <esp_bt_device.h>
+#include <esp_random.h>
 
 #include "core/BLESync.h"
 #include <cstring>
+#include <algorithm>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #if BLE_SMP_SUPPORTED
-// Defined in BluedroidSecurity.cpp
+// Defined in security/BLESecurity.bluedroid.cpp
 void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #endif
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-bool bleInStackCallbackTask() {
+bool BLETask::isHostStackTask() {
   TaskHandle_t current = xTaskGetCurrentTaskHandle();
   const char *name = current ? pcTaskGetName(current) : nullptr;
   return name && strcmp(name, "BTC_TASK") == 0;
 }
 
-// BLEClass::Impl (Bluedroid backend state) is declared in BluedroidCore.h.
+// BLEClass::Impl (Bluedroid backend state) is declared in BLE.bluedroid.h.
 
 /**
  * @brief Dispatches GAP events to advertising, scan, GATT, security, and custom handlers; signals local privacy completion.
@@ -94,6 +103,10 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   if (event == ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT) {
     BTStatus st = (param->local_privacy_cmpl.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
     impl->privacySync.give(st);
+  }
+
+  if (event == ESP_GAP_BLE_SET_STATIC_RAND_ADDR_EVT) {
+    impl->randAddrSync.give(param->set_rand_addr_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail);
   }
 
   if (event == ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT) {
@@ -121,6 +134,13 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
 #endif
 #if BLE_GATT_CLIENT_SUPPORTED
   if (auto hook = impl->loadHook(impl->clientGapHook)) {
+    hook(event, param);
+  }
+#endif
+#if BLE_AUDIO_SUPPORTED
+  // SMP completion has no BTA path into the LE Audio engine; it gates the
+  // engine's GATT discovery on audio links.
+  if (auto hook = impl->loadHook(impl->audioGapHook)) {
     hook(event, param);
   }
 #endif
@@ -182,62 +202,32 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 #endif
 
 // --------------------------------------------------------------------------
-// BLEClass lifecycle
+// BLEClass::Impl backend lifecycle hooks (called from BLE.cpp)
 // --------------------------------------------------------------------------
 
-BLEClass::BLEClass() : _impl(new Impl()) {}
-
-BLEClass::~BLEClass() {
-  if (isInitialized()) {
-    end(false);
+void BLEClass::Impl::abandonStart() {
+  if (hostUser) {
+    hostUser = false;
+    (void)btBluedroidHostRelease();
   }
-  delete _impl;
-  _impl = nullptr;
+  // A failed begin has no later end() to run the deferred controller stop.
+  btBluedroidHostFinalize();
 }
 
-// Fails with InvalidState if a prior end(true) already released controller memory; that state blocks re-begin in-process.
-BTStatus BLEClass::begin(const String &deviceName) {
-  if (!_impl || !_impl->lifecycleMtx) {
-    return BTStatus::NoMemory;
-  }
-  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-  if (_impl->ending) {
-    return BTStatus::InvalidState;
-  }
-  if (isInitialized()) {
-    return BTStatus::OK;
-  }
-
-#if defined(CONFIG_BT_CONTROLLER_ENABLED)
-  if (btMemReleased(BT_MODE_BLE)) {
-    log_e("Cannot reinitialize BLE: memory has been released");
-    return BTStatus::InvalidState;
-  }
-#endif
-
-  log_i("Initializing BLE stack: Bluedroid");
-
-  if (!btStart()) {
-    log_e("btStart() failed");
+BTStatus BLEClass::Impl::backendBegin(const String &deviceName) {
+  // Bluedroid is a single host shared with Bluetooth Classic (BluetoothSerial).
+  // The core starts it for the first user and stops it for the last; a host
+  // already enabled by an external component is adopted and left up.
+  if (!btBluedroidHostAcquire()) {
+    log_e("Bluedroid host start failed");
     return BTStatus::Fail;
   }
+  hostUser = true;
 
-  esp_err_t err = esp_bluedroid_init();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_init: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-
-  err = esp_bluedroid_enable();
-  if (err != ESP_OK) {
-    log_e("esp_bluedroid_enable: %s", esp_err_to_name(err));
-    esp_bluedroid_deinit();
-    return BTStatus::Fail;
-  }
-
-  err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
+  esp_err_t err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 
@@ -245,6 +235,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   err = esp_ble_gatts_register_callback(BLEClass::Impl::gattsCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gatts_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 #endif
@@ -253,170 +244,58 @@ BTStatus BLEClass::begin(const String &deviceName) {
   err = esp_ble_gattc_register_callback(BLEClass::Impl::gattcCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_register_callback: %s", esp_err_to_name(err));
+    abandonStart();
     return BTStatus::Fail;
   }
 #endif
 
-  _deviceName = deviceName;
+  BLE._deviceName = deviceName;
   if (deviceName.length() > 0) {
     esp_ble_gap_set_device_name(deviceName.c_str());
   }
 
-  if (_impl->localMTU != 23) {
-    esp_ble_gatt_set_local_mtu(_impl->localMTU);
+  if (localMTU != 23) {
+    esp_ble_gatt_set_local_mtu(localMTU);
   }
-
-  _impl->ending = false;
-  setInitialized(true);
-  _ownAddressType = static_cast<BTAddress::Type>(_impl->ownAddrType);
-#if BLE_SCANNING_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->scanBeginHook)) {
-    hook();
-  }
-#endif
-#if BLE_ADVERTISING_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->advBeginHook)) {
-    hook();
-  }
-#endif
-#if BLE_GATT_CLIENT_SUPPORTED
-  BLEClient::Impl::openTerminalCloseAdmission();
-#endif
-
-#if BLE_SMP_SUPPORTED
-  // getSecurity() keeps its Impl in a function-local static that outlives an
-  // end()/begin() cycle, but the freshly initialized stack is back at its own
-  // defaults. Re-push the retained configuration so the two cannot disagree:
-  // without this, an end()/begin() round-trip silently dropped every security
-  // setting while getSecurity() still reported the old values.
-  if (auto hook = _impl->loadHook(_impl->securityBeginHook)) {
-    hook();
-  }
-#endif
-
   return BTStatus::OK;
 }
 
-namespace {
-void bleEndWorker(void *) {
-  BLE.end(false);
-  vTaskDelete(nullptr);
-}
-
-bool bleStartEndWorker() {
-#if BLE_VALIDATION_HOOKS
-  if (BLEValidationHooks::consumeFailure(BLEHooks.lifecycle.endWorkerStartFailures)) {
-    return false;
-  }
+void BLEClass::Impl::backendAfterHooks() {
+#if BLE_GATT_CLIENT_SUPPORTED
+  BLEClient::Impl::openTerminalCloseAdmission();
 #endif
-  return xTaskCreate(bleEndWorker, "ble-end", 6144, nullptr, 1, nullptr) == pdPASS;
 }
-}  // namespace
 
-// Irreversible: after end(true) BLE memory is freed via btMemRelease() and begin() cannot succeed again without a hardware reset.
-void BLEClass::end(bool releaseMemory) {
-  if (bleInStackCallbackTask()) {
-    // Claim ending before returning so begin() cannot treat the still-live
-    // stack as a successful re-init. The worker, or a later user-thread end(),
-    // runs the teardown body.
-    {
-      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-      if (!_impl || (!isInitialized() && !_impl->endRunning)) {
-        return;
-      }
-      if (releaseMemory) {
-        _impl->endReleaseMemory = true;
-      }
-      if (_impl->ending) {
-        return;
-      }
-      _impl->ending = true;
-    }
-    if (!bleStartEndWorker()) {
-      log_e("BLE.end: cannot defer stack-task teardown");
-    }
-    return;
-  }
+void BLEClass::Impl::backendFinishBegin() {}
 
-  while (true) {
-    bool waitForWorker = false;
-    {
-      BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-      if (!_impl) {
-        return;
-      }
-      if (!isInitialized() && !_impl->endRunning) {
-        return;
-      }
-      if (releaseMemory) {
-        _impl->endReleaseMemory = true;
-      }
-      if (_impl->endRunning) {
-        if (_impl->endTask == xTaskGetCurrentTaskHandle()) {
-          return;
-        }
-        waitForWorker = true;
-      } else {
-        _impl->ending = true;
-        _impl->endRunning = true;
-        _impl->endTask = xTaskGetCurrentTaskHandle();
-      }
-    }
-    if (!waitForWorker) {
-      break;
-    }
-    vTaskDelay(1);
-  }
-
-  if (auto hook = _impl->loadHook(_impl->streamPreEndHook)) {
-    hook();
-  }
-
+void BLEClass::Impl::backendPreAdvScanEnd() {
 #if BLE_GATT_SERVER_SUPPORTED
   // Prevent deferred work from racing host shutdown. Keep the GATT tree alive
   // until Bluedroid is fully stopped so any final native callbacks can still
   // resolve their attribute handles safely.
-  if (auto hook = _impl->loadHook(_impl->serverPreEndHook)) {
+  if (auto hook = loadHook(serverPreEndHook)) {
     hook();
   }
 #endif
-  // Reset advertising state before tearing down the stack.  The Bluedroid
-  // stack is still running here, so the public reset() can call stop() through
-  // the normal async path (esp_ble_gap_stop_advertising + wait), then wipe all
-  // accumulated configuration (serviceUUIDs, appearance, etc.).
-#if BLE_ADVERTISING_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->advEndHook)) {
-    hook();
-  }
-#endif
-  // Stop any active scan while the stack is still enabled so a late scan-result
-  // callback cannot fire into the scan handler after esp_bluedroid_disable().
-#if BLE_SCANNING_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->scanEndHook)) {
-    hook();
-  }
-#endif
+}
 
-  // Close the public session before native shutdown callbacks run. The GATT
-  // tree stays attached until deinit, but callbacks cannot re-enter
-  // createServer() or send through a host that is stopping.
-  {
-    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-    setInitialized(false);
-  }
-#if BLE_GATT_SERVER_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->serverDeactivateHook)) {
-    hook();
-  }
-#endif
+void BLEClass::Impl::backendPreSessionClose() {}
+
+void BLEClass::Impl::backendStopAndDeinitHost() {
 #if BLE_GATT_CLIENT_SUPPORTED
   // Close terminal-retry admission and wait until no worker can enter a native
   // GATTC API before Bluedroid is disabled.
   BLEClient::Impl::stopTerminalCloseWorkers();
 #endif
-
-  esp_bluedroid_disable();
-  esp_bluedroid_deinit();
+  // Release this session's reference to the shared Bluedroid host. The core
+  // stops it for the last user unless an external owner keeps it up.
+  {
+    BLELockGuard lifecycle(lifecycleMtx);
+    releasedHostUser = hostUser;
+    hostUser = false;
+  }
+  const bt_host_release_result_t hostResult = releasedHostUser ? btBluedroidHostRelease() : BT_HOST_STILL_IN_USE;
+  releasedHostStopped = (hostResult == BT_HOST_STOPPED);
 
 #if BLE_GATT_CLIENT_SUPPORTED
   // No GATTC callback can arrive after deinit. Detach retained public handles
@@ -425,48 +304,25 @@ void BLEClass::end(bool releaseMemory) {
   BLEClient::Impl::invalidateAfterHostDeinit();
   BLEClient::Impl::releaseTerminalCloseOwners();
 #endif
-#if BLE_GATT_SERVER_SUPPORTED
-  if (auto hook = _impl->loadHook(_impl->serverPostEndHook)) {
-    hook();
-  }
-#endif
-  if (auto hook = _impl->loadHook(_impl->streamPostEndHook)) {
-    hook();
-  }
-
-  esp_bt_controller_disable();
-  esp_bt_controller_deinit();
-
-  bool release = false;
-  {
-    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-    release = _impl->endReleaseMemory;
-    _impl->endReleaseMemory = false;
-    _impl->endTask = nullptr;
-    _impl->endRunning = false;
-  }
-  if (release) {
-    btMemRelease(BT_MODE_BLE);
-  }
-  {
-    BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
-    _impl->ending = false;
-  }
 }
 
-bool BLEClass::setStreamEndHooks(void (*preHook)(), void (*postHook)()) {
-  if (!_impl) {
-    return false;
+void BLEClass::Impl::backendFinalizeEnd(bool releaseMemory) {
+  // The host is down; complete the controller stop now that the post-end hooks
+  // have run (the previous ordering kept the controller up until this point).
+  btBluedroidHostFinalize();
+
+  // Releasing BLE controller memory under a still-running Classic owner would
+  // break that owner; only the last user that started the host may release it.
+  // Otherwise record the terminal end(true) contract without a physical free.
+  if (releaseMemory && releasedHostUser) {
+    if (releasedHostStopped) {
+      btMemRelease(BT_MODE_BLE);
+    } else {
+      btMarkMemReleased(BT_MODE_BLE);
+    }
   }
-  BLELockGuard lifecycle(_impl->lifecycleMtx);
-  if (_impl->ending) {
-    return false;
-  }
-  portENTER_CRITICAL(&_impl->hookMux);
-  _impl->streamPreEndHook = preHook;
-  _impl->streamPostEndHook = postHook;
-  portEXIT_CRITICAL(&_impl->hookMux);
-  return true;
+  releasedHostUser = false;
+  releasedHostStopped = false;
 }
 
 // --------------------------------------------------------------------------
@@ -481,17 +337,24 @@ BTAddress BLEClass::getAddress() const {
   if (!addr) {
     return BTAddress();
   }
-  return BTAddress::fromEspBdAddr(addr, BTAddress::Type::Public);
+  return BLEAddressUtil::fromNative(addr, BTAddress::Type::Public);
 }
 
-// Toggles esp_ble_gap_config_local_privacy only when the desired privacy level differs from the current state; uses a 2 s privacySync wait.
+// Configures the controller-side identity backing BTAddress::Type:
+//   Public                  -> public device address, LL privacy off
+//   Random                  -> random *device* address (needs HCI_LE_Set_Random_Address)
+//   PublicID / RandomID     -> resolvable private address, LL privacy on
+// Privacy is toggled only when the desired level differs from the current one
+// (2 s privacySync wait); a plain random address is programmed once, because the
+// controller rejects an advertising enable with 0x12 (Invalid HCI Command
+// Parameters) while own_addr_type is Random but no random address exists.
 BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  bool privacyNeeded = (type != BTAddress::Type::Public);
-  bool privacyCurrent = (_impl->ownAddrType != BLE_ADDR_TYPE_PUBLIC);
-  if (privacyNeeded != privacyCurrent) {
+
+  const bool privacyNeeded = (type == BTAddress::Type::PublicID || type == BTAddress::Type::RandomID);
+  if (privacyNeeded != _impl->privacyEnabled) {
     _impl->privacySync.take();
     esp_err_t err = esp_ble_gap_config_local_privacy(privacyNeeded);
     if (err != ESP_OK) {
@@ -500,13 +363,56 @@ BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
     }
     BTStatus st = _impl->privacySync.wait(2000);
     if (st != BTStatus::OK) {
-      log_e("setOwnAddressType: privacy config timeout");
+      // Leaving the controller in the previous privacy state keeps ownAddrType
+      // consistent with it; the caller sees the failure.
+      log_e("setOwnAddressType: privacy config failed: %s", st.toString());
       return st;
     }
+    _impl->privacyEnabled = privacyNeeded;
+    if (privacyNeeded) {
+      // A static random address is meaningless while privacy generates an RPA.
+      _impl->randomAddrSet = false;
+    }
   }
+
+  if (type == BTAddress::Type::Random && !_impl->randomAddrSet) {
+    esp_bd_addr_t rnd;
+    for (int i = 0; i < 6; i++) {
+      rnd[i] = static_cast<uint8_t>(esp_random());
+    }
+    // Static random address: the two most significant bits of the most
+    // significant octet (esp_bd_addr_t is MSB-first) are both set.
+    rnd[0] = static_cast<uint8_t>((rnd[0] & 0x3F) | 0xC0);
+    _impl->randAddrSync.take();
+    esp_err_t err = esp_ble_gap_set_rand_addr(rnd);
+    if (err != ESP_OK) {
+      _impl->randAddrSync.give(BTStatus::Fail);
+      log_e("setOwnAddressType: esp_ble_gap_set_rand_addr: %s", esp_err_to_name(err));
+      return BTStatus::Fail;
+    }
+    BTStatus st = _impl->randAddrSync.wait(2000);
+    if (st != BTStatus::OK) {
+      log_e("setOwnAddressType: random address config failed: %s", st.toString());
+      return st;
+    }
+    memcpy(_impl->ownRandomAddr, rnd, sizeof(_impl->ownRandomAddr));
+    _impl->randomAddrSet = true;
+  }
+
   _impl->ownAddrType = static_cast<uint8_t>(type);
   _ownAddressType = type;
   return BTStatus::OK;
+}
+
+bool BLEClass::getOwnRandomAddress(uint8_t out[6]) const {
+  if (!_impl || !isInitialized() || !_impl->randomAddrSet || !out) {
+    return false;
+  }
+  // ownRandomAddr is stored in esp_bd_addr_t (MSB-first) order; BLE.h specifies LSB-first.
+  for (int i = 0; i < 6; i++) {
+    out[i] = _impl->ownRandomAddr[5 - i];
+  }
+  return true;
 }
 
 // Setting a random static identity is not implemented on the Bluedroid path; always returns NotSupported.
@@ -530,10 +436,6 @@ BTStatus BLEClass::setMTU(uint16_t mtu) {
   }
   _impl->localMTU = mtu;
   return BTStatus::OK;
-}
-
-uint16_t BLEClass::getMTU() const {
-  return _impl ? _impl->localMTU : 23;
 }
 
 // --------------------------------------------------------------------------
@@ -575,8 +477,8 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
       continue;
     }
 
-    BTAddress bondAddr = BTAddress::fromEspBdAddr(devList[i].bd_addr, BTAddress::Type::Public);
-    BTAddress identityAddr = BTAddress::fromEspBdAddr(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
+    BTAddress bondAddr = BLEAddressUtil::fromNative(devList[i].bd_addr, BTAddress::Type::Public);
+    BTAddress identityAddr = BLEAddressUtil::fromNative(devList[i].bond_key.pid_key.static_addr, BTAddress::Type::Public);
 
     if (bondAddr == peer || identityAddr == peer) {
       bool nonzero = false;
@@ -602,30 +504,19 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
 
 // Only available when BLE5_SUPPORTED is on; older targets return NotSupported.
 // Bluedroid takes preferred-PHY *masks* (not the single-PHY enum values NimBLE uses).
-BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  esp_err_t err = esp_ble_gap_set_preferred_default_phy(blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy));
+  esp_err_t err = esp_ble_gap_set_preferred_default_phy(bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy));
   if (err != ESP_OK) {
     log_e("setDefaultPhy: esp_ble_gap_set_preferred_default_phy: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
   return BTStatus::OK;
-#else
-  log_w("setDefaultPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
+}
 #endif
-}
-
-// Not implemented on the Bluedroid path; out-parameters are still initialized to PHY_1M so callers that ignore the NotSupported return never read uninitialized data.
-BTStatus BLEClass::getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
-  txPhy = BLEPhy::PHY_1M;
-  rxPhy = BLEPhy::PHY_1M;
-  log_w("getDefaultPhy not supported on Bluedroid");
-  return BTStatus::NotSupported;
-}
 
 // --------------------------------------------------------------------------
 // Whitelist
@@ -643,7 +534,7 @@ BTStatus BLEClass::whiteListAdd(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(address, bda);
   _impl->whitelistSync.take();
   esp_err_t err = esp_ble_gap_update_whitelist(true, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
   if (err != ESP_OK) {
@@ -669,7 +560,7 @@ BTStatus BLEClass::whiteListRemove(const BTAddress &address) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(address, bda);
   _impl->whitelistSync.take();
   esp_err_t err = esp_ble_gap_update_whitelist(false, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
   if (err != ESP_OK) {
@@ -701,17 +592,6 @@ BLEClass::Stack BLEClass::getStack() const {
 
 const char *BLEClass::getStackName() const {
   return "Bluedroid";
-}
-
-// Always false: Bluedroid in this build uses the local controller, not the hosted co-processor path (contrast with NimBLE hosted builds, where setPins matters).
-bool BLEClass::isHostedBLE() const {
-  return false;
-}
-
-// Present only for API symmetry with hosted NimBLE; the Bluedroid in-tree path ignores the pins and always returns NotSupported.
-BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_t) {
-  log_w("setPins not supported on Bluedroid");
-  return BTStatus::NotSupported;
 }
 
 // --------------------------------------------------------------------------
@@ -782,11 +662,6 @@ BLEScan BLEClass::getScan() {
   }
   return BLEScan(slot);
 }
-#else
-BLEScan BLEClass::getScan() {
-  log_w("Scanning not supported");
-  return BLEScan();
-}
 #endif
 
 #if BLE_ADVERTISING_SUPPORTED
@@ -821,32 +696,81 @@ BLEAdvertising BLEClass::getAdvertising() {
   }
   return BLEAdvertising(slot);
 }
-
-BTStatus BLEClass::startAdvertising() {
-  return getAdvertising().start();
-}
-
-BTStatus BLEClass::stopAdvertising() {
-  return getAdvertising().stop();
-}
-#else
-BLEAdvertising BLEClass::getAdvertising() {
-  log_w("Advertising not supported");
-  return BLEAdvertising();
-}
-
-BTStatus BLEClass::startAdvertising() {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClass::stopAdvertising() {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
 #endif
 
 #if BLE_GATT_SERVER_SUPPORTED
+namespace {
+
+void onBluedroidAdvRestartTimer(void *arg) {
+  auto *server = static_cast<BLEServer::Impl *>(arg);
+  if (!server) {
+    return;
+  }
+  // Hold reAdvMtx across startAdvertising() so a concurrent stop() waits
+  // for this in-flight restart to finish, then issues a native stop.
+  BLELockGuard reAdv(server->reAdvMtx);
+  const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
+  if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+    return;
+  }
+  bool restart = false;
+  {
+    BLELockGuard lock(server->mtx);
+    restart = server->active && server->advertiseOnDisconnect;
+  }
+  if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
+    return;
+  }
+  if (restart && BLE.isInitialized()) {
+#if BLE_VALIDATION_HOOKS
+    if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
+      BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
+      BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
+    }
+#endif
+    BLE.startAdvertising();
+  }
+}
+
+void bluedroidServerPreEnd() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  if (srv->advRestartTimer) {
+    esp_timer_stop(srv->advRestartTimer);
+  }
+  if (srv->indicationRetryTimer) {
+    esp_timer_stop(srv->indicationRetryTimer);
+  }
+}
+
+void bluedroidServerDeactivate() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  BLELockGuard lock(srv->mtx);
+  srv->active = false;
+}
+
+void bluedroidServerPostEnd() {
+  auto *srv = BLEServer::Impl::s_instance;
+  if (!srv) {
+    return;
+  }
+  srv->gattsIf = ESP_GATT_IF_NONE;
+  srv->pendingHandle = nullptr;
+  srv->prepWrites.clear();
+  {
+    BLELockGuard lock(srv->mtx);
+    srv->pendingNotifies.clear();
+  }
+  srv->releaseGattTree();
+}
+
+}  // namespace
+
 // A successful create isn't the end of the story here -- GATTS app registration
 // with the stack is asynchronous, so an existing slot may still be waiting on
 // its `gattsIf`. Every call re-checks that and retries registration (and drops
@@ -865,36 +789,7 @@ BLEServer BLEClass::createServer() {
   if (!slot) {
     auto fresh = std::make_shared<BLEServer::Impl>();
     esp_timer_create_args_t timerArgs = {};
-    timerArgs.callback = [](void *arg) {
-      auto *server = static_cast<BLEServer::Impl *>(arg);
-      if (!server) {
-        return;
-      }
-      // Hold reAdvMtx across startAdvertising() so a concurrent stop() waits
-      // for this in-flight restart to finish, then issues a native stop.
-      BLELockGuard reAdv(server->reAdvMtx);
-      const uint32_t armed = server->reAdvArmedEpoch.load(std::memory_order_acquire);
-      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
-        return;
-      }
-      bool restart = false;
-      {
-        BLELockGuard lock(server->mtx);
-        restart = server->active && server->advertiseOnDisconnect;
-      }
-      if (server->reAdvEpoch.load(std::memory_order_acquire) != armed) {
-        return;
-      }
-      if (restart && BLE.isInitialized()) {
-#if BLE_VALIDATION_HOOKS
-        if (BLEHooks.adv.holdReAdvStart.load(std::memory_order_acquire)) {
-          BLEHooks.adv.reAdvStartEntered.store(true, std::memory_order_release);
-          BLEValidationHooks::holdWhile(BLEHooks.adv.holdReAdvStart);
-        }
-#endif
-        BLE.startAdvertising();
-      }
-    };
+    timerArgs.callback = onBluedroidAdvRestartTimer;
     timerArgs.arg = fresh.get();
     timerArgs.name = "ble_adv_restart";
     esp_err_t err = esp_timer_create(&timerArgs, &fresh->advRestartTimer);
@@ -920,55 +815,10 @@ BLEServer BLEClass::createServer() {
     BLELockGuard lock(slot->mtx);
     slot->active = true;
   }
-  _impl->storeHook(
-    _impl->serverPreEndHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      if (srv->advRestartTimer) {
-        esp_timer_stop(srv->advRestartTimer);
-      }
-      if (srv->indicationRetryTimer) {
-        esp_timer_stop(srv->indicationRetryTimer);
-      }
-    }
-  );
-  _impl->storeHook(
-    _impl->serverDeactivateHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      BLELockGuard lock(srv->mtx);
-      srv->active = false;
-    }
-  );
-  _impl->storeHook(
-    _impl->serverPostEndHook,
-    +[]() {
-      auto *srv = BLEServer::Impl::s_instance;
-      if (!srv) {
-        return;
-      }
-      srv->gattsIf = ESP_GATT_IF_NONE;
-      srv->pendingHandle = nullptr;
-      srv->prepWrites.clear();
-      {
-        BLELockGuard lock(srv->mtx);
-        srv->pendingNotifies.clear();
-      }
-      srv->releaseGattTree();
-    }
-  );
+  _impl->storeHook(_impl->serverPreEndHook, bluedroidServerPreEnd);
+  _impl->storeHook(_impl->serverDeactivateHook, bluedroidServerDeactivate);
+  _impl->storeHook(_impl->serverPostEndHook, bluedroidServerPostEnd);
   return BLEServer(slot);
-}
-#else
-BLEServer BLEClass::createServer() {
-  log_w("GATT server not supported");
-  return BLEServer();
 }
 #endif
 
@@ -987,12 +837,196 @@ BLEClient BLEClass::createClient() {
   }
   return BLEClient(impl);
 }
-#else
-BLEClient BLEClass::createClient() {
-  log_w("GATT client not supported");
-  return BLEClient();
-}
 #endif
+
+bool bluedroidFindPeerAddress(uint16_t connHandle, BTAddress &peerAddress) {
+  if (connHandle == 0xFFFF) {
+    return false;
+  }
+
+  bool haveClient = false;
+  bool haveServer = false;
+  BTAddress clientPeer;
+  BTAddress serverPeer;
+
+#if BLE_GATT_CLIENT_SUPPORTED
+  // Central links: the client keeps the GATT connection id and the ACL handle.
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (!client || !client->connected.load()) {
+      continue;
+    }
+    if (client->connId.load() == connHandle || client->aclHandle.load() == connHandle) {
+      clientPeer = client->peerAddress;
+      haveClient = static_cast<bool>(clientPeer);
+      break;
+    }
+  }
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  // Peripheral links: the server connection table is keyed by the handle the
+  // public API reports (the GATT connection id on Bluedroid).
+  auto *server = BLEServer::Impl::s_instance;
+  if (server) {
+    BLELockGuard lock(server->mtx);
+    BLEConnInfo *info = server->connFind(connHandle);
+    if (info) {
+      serverPeer = info->getAddress();
+      haveServer = static_cast<bool>(serverPeer);
+    }
+  }
+#endif
+
+  if (haveClient && haveServer && clientPeer != serverPeer) {
+    // Native client/server connection ids share a numeric space on Bluedroid.
+    // A collision between links to different peers must not resolve to the
+    // wrong one; make the caller retry with a role-specific handle/address.
+    log_w(
+      "connection handle %u matches a client link (%s) and a server link (%s); refusing ambiguous lookup", (unsigned)connHandle, clientPeer.toString().c_str(),
+      serverPeer.toString().c_str()
+    );
+    return false;
+  }
+  if (haveClient) {
+    peerAddress = clientPeer;
+    return true;
+  }
+  if (haveServer) {
+    peerAddress = serverPeer;
+    return true;
+  }
+  return false;
+}
+
+void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections);
+
+void bluedroidFindConnHandles(const BTAddress &peerAddress, std::vector<uint16_t> &handles) {
+  std::vector<BLEConnInfo> connections;
+  bluedroidFindConnections(peerAddress, connections);
+  handles.clear();
+  handles.reserve(connections.size());
+  for (const auto &connection : connections) {
+    handles.push_back(connection.getHandle());
+  }
+}
+
+bool bluedroidFindConnHandle(const BTAddress &peerAddress, uint16_t &connHandle) {
+  std::vector<uint16_t> handles;
+  bluedroidFindConnHandles(peerAddress, handles);
+  if (handles.empty()) {
+    return false;
+  }
+  connHandle = handles.front();
+  return true;
+}
+
+namespace {
+
+void appendUniqueConnection(std::vector<BLEConnInfo> &connections, const BLEConnInfo &info) {
+  if (!info) {
+    return;
+  }
+  for (const auto &existing : connections) {
+    if (existing.getAddress() == info.getAddress()) {
+      return;  // One descriptor per ACL; keep the first (client) entry.
+    }
+  }
+  BLEConnInfo copy = info;
+  BLEConnInfoImpl::clearVolatile(copy);
+  connections.push_back(copy);
+}
+
+}  // namespace
+
+void bluedroidFindConnections(const BTAddress &peerAddress, std::vector<BLEConnInfo> &connections) {
+  connections.clear();
+  if (!peerAddress) {
+    return;
+  }
+
+#if BLE_GATT_CLIENT_SUPPORTED
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (!client || !client->connected.load() || client->peerAddress != peerAddress) {
+      continue;
+    }
+    BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
+    appendUniqueConnection(connections, handle.getConnInfo());
+  }
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  auto *server = BLEServer::Impl::s_instance;
+  if (server) {
+    BLELockGuard lock(server->mtx);
+    for (auto &entry : server->connections) {
+      const BLEConnInfo &info = entry.second;
+      if (info.getAddress() == peerAddress || info.getIdAddress() == peerAddress) {
+        appendUniqueConnection(connections, info);
+      }
+    }
+  }
+#endif
+}
+
+bool bluedroidFindConnInfo(const BTAddress &peerAddress, BLEConnInfo &info) {
+  uint16_t connHandle = 0xFFFF;
+  if (!bluedroidFindConnHandle(peerAddress, connHandle)) {
+    return false;
+  }
+#if BLE_GATT_CLIENT_SUPPORTED
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (client && client->connected.load() && client->connId.load() == connHandle) {
+      BLEClient handle = BLEClientImplCommon::makeHandle(client.get());
+      info = handle.getConnInfo();
+      BLEConnInfoImpl::clearVolatile(info);
+      return static_cast<bool>(info);
+    }
+  }
+#endif
+#if BLE_GATT_SERVER_SUPPORTED
+  auto *server = BLEServer::Impl::s_instance;
+  if (server) {
+    BLELockGuard lock(server->mtx);
+    BLEConnInfo *found = server->connFind(connHandle);
+    if (found) {
+      info = *found;
+      BLEConnInfoImpl::clearVolatile(info);
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
+uint16_t BLEClass::getConnHandle(const BTAddress &peerAddress) const {
+  if (!isInitialized() || isEnding()) {
+    return 0xFFFF;
+  }
+  uint16_t connHandle = 0xFFFF;
+  return bluedroidFindConnHandle(peerAddress, connHandle) ? connHandle : 0xFFFF;
+}
+
+std::vector<uint16_t> BLEClass::getConnHandles(const BTAddress &peerAddress) const {
+  std::vector<uint16_t> handles;
+  if (isInitialized() && !isEnding()) {
+    bluedroidFindConnHandles(peerAddress, handles);
+  }
+  return handles;
+}
+
+std::vector<BLEConnInfo> BLEClass::getConnections(const BTAddress &peerAddress) const {
+  std::vector<BLEConnInfo> connections;
+  if (isInitialized() && !isEnding()) {
+    bluedroidFindConnections(peerAddress, connections);
+  }
+  return connections;
+}
+
+BLEConnInfo BLEClass::getConnInfo(const BTAddress &peerAddress) const {
+  BLEConnInfo info;
+  if (isInitialized() && !isEnding()) {
+    (void)bluedroidFindConnInfo(peerAddress, info);
+  }
+  return info;
+}
 
 #if BLE_SMP_SUPPORTED
 BLESecurity BLEClass::getSecurity() {
@@ -1017,11 +1051,6 @@ BLESecurity BLEClass::getSecurity() {
     slot->applySecurityParams();
   }
   return BLESecurity(slot);
-}
-#else
-BLESecurity BLEClass::getSecurity() {
-  log_w("SMP not supported");
-  return BLESecurity();
 }
 #endif
 

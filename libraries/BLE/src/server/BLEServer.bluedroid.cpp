@@ -22,6 +22,8 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddressUtil.h"
+#include "core/BLEAudioHooks.h"
 #if BLE_BLUEDROID
 
 #if BLE_GATT_SERVER_SUPPORTED
@@ -362,6 +364,38 @@ bool checkAuthorized(BLEServer::Impl *impl, uint16_t connId, uint16_t handle, BL
   return sec->notifyAuthorization(getConnInfoCopy(impl, connId), handle, isRead);
 }
 
+// Registration iterates snapshots, never the live vectors: characteristics are
+// appended under the server mtx and descriptors under each chr->mtx, while
+// native registration calls block waiting for stack events.
+std::vector<std::shared_ptr<BLECharacteristic::Impl>> snapshotCharacteristics(BLEServer::Impl &server, BLEService::Impl &svc) {
+  BLELockGuard lock(server.mtx);
+  return svc.characteristics;
+}
+
+std::vector<std::shared_ptr<BLEDescriptor::Impl>> snapshotDescriptors(BLECharacteristic::Impl &chr) {
+  BLELockGuard lock(chr.mtx);
+  return chr.descriptors;
+}
+
+std::vector<std::shared_ptr<BLEService::Impl>> snapshotIncludedServices(BLEServer::Impl &server, BLEService::Impl &svc) {
+  BLELockGuard lock(server.mtx);
+  return svc.includedServices;
+}
+
+bool serviceHasUnregisteredAttributes(BLEServer::Impl &server, BLEService::Impl &svc) {
+  for (auto &chr : snapshotCharacteristics(server, svc)) {
+    if (chr->handle == 0) {
+      return true;
+    }
+    for (auto &desc : snapshotDescriptors(*chr)) {
+      if (desc->handle == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 // --------------------------------------------------------------------------
@@ -413,41 +447,31 @@ BTStatus BLEServer::start() {
       if (!hasNew) {
         return BTStatus::OK;
       }
+      // Same freeze as NimBLE (which returns InvalidState from its rebuild):
+      // roles that register services must be created before audio.start().
+      // Bluedroid could register natively, but the observable contract is
+      // one table state on both backends. Without the audio engine compiled
+      // in there is nothing to freeze, so the check compiles out.
+#if BLE_AUDIO_SUPPORTED
+      if (bleAudioGattFrozen && bleAudioGattFrozen()) {
+        log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        return BTStatus::InvalidState;
+      }
+#endif
       log_d("Server: registering new service(s)");
     } else {
+      // A first start after audio.start() stages classic services into a
+      // committed table, exactly like the restart path above.
+#if BLE_AUDIO_SUPPORTED
+      if (!impl.services.empty() && bleAudioGattFrozen && bleAudioGattFrozen()) {
+        log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+        return BTStatus::InvalidState;
+      }
+#endif
       log_d("Server: starting with %u service(s)", (unsigned)impl.services.size());
     }
     services = impl.services;
   }
-
-  // Registration iterates snapshots, never the live vectors: characteristics
-  // are appended under the server mtx and descriptors under each chr->mtx,
-  // while the native calls below block waiting for stack events.
-  auto snapChrs = [&impl](BLEService::Impl &svc) {
-    BLELockGuard lock(impl.mtx);
-    return svc.characteristics;
-  };
-  auto snapDescs = [](BLECharacteristic::Impl &chr) {
-    BLELockGuard lock(chr.mtx);
-    return chr.descriptors;
-  };
-  auto snapIncludes = [&impl](BLEService::Impl &svc) {
-    BLELockGuard lock(impl.mtx);
-    return svc.includedServices;
-  };
-  auto svcHasUnregistered = [&snapChrs, &snapDescs](BLEService::Impl &svc) {
-    for (auto &chr : snapChrs(svc)) {
-      if (chr->handle == 0) {
-        return true;
-      }
-      for (auto &desc : snapDescs(*chr)) {
-        if (desc->handle == 0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
 
   // First pass: validate all unstarted services (and unregistered
   // characteristics on started ones), then create the unstarted services so
@@ -459,7 +483,7 @@ BTStatus BLEServer::start() {
       BLELockGuard lock(impl.mtx);
       svcStarted = svc->started;
     }
-    if (svcStarted && !svcHasUnregistered(*svc)) {
+    if (svcStarted && !serviceHasUnregisteredAttributes(impl, *svc)) {
       continue;
     }
     if (!svcStarted && svc->handle != 0) {
@@ -467,13 +491,13 @@ BTStatus BLEServer::start() {
     }
 
     // Auto-create CCCD descriptors before validation and handle counting.
-    for (auto &chr : snapChrs(*svc)) {
+    for (auto &chr : snapshotCharacteristics(impl, *svc)) {
       if (svcStarted && chr->handle != 0) {
         continue;  // Already registered; its CCCD already exists.
       }
       if ((chr->properties & BLEProperty::Notify) || (chr->properties & BLEProperty::Indicate)) {
         bool hasCCCD = false;
-        for (auto &d : snapDescs(*chr)) {
+        for (auto &d : snapshotDescriptors(*chr)) {
           if (d->uuid == BLEUUID(CCCD_UUID16)) {
             hasCCCD = true;
             break;
@@ -502,7 +526,7 @@ BTStatus BLEServer::start() {
           }
         }
       }
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
+      if (!BLEGattInternal::validateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
         log_e("Server: characteristic %s rejected by validation", chr->uuid.toString().c_str());
         return BTStatus::InvalidState;
       }
@@ -515,9 +539,9 @@ BTStatus BLEServer::start() {
     }
 
     // 1 (service) + 1 per include + 2 per char + 1 per descriptor.
-    uint32_t needed = 1 + static_cast<uint32_t>(snapIncludes(*svc).size());
-    for (const auto &chr : snapChrs(*svc)) {
-      needed += 2 + snapDescs(*chr).size();
+    uint32_t needed = 1 + static_cast<uint32_t>(snapshotIncludedServices(impl, *svc).size());
+    for (const auto &chr : snapshotCharacteristics(impl, *svc)) {
+      needed += 2 + snapshotDescriptors(*chr).size();
     }
     if (svc->numHandles < needed) {
       svc->numHandles = needed;
@@ -552,7 +576,7 @@ BTStatus BLEServer::start() {
       BLELockGuard lock(impl.mtx);
       wasStarted = svc->started;
     }
-    if (wasStarted && !svcHasUnregistered(*svc)) {
+    if (wasStarted && !serviceHasUnregisteredAttributes(impl, *svc)) {
       continue;
     }
     if (wasStarted) {
@@ -580,7 +604,8 @@ BTStatus BLEServer::start() {
 
     // 1. Add Included Service declarations (GATT §3.2). Already declared on a
     // service being re-registered after a stop; do not declare them twice.
-    std::vector<std::shared_ptr<BLEService::Impl>> includes = wasStarted ? std::vector<std::shared_ptr<BLEService::Impl>>{} : snapIncludes(*svc);
+    std::vector<std::shared_ptr<BLEService::Impl>> includes =
+      wasStarted ? std::vector<std::shared_ptr<BLEService::Impl>>{} : snapshotIncludedServices(impl, *svc);
     for (auto &inc : includes) {
       if (inc->handle == 0) {
         log_e("Server: included service %s has no handle", inc->uuid.toString().c_str());
@@ -607,7 +632,7 @@ BTStatus BLEServer::start() {
     // stack already has it, e.g. on a service re-registered after a stop).
     bool reregFailed = false;
     BTStatus reregSt = BTStatus::Fail;
-    for (auto &chr : snapChrs(*svc)) {
+    for (auto &chr : snapshotCharacteristics(impl, *svc)) {
       esp_err_t err = ESP_OK;
       BTStatus st = BTStatus::OK;
       if (chr->handle == 0) {
@@ -637,7 +662,7 @@ BTStatus BLEServer::start() {
       }
 
       // 3. Add descriptors for this characteristic (unregistered ones only).
-      for (auto &desc : snapDescs(*chr)) {
+      for (auto &desc : snapshotDescriptors(*chr)) {
         if (desc->handle != 0) {
           continue;
         }
@@ -747,23 +772,7 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   return BTStatus::OK;
 }
 
-// Blocks on connectSync until OPEN_EVT reports the result of esp_ble_gatts_open.
-BTStatus BLEServer::connect(const BTAddress &address) {
-  BLE_CHECK_IMPL(BTStatus::InvalidState);
-  esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
-  impl.connectSync.take();
-  esp_err_t err = esp_ble_gatts_open(impl.gattsIf, bda, true);
-  if (err != ESP_OK) {
-    // Release the sync we just took: no OPEN_EVT will arrive to give() it.
-    impl.connectSync.give(BTStatus::Fail);
-    log_e("Server: esp_ble_gatts_open: %s", esp_err_to_name(err));
-    return BTStatus::Fail;
-  }
-  return impl.connectSync.wait(10000);
-}
-
-BLEIndicationSend bleServerSendIndication(
+BLEServerInternal::IndicationSend BLEServerInternal::sendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
   esp_gatt_if_t gattsIf = ESP_GATT_IF_NONE;
@@ -772,14 +781,14 @@ BLEIndicationSend bleServerSendIndication(
     if (!impl->active || !impl->started || impl->gattsIf == ESP_GATT_IF_NONE || !impl->connFind(connHandle)) {
       status = BLECharacteristic::ERROR_NO_CLIENT;
       code = ESP_ERR_INVALID_STATE;
-      return BLEIndicationSend::Failed;
+      return BLEServerInternal::IndicationSend::Failed;
     }
     gattsIf = impl->gattsIf;
   }
   // Bluedroid copies the payload; the outcome arrives as ESP_GATTS_CONF_EVT.
   esp_err_t err = esp_ble_gatts_send_indicate(gattsIf, connHandle, attrHandle, length, const_cast<uint8_t *>(data), true);
   if (err == ESP_OK) {
-    return BLEIndicationSend::Sent;
+    return BLEServerInternal::IndicationSend::Sent;
   }
   if (err == ESP_FAIL) {
     // The public API returns ESP_FAIL when ATT's L2CAP channel is congested
@@ -788,12 +797,12 @@ BLEIndicationSend bleServerSendIndication(
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = static_cast<uint32_t>(err);
     impl->scheduleBusyRetry();
-    return BLEIndicationSend::Busy;
+    return BLEServerInternal::IndicationSend::Busy;
   }
   log_e("Server: esp_ble_gatts_send_indicate (indicate) conn=%u: %s", connHandle, esp_err_to_name(err));
   status = (err == ESP_ERR_INVALID_STATE) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_INDICATE_FAILURE;
   code = static_cast<uint32_t>(err);
-  return BLEIndicationSend::Failed;
+  return BLEServerInternal::IndicationSend::Failed;
 }
 
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
@@ -823,7 +832,7 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   }
 
   esp_ble_conn_update_params_t connParams = {};
-  addr.toEspBdAddr(connParams.bda);
+  BLEAddressUtil::toNative(addr, connParams.bda);
   connParams.min_int = params.minInterval;
   connParams.max_int = params.maxInterval;
   connParams.latency = params.latency;
@@ -837,8 +846,8 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   return BTStatus::OK;
 }
 
-BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   esp_bd_addr_t bda;
   {
@@ -848,29 +857,21 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
       log_w("Server: setPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddressUtil::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Server: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
   return impl.phySync.wait(2000);
-#else
-  (void)connHandle;
-  (void)txPhy;
-  (void)rxPhy;
-  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
 
 BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) const {
   txPhy = BLEPhy::PHY_1M;
   rxPhy = BLEPhy::PHY_1M;
-#if BLE5_SUPPORTED
   if (!_impl) {
     return BTStatus::InvalidState;
   }
@@ -883,7 +884,7 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
       log_w("Server: getPhy - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddressUtil::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_read_phy(bda);
@@ -898,12 +899,8 @@ BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) co
     rxPhy = impl.pendingRxPhy;
   }
   return st;
-#else
-  (void)connHandle;
-  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 // Bluedroid's set_pkt_data_len takes only tx octets; txTime is accepted for API parity and ignored.
 BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t /*txTime*/) {
@@ -917,7 +914,7 @@ BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t 
       log_w("Server: setDataLen - unknown connHandle %u", connHandle);
       return BTStatus::NotConnected;
     }
-    conn->getAddress().toEspBdAddr(bda);
+    BLEAddressUtil::toNative(conn->getAddress(), bda);
   }
   impl.dataLenSync.take();
   esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);
@@ -988,7 +985,8 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         BLEAdvertising::Impl::s_instance->isAdvertising = false;
       }
 #endif
-      BLEConnInfo connInfo = BLEConnInfoImpl::make(connId, param->connect.remote_bda, 23, false, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+      BLEConnInfo connInfo =
+        BLEConnInfoImpl::make(connId, param->connect.remote_bda, 23, param->connect.link_role == 0, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
       {
         BLELockGuard lock(impl->mtx);
         impl->connSet(connId, connInfo);
@@ -1746,14 +1744,6 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       break;
     }
 
-      // ----- connect() blocking -----
-
-    case ESP_GATTS_OPEN_EVT:
-    {
-      impl->connectSync.give(param->open.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
-      break;
-    }
-
     default: break;
   }
 }
@@ -1867,7 +1857,7 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 }
 
 // --------------------------------------------------------------------------
-// GATTS app registration (used by BLEClass::createServer in BluedroidCore.cpp)
+// GATTS app registration (used by BLEClass::createServer in BLE.bluedroid.cpp)
 // --------------------------------------------------------------------------
 
 bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server) {
@@ -1891,7 +1881,7 @@ bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server) {
 
 // Uses esp_ble_gatts_delete_service and clears local handles, instead of a NimBLE-wide
 // ble_gatts_reset and full re-register of every service.
-BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
   }
@@ -1927,7 +1917,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
         }
       }
     }
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     return BTStatus::OK;
   }
 
@@ -1953,63 +1943,15 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
       }
     }
   }
-  bleDetachLocalService(svc);
+  BLEGattInternal::detachLocalService(svc);
   return BTStatus::OK;
 }
 
-#else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
+#else /* !BLE_GATT_SERVER_SUPPORTED -- backend hook stub */
 
-#include "BLE.h"
 #include "core/BLEBackend.h"
-#include "esp32-hal-log.h"
 
-// Stubs for BLE_GATT_SERVER_SUPPORTED == 0: log; return NotSupported, 0, or empty. getPhy() may not
-// set out-parameters; check return or initialize.
-
-BTStatus BLEServer::start() {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::disconnect(uint16_t, uint8_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::connect(const BTAddress &) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-uint16_t BLEServer::getPeerMTU(uint16_t) const {
-  return 0;
-}
-
-BTStatus BLEServer::updateConnParams(uint16_t, const BLEConnParams &) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setPhy(uint16_t, BLEPhy, BLEPhy) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::getPhy(uint16_t, BLEPhy &, BLEPhy &) const {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEServer::setDataLen(uint16_t, uint16_t, uint16_t) {
-  log_w("GATT server not supported");
-  return BTStatus::NotSupported;
-}
-
-int BLEServer::handleGapEvent(void *) {
-  return 0;
-}
-
-BTStatus bleServerRemoveService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {
   return BTStatus::NotSupported;
 }
 

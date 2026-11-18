@@ -34,6 +34,9 @@
 #include "advertising/BLEAdvScanHelpers.h"
 #include "esp32-hal-log.h"
 #include "esp_timer.h"
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.nimble.h"
+#endif
 
 #include <algorithm>
 #include <new>
@@ -47,18 +50,6 @@
 #include <nimble/nimble_port.h>
 
 namespace {
-
-bool duplicateKeySeen(const BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  return std::any_of(impl.duplicateKeys.begin(), impl.duplicateKeys.end(), [&](const auto &key) {
-    return key.first == address && key.second == sid;
-  });
-}
-
-void markDuplicateKey(BLEScan::Impl &impl, const BTAddress &address, uint8_t sid) {
-  if (!duplicateKeySeen(impl, address, sid)) {
-    impl.duplicateKeys.emplace_back(address, sid);
-  }
-}
 
 /**
  * @brief Invokes the per-result callback with a discovered device, if set.
@@ -94,6 +85,21 @@ void dispatchComplete(BLEScan::Impl *impl) {
 }
 
 #if BLE5_SUPPORTED
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+BTStatus periodicSyncStatus(int rc) {
+  switch (rc) {
+    case 0:                return BTStatus::OK;
+    case BLE_HS_EINVAL:    return BTStatus::InvalidParam;
+    case BLE_HS_ENOTCONN:  return BTStatus::NotConnected;
+    case BLE_HS_ENOMEM:    return BTStatus::NoMemory;
+    case BLE_HS_EDISABLED:
+    case BLE_HS_EALREADY:  return BTStatus::InvalidState;
+    case BLE_HS_EBUSY:     return BTStatus::Busy;
+    default:               return BTStatus::Fail;
+  }
+}
+#endif
+
 /**
  * @brief Invokes the periodic advertising sync callback, if set.
  * @param impl Scan implementation that holds the callback.
@@ -300,6 +306,13 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     return 0;
   }
 
+#if BLE_ISO_SUPPORTED
+  // ISO and GAF share this host event sink. Broadcast roles need extended
+  // discovery, periodic-sync, BIGInfo, and PAST events before the scan facade
+  // consumes them.
+  BLEIsoInternal::forwardHostGapEvent(event);
+#endif
+
   switch (event->type) {
     case BLE_GAP_EVENT_DISC:
     {
@@ -319,7 +332,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           // Legacy PDUs carry no ADI; match the legacy entry (SID 0xFF).
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == 0xFF) {
-              duplicate = impl->filterDuplicates && duplicateKeySeen(*impl, addr, 0xFF)
+              duplicate = impl->filterDuplicates && impl->duplicateKeySeen(addr, 0xFF)
                           && BLEScanImplCommon::sameScanResponsePayload(existing, event->disc.data, event->disc.length_data);
               break;
             }
@@ -327,7 +340,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           if (!duplicate) {
             found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, 0xFF, event->disc.data, event->disc.length_data, event->disc.rssi, merged);
             if (found && impl->filterDuplicates) {
-              markDuplicateKey(*impl, addr, 0xFF);
+              impl->markDuplicateKey(addr, 0xFF);
             }
           } else {
             found = true;
@@ -349,7 +362,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       {
         BLELockGuard lock(impl->mtx);
         if (impl->filterDuplicates) {
-          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          const bool keySeen = impl->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
               duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
@@ -360,7 +373,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         if (!duplicate) {
           dev = impl->results.appendOrReplace(dev);
           if (impl->filterDuplicates) {
-            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+            impl->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
           }
         }
       }
@@ -456,14 +469,14 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == addr && existing.getAdvSID() == d.sid) {
               duplicate =
-                impl->filterDuplicates && duplicateKeySeen(*impl, addr, d.sid) && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
+                impl->filterDuplicates && impl->duplicateKeySeen(addr, d.sid) && BLEScanImplCommon::sameScanResponsePayload(existing, d.data, d.length_data);
               break;
             }
           }
           if (!duplicate) {
             found = BLEScanImplCommon::mergeScanResponse(impl->results, addr, d.sid, d.data, d.length_data, d.rssi, merged);
             if (found && impl->filterDuplicates) {
-              markDuplicateKey(*impl, addr, d.sid);
+              impl->markDuplicateKey(addr, d.sid);
             }
           } else {
             found = true;
@@ -486,7 +499,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       {
         BLELockGuard lock(impl->mtx);
         if (impl->filterDuplicates) {
-          const bool keySeen = duplicateKeySeen(*impl, dev.getAddress(), dev.getAdvSID());
+          const bool keySeen = impl->duplicateKeySeen(dev.getAddress(), dev.getAdvSID());
           for (const auto &existing : impl->results) {
             if (existing.getAddress() == dev.getAddress() && existing.getAdvSID() == dev.getAdvSID()) {
               duplicate = keySeen && BLEScanImplCommon::samePrimaryPayload(existing, dev);
@@ -497,7 +510,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         if (!duplicate) {
           dev = impl->results.appendOrReplace(dev);
           if (impl->filterDuplicates) {
-            markDuplicateKey(*impl, dev.getAddress(), dev.getAdvSID());
+            impl->markDuplicateKey(dev.getAddress(), dev.getAdvSID());
           }
         }
       }
@@ -507,10 +520,15 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       return 0;
     }
 
+#if BLE_PERIODIC_ADV_SUPPORTED
     case BLE_GAP_EVENT_PERIODIC_SYNC:
     {
+      if (event->periodic_sync.status != 0) {
+        log_w("PERIODIC_SYNC failed status=%d", event->periodic_sync.status);
+        return 0;
+      }
       // Track successfully established syncs so BLE.end() can tear them down.
-      if (event->periodic_sync.status == 0) {
+      {
         BLELockGuard lock(impl->mtx);
         impl->periodicSyncs.push_back(event->periodic_sync.sync_handle);
       }
@@ -521,6 +539,29 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       );
       return 0;
     }
+
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+    case BLE_GAP_EVENT_PERIODIC_TRANSFER:
+#ifdef BLE_GAP_EVENT_PERIODIC_TRANSFER_V2
+    case BLE_GAP_EVENT_PERIODIC_TRANSFER_V2:
+#endif
+    {
+      if (event->periodic_transfer.status != 0) {
+        log_w("PERIODIC_TRANSFER failed status=%d", event->periodic_transfer.status);
+        return 0;
+      }
+      {
+        BLELockGuard lock(impl->mtx);
+        impl->periodicSyncs.push_back(event->periodic_transfer.sync_handle);
+      }
+      BTAddress addr(event->periodic_transfer.adv_addr.val, static_cast<BTAddress::Type>(event->periodic_transfer.adv_addr.type));
+      dispatchPeriodicSync(
+        impl, event->periodic_transfer.sync_handle, event->periodic_transfer.sid, addr, static_cast<BLEPhy>(event->periodic_transfer.adv_phy),
+        event->periodic_transfer.per_adv_itvl
+      );
+      return 0;
+    }
+#endif
 
     case BLE_GAP_EVENT_PERIODIC_REPORT:
     {
@@ -542,7 +583,8 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       dispatchPeriodicLost(impl, event->periodic_sync_lost.sync_handle);
       return 0;
     }
-#endif
+#endif /* BLE_PERIODIC_ADV_SUPPORTED */
+#endif /* BLE5_SUPPORTED */
 
     default: return 0;
   }
@@ -573,7 +615,7 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   coded.itvl = impl.hasCodedConfig ? impl.codedInterval : impl.interval;
   coded.window = impl.hasCodedConfig ? impl.codedWindow : impl.window;
 
-  uint16_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  uint16_t durationUnits = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   // Keep controller filtering disabled. Some controllers key legacy duplicates
   // only by address/event type and suppress a same-length payload update. The
   // host callback filters byte-identical primary and scan-response segments so
@@ -610,12 +652,6 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   return BTStatus::OK;
 }
 
-void BLEScan::clearDuplicateCache() {
-  BLE_CHECK_IMPL();
-  BLELockGuard lock(impl.mtx);
-  impl.duplicateKeys.clear();
-}
-
 static BTStatus nimbleStopScanSession(BLEScan::Impl &impl);
 
 BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
@@ -624,7 +660,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   if (!publisher) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
@@ -658,17 +694,6 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
     }
   }
   return BTStatus::OK;
-}
-
-// Blocks until the scan completes or times out; completion is gated by the internal sync object.
-BLEScan::Results BLEScan::startBlocking(uint32_t durationMs) {
-  BLE_CHECK_IMPL(BLEScan::Results());
-  if (start(durationMs, false) != BTStatus::OK) {
-    return BLEScan::Results();
-  }
-  impl.scanSync.wait(durationMs == 0 ? portMAX_DELAY : durationMs + 2000);
-  BLELockGuard lock(impl.mtx);
-  return impl.results;
 }
 
 static BTStatus nimbleStopScanSession(BLEScan::Impl &impl) {
@@ -780,7 +805,7 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   if (!publisher) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
@@ -803,13 +828,13 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
     impl.sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
     impl.hasUncodedConfig = (uncodedConfig != nullptr);
     if (uncodedConfig) {
-      impl.uncodedInterval = bleMsToUnits0625(uncodedConfig->interval);
-      impl.uncodedWindow = bleMsToUnits0625(uncodedConfig->window);
+      impl.uncodedInterval = BLEAdvInternal::msToUnits0625(uncodedConfig->interval);
+      impl.uncodedWindow = BLEAdvInternal::msToUnits0625(uncodedConfig->window);
     }
     impl.hasCodedConfig = (codedConfig != nullptr);
     if (codedConfig) {
-      impl.codedInterval = bleMsToUnits0625(codedConfig->interval);
-      impl.codedWindow = bleMsToUnits0625(codedConfig->window);
+      impl.codedInterval = BLEAdvInternal::msToUnits0625(codedConfig->interval);
+      impl.codedWindow = BLEAdvInternal::msToUnits0625(codedConfig->window);
     }
     const uint32_t generation = ++impl.activeGeneration;
     return nimbleStartScanSession(impl, durationMs, generation);
@@ -820,14 +845,14 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
 #endif
 }
 
-// Delegates to stop() on NimBLE.
-BTStatus BLEScan::stopExtended() {
-  return stop();
-}
-
 BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount, uint16_t timeoutMs) {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  // HCI Advertising_SID is 0..0x0F, Skip is 0..0x01F3, Sync_Timeout is 10-ms
+  // units >= 0x000A (Core Spec Vol 4, Part E, §7.8.67).
+  if (!BLEScanImplCommon::periodicSyncParamsValid(sid, skipCount, timeoutMs)) {
+    return BTStatus::InvalidParam;
+  }
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
@@ -842,38 +867,123 @@ BTStatus BLEScan::createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_
   memcpy(bleAddr.val, addr.data(), 6);
 
   int rc = ble_gap_periodic_adv_sync_create(&bleAddr, sid, &params, BLEScan::Impl::gapEventHandler, &impl.periodicContext);
+  if (rc == BLE_HS_EALREADY) {
+    log_w("Scan: already synced to %s sid=%u", addr.toString().c_str(), sid);
+    return BTStatus::InvalidState;
+  }
+  if (rc == BLE_HS_EBUSY) {
+    log_w("Scan: another periodic sync is still pending");
+    return BTStatus::Busy;
+  }
   if (rc != 0) {
     log_e("ble_gap_periodic_adv_sync_create: rc=%d", rc);
     return BTStatus::Fail;
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: createPeriodicSync not supported (BLE 5.0 unavailable)");
+  (void)addr;
+  (void)sid;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: createPeriodicSync not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
 
-BTStatus BLEScan::cancelPeriodicSync() {
-#if BLE5_SUPPORTED
+BTStatus BLEScan::receivePeriodicSync(uint16_t connHandle, uint16_t skipCount, uint16_t timeoutMs) {
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  // HCI skip is at most 0x01F3; the sync timeout is 10-ms units, so reject
+  // values below one valid unit before converting. uint16_t milliseconds
+  // cannot exceed the HCI upper timeout bound after conversion.
+  if (!BLEScanImplCommon::pastParamsValid(skipCount, timeoutMs)) {
+    return BTStatus::InvalidParam;
+  }
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
+
+  struct ble_gap_periodic_sync_params params = {};
+  params.skip = skipCount;
+  params.sync_timeout = timeoutMs / 10;
+
+  int rc = ble_gap_periodic_adv_sync_receive(connHandle, &params, BLEScan::Impl::gapEventHandler, &impl.periodicContext);
+  BTStatus status = periodicSyncStatus(rc);
+  if (status == BTStatus::InvalidState && rc == BLE_HS_EALREADY) {
+    log_w("Scan: PAST receive already enabled on conn %u; cancel it before changing parameters", (unsigned)connHandle);
+  }
+  if (!status) {
+    log_e("Scan: periodic sync receive conn=%u rc=%d", (unsigned)connHandle, rc);
+  }
+  return status;
+#else
+  (void)connHandle;
+  (void)skipCount;
+  (void)timeoutMs;
+  log_w("Scan: receivePeriodicSync not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::receivePeriodicSync(const BLEConnInfo &peer, uint16_t skipCount, uint16_t timeoutMs) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return receivePeriodicSync(peer.getHandle(), skipCount, timeoutMs);
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(uint16_t connHandle) {
+#if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLEAdmissionGuard publisher(impl.nativeAdmission);
+  if (!publisher) {
+    return BTStatus::InvalidState;
+  }
+  int rc = ble_gap_periodic_adv_sync_receive(connHandle, nullptr, nullptr, nullptr);
+  if (rc == BLE_HS_EALREADY) {
+    return BTStatus::OK;
+  }
+  BTStatus status = periodicSyncStatus(rc);
+  if (!status) {
+    log_e("Scan: cancel periodic sync receive conn=%u rc=%d", (unsigned)connHandle, rc);
+  }
+  return status;
+#else
+  (void)connHandle;
+  log_w("Scan: stopPeriodicSyncReceive not supported (PAST unavailable)");
+  return BTStatus::NotSupported;
+#endif
+}
+
+BTStatus BLEScan::stopPeriodicSyncReceive(const BLEConnInfo &peer) {
+  if (!(bool)peer) {
+    return BTStatus::NotConnected;
+  }
+  return stopPeriodicSyncReceive(peer.getHandle());
+}
+
+BTStatus BLEScan::cancelPeriodicSyncCreate() {
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
     return BTStatus::InvalidState;
   }
   int rc = ble_gap_periodic_adv_sync_create_cancel();
-  if (rc != 0) {
-    log_e("Scan: cancelPeriodicSync failed rc=%d", rc);
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    log_e("Scan: cancelPeriodicSyncCreate failed rc=%d", rc);
     return BTStatus::Fail;
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: cancelPeriodicSync not supported (BLE 5.0 unavailable)");
+  log_w("Scan: cancelPeriodicSyncCreate not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
 
 BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAdmissionGuard publisher(impl.nativeAdmission);
   if (!publisher) {
@@ -891,7 +1001,8 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
   }
   return BTStatus::OK;
 #else
-  log_w("Scan: terminatePeriodicSync not supported (BLE 5.0 unavailable)");
+  (void)syncHandle;
+  log_w("Scan: terminatePeriodicSync not supported (periodic adv unavailable)");
   return BTStatus::NotSupported;
 #endif
 }
@@ -900,7 +1011,7 @@ BTStatus BLEScan::terminatePeriodicSync(uint16_t syncHandle) {
 // NimBLE host is still enabled, so terminating here avoids the benign
 // BLE_HS_EDISABLED race that occurs if a sync is left active across host stop.
 void BLEScan::terminateAllPeriodicSyncs() {
-#if BLE5_SUPPORTED
+#if BLE_PERIODIC_ADV_SUPPORTED
   if (!_impl) {
     return;
   }
@@ -948,12 +1059,6 @@ void BLEScan::resetBackendEvents() {
   }
 }
 
-void BLEScan::prepareBackendStart() {
-  if (_impl) {
-    _impl->nativeAdmission.reopen();
-  }
-}
-
 void BLEScan::beginBackendShutdown() {
   if (!_impl) {
     return;
@@ -972,62 +1077,6 @@ void BLEScan::beginBackendShutdown() {
     _impl->scanSync.give(stopStatus);
   }
 }
-
-#else /* !BLE_SCANNING_SUPPORTED -- stubs */
-
-// Stubs for BLE_SCANNING_SUPPORTED == 0: log; start* return NotSupported or empty results/scan.
-
-void BLEScan::clearDuplicateCache() {
-  log_w("Scanning not supported");
-}
-
-BTStatus BLEScan::start(uint32_t, bool) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BLEScan::Results BLEScan::startBlocking(uint32_t) {
-  log_w("Scanning not supported");
-  return BLEScan::Results();
-}
-
-BTStatus BLEScan::stop() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::startExtended(uint32_t, const ExtScanConfig *, const ExtScanConfig *) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::stopExtended() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::createPeriodicSync(const BTAddress &, uint8_t, uint16_t, uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::cancelPeriodicSync() {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEScan::terminatePeriodicSync(uint16_t) {
-  log_w("Scanning not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEScan::terminateAllPeriodicSyncs() {}
-
-void BLEScan::resetBackendEvents() {}
-
-void BLEScan::prepareBackendStart() {}
-
-void BLEScan::beginBackendShutdown() {}
 
 #endif /* BLE_SCANNING_SUPPORTED */
 

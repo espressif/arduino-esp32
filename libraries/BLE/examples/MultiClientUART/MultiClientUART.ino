@@ -12,6 +12,8 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// One sketch owns the Nordic UART Service at a time: a second begun
+// BLEStream (or a manually registered NUS) makes begin() return Busy.
 BLEStream bleSerial;
 
 void setup() {
@@ -49,7 +51,7 @@ void setup() {
   Serial.println();
   Serial.println("Multi-client NUS server ready.");
   Serial.printf("Device: %s\n", BLE.getDeviceName().c_str());
-  Serial.println("Connect multiple centrals; each line is echoed to its sender only.");
+  Serial.println("Connect multiple centrals. Each line is echoed to its sender only.");
   Serial.println("A heartbeat is broadcast to all peers every 10 seconds.");
   Serial.println();
 }

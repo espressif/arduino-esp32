@@ -45,6 +45,10 @@
  *   BLE5_ADV_TX_SUPPORTED      – ext-adv TX actually implemented (backend has it)
  *   BLE_PERIODIC_ADV_TX_SUPPORTED – periodic-adv TX actually implemented
  *   BLE_L2CAP_SUPPORTED        – L2CAP CoC channels (NimBLE + config)
+ *   BLE_ISO_SUPPORTED          – Isochronous transport (CIS/BIG) host support
+ *   BLE_ISO_*_SUPPORTED        – per-role ISO guards (CIS central/peripheral, BIG broadcaster/receiver)
+ *   BLE_AUDIO_SUPPORTED        – LE Audio engine (GAF profiles) is compiled in
+ *   BLE_AUDIO_*_SUPPORTED      – per-role LE Audio guards (BAP/CAP/CSIP/VCP/…)
  */
 
 /* ── Stack selection ────────────────────────────────────────────────── */
@@ -75,6 +79,53 @@
 #endif
 
 /* ── Feature guards ─────────────────────────────────────────────────── */
+
+/* Local BLE controller present (false on ESP-Hosted targets such as ESP32-P4). */
+#if defined(SOC_BLE_SUPPORTED)
+#define BLE_LOCAL_CONTROLLER_SUPPORTED 1
+#else
+#define BLE_LOCAL_CONTROLLER_SUPPORTED 0
+#endif
+
+/* Local BT controller driver enabled in Kconfig. */
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+#define BLE_CONTROLLER_ENABLED 1
+#else
+#define BLE_CONTROLLER_ENABLED 0
+#endif
+
+/* NimBLE running over the ESP-Hosted co-processor transport. */
+#if BLE_NIMBLE && defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#define BLE_HOSTED_NIMBLE 1
+#else
+#define BLE_HOSTED_NIMBLE 0
+#endif
+
+/* Maximum concurrent BLE links configured in the stack. */
+#if defined(CONFIG_BT_MAX_CONN)
+#define BLE_MAX_CONN CONFIG_BT_MAX_CONN
+#elif BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_MAX_CONNECTIONS)
+#define BLE_MAX_CONN CONFIG_BT_NIMBLE_MAX_CONNECTIONS
+#elif BLE_BLUEDROID && defined(CONFIG_BT_ACL_CONNECTIONS)
+#define BLE_MAX_CONN CONFIG_BT_ACL_CONNECTIONS
+#else
+#define BLE_MAX_CONN 4
+#endif
+
+/* Core to which the active BT host task is pinned (-1 when unpinned). */
+#if defined(CONFIG_FREERTOS_UNICORE) && CONFIG_FREERTOS_UNICORE
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE            0
+#elif BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PINNED_TO_CORE)
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE            CONFIG_BT_NIMBLE_PINNED_TO_CORE
+#elif BLE_BLUEDROID && defined(CONFIG_BT_BLUEDROID_PINNED_TO_CORE)
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 1
+#define BLE_HOST_PINNED_CORE            CONFIG_BT_BLUEDROID_PINNED_TO_CORE
+#else
+#define BLE_HOST_PINNED_TO_CORE_DEFINED 0
+#define BLE_HOST_PINNED_CORE            (-1)
+#endif
 
 /*
  * GATT Server (GATTS).
@@ -151,6 +202,40 @@
 #define BLE_PERIODIC_ADV_SUPPORTED 0
 #endif
 
+/* Enhanced periodic advertising API variants (ADI / extra start/data params). */
+#if BLE_PERIODIC_ADV_SUPPORTED \
+  && ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_ENH)))
+#define BLE_PERIODIC_ADV_ENH_SUPPORTED 1
+#else
+#define BLE_PERIODIC_ADV_ENH_SUPPORTED 0
+#endif
+
+/* Total extended-advertising controller instances (user sets + reserved legacy set). */
+#if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
+#define BLE_MAX_EXT_ADV_INSTANCES (CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1)
+#else
+#define BLE_MAX_EXT_ADV_INSTANCES 2
+#endif
+
+/*
+ * Periodic Advertising Sync Transfer (PAST) receiver support.
+ *
+ * PAST is a Bluetooth 5.1 feature, but the host config symbol alone only says
+ * the host code was compiled in; the controller must also implement the 5.1
+ * HCI commands. BLE 5.0-only controllers (ESP32-S3/C3) still expose the host
+ * config, so require a controller capability as well. Current controllers with
+ * the later periodic-advertising feature set (SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED)
+ * are exactly the ones that implement PAST; 5.0 silicon does not. Hosted NimBLE
+ * has no local controller caps: all supported hosted companions implement PAST,
+ * so assume it is available there.
+ */
+#if BLE_PERIODIC_ADV_SUPPORTED && (defined(SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)) \
+  && ((BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_SYNC_TRANSFER)) || (BLE_BLUEDROID && defined(CONFIG_BT_BLE_FEAT_PERIODIC_ADV_SYNC_TRANSFER)))
+#define BLE_PAST_SUPPORTED 1
+#else
+#define BLE_PAST_SUPPORTED 0
+#endif
+
 /*
  * BLE 5.0 extended advertising *TX* is actually implemented in this build.
  * Distinct from BLE5_SUPPORTED (controller/stack capability): both backends
@@ -178,9 +263,11 @@
 
 /* L2CAP Connection-Oriented Channels (CoC) — NimBLE only, requires config */
 #if BLE_NIMBLE && defined(CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM) && (CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0)
-#define BLE_L2CAP_SUPPORTED 1
+#define BLE_L2CAP_SUPPORTED   1
+#define BLE_L2CAP_COC_MAX_NUM CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
 #else
-#define BLE_L2CAP_SUPPORTED 0
+#define BLE_L2CAP_SUPPORTED   0
+#define BLE_L2CAP_COC_MAX_NUM 0
 #endif
 
 /*
@@ -192,4 +279,264 @@
 #define BLE_VALIDATION_HOOKS 1
 #else
 #define BLE_VALIDATION_HOOKS 0
+#endif
+
+/* ── LE Audio / Isochronous feature guards ──────────────────────────── */
+
+/*
+ * The LE Audio and Isochronous features are provided by the host-agnostic
+ * esp_ble_iso / esp_ble_audio components (IDF abstracts NimBLE vs Bluedroid
+ * *inside* the engine). These guards therefore key on the engine's own
+ * Kconfig symbols rather than on stack-specific ones. Both are hidden symbols
+ * selected by the concrete role options below (BAP/CAP/…), so they are only
+ * defined when at least one audio/ISO role is compiled in.
+ *
+ * BLE_ISO_SUPPORTED   – host ISO transport (CIS/BIG) is compiled in
+ * BLE_AUDIO_SUPPORTED  – the LE Audio engine (GAF profiles) is compiled in
+ */
+
+/* Isochronous channels: host support (CONFIG_BT_ISO) on a BLE-capable build. */
+#if BLE_ENABLED && defined(CONFIG_BT_ISO)
+#define BLE_ISO_SUPPORTED 1
+#else
+#define BLE_ISO_SUPPORTED 0
+#endif
+
+/* Concurrent ISO channels supported by the host pool. */
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_MAX_CHAN)
+#define BLE_ISO_MAX_CHAN CONFIG_BT_ISO_MAX_CHAN
+#else
+#define BLE_ISO_MAX_CHAN 1
+#endif
+
+/*
+ * Per-role ISO guards. Each maps 1:1 to the esp_ble_iso role Kconfig, which
+ * decides whether the matching esp_ble_iso_* entry points are compiled at all
+ * (CIG create/CIS connect, ISO server, BIG create, BIG sync). The LE Audio
+ * roles select them, so an audio build only carries the ISO roles it needs.
+ */
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_CENTRAL)
+#define BLE_ISO_CIS_CENTRAL_SUPPORTED 1
+#else
+#define BLE_ISO_CIS_CENTRAL_SUPPORTED 0
+#endif
+
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_PERIPHERAL)
+#define BLE_ISO_CIS_PERIPHERAL_SUPPORTED 1
+#else
+#define BLE_ISO_CIS_PERIPHERAL_SUPPORTED 0
+#endif
+
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_BROADCASTER)
+#define BLE_ISO_BROADCASTER_SUPPORTED 1
+#else
+#define BLE_ISO_BROADCASTER_SUPPORTED 0
+#endif
+
+#if BLE_ISO_SUPPORTED && defined(CONFIG_BT_ISO_SYNC_RECEIVER)
+#define BLE_ISO_SYNC_RECEIVER_SUPPORTED 1
+#else
+#define BLE_ISO_SYNC_RECEIVER_SUPPORTED 0
+#endif
+
+/* LE Audio engine (GAF): PACS/ASCS/BAP/CAP/… present. Always implies ISO. */
+#if BLE_ENABLED && defined(CONFIG_BT_AUDIO) && BLE_ISO_SUPPORTED
+#define BLE_AUDIO_SUPPORTED 1
+#else
+#define BLE_AUDIO_SUPPORTED 0
+#endif
+
+/*
+ * Per-role LE Audio guards. Each maps 1:1 to the engine role Kconfig so a
+ * role handle / factory / example self-excludes when its role is not built.
+ * They are only ever 1 when BLE_AUDIO_SUPPORTED is 1. Written as explicit
+ * conditional blocks (not `defined()` inside a macro body, which is UB when
+ * the macro is later used in an `#if`).
+ */
+
+/* Basic Audio Profile (BAP) */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_UNICAST_SERVER)
+#define BLE_AUDIO_UNICAST_SERVER_SUPPORTED 1
+#else
+#define BLE_AUDIO_UNICAST_SERVER_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_UNICAST_CLIENT)
+#define BLE_AUDIO_UNICAST_CLIENT_SUPPORTED 1
+#else
+#define BLE_AUDIO_UNICAST_CLIENT_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_BROADCAST_SOURCE)
+#define BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED 1
+#else
+#define BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_BROADCAST_SINK)
+#define BLE_AUDIO_BROADCAST_SINK_SUPPORTED 1
+#else
+#define BLE_AUDIO_BROADCAST_SINK_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_SCAN_DELEGATOR)
+#define BLE_AUDIO_SCAN_DELEGATOR_SUPPORTED 1
+#else
+#define BLE_AUDIO_SCAN_DELEGATOR_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_BAP_BROADCAST_ASSISTANT)
+#define BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED 1
+#else
+#define BLE_AUDIO_BROADCAST_ASSISTANT_SUPPORTED 0
+#endif
+
+/* Common Audio Profile (CAP) */
+// The CAP acceptor registration entry point (esp_ble_audio_cap_acceptor_register,
+// which instantiates CAS + an included CSIS) is compiled only when the acceptor
+// is also a coordinated-set member, i.e. CONFIG_BT_CAP_ACCEPTOR_SET_MEMBER.
+// Guard on that symbol so the acceptor role only exists when it can link.
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CAP_ACCEPTOR_SET_MEMBER)
+#define BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED 1
+#else
+#define BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CAP_INITIATOR)
+#define BLE_AUDIO_CAP_INITIATOR_SUPPORTED 1
+#else
+#define BLE_AUDIO_CAP_INITIATOR_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CAP_COMMANDER)
+#define BLE_AUDIO_CAP_COMMANDER_SUPPORTED 1
+#else
+#define BLE_AUDIO_CAP_COMMANDER_SUPPORTED 0
+#endif
+
+// Unicast <-> broadcast handover. Kconfig makes it depend on the commander,
+// initiator, broadcast assistant, broadcast source and a unicast client sink ASE.
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CAP_HANDOVER)
+#define BLE_AUDIO_CAP_HANDOVER_SUPPORTED 1
+#else
+#define BLE_AUDIO_CAP_HANDOVER_SUPPORTED 0
+#endif
+
+/* Coordinated Set Identification Profile (CSIP) */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CSIP_SET_MEMBER)
+#define BLE_AUDIO_CSIP_MEMBER_SUPPORTED 1
+#else
+#define BLE_AUDIO_CSIP_MEMBER_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CSIP_SET_COORDINATOR)
+#define BLE_AUDIO_CSIP_COORDINATOR_SUPPORTED 1
+#else
+#define BLE_AUDIO_CSIP_COORDINATOR_SUPPORTED 0
+#endif
+
+/* Volume Control Profile (VCP) */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_VCP_VOL_REND)
+#define BLE_AUDIO_VCP_RENDERER_SUPPORTED 1
+#else
+#define BLE_AUDIO_VCP_RENDERER_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_VCP_VOL_CTLR)
+#define BLE_AUDIO_VCP_CONTROLLER_SUPPORTED 1
+#else
+#define BLE_AUDIO_VCP_CONTROLLER_SUPPORTED 0
+#endif
+
+/* Microphone Control Profile (MICP) */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MICP_MIC_DEV)
+#define BLE_AUDIO_MICP_DEVICE_SUPPORTED 1
+#else
+#define BLE_AUDIO_MICP_DEVICE_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MICP_MIC_CTLR)
+#define BLE_AUDIO_MICP_CONTROLLER_SUPPORTED 1
+#else
+#define BLE_AUDIO_MICP_CONTROLLER_SUPPORTED 0
+#endif
+
+/* Media Control Profile (MCP) */
+/* The engine's server surface (media_proxy_pl_*) is only linkable with
+ * CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL: gate on it too, otherwise
+ * createMediaPlayer() would attach a role whose start() always fails. */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MCS) && defined(CONFIG_BT_MCTL_LOCAL_PLAYER_CONTROL)
+#define BLE_AUDIO_MCP_SERVER_SUPPORTED 1
+#else
+#define BLE_AUDIO_MCP_SERVER_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_MCC)
+#define BLE_AUDIO_MCP_CLIENT_SUPPORTED 1
+#else
+#define BLE_AUDIO_MCP_CLIENT_SUPPORTED 0
+#endif
+
+/* Call Control Profile (CCP) */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CCP_CALL_CONTROL_SERVER)
+#define BLE_AUDIO_CCP_SERVER_SUPPORTED 1
+#else
+#define BLE_AUDIO_CCP_SERVER_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_CCP_CALL_CONTROL_CLIENT)
+#define BLE_AUDIO_CCP_CLIENT_SUPPORTED 1
+#else
+#define BLE_AUDIO_CCP_CLIENT_SUPPORTED 0
+#endif
+
+/* Top-level profiles */
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_TMAP)
+#define BLE_AUDIO_TMAP_SUPPORTED 1
+#else
+#define BLE_AUDIO_TMAP_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_GMAP)
+#define BLE_AUDIO_GMAP_SUPPORTED 1
+#else
+#define BLE_AUDIO_GMAP_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_PBP)
+#define BLE_AUDIO_PBP_SUPPORTED 1
+#else
+#define BLE_AUDIO_PBP_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_HAS)
+#define BLE_AUDIO_HAS_SUPPORTED 1
+#else
+#define BLE_AUDIO_HAS_SUPPORTED 0
+#endif
+
+#if BLE_AUDIO_SUPPORTED && defined(CONFIG_BT_HAS_CLIENT)
+#define BLE_AUDIO_HAS_CLIENT_SUPPORTED 1
+#else
+#define BLE_AUDIO_HAS_CLIENT_SUPPORTED 0
+#endif
+
+/*
+ * Turnkey LC3 data plane (BLEAudioPlayer / BLEAudioRecorder / BLEAudioPipeline).
+ *
+ * The LC3 encoder/decoder lives in the managed `espressif/esp_audio_codec`
+ * component, which is only pulled into the LE-Audio-capable targets by the
+ * lib-builder. Detect it by header presence so the whole audio component still
+ * compiles on builds where the codec is absent (the player/recorder headers
+ * then compile to nothing). Requires the LE Audio engine (for the
+ * BLEAudioStream it binds to).
+ */
+#if BLE_AUDIO_SUPPORTED && defined(__has_include)
+#if __has_include(<esp_lc3_dec.h>) && __has_include(<esp_lc3_enc.h>)
+#define BLE_AUDIO_LC3_SUPPORTED 1
+#else
+#define BLE_AUDIO_LC3_SUPPORTED 0
+#endif
+#else
+#define BLE_AUDIO_LC3_SUPPORTED 0
 #endif

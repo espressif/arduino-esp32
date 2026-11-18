@@ -129,35 +129,28 @@
 
 /** @} */
 
-/* BLE Appearance values — HID category (Bluetooth Assigned Numbers §2.6) */
-#define BLE_APPEARANCE_HID_GENERIC         0x03C0
-#define BLE_APPEARANCE_HID_KEYBOARD        0x03C1
-#define BLE_APPEARANCE_HID_MOUSE           0x03C2
-#define BLE_APPEARANCE_HID_JOYSTICK        0x03C3
-#define BLE_APPEARANCE_HID_GAMEPAD         0x03C4
-#define BLE_APPEARANCE_HID_DIGITIZER       0x03C5
-#define BLE_APPEARANCE_HID_CARD_READER     0x03C6
-#define BLE_APPEARANCE_HID_DIGITAL_PEN     0x03C7
-#define BLE_APPEARANCE_HID_BARCODE_SCANNER 0x03C8
+/* HID appearance values live in advertising/BLEAppearance.h. */
 
-/* HID Report */
-/* Where report IDs are used the first byte of 'data' will be the */
-/* report ID and 'length' will include this report ID byte. */
+/* HID Report
+ * Over GATT the Report ID is not serialized with the report payload: hosts
+ * learn it from the Report Reference descriptor (0x2908) of the report
+ * characteristic. Do not prepend the Report ID to the bytes passed to
+ * BLECharacteristic::setValue()/notify(). */
 
 /**
- * @brief Max bytes in one HID report buffer (including Report ID if used).
+ * @brief Max bytes in one HID report payload (excluding the Report ID).
  */
 #define MAX_HID_REPORT_SIZE (64)
 
 /**
  * @brief Fixed-size buffer for a single HID report.
  *
- * When Report IDs are in use, the first byte of @c data is the report ID
- * and @c length includes that byte.
+ * @c data holds only the report payload; the Report ID is conveyed by the
+ * Report Reference descriptor and must not be prepended to @c data.
  */
 typedef struct {
   uint32_t length;                    ///< Number of valid bytes in @c data.
-  uint8_t data[MAX_HID_REPORT_SIZE];  ///< Report payload (including report ID if used).
+  uint8_t data[MAX_HID_REPORT_SIZE];  ///< Report payload (excluding the Report ID).
 } HID_REPORT;
 
 #endif

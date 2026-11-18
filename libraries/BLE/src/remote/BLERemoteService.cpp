@@ -22,6 +22,7 @@
 
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
+#include "esp32-hal-log.h"
 
 BLERemoteServiceImplCommon::~BLERemoteServiceImplCommon() {
   BLELockGuard lock(cacheMtx ? cacheMtx->get() : nullptr);
@@ -73,5 +74,23 @@ String BLERemoteService::toString() const {
   BLE_CHECK_IMPL("BLERemoteService(empty)");
   return "BLERemoteService(uuid=" + impl.uuid.toString() + ")";
 }
+
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &) const {
+  log_w("GATT client not supported");
+  return BLERemoteCharacteristic();
+}
+
+std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() const {
+  log_w("GATT client not supported");
+  return {};
+}
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
 
 #endif /* BLE_ENABLED */

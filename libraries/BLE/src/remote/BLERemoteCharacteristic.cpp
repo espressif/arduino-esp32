@@ -123,7 +123,7 @@ uint8_t BLERemoteCharacteristic::readUInt8(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
+  return static_cast<uint8_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
 uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
@@ -132,7 +132,7 @@ uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
+  return static_cast<uint16_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
 uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
@@ -141,7 +141,7 @@ uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
+  return BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
 float BLERemoteCharacteristic::readFloat(uint32_t timeoutMs) {
@@ -185,5 +185,43 @@ String BLERemoteCharacteristic::toString() const {
   BLE_CHECK_IMPL("BLERemoteCharacteristic(empty)");
   return "BLERemoteCharacteristic(uuid=" + impl.uuid.toString() + ")";
 }
+
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+bool BLERemoteCharacteristic::readInto(uint32_t) {
+  log_w("GATT client not supported");
+  return false;
+}
+
+BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLERemoteCharacteristic::subscribe(BLESubscription, NotifyCallback) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLERemoteCharacteristic::unsubscribe() {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &) const {
+  log_w("GATT client not supported");
+  return BLERemoteDescriptor();
+}
+
+std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const {
+  log_w("GATT client not supported");
+  return {};
+}
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
 
 #endif /* BLE_ENABLED */

@@ -71,4 +71,14 @@ BLEConnInfo BLEConnInfoImpl::fromDesc(const struct ble_gap_conn_desc &desc) {
   return info;
 }
 
+void BLEConnInfoImpl::clearVolatile(BLEConnInfo &info) {
+  if (!info) {
+    return;
+  }
+  auto *d = info.data();
+  d->txPhy = 1;
+  d->rxPhy = 1;
+  d->rssi = 0;
+}
+
 #endif /* BLE_NIMBLE */

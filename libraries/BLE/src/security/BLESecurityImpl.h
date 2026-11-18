@@ -55,11 +55,19 @@ struct BLESecurityImplCommon {
   // setAuthenticationMode, ...) while the host task reads them during pairing.
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
+  /// True once the sketch configured the association model itself. The LE Audio
+  /// engine applies its own Just Works defaults only while this is false.
+  bool configuredByApp = false;
+
   BLEIOCapability ioCap = BLEIOCapability::NoInputNoOutput;
+  bool bonding = true;
   bool mitm = false;
+  bool secureConnection = true;
   bool forceAuth = false;
   bool regenOnConnect = false;
   uint8_t keySize = 16;
+  BLESecurity::KeyDist initiatorKeys = BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey;
+  BLESecurity::KeyDist responderKeys = BLESecurity::KeyDist::EncKey | BLESecurity::KeyDist::IdKey;
 
   // Passkey Entry configuration (shared; the name `staticPassKey`/`passKeySet` was
   // stack-inconsistent before). `passKey` is the 6-digit value; `passKeyIsStatic`

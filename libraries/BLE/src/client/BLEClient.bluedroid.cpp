@@ -16,6 +16,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddressUtil.h"
 #if BLE_BLUEDROID
 
 #if BLE_GATT_CLIENT_SUPPORTED
@@ -105,6 +106,49 @@ std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::snapshotClients()
   return clients;
 }
 
+bool BLEClientInternal::connLive(uint16_t connId) {
+  if (connId == 0xFFFF) {
+    return false;
+  }
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (client->connId.load() == connId) {
+      /* ACL is latched on CONNECT_EVT before OPEN_EVT sets connected; accept
+       * either so a link coming up is not refused in the window. Disconnect
+       * clears both, so a dead link still fails. */
+      if (client->connected.load() || client->aclHandle.load() != 0xFFFF) {
+        return true;
+      }
+      return false;
+    }
+  }
+  /* Not one of ours: likely already an ACL handle (see aclHandle
+   * fallback). Accept optimistically like NimBLE's host-live check and let
+   * the stack reject it if invalid, instead of refusing a valid raw ACL. */
+  return true;
+}
+
+uint16_t BLEClientInternal::aclHandle(uint16_t connId) {
+  if (connId == 0xFFFF) {
+    return 0xFFFF; /* No link: never resolve a dead or never-connected client. */
+  }
+  for (auto &client : BLEClient::Impl::snapshotClients()) {
+    if (client->connId.load() == connId) {
+      // Skip links that are going down: their ACL handle may already belong to
+      // nobody (or, after a controller recycle, to a different peer). Accept
+      // the CONNECT->OPEN window where the ACL is latched but OPEN hasn't set
+      // connected yet; disconnect clears both so dead links still miss.
+      if (client->connected.load() || client->aclHandle.load() != 0xFFFF) {
+        uint16_t h = client->aclHandle.load();
+        if (h != 0xFFFF) {
+          return h;
+        }
+      }
+      return connId;
+    }
+  }
+  return connId; /* Not one of ours (already an ACL handle). */
+}
+
 void BLEClient::Impl::removeClient(Impl *client) {
   BLELockGuard lock(s_clientsMtx);
   for (auto it = s_clients.begin(); it != s_clients.end();) {
@@ -166,7 +210,7 @@ static uint16_t allocateAppId() {
 }
 
 // --------------------------------------------------------------------------
-// GATTC app registration (used by BLEClass::createClient in BluedroidCore.cpp)
+// GATTC app registration (used by BLEClass::createClient in BLE.bluedroid.cpp)
 // --------------------------------------------------------------------------
 
 // Registration is asynchronous: blocks up to 5 s for REG_EVT via a sync object, and removes the
@@ -238,7 +282,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
 #endif
 
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(address, bda);
 
 #if BLE5_SUPPORTED
   {
@@ -251,7 +295,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     connParams.supervision_timeout = 0x1F4;
     connParams.min_ce_len = 0;
     connParams.max_ce_len = 0;
-    esp_ble_gap_phy_mask_t phyMask = blePhyToPrefMask(phy);
+    esp_ble_gap_phy_mask_t phyMask = bluedroidPhyToPrefMask(phy);
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
@@ -279,11 +323,23 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
   conn.own_addr_type = static_cast<esp_ble_addr_type_t>(GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT);
   conn.phy_mask = 0;
 
+  // Prepare autoDiscSync BEFORE enh_open: when BTA has no cached GATT database
+  // for this peer, bta_gattc_conn() starts an on-air BTA auto-discovery BEFORE
+  // delivering ESP_GATTC_OPEN_EVT. If connect() sent esp_ble_gattc_send_mtu_req
+  // while another GATTC app (e.g. the LE Audio engine) still had an ATT procedure
+  // in flight on the shared ACL, or before BTA's auto-discovery finished, GATT
+  // would log `GATTC_ConfigureMTU GATT_BUSY`. Waiting for ESP_GATTC_DIS_SRVC_CMPL_EVT
+  // when OPEN_EVT arrives with default MTU 23 (uncached) serializes the MTU
+  // exchange cleanly after BTA's initial discovery without slowing cached reconnects.
+  impl.autoDiscDone.store(false, std::memory_order_release);
+  impl.autoDiscSync.take();
   impl.connectSync.take();
   esp_err_t err = esp_ble_gattc_enh_open(impl.gattcIf, &conn);
 
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_enh_open: %s", esp_err_to_name(err));
+    impl.autoDiscDone.store(true, std::memory_order_release);
+    impl.autoDiscSync.give(BTStatus::Fail);
     impl.connectSync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
@@ -294,6 +350,10 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     // Cancel pending connection
     esp_ble_gap_disconnect(bda);
     return st;
+  }
+
+  if (!impl.autoDiscDone.load(std::memory_order_acquire)) {
+    (void)impl.autoDiscSync.wait(2000);
   }
 
   // Initial ATT MTU exchange, performed synchronously from the caller's thread
@@ -307,7 +367,11 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
   // (DESIGN.md ordering contract).
   if (impl.connected) {
     impl.mtuSync.take();
-    if (esp_ble_gattc_send_mtu_req(impl.gattcIf, impl.connId) == ESP_OK) {
+    bool forceMtuFailure = false;
+#if BLE_VALIDATION_HOOKS
+    forceMtuFailure = BLEHooks.client.injectMtuSendFailure.load(std::memory_order_relaxed);
+#endif
+    if (!forceMtuFailure && esp_ble_gattc_send_mtu_req(impl.gattcIf, impl.connId) == ESP_OK) {
       impl.mtuSync.wait(2000);
     } else {
       impl.mtuSync.give(BTStatus::Fail);
@@ -342,7 +406,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
   impl.cachedRxPhy = 1;
 #endif
   esp_bd_addr_t bda;
-  address.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(address, bda);
 
 #if BLE5_SUPPORTED
   {
@@ -353,7 +417,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
     connParams.interval_max = 0x28;
     connParams.latency = 0;
     connParams.supervision_timeout = 0x1F4;
-    esp_ble_gap_phy_mask_t phyMask = blePhyToPrefMask(phy);
+    esp_ble_gap_phy_mask_t phyMask = bluedroidPhyToPrefMask(phy);
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
@@ -378,8 +442,14 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
   conn.own_addr_type = static_cast<esp_ble_addr_type_t>(GATTC_OWN_ADDR_TYPE_LOCAL_DEFAULT);
   conn.phy_mask = 0;
 
+  // Same BTA auto-discovery gate as connect(): arm the sync before enh_open
+  // so an uncached peer's DIS_SRVC_CMPL_EVT is not missed.
+  impl.autoDiscDone.store(false, std::memory_order_release);
+  impl.autoDiscSync.take();
   esp_err_t err = esp_ble_gattc_enh_open(impl.gattcIf, &conn);
   if (err != ESP_OK) {
+    impl.autoDiscDone.store(true, std::memory_order_release);
+    impl.autoDiscSync.give(BTStatus::Fail);
     log_e("Client: esp_ble_gattc_enh_open: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
@@ -399,7 +469,7 @@ BTStatus BLEClient::cancelConnect() {
   }
 
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(impl.peerAddress, bda);
   esp_err_t err = esp_ble_gap_disconnect(bda);
   if (err != ESP_OK) {
     log_e("Client: cancelConnect esp_ble_gap_disconnect: %s", esp_err_to_name(err));
@@ -455,6 +525,15 @@ BTStatus BLEClient::discoverServices() {
     return BTStatus::NotConnected;
   }
 
+  if (!impl.autoDiscDone.load(std::memory_order_acquire)) {
+    // Best effort: when BTA is mid-auto-discovery, wait up to 2 s for
+    // DIS_SRVC_CMPL_EVT so the search runs on the discovered database; on
+    // timeout the search runs anyway and reports whatever BTA has (the wait
+    // result is intentionally ignored — a stuck discovery must not wedge this
+    // call forever).
+    (void)impl.autoDiscSync.wait(2000);
+  }
+
   {
     BLELockGuard lock(impl.mtx);
     impl.clearDiscoveredServices();
@@ -493,7 +572,7 @@ BTStatus BLEClient::secureConnection() {
   }
 
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(impl.peerAddress, bda);
   esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   if (err != ESP_OK) {
     log_e("Client: esp_ble_set_encryption: %s", esp_err_to_name(err));
@@ -550,7 +629,7 @@ int8_t BLEClient::getRSSI() const {
   }
 
   esp_bd_addr_t bda;
-  _impl->peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(_impl->peerAddress, bda);
 
   _impl->rssiSync.take();
   esp_err_t err = esp_ble_gap_read_rssi(bda);
@@ -580,7 +659,7 @@ BLEConnInfo BLEClient::getConnInfo() const {
   if (!_impl || !_impl->connected) {
     return BLEConnInfo();
   }
-  BLEConnInfo conn = BLEConnInfoImpl::make(_impl->connId, _impl->peerAddress, _impl->mtu, /*central=*/true);
+  BLEConnInfo conn = BLEConnInfoImpl::make(_impl->connId, _impl->peerAddress, _impl->mtu, _impl->central.load());
   // Bluedroid has no live security-level query, so reflect the flags latched from
   // AUTH_CMPL. Matches NimBLE getConnInfo() and the server's persisted flags.
   BLEConnInfoImpl::updateSecurityFlags(conn, _impl->secEncrypted, _impl->secAuthenticated, _impl->secBonded);
@@ -608,7 +687,7 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
   }
 
   esp_ble_conn_update_params_t cp;
-  impl.peerAddress.toEspBdAddr(cp.bda);
+  BLEAddressUtil::toNative(impl.peerAddress, cp.bda);
   cp.min_int = params.minInterval;
   cp.max_int = params.maxInterval;
   cp.latency = params.latency;
@@ -625,35 +704,28 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
 // PHY + DLE (BLE 5.0)
 // --------------------------------------------------------------------------
 
-BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!impl.connected) {
     log_w("Client: setPhy called but not connected");
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(impl.peerAddress, bda);
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Client: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);
     return BTStatus::Fail;
   }
   return impl.phySync.wait(2000);
-#else
-  (void)txPhy;
-  (void)rxPhy;
-  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
 
 BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
   txPhy = BLEPhy::PHY_1M;
   rxPhy = BLEPhy::PHY_1M;
-#if BLE5_SUPPORTED
   if (!_impl) {
     return BTStatus::InvalidState;
   }
@@ -663,7 +735,7 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(impl.peerAddress, bda);
   impl.phySync.take();
   esp_err_t err = esp_ble_gap_read_phy(bda);
   if (err != ESP_OK) {
@@ -677,11 +749,8 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
     rxPhy = impl.pendingRxPhy;
   }
   return st;
-#else
-  log_w("%s not supported on this Bluedroid path", __func__);
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 // Bluedroid's set_pkt_data_len takes only tx octets; txTime is accepted for API parity and ignored.
 BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t /*txTime*/) {
@@ -692,7 +761,7 @@ BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t /*txTime*/) {
     return BTStatus::InvalidState;
   }
   esp_bd_addr_t bda;
-  impl.peerAddress.toEspBdAddr(bda);
+  BLEAddressUtil::toNative(impl.peerAddress, bda);
   impl.dataLenSync.take();
   esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);
   if (err != ESP_OK) {
@@ -747,6 +816,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
     return;
   }
   bool wasConnected;
+  BLEClient::DisconnectHandler disconnectHandler;
   BLEConnInfo conn;
   std::shared_ptr<BLEClient::Impl> pendingWriteOwner;
   std::shared_ptr<BLEClient::Impl> terminalCloseOwner;
@@ -756,11 +826,15 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
       return;
     }
     wasConnected = client->connected;
+    if (wasConnected) {
+      disconnectHandler = client->onDisconnectCb;
+    }
     // Capture conn info before connId is reset so the callback still sees the
     // connection that just ended.
-    conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+    conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
     client->connected = false;
     client->connId = 0xFFFF;
+    client->aclHandle = 0xFFFF;
     client->secEncrypted = false;
     client->secAuthenticated = false;
     client->secBonded = false;
@@ -780,6 +854,8 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
   log_i("Client: disconnected, connId=%u reason=0x%02x", evtConnId, reason);
 
   // Release any waiting syncs
+  client->autoDiscDone.store(true, std::memory_order_release);
+  client->autoDiscSync.give(BTStatus::Fail);
   client->connectSync.give(BTStatus::Fail);
   client->discoverSync.give(BTStatus::Fail);
   client->readSync.give(BTStatus::Fail);
@@ -788,7 +864,7 @@ static void completeClientDisconnect(BLEClient::Impl *client, uint16_t evtConnId
   client->rssiSync.give(BTStatus::Fail);
 
   if (wasConnected) {
-    client->dispatchDisconnect(conn, reason);
+    client->dispatchDisconnect(conn, reason, disconnectHandler);
   }
   client->disconnectSync.give(BTStatus::OK);
 }
@@ -819,7 +895,7 @@ static void retryTerminalClientClose(const std::shared_ptr<BLEClient::Impl> &own
 
   if (BLE.isInitialized() && client->connected) {
     esp_bd_addr_t peer;
-    client->peerAddress.toEspBdAddr(peer);
+    BLEAddressUtil::toNative(client->peerAddress, peer);
     if (esp_ble_gap_disconnect(peer) == ESP_OK) {
       return;
     }
@@ -873,7 +949,7 @@ static void scheduleTerminalClientClose(BLEClient::Impl *client) {
     delete taskArg;
     client->terminalCloseRetryActive = false;
     esp_bd_addr_t peer;
-    client->peerAddress.toEspBdAddr(peer);
+    BLEAddressUtil::toNative(client->peerAddress, peer);
     if (esp_ble_gap_disconnect(peer) != ESP_OK) {
       // Keep the terminal owner registry entry as a quarantine reference. A later explicit
       // disconnect or host shutdown still releases it through normal teardown.
@@ -907,6 +983,7 @@ void BLEClient::Impl::invalidateAfterHostDeinit() {
     client->appId = APP_ID_INVALID;
     client->connected = false;
     client->connId = UINT16_MAX;
+    client->aclHandle = 0xFFFF;
     client->mtu = 23;
     client->connectionGeneration.fetch_add(1, std::memory_order_relaxed);
     client->secEncrypted = false;
@@ -931,6 +1008,8 @@ void BLEClient::Impl::invalidateAfterHostDeinit() {
 
     // Release any API call whose native completion disappeared with the host.
     client->regSync.give(BTStatus::Fail);
+    client->autoDiscDone.store(true, std::memory_order_release);
+    client->autoDiscSync.give(BTStatus::Fail);
     client->connectSync.give(BTStatus::Fail);
     client->disconnectSync.give(BTStatus::Fail);
     client->discoverSync.give(BTStatus::Fail);
@@ -1030,7 +1109,11 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       // virtual connection. Just refine the peer's address type when this
       // client's target BDA matches.
       if (client->peerAddress.equalsEspBdAddr(param->connect.remote_bda)) {
-        client->peerAddress = BTAddress::fromEspBdAddr(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+        client->peerAddress = BLEAddressUtil::fromNative(param->connect.remote_bda, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
+        // The HCI ACL handle is the key the ISO transport uses (GATTS/GATTC
+        // conn ids are per-interface and mean nothing to it).
+        client->aclHandle = param->connect.conn_handle;
+        client->central = (param->connect.link_role == 0);
       }
       break;
     }
@@ -1049,22 +1132,45 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
           client->secEncrypted = false;
           client->secAuthenticated = false;
           client->secBonded = false;
-          conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+          conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
+        }
+        // Query BTA's cached DB size synchronously: when p_srcb->p_srvc_cache
+        // is already populated (or open.mtu > 23 from a prior session),
+        // bta_gattc_conn() skips auto-discovery and no DIS_SRVC_CMPL_EVT will
+        // fire. Mark autoDiscDone immediately in that case so cached reconnects
+        // (even at MTU 23) never wait on autoDiscSync.
+        uint16_t cachedCount = 0;
+        (void)esp_ble_gattc_get_attr_count(gattc_if, param->open.conn_id, ESP_GATT_DB_ALL, 1, 0xFFFF, 0, &cachedCount);
+        if (cachedCount > 0 || param->open.mtu > 23) {
+          client->autoDiscDone.store(true, std::memory_order_release);
+          client->autoDiscSync.give(BTStatus::OK);
         }
         log_i("Client: connected, connId=%u", client->connId.load());
         // The ATT MTU exchange is NOT requested here: on Bluedroid a request
         // issued at connection setup (event callback or immediately after) is
-        // silently dropped. connect() performs it from the caller thread with a
-        // retry once the link is up (see BLEClient::connect).
+        // silently dropped. connect() performs it from the caller thread once
+        // the link (and any initial BTA auto-discovery) is settled.
         // Prefer peerAddress (type latched on CONNECT) over open.remote_bda
         // (OPEN has no addr_type field).
         client->dispatchConnect(conn);
         client->connectSync.give(BTStatus::OK);
       } else {
         log_e("Client: GATTC open failed: status=%d", param->open.status);
+        client->autoDiscDone.store(true, std::memory_order_release);
+        client->autoDiscSync.give(BTStatus::Fail);
         client->dispatchConnectFail(param->open.status);
         client->connectSync.give(BTStatus::Fail);
       }
+      break;
+    }
+
+    case ESP_GATTC_DIS_SRVC_CMPL_EVT:
+    {
+      // BTA auto-discovery finished: unblock the connect()/discoverServices()
+      // gate armed before enh_open. Uncached reconnects wait on this; cached
+      // ones never armed it (autoDiscDone stayed true from the cache probe).
+      client->autoDiscDone.store(true, std::memory_order_release);
+      client->autoDiscSync.give(param->dis_srvc_cmpl.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
       break;
     }
 
@@ -1251,7 +1357,7 @@ void BLEClient::Impl::handleGATTC(esp_gattc_cb_event_t event, esp_gatt_if_t gatt
       }
       client->mtuSync.give(param->cfg_mtu.status == ESP_GATT_OK ? BTStatus::OK : BTStatus::Fail);
 
-      BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, /*central=*/true);
+      BLEConnInfo conn = BLEConnInfoImpl::make(client->connId, client->peerAddress, client->mtu, client->central.load());
       client->dispatchMtuChanged(conn, client->mtu);
       break;
     }
@@ -1329,8 +1435,8 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     for (const auto &owner : clients) {
       auto *c = owner.get();
       if (c->connected && c->peerAddress.equalsEspBdAddr(param->ble_security.auth_cmpl.bd_addr)) {
-        c->peerAddress = BTAddress::fromEspBdAddr(param->ble_security.auth_cmpl.bd_addr, addrType);
-        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, /*central=*/true);
+        c->peerAddress = BLEAddressUtil::fromNative(param->ble_security.auth_cmpl.bd_addr, addrType);
+        BLEConnInfo conn = BLEConnInfoImpl::make(c->connId, c->peerAddress, c->mtu, c->central.load());
         BLEConnInfoImpl::updateSecurityFromAuthComplete(conn, param->ble_security.auth_cmpl.auth_mode);
         c->secEncrypted = conn.isEncrypted();
         c->secAuthenticated = conn.isAuthenticated();
@@ -1410,103 +1516,6 @@ void BLEClient::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     }
   }
 #endif /* BLE5_SUPPORTED */
-}
-
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "BLE.h"
-#include "core/BLEBackend.h"
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: log on most entry points; return NotSupported, empty,
-// 0, -128, 0xFFFF, or no-op. getPhy() does not write txPhy/rxPhy; initialize or check the return.
-
-BTStatus BLEClient::connect(const BTAddress &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BTAddress &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BTAddress &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BLEAdvertisedDevice &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::cancelConnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::disconnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::discoverServices() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::secureConnection() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEClient::setMTU(uint16_t) {}
-
-uint16_t BLEClient::getMTU() const {
-  return 0;
-}
-
-int8_t BLEClient::getRSSI() const {
-  return -128;
-}
-
-uint16_t BLEClient::getHandle() const {
-  return 0xFFFF;
-}
-
-BLEConnInfo BLEClient::getConnInfo() const {
-  return BLEConnInfo();
-}
-
-BTStatus BLEClient::updateConnParams(const BLEConnParams &) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::getPhy(BLEPhy &, BLEPhy &) const {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setDataLen(uint16_t, uint16_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
 }
 
 #endif /* BLE_GATT_CLIENT_SUPPORTED */

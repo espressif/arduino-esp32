@@ -21,6 +21,7 @@
  */
 
 #include "core/BLEGuards.h"
+#include "core/BLEAddressUtil.h"
 #if BLE_BLUEDROID
 
 // ==========================================================================
@@ -147,20 +148,6 @@ std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() cons
   return result;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty characteristic handles and lists.
-
-BLERemoteCharacteristic BLERemoteService::getCharacteristic(const BLEUUID &) const {
-  return BLERemoteCharacteristic();
-}
-
-std::vector<BLERemoteCharacteristic> BLERemoteService::getCharacteristics() const {
-  return {};
-}
-
 #endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 // ==========================================================================
@@ -235,7 +222,7 @@ static bool initiateSecurityAndWait(const RemoteGattTarget &target, const std::s
     // give() can't race ahead of our wait().
     secImpl->authSync.take();
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddressUtil::toNative(client->peerAddress, bda);
     err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
   }
   if (err != ESP_OK) {
@@ -551,6 +538,25 @@ static BTStatus subscribeWithCccd(
     return BTStatus::InvalidState;
   }
 
+  // Keep the "not connected" contract ahead of discovery, which would otherwise
+  // surface as NotFound.
+  {
+    BLELockGuard lock(client->mtx);
+    if (!remoteTargetConnectedLocked(target, client)) {
+      return BTStatus::InvalidState;
+    }
+  }
+
+  // Resolve the CCCD before touching the stack: registering on a characteristic
+  // without one is rejected by BT_APPL ("reg notif ... not notif/ind") and
+  // leaves a stale error on the console, while the operation itself must simply
+  // report NotFound. Discovery is triggered by this lookup either way.
+  BLERemoteDescriptor cccd = chr.getDescriptor(BLEUUID(BLE_DSC_UUID16_CCCD));
+  if (!cccd) {
+    log_w("RemoteCharacteristic %s: CCCD descriptor (0x2902) not found", impl->uuid.toString().c_str());
+    return BTStatus::NotFound;
+  }
+
   log_d("RemoteCharacteristic %s: subscribe cccd=0x%04x (connId=%u)", impl->uuid.toString().c_str(), cccdVal, client->connId.load());
   esp_err_t err;
   {
@@ -560,7 +566,7 @@ static BTStatus subscribeWithCccd(
     }
     impl->onNotifyCb = std::move(callback);
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddressUtil::toNative(client->peerAddress, bda);
     err = esp_ble_gattc_register_for_notify(client->gattcIf, bda, impl->handle);
   }
 
@@ -571,33 +577,25 @@ static BTStatus subscribeWithCccd(
     return BTStatus::Fail;
   }
 
-  BLERemoteDescriptor cccd = chr.getDescriptor(BLEUUID(BLE_DSC_UUID16_CCCD));
-  if (cccd) {
 #if BLE_VALIDATION_HOOKS
-    if (BLEHooks.remote.injectCccdWriteFail.exchange(false, std::memory_order_acq_rel)) {
-      BLELockGuard clearLock(client->mtx);
-      impl->onNotifyCb = nullptr;
-      esp_bd_addr_t bdaClear;
-      client->peerAddress.toEspBdAddr(bdaClear);
-      esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
-      return BTStatus::Fail;
-    }
-#endif
-    BTStatus st = cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
-    if (st != BTStatus::OK) {
-      BLELockGuard clearLock(client->mtx);
-      impl->onNotifyCb = nullptr;
-      esp_bd_addr_t bdaClear;
-      client->peerAddress.toEspBdAddr(bdaClear);
-      esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
-    }
-    return st;
+  if (BLEHooks.remote.injectCccdWriteFail.exchange(false, std::memory_order_acq_rel)) {
+    BLELockGuard clearLock(client->mtx);
+    impl->onNotifyCb = nullptr;
+    esp_bd_addr_t bdaClear;
+    BLEAddressUtil::toNative(client->peerAddress, bdaClear);
+    esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
+    return BTStatus::Fail;
   }
-
-  log_w("RemoteCharacteristic %s: CCCD descriptor (0x2902) not found", impl->uuid.toString().c_str());
-  BLELockGuard clearLock(client->mtx);
-  impl->onNotifyCb = nullptr;
-  return BTStatus::NotFound;
+#endif
+  BTStatus st = cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
+  if (st != BTStatus::OK) {
+    BLELockGuard clearLock(client->mtx);
+    impl->onNotifyCb = nullptr;
+    esp_bd_addr_t bdaClear;
+    BLEAddressUtil::toNative(client->peerAddress, bdaClear);
+    esp_ble_gattc_unregister_for_notify(client->gattcIf, bdaClear, impl->handle);
+  }
+  return st;
 }
 
 // Blocking: CCCD write path uses a confirmed GATTC write with wait; CCCD subscription semantics apply.
@@ -624,22 +622,31 @@ BTStatus BLERemoteCharacteristic::unsubscribe() {
     if (!remoteTargetConnectedLocked(target, client)) {
       return BTStatus::InvalidState;
     }
+  }
+
+  // A characteristic without a CCCD was never registered, so asking the stack to
+  // deregister it only produces "registration not found". Report NotFound to
+  // mirror subscribe().
+  uint16_t cccdVal = 0x0000;
+  BLERemoteDescriptor cccd = getDescriptor(BLEUUID(BLE_DSC_UUID16_CCCD));
+  if (!cccd) {
+    log_w("RemoteCharacteristic %s: CCCD descriptor (0x2902) not found for unsubscribe", _impl->uuid.toString().c_str());
+    return BTStatus::NotFound;
+  }
+
+  {
+    BLELockGuard lock(client->mtx);
+    if (!remoteTargetConnectedLocked(target, client)) {
+      return BTStatus::InvalidState;
+    }
     _impl->onNotifyCb = nullptr;
     esp_bd_addr_t bda;
-    client->peerAddress.toEspBdAddr(bda);
+    BLEAddressUtil::toNative(client->peerAddress, bda);
     esp_ble_gattc_unregister_for_notify(client->gattcIf, bda, _impl->handle);
   }
 
   // Write 0x0000 to CCCD
-  uint16_t cccdVal = 0x0000;
-
-  BLERemoteDescriptor cccd = getDescriptor(BLEUUID(BLE_DSC_UUID16_CCCD));
-  if (cccd) {
-    return cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
-  }
-
-  log_w("RemoteCharacteristic %s: CCCD descriptor (0x2902) not found for unsubscribe", _impl->uuid.toString().c_str());
-  return BTStatus::NotFound;
+  return cccd.writeValue(reinterpret_cast<const uint8_t *>(&cccdVal), sizeof(cccdVal), true);
 }
 
 // --------------------------------------------------------------------------
@@ -713,39 +720,6 @@ std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const
   return result;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: false/empty/NotSupported as appropriate; log on side-effecting paths.
-
-bool BLERemoteCharacteristic::readInto(uint32_t) {
-  return false;
-}
-
-BTStatus BLERemoteCharacteristic::writeValue(const uint8_t *, size_t, bool) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLERemoteCharacteristic::subscribe(BLESubscription, NotifyCallback) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLERemoteCharacteristic::unsubscribe() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BLERemoteDescriptor BLERemoteCharacteristic::getDescriptor(const BLEUUID &) const {
-  return BLERemoteDescriptor();
-}
-
-std::vector<BLERemoteDescriptor> BLERemoteCharacteristic::getDescriptors() const {
-  return {};
-}
-
 #endif /* BLE_GATT_CLIENT_SUPPORTED */
 
 // ==========================================================================
@@ -794,21 +768,6 @@ BTStatus BLERemoteDescriptor::writeValue(const uint8_t *data, size_t len, bool w
   RemoteGattTarget target{service, characteristic, _impl};
   auto client = remoteClient(target);
   return performRemoteWrite(target, client, _impl ? _impl->handle : 0, true, data, len, withResponse);
-}
-
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-#include "esp32-hal-log.h"
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: empty read, NotSupported write.
-
-bool BLERemoteDescriptor::readInto(uint32_t) {
-  return false;
-}
-
-BTStatus BLERemoteDescriptor::writeValue(const uint8_t *, size_t, bool) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
 }
 
 #endif /* BLE_GATT_CLIENT_SUPPORTED */

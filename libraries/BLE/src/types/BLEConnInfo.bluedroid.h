@@ -32,6 +32,13 @@
 
 struct BLEConnInfoImpl {
   /**
+   * @brief Clear volatile live fields (PHY, RSSI) for a deterministic
+   *        address-based lookup snapshot.
+   * @param info Connection info to update in place.
+   */
+  static void clearVolatile(BLEConnInfo &info);
+
+  /**
    * @brief Build a BLEConnInfo snapshot for a Bluedroid link.
    * @param connId GATT connection identifier (0 when unknown, e.g. on a bare
    *               security event before a GATT connection exists).

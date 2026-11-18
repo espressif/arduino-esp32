@@ -290,4 +290,16 @@ BLEDescriptor BLEDescriptor::createCCCD() {
   return BLEDescriptor(d);
 }
 
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_SERVER_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_GATT_SERVER_SUPPORTED
+
+void BLEDescriptor::setPermissions(BLEPermission) {
+  log_w("GATT server not supported");
+}
+
+#endif /* !BLE_GATT_SERVER_SUPPORTED */
+
 #endif /* BLE_ENABLED */

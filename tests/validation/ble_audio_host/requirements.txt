@@ -1,0 +1,9 @@
+# Host-side deps for the LE Audio host-interop suite (Bumble owns HCI + LC3).
+#
+# Installed on the Linux bench in addition to tests/requirements.txt:
+#   python3 -m venv .venv && .venv/bin/pip install -r ../../requirements.txt -r requirements.txt
+#
+# BlueZ must be stopped/masked while the suite runs (see setup_bumble_hci.sh);
+# Bumble opens the adapter exclusively via BUMBLE_TRANSPORT (default hci-socket:0).
+# AIC8800 requires btusb firmware — do not use raw usb:VID:PID on that dongle.
+bumble[auracast]>=0.0.230

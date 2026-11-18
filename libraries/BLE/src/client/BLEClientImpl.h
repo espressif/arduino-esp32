@@ -32,6 +32,7 @@
 #include "client/BLEClient.h"
 #include "remote/BLERemoteService.h"
 #include "core/BLEMutex.h"
+#include "core/BLESync.h"
 #include <atomic>
 #include <memory>
 #include <vector>
@@ -50,6 +51,10 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   std::vector<std::shared_ptr<BLERemoteService::Impl>> discoveredServices;
   std::shared_ptr<BLESharedMutex> mtxOwner = std::make_shared<BLESharedMutex>();
   SemaphoreHandle_t mtx = mtxOwner->get();
+  BLESync connectSync{"connectSync"};
+  BLESync disconnectSync{"disconnectSync"};
+  BLESync discoverSync{"discoverSync"};
+  BLESync mtuSync{"mtuSync"};
 
   void clearDiscoveredServices();
 
@@ -71,11 +76,12 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   // See DESIGN.md "Handle construction: makeHandle vs. the private constructor".
   static BLEClient makeHandle(BLEClient::Impl *impl);
 
-  // Stack-agnostic callback dispatch: each copies the handler under
-  // mtx, then invokes it outside the lock so user code can safely re-enter the
-  // BLE API without deadlocking. Shared by both backends. The NimBLE-only
-  // connection-parameter *request* hook (which returns accept/reject) stays in
-  // NimBLEClient.cpp because Bluedroid has no equivalent GAP event.
+  // Stack-agnostic callback dispatch. Disconnect handlers are snapshotted by
+  // the backend under mtx together with the connected-state transition, then
+  // invoked outside the lock; a concurrent resetCallbacks() must not suppress
+  // an event already being dispatched. The NimBLE-only connection-parameter
+  // request hook stays in BLEClient.nimble.cpp because Bluedroid has no
+  // equivalent GAP event.
 
   /**
    * @brief Notify the connect callback (if set) for a new connection.
@@ -84,11 +90,12 @@ struct BLEClientImplCommon : std::enable_shared_from_this<BLEClient::Impl> {
   void dispatchConnect(const BLEConnInfo &connInfo);
 
   /**
-   * @brief Notify the disconnect callback (if set).
+   * @brief Invoke the disconnect callback snapshot taken with the state change.
    * @param connInfo Connection details at the time of disconnect.
    * @param reason Bluetooth disconnect reason code.
+   * @param handler Callback copied under @c mtx by the backend event handler.
    */
-  void dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason);
+  void dispatchDisconnect(const BLEConnInfo &connInfo, uint8_t reason, const BLEClient::DisconnectHandler &handler);
 
   /**
    * @brief Notify the connect-fail callback (if set).

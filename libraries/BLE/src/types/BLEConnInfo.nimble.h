@@ -25,6 +25,13 @@
 #include <host/ble_gap.h>
 
 struct BLEConnInfoImpl {
+  /**
+   * @brief Clear volatile live fields (PHY, RSSI) for a deterministic
+   *        address-based lookup snapshot.
+   * @param info Connection info to update in place.
+   */
+  static void clearVolatile(BLEConnInfo &info);
+
   static BLEConnInfo fromDesc(const struct ble_gap_conn_desc &desc);
 };
 

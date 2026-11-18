@@ -49,8 +49,10 @@ Two folders hold code that is not owned by a single component:
 - `src/core/` — cross-cutting infrastructure: backend guards (`BLEGuards.h`),
   the `BLELockGuard`/`BLESync` primitives, the `BLE_CHECK_IMPL` helper, the
   single backend selector `BLEBackend.h`, the compile-time
-  `BLEBackendContract.h`, and the test-only `BLEValidationHooks` injector
-  (compiled in only when `BLE_VALIDATION_HOOKS` is set; not a public API).
+  `BLEBackendContract.h`, the backend-aware address conversion
+  (`BLEAddressUtil.h` plus `BLEAddressUtil.nimble.cpp` / `BLEAddressUtil.bluedroid.cpp`),
+  and the test-only `BLEValidationHooks` injector (compiled in only when
+  `BLE_VALIDATION_HOOKS` is set; not a public API).
 - `src/types/` — backend-agnostic value types shared across components
   (`BLEUUID`, `BLEConnInfo`, `BLEAdvTypes`, `BLEProperty`), including their
   small per-stack converter helpers (`BLEUUID.nimble.*`, etc.).
@@ -87,7 +89,10 @@ Feature guards (derived from Kconfig / SoC capabilities):
 - `BLE_ADVERTISING_SUPPORTED`: BLE advertising available
 - `BLE_VALIDATION_HOOKS`: test-only injectors (`core/BLEValidationHooks`); off in production. The validation suite enables it with `-DBLE_VALIDATION_HOOKS`.
 - `BLE5_SUPPORTED`: BLE 5.0 features (extended advertising, PHY selection, periodic advertising)
+- `BLE_PAST_SUPPORTED`: Periodic Advertising Sync Transfer receiver feature, when enabled by the selected host configuration **and** the controller implements BLE 5.1 PAST (5.0-only silicon such as ESP32-S3/C3 reports it unsupported; hosted NimBLE is assumed capable because all supported hosted companions implement PAST)
 - `BLE_L2CAP_SUPPORTED`: L2CAP CoC channels; NimBLE only, requires explicit Kconfig
+- `BLE_ISO_SUPPORTED`: host isochronous transport (CIS/BIG), exposed as the `BLEIso` API (`src/iso/`). Gates the per-role guards `BLE_ISO_CIS_CENTRAL_SUPPORTED`, `BLE_ISO_CIS_PERIPHERAL_SUPPORTED`, `BLE_ISO_BROADCASTER_SUPPORTED` and `BLE_ISO_SYNC_RECEIVER_SUPPORTED` (`CONFIG_BT_ISO_CENTRAL` / `PERIPHERAL` / `BROADCASTER` / `SYNC_RECEIVER`)
+- `BLE_AUDIO_SUPPORTED`: the LE Audio engine (GAF profiles); implies ISO. Gates a family of per-role guards (`BLE_AUDIO_UNICAST_SERVER_SUPPORTED`, `BLE_AUDIO_CAP_ACCEPTOR_SUPPORTED`, …) documented in [`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md)
 
 ### Hosted BLE
 
@@ -125,9 +130,10 @@ lazy-singleton/fresh-instance split and the post-create logic genuinely differ p
 shared "one size fits all" abstraction would either need to be bypassed regularly (as Bluedroid's
 `createServer` already must be, for its asynchronous GATTS registration retry) or made generic
 enough that it stopped being easier to read than the explicit code it replaced.
-`BLEClass()`/`~BLEClass()` need a complete `BLEClass::Impl` (backend-specific), so they're defined
-once per backend `BLE.<stack>.cpp` rather than shared — 7 identical lines duplicated is cheaper than a
-shared header for this one case.
+`BLE.cpp` owns `BLEClass()`/`~BLEClass()`, `begin()`/`end()` orchestration, and feature-disabled
+factory fallbacks (`#if !BLE_*_SUPPORTED`), while enabled factories (`createServer`, `getScan`,
+`getAdvertising`, `getSecurity`) live in `BLE.<stack>.cpp` because each wires backend-specific GAP/GATT
+and teardown hooks.
 
 ### Per-instance handles
 
@@ -150,6 +156,8 @@ These objects are copied by value but refer to shared underlying state.
 `BLEConnInfo` is the stack-agnostic connection descriptor.
 It replaces backend-specific callback parameter types and stores its data inline.
 Public APIs should prefer `BLEConnInfo` over raw NimBLE/Bluedroid structs.
+Address-based lookups (`BLE.getConnInfo(address)`, `BLE.getConnections(address)`) normalize the volatile PHY/RSSI fields on both backends (PHY_1M/0) so the result is deterministic; the owning `BLEClient`/`BLEServer` handle exposes the live values.
+Address-based lookups return one descriptor/handle per ACL. Bluedroid can have several GATTC client objects and a GATTS server link on the same ACL; the lookup collapses them to the owning application's handle (client first), while NimBLE exposes the single ACL handle. A second GATTC client connection to an already-connected peer is not supported by the NimBLE host, so the dual-role test skips its reverse-client phase there.
 
 ## PIMPL pattern
 
@@ -176,7 +184,10 @@ struct BLEServer::Impl : BLEServerImplCommon { /* NimBLE state + static handlers
 - The single sanctioned access pattern in `.cpp` code is the `BLE_CHECK_IMPL(...)` null-guard macro, which yields a cast-free `impl` reference (item 3).
 - Backends reconstruct a public handle from a raw `Impl*` via `enable_shared_from_this` and a static `*ImplCommon::makeHandle` factory, avoiding extra `friend` declarations.
 
-This shared-base split is applied wherever there is real cross-backend duplication (Server, Service, Characteristic, Descriptor, Client, the three Remote types, Security, AdvertisedDevice). Classes that are inherently per-backend with no shared state (`BLEClass`, `Scan`, `Advertising`, `BLEL2CAPServer`) define `Foo::Impl` directly with no base. All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
+`BLEClass` also uses a shared base (`BLEClassImplCommon` in `BLEImpl.h`) so `BLE.cpp` owns the
+constructor/destructor, the `begin()`/`end()` state machine and deferred worker, and all
+feature-disabled factory/PHY/hosted fallbacks. Only `BLEL2CAPServer` (NimBLE-only) has no shared base,
+and `BLEAdvertisedDevice` is 100% shared (`BLEAdvertisedDeviceImpl.h`). All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header, or if a shared `.h`/`.c`/`.cpp` file leaks `BLE_NIMBLE` / `BLE_BLUEDROID`. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
 
 **Handle construction: `makeHandle` vs. the private constructor.**
 Every public handle's `std::shared_ptr<Impl>` constructor is **private** — handles must only be minted by the library, never fabricated by user code around an arbitrary `Impl*`. Code that needs to build a handle falls into two groups:
@@ -266,7 +277,7 @@ If the user still holds a child handle, its Impl enters a minimal shell state th
 This means `BLE.end(true)` (controller memory release) works correctly even if the user has forgotten to clear global handles.
 `BLE.createServer()` is a process-lifetime singleton (one physical GATT server): `end()` keeps that object and drops its services, so a later `begin()` plus `createServer()` returns the same empty server. The sketch must recreate the GATT tree; calling `createService()` without `end()` having cleared the previous tree would otherwise register a second copy.
 
-Retained scan, advertising, and periodic-sync handles are closed by `BLEAdmissionGate` before the host is disabled, so a late `start()`/`stop()`/`reset()` cannot enter a native API after teardown has begun. Closed-gate `stop()` and `clearExtended()` are idempotent (`OK`); `start()` returns `InvalidState`; `cancelPeriodicSync` / `terminatePeriodicSync` also return `InvalidState` because they are not stop-like. `clearExtended()` while a set is still enabled returns `Fail` and leaves advertising flags unchanged. Closed-gate `reset()` still clears software config and advertising flags without native calls (including on BLE4.2, where there is no extended-instance block), so `beginBackendShutdown()` stops every advertising instance unconditionally, then `reset()` for the software clear. Bluedroid extended stop/clear is asynchronous: shutdown and admitted `reset()` wait for each `EXT_ADV_STOP_COMPLETE` (and periodic stop) before `HCI_LE_Clear_Advertising_Sets`, which is Command Disallowed while advertising or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60). Public `clearExtended()` also waits for `EXT_ADV_SET_CLEAR_COMPLETE`. Stop, clear, and periodic-stop completes give `advSync` only when that command is the armed waiter, so a leftover or extra complete cannot release a different setup/start wait. NimBLE `ble_gap_ext_adv_stop`/`clear` are host-synchronous, so they do not wait on a completion event. Teardown itself is the shutdown caller and stops native sessions without re-entering the gate.
+Retained scan, advertising, and periodic-sync handles are closed by `BLEAdmissionGate` before the host is disabled, so a late `start()`/`stop()`/`reset()` cannot enter a native API after teardown has begun. Closed-gate `stop()` and `clearExtended()` are idempotent (`OK`); `start()` returns `InvalidState`; `cancelPeriodicSyncCreate` / `terminatePeriodicSync` also return `InvalidState` because they are not stop-like. `clearExtended()` while a set is still enabled returns `Fail` and leaves advertising flags unchanged. Closed-gate `reset()` still clears software config and advertising flags without native calls (including on BLE4.2, where there is no extended-instance block), so `beginBackendShutdown()` stops every advertising instance unconditionally, then `reset()` for the software clear. Bluedroid extended stop/clear is asynchronous: shutdown and admitted `reset()` wait for each `EXT_ADV_STOP_COMPLETE` (and periodic stop) before `HCI_LE_Clear_Advertising_Sets`, which is Command Disallowed while advertising or periodic advertising is still enabled on any set (Vol 4, Part E, §7.8.60). Public `clearExtended()` also waits for `EXT_ADV_SET_CLEAR_COMPLETE`. Stop, clear, and periodic-stop completes give `advSync` only when that command is the armed waiter, so a leftover or extra complete cannot release a different setup/start wait. NimBLE `ble_gap_ext_adv_stop`/`clear` are host-synchronous, so they do not wait on a completion event. Teardown itself is the shutdown caller and stops native sessions without re-entering the gate.
 
 ### True value types
 
@@ -337,6 +348,11 @@ It is shared with BT Classic infrastructure and is intentionally tiny.
 - use specific statuses (`Timeout`, `NotFound`, `NotSupported`, `AlreadyConnected`, `InvalidState`, etc.) instead of generic failure where possible
 - do not mix `bool`, raw stack error codes, and silent failure semantics in new public BLE APIs
 - convert backend-native errors into `BTStatus` at the boundary
+- a request whose target state is already in effect (stop, cancel, disconnect, set-same-value) returns `OK`
+- a request rejected because another operation is still in progress returns `Busy`; retrying later can succeed
+- `InvalidState` means a precondition is not met, including "already running with different parameters"
+- stack "already" codes (`BLE_HS_EALREADY`, `-EALREADY`) are handled per call site, since they mean a no-op for some
+  calls and a rejection for others
 
 ## GATT model and rules
 
@@ -410,6 +426,48 @@ Creating services and characteristics builds up an in-memory GATT model.
 `BLEServer::start()` is the registration point that pushes that model into the backend stack.
 Code should not assume that `createService()` alone means the service already exists in the controller.
 
+On NimBLE, `BLEServer::start()` does not own the attribute-table lifecycle directly. It delegates to the
+unified coordinator `gatt/BLEGattDatabase.nimble.{h,cpp}`, which is the single owner of `ble_gatts_reset` /
+`ble_svc_gap_init` / `ble_svc_gatt_init` / `ble_gatts_start`. This is required for correctness: NimBLE cannot
+support two independent GATT owners (a second `ble_gatts_start()` reallocates and wipes the first table, and the
+service-init calls are non-idempotent). The coordinator has two modes:
+
+- **Standalone** (no LE Audio): the coordinator performs the full `reset -> svc init -> add_svcs -> start`
+  rebuild, exactly as before. Non-audio behavior is unchanged.
+- **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
+  and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::begin()`); the
+  plain-GATT server only records itself as a contributor. Immediately before the audio commit, the coordinator
+  snapshots its latest tree and calls `ble_gatts_add_svcs` exactly once. Deferring publication makes repeated
+  pre-commit `server.start()` calls safe when more services or characteristics are added: NimBLE never retains a
+  pointer to a replaced definition array and no service is added twice. This lets an ordinary `BLEServer` service
+  and the audio profiles coexist in one committed GATT table. Recommended ordering: `BLE.begin()`
+  -> create/stage server services and audio roles -> `audio.begin()` (initializes if needed,
+  then publishes everything at once). Staging plain-GATT services *before* any audio role
+  also works: the audio commit adopts the standalone-published table and republishes it
+  once (GAP must be idle; `Busy` otherwise).
+
+Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()`
+calls the `bleAudioGattActive()` weak hook, which the linked BLEAudio backend
+defines as `bleAudioEngineIsInitialized()` (false when the engine is not
+compiled in, since the hook is then null), so audio mode is exactly the window
+between `audio.begin()` (engine init) and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
+host-agnostic engine through weak hooks in `core/BLEAudioHooks.h`. In `BLEAudio`, `src/engine/` is 100% pure C, and
+all host-specific glue lives in the single backend pair `BLEAudio.nimble.{h,cpp}` and `BLEAudio.bluedroid.{h,cpp}`.
+
+After `audio.begin()` commits, the NimBLE table is frozen: a later `BLEServer::start()` that would add attributes returns
+`InvalidState` instead of resetting the audio-owned table. Removing an already committed plain-GATT service remains
+supported; the server hides only that service's handle range and emits Service Changed. `audio.end()` clears the
+audio commit state, and the next `audio.begin()` runs `ble_gatts_reset()` (returning `Busy` if GAP or a connection
+is active) so a new table can be staged in the same `BLE.begin()` session without duplicating ATT attributes.
+`nimbleForwardServerGapEvent` forwards ISO GAP, Audio GATT, and fallback SMP events directly before delegating to
+an optional `BLEServer`, so standalone audio/ISO peripherals work without calling `BLE.createServer()`.
+
+On Bluedroid, incremental multi-app GATTS registration already allows coexistence: the engine registers its own
+BTA GATTS/GATTC apps, so the Bluedroid server path stays thin and does not use the coordinator. The post-`start()`
+freeze is still enforced there (`InvalidState` on new staging, via the shared `bleAudioGattFrozen()` hook) so both
+backends present one table state; removal works natively on either stack. Audio centrals must
+open links with `BLEAudio::connect()`, which goes through the engine's GATTC interface.
+
 ### Descriptor rules
 
 - CCCD is auto-created for notify/indicate characteristics
@@ -444,6 +502,45 @@ Important lifecycle invariants:
 - role factories and the begin/end state transition are serialized by the core
   lifecycle mutex; `end()` closes factory admission before role teardown, while
   long native shutdown runs without holding that mutex
+- audio and standalone ISO register lazy pre-end hooks with the core. `BLE.end()`
+  runs them while the host is still up, before clearing the public session; an
+  active audio controller is therefore released even when the sketch omits
+  `audio.end()`, and standalone `BLEIso` ownership cannot leak into the next
+  `begin()`. The ISO controller's `end()`, `BLEAudio::end()`, and Broadcast
+  Source/Sink `stop()` wait on native ISO disconnect and keep ownership on failure (audio
+  stops share one 5 s budget across their waits; see `../BLEAudio/DESIGN.md`).
+  If ISO or audio is still live after the hook, `BLE.end()` aborts
+  host shutdown: a CONNECTED BIG must be terminated over HCI, not
+  software-reset (controller assert). The ISO controller's `begin()` after a failed `end()`
+  retries the teardown instead of reporting OK over it; `connectCis()` refuses
+  dead handles before creating the CIG (`bleIsoAclHandleLive`, both backends:
+  Bluedroid accepts the CONNECT→OPEN window via the latched ACL and treats an
+  unknown handle as a raw ACL, matching NimBLE's host-live check, with the
+  stack as the final arbiter); channel liveness for `end()`/`isIdle()` is
+  tracked with atomic `connected`/`accepted` only (the stack-owned
+  `chan.state`/`iso` is never read off-task); CIS connect and BIG create mark
+  the slot busy before the async call so a racing `end()` cannot report idle;
+  a peripheral `listenCis()` channel re-listens on its own (a second call
+  reserves another concurrent channel) and a never-accepted listen is
+  released by `disconnect()`; the accept flag is cleared on disconnect so a
+  dropped CIS never wedges a later `end()` (a second call still reserves
+  another channel); an audio-owned host drop completes only attached
+  (connected/accepted) raw channels with reason `0x16` instead of losing them
+  silently, and drops every group handle it retained (CIG, BIG, sync state), so
+  the next `connectCis()` cannot terminate a group the released host already
+  freed.
+- `BLE.end()` called from a host/BTC callback claims the ending state and
+  defers the same ordered teardown to its worker; audio/ISO teardown must never
+  bypass that callback-safe path
+- Bluedroid is a single process-wide host. `btBluedroidHostAcquire()` /
+  `btBluedroidHostRelease()` reference-count it for BLE and BluetoothSerial:
+  the first user starts the controller and host, the last one stops them, and a
+  host already enabled by an external component is adopted and never stopped.
+  `end(true)` on a session that is not the last user records the terminal
+  contract without a physical release; the last user performs the teardown.
+  An acquire that lands between the last release and its deferred controller
+  stop cancels that stop and takes ownership; a stale finalize never stops a
+  re-acquired controller (covered by the bt_mem_wrap phase-10 interleave test).
 
 ### Design rule
 
@@ -472,7 +569,15 @@ Gate backend availability through `BLE5_SUPPORTED` and runtime status reporting,
 
 The extended/periodic **advertising** API is **per instance, per setter** (`setExt*`, `startExtended`, `setPeriodicAdv*`, `startPeriodicAdv`), mirroring the legacy setter style and the BLE5 receive side — not a config-struct form.
 Because extended advertising is inherently multi-instance (SID, secondary PHY, per-set data, anonymous mode), it needs its own per-instance surface distinct from the single-instance legacy path; legacy stays the simple default.
-Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (extended discovery + periodic sync) and the **transmit** side (extended + periodic advertising) are implemented over the extended controller API. When BLE5 is enabled, legacy `start()`/`stop()` and scanning are also routed through the extended engine using legacy PDUs (a reserved top instance broadcasts the legacy `ADV_IND` so it can coexist with user extended sets) — see [Advertising / scanning routing](#advertising--scanning-capability-gated-routing) below. Bluedroid mirrors that surface when `BLE5_SUPPORTED` is on (BLE5-capable chips with `CONFIG_BT_BLE_50_FEATURES_SUPPORTED`): extended adv/scan, connection PHY/DLE, `setDefaultPhy`, periodic advertising TX (`CONFIG_BT_BLE_50_PERIODIC_ADV_EN`), and periodic sync RX. Classic esp32 stays on BLE 4.2 and uses the shared `NotSupported` fallbacks. Where a backend lacks a capability, the `NotSupported` behavior is a single shared fallback in the stack-agnostic layer, not a per-backend copy. On non-BLE-5 builds every BLE5 method returns `BTStatus::NotSupported` (setters are no-ops), so callers must check the returned status. On-air BLE5 TX/sync verification requires a 2-DUT BLE5 rig (HITL).
+Current status: on NimBLE with `BLE5_SUPPORTED`, both the **receive** side (extended discovery + periodic sync) and the **transmit** side (extended + periodic advertising) are implemented over the extended controller API. When BLE5 is enabled, legacy `start()`/`stop()` and scanning are also routed through the extended engine using legacy PDUs (a reserved top instance broadcasts the legacy `ADV_IND` so it can coexist with user extended sets) — see [Advertising / scanning routing](#advertising--scanning-capability-gated-routing) below. Bluedroid mirrors that surface when `BLE5_SUPPORTED` is on (BLE5-capable chips with `CONFIG_BT_BLE_50_FEATURES_SUPPORTED`): extended adv/scan, connection PHY/DLE, `setDefaultPhy`, periodic advertising TX (`CONFIG_BT_BLE_50_PERIODIC_ADV_EN`), and periodic sync RX. Classic esp32 stays on BLE 4.2 and uses the shared `NotSupported` fallbacks.
+Bluedroid-specific constraints found while validating the S31 BLE5 suite:
+extended-advertising report addresses arrive as `esp_bd_addr_t` (MSB-first) and
+must go through `BTAddress::fromEspBdAddr`; a set advertising with
+`BTAddress::Type::Random` needs its own random address
+(`esp_ble_gap_ext_adv_set_rand_addr`) after `Set_Extended_Adv_Params` created
+the set — the device-level address alone makes the enable fail with `0x12`; and
+`ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR` omits the `Directed` bit, so
+high-duty directed advertising must send `0x1D` (not `0x19`). Where a backend lacks a capability, the `NotSupported` behavior is a single shared fallback in the stack-agnostic layer, not a per-backend copy. On non-BLE-5 builds every BLE5 method returns `BTStatus::NotSupported` (setters are no-ops), so callers must check the returned status. On-air BLE5 TX/sync verification requires a 2-DUT BLE5 rig (HITL).
 
 ### BLEStream
 
@@ -483,13 +588,62 @@ In **server mode**, multiple centrals may connect at once. As a single Arduino `
 While active, server-mode `BLEStream` exclusively owns the NUS service, legacy advertising configuration, and the server's callback slots. `begin()` returns `Busy` if another owner already registered NUS. `end()` stops advertising, disconnects the server ACL peers, removes only NUS, and leaves the BLE stack and unrelated GATT services initialized.
 
 ### L2CAP CoC
-
 L2CAP CoC is guarded by `BLE_L2CAP_SUPPORTED` and only available when the backend and Kconfig support it.
 This is an accepted exception because capability depends on both backend and build configuration.
 Even so, the public API remains generic and does not expose backend types.
 `BLE.connectL2CAP()` blocks via `BLESync` until `BLE_L2CAP_EVENT_COC_CONNECTED` completes (or returns an empty `BLEL2CAPChannel` on failure/timeout). Channel-native `write()`, `getMTU()`, and `disconnect()` calls from application tasks are submitted through a per-channel event on the NimBLE host queue; this serializes native channel-pointer access with `COC_DISCONNECTED`, which owns pointer invalidation. Each whole public channel operation is also serialized so one operation cannot consume another operation's `BLESync` wakeup. Calls already on the host task execute directly and never wait for flow-control events: a write that would need a later `COC_TX_UNSTALLED` returns `Busy`.
 `write()` splits payloads larger than the peer CoC MTU into MTU-sized SDUs and application-task calls may block briefly between chunks while waiting for peer credits (`COC_TX_UNSTALLED`). NimBLE itself does not segment oversized SDUs — that is done in the Arduino wrapper. A channel allocates NPL event backing only while an operation is queued or in flight and returns it to the bounded ESP-IDF pool before waking the caller; retained detached shells therefore consume no event slots. The active-operation registry holds a strong Impl reference, and the queued callback takes its own strong copy before running, so waking the caller and dropping the final public handle cannot free callback state. L2CAP shutdown closes an enqueue gate before stopping the host; after `nimble_port_stop()` and before `nimble_port_deinit()`, every still-active tracked event is removed/deinitialized and all operation waiters are released. Client channel contexts are then cleaned up by `nimbleCleanupL2CAP()`. Operations on a detached non-null channel shell return `NotConnected` (including after `end()` and a later `begin()`); only an empty handle returns `InvalidState`. Detached `getMTU()` returns zero without queueing host work.
 On receive, SDUs up to a fixed 256-byte stack threshold are flattened without a heap allocation; larger SDUs (when the channel MTU is bigger) spill to a heap vector. Channel MTU itself is whatever the caller configured (128, 256, 512, …) and is independent of that RX threshold. After flatten, the received `sdu_rx` mbuf is freed and a fresh buffer is posted via `ble_l2cap_recv_ready` — omitting the free drains the CoC pool and stalls peer credits.
+
+### Bluedroid BTA auto-discovery gate
+
+On uncached (re)connects, Bluedroid BTA runs its own GATT auto-discovery
+before delivering `ESP_GATTC_OPEN_EVT`. The client arms `autoDiscSync` (with
+`autoDiscDone=false`) before `enh_open` and the `DIS_SRVC_CMPL_EVT` handler
+signals it; `connect()` then waits for it (only when OPEN arrived with the
+default MTU 23, i.e. uncached) before the MTU exchange, and
+`discoverServices()` waits up to 2 s when a discovery is in flight. Both waits
+are best effort: a timeout runs the operation on whatever BTA has rather than
+wedging the caller. Cached reconnects are detected with a `get_attr_count`
+probe and skip the wait. Observable ordering (connect → MTU → discovery) is
+identical on both backends; this gate only serializes Bluedroid-internal
+events.
+
+### LE Audio
+
+LE Audio (`libraries/BLEAudio/src/`) is a **separate Arduino library**
+built on the host-agnostic ESP-BLE-AUDIO engine. Keeping it out of `BLE` means
+a sketch that includes only `<BLE.h>` does not compile the audio engine; a
+sketch that includes `<BLEAudio.h>` gets the whole subsystem. The only host-specific files in `BLEAudio` are the two `.nimble.*` / `.bluedroid.*` pairs
+(`BLEAudio.{nimble,bluedroid}.*` selected by `BLEAudioBackend.h`, and
+`engine/BLEAudioEngine.{nimble,bluedroid}.*`). The `BLEAudio` controller is a shared handle minted
+from the `BLE` singleton (`BLE.getAudioController()`); its `create*()` factories mint
+value-type role handles (unicast/broadcast data plane and Broadcast Assistant;
+CAP/CSIP coordination; VCP/MICP/MCP/CCP control; TMAP/GMAP/HAS/PBP identity) whose
+audio flows through `BLEAudioStream` handles, with a turnkey LC3 player/recorder on
+top. Every engine call is isolated in C engine units (`engine/BLEAudioEngine*.{h,c}`)
+behind an `extern "C"` boundary, and engine events reach the role handles through one
+event bridge; no `esp_ble_audio_*` type ever appears in a header reachable from
+`<BLEAudio.h>`. Roles
+stage their registration before `audio.begin()` (the controller's
+`roleApplies` "accumulate then commit" model), and `begin()` performs the single
+coordinated `ble_gatts_start()` so audio profiles and a plain-GATT `BLEServer` coexist in
+one GATT table (see [Service staging and startup](#service-staging-and-startup)).
+The core forwards host GAP/GATT events to the engine through lazy hooks and runs
+audio plus standalone-ISO teardown before host shutdown. Dispatch order is
+inherently backend-specific and is *not* normalized: NimBLE fans one GAP event
+out as ISO → audio → server → SMP (`nimbleForwardServerGapEvent`), while
+Bluedroid routes each component through its own BTA callback and notifies the
+audio engine after server/adv/scan/client, just before security. The engine
+does not depend on the core's server/client hooks (it owns its own GATT
+registration on both hosts), so the relative order is unobservable to
+sketches; do not "align" the two chains. These hooks preserve the
+normal callback-safe `BLE.end()` worker and lifecycle admission rules; audio is
+not a second owner of the BLE singleton lifecycle.
+
+The full audio-layer architecture, engine boundary, event and stream paths, per-role feature guards,
+and per-role spec-compliance checklist live in the dedicated maintainer doc
+[`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md).
 
 ## Backend contract
 
@@ -530,7 +684,8 @@ moving them to `cores/` would share nothing and only pollute the core.
 The two headers differ in how they relate to the `BLE.h` umbrella:
 
 - **`hid/HIDTypes.h` — reaches `BLE.h` transitively.** It contains only macros and
-  constants (HID short-item macros, report types, `BLE_APPEARANCE_HID_*`) — it emits **no
+  constants (HID short-item macros and report types); the HID appearance values
+  live in `advertising/BLEAppearance.h`. It emits **no
   data**, so including it widely costs nothing. `hid/BLEHIDDevice.h` needs it and is itself
   listed in `BLE.h`, so any sketch that does `#include <BLE.h>` already has it. It is *not*
   listed directly in `BLE.h` because the umbrella aggregates the public **class** headers;
@@ -578,8 +733,8 @@ header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 
 ### What a backend must provide
 
-1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` when a shared base exists (enforced by `BLEBackendContract.h`). Baseless classes (`BLEClass`, `Scan`, `Advertising`, L2CAP) define `Foo::Impl` directly. `BLEAdvertisedDevice` is fully shared — no backend `Impl` needed.
-2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack. **Exception — `BLEClass`:** all lifecycle, identity, MTU/PHY/whitelist, custom handlers, **and** factory accessors live in `BLE.<stack>.cpp` only.
+1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` (`BLEBackendContract.h` verifies `BLEClass`, `Server`, `Service`, `Characteristic`, `Descriptor`, `Client`, `Remote*`, `Scan`, `Advertising`, and `Security`). `BLEAdvertisedDevice` is 100% shared; `BLEL2CAPServer` is NimBLE-only.
+2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack (while `BLEFoo.cpp` provides shared bodies and `#if !BLE_*_SUPPORTED` fallbacks).
 3. **Agnostic hooks** declared in the shared base / `core/` and implemented per backend (e.g. `bleServerRemoveService`). Validation helpers such as `bleValidateCharProps` are shared — consume them, do not reimplement.
 4. **Lifecycle + event routing** — init/deinit in `BLE.<stack>.cpp`; route GAP/GATT into shared handlers (`handleGAP` / `handleGATTS` / `handleGATTC`, advertising/scan/security). Fire shared `BLESecurityImplCommon` pairing hooks on the process-wide `BLESecurity::Impl::instance()`.
 5. **Resource teardown in `end()`** — the library owns cleanup of resources it created. `end()` already resets advertising and stops scanning; backends with periodic-sync must call `BLEScan::terminateAllPeriodicSyncs()` **while the host is still enabled**. Terminating after host disable races teardown.
@@ -588,15 +743,16 @@ header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 
 - **Scan results:** cache into `results` **before** `onResult`, so `getResults()` inside the handler sees the current device.
 - **Client connect:** deliver `onConnect` **before** unblocking a blocking `connect()`.
-- **Client and server disconnect:** tear down connection state, discovered remote ownership, and notification routes before delivering `onDisconnect`; accepted sends that are still pending receive their terminal link-loss status before `onDisconnect` (NimBLE snapshots `pendingNotifies` and dispatches `ERROR_NO_CLIENT` the same way Bluedroid does); deliver disconnect only if the link had reached connected. When `BLEClient::disconnect()` or `BLEServer::disconnect()` is called from a user task (not the stack callback task), it blocks via `BLESync` until the disconnect event completes.
+- **Client and server disconnect:** tear down connection state, discovered remote ownership, and notification routes before delivering `onDisconnect`; accepted sends that are still pending receive their terminal link-loss status before `onDisconnect` (NimBLE snapshots `pendingNotifies` and dispatches `ERROR_NO_CLIENT` the same way Bluedroid does); deliver disconnect only if the link had reached connected. The client snapshots `onDisconnect` under the same mutex as the connected-state transition, so a concurrent `resetCallbacks()` or partial-start cleanup cannot erase an event already being dispatched; callbacks still run outside the lock. When `BLEClient::disconnect()` or `BLEServer::disconnect()` is called from a user task (not the stack callback task), it blocks via `BLESync` until the disconnect event completes.
 - **Bluedroid notify/indicate CONF:** `ESP_GATTS_CONF_EVT` has no notify/indicate bit. A notify CONF is local TX-complete and arrives before the peer indication confirm, so a submitted notification is consumed first; an in-flight indication is the fallback. Preferring the in-flight indication would steal leftover notify CONFs once `indicationDone()` starts the next queued indication (ATT still has one outstanding; the stack returns Busy and a dual notify+indicate burst drops a payload). A reservation that has not been handed to the stack must not consume a CONF. Notifications are marked submitted only after `esp_ble_gatts_send_indicate` returns `ESP_OK`.
 - **NimBLE GATT rebuild:** a failed rebuild after `ble_gatts_reset()` clears `started` and attribute handles so the next `start()` retries instead of treating the empty table as live. After a successful rebuild, Service Changed uses the full ATT range `0x0001–0xFFFF` (handles were reassigned). The connected/EBUSY visibility path still uses the pre-reset range.
 - **`BLE.end()` from a stack callback:** claims `ending` under the lifecycle mutex (so `begin()` returns `InvalidState` and factories refuse) then defers the teardown body to a worker (`bleInStackCallbackTask()` + `xTaskCreate`), matching `BLEStream::end()`. Calling `end()` inline on the host/BTC task deadlocks deferred stream teardown that still needs the host. A failed worker create leaves `ending` set; the next user-thread `end()` runs the body. User-thread `end()` waits out an in-flight worker so returning means the host is down. A nested `end()` from the teardown task itself returns immediately so it cannot deadlock on its own `endRunning` flag. `end(true)` latches onto the in-flight session only; a no-op `end()` after the host is already down does not leak that latch into the next `begin()`.
+- **ACL loss with active CIS:** the ISO host treats a physical ACL disconnect as terminal for every CIS still attached to it. Bluedroid controllers can report the local CIS Disconnect as ACL loss without delivering the local CIS-complete event; force-completing those channels releases the ISO controller `end()` waiters and the deferred ACL slot. A later duplicate CIS-complete is ignored.
 - **NimBLE L2CAP:** `connectL2CAP` drops `lifecycleMtx` before the 5 s `connectSync` wait. Host-callback writes larger than one peer CoC SDU return `Busy` before any send (a retry would otherwise resend a prefix).
 - **NimBLE legacy OOB:** `ble_sm_inject_io` copies a 16-byte TK; a zeroed TK is the public Temporary Key and pairing would succeed. OOB is not supported: fail with `BLE_SM_ERR_OOB` and wake the auth waiter. OOB-SC injects null `oob_sc_data` pointers, which NimBLE already maps to `BLE_SM_ERR_OOB`. Validation-only `BLEHooks.security.advertiseOob` sets `ble_hs_cfg.sm_oob_data_flag` so HITL can force `BLE_SM_IOACT_OOB` / `BLE_SM_IOACT_OOB_SC`.
 - **Bluedroid OOB:** `ESP_GAP_BLE_OOB_REQ_EVT` / `ESP_GAP_BLE_SC_OOB_REQ_EVT` must not reply with a zero TK (public Temporary Key). The library disconnects the ACL so SMP aborts. The same validation hook sets `ESP_BLE_SM_OOB_SUPPORT`.
 - **Directed advertising InitA:** `setDirectedAddress` supplies the peer address for `DirectedHighDuty` / `DirectedLowDuty` / `ConnectableDirected`. `start()` of a directed type with a zero address is `InvalidParam` (Vol 6, Part B, §4.4.2.4). High-duty directed is also capped at 1.28 s (§4.4.2.4.2). BLE5 `startLegacyViaExtAdv` drops leftover AD/SCAN_RSP on the reserved instance before `Set_Ext_Adv_Params` (NimBLE `ble_gap_ext_adv_remove`; Bluedroid zero-length data/scan-rsp). The controller rejects high-duty directed while the set still holds data (Vol 4, Part E, §7.8.53; HCI 0x12).
-- **Client MTU exchange:** initiate from the **caller's thread inside blocking `connect()`**, after the connect sync is released, and **block until it completes**. On NimBLE, `ble_att_set_preferred_mtu` is updated in `setMTU()` and before `ble_gattc_exchange_mtu()` in `connect()` so the ATT preferred MTU matches Bluedroid's `esp_ble_gatt_set_local_mtu`. Bluedroid drops a pending MTU procedure if another GATT/GAP op starts while it is in flight. `connectAsync()` does **not** auto-exchange — call `setMTU()` after `onConnect`. MTU is not yet negotiated *inside* `onConnect`.
+- **Client MTU exchange:** initiate from the **caller's thread inside blocking `connect()`**, after the connect sync is released, and **block until it completes**. On NimBLE, `ble_att_set_preferred_mtu` is updated in `setMTU()` and before `ble_gattc_exchange_mtu()` in `connect()` so the ATT preferred MTU matches Bluedroid's `esp_ble_gatt_set_local_mtu`. Bluedroid drops a pending MTU procedure if another GATT/GAP op starts while it is in flight. A peripheral-initiated exchange that completes before NimBLE delivers `BLE_GAP_EVENT_CONNECT` (CONNECT is deferred behind the LL feature/version reads) is latched and replayed after `onConnect`, so `BLE_HS_EALREADY` from the local exchange is not a connection failure and `onMtuChanged` still fires. On Bluedroid, connect completion is `OPEN_EVT` and never depends on the MTU procedure: if `esp_ble_gattc_send_mtu_req()` cannot start (including a peer that got there first), `connect()` still succeeds, and a successful local request still produces `CFG_MTU_EVT` after a peer-first exchange. `connectAsync()` does **not** auto-exchange — call `setMTU()` after `onConnect`. MTU is not yet negotiated *inside* `onConnect`.
 - **Default scan timing:** interval == window == 30 ms (continuous active scan) unless overridden.
 - **`BLEConnInfo::getIdAddress()`:** resolved identity when the stack provides one (NimBLE `peer_id_addr`), else OTA. Bluedroid has no resolved-identity field → always OTA, never empty.
 
@@ -630,17 +786,18 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 - Object mutex on every Impl: **`mtx`** (one name).
 - Callback storage: `on<Event>Cb`; public typedefs: `<Event>Handler`.
 - `connHandle` = stack-agnostic 16-bit connection handle; `connId` = Bluedroid-native GATT id (backend only); `handle` = GATT attribute handle.
-- Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: neutral `ble*` name.
+- Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: `<Component>Internal` namespaces (`BLEIsoInternal`, `BLEServerInternal`, `BLEGattInternal`, `BLEAdvInternal`, `BLEClientInternal`, `BLETask`, `BLECoreInternal`); the four `extern "C"` ISO host hand-over functions stay global because the C LE Audio engine calls them.
 
 ### Enforcement
 
 - **Compile time:** `core/BLEBackendContract.h` `static_assert`s shared-base inheritance and that baseless `Impl`s are defined.
-- **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` names a backend type or includes a backend/selector header.
+- **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` or `BLEAudio*.h` names a backend type or includes a backend/selector header, or if any shared (non-`.nimble.*`/non-`.bluedroid.*`) source/header leaks `BLE_NIMBLE` / `BLE_BLUEDROID`.
 - **Link time:** any public/agnostic method left undefined by the backend is a linker error.
 
 ### Known non-normalizable divergences
 
 - **`BLEConnInfo` real PHY on Bluedroid:** on BLE5 builds, cached from `ESP_GAP_BLE_READ_PHY_COMPLETE_EVT` / `ESP_GAP_BLE_PHY_UPDATE_COMPLETE_EVT` (defaults to `PHY_1M` until the first event). On BLE 4.2-only controllers the read-PHY API is unavailable by design, so the field stays `PHY_1M`. Peer address type is taken from GATTS/GATTC connect and `AUTH_CMPL` events.
+- **Bluedroid ambiguous handle collision:** a client and a server `conn_id` can share a numeric value. `BLEAddressUtil` resolution refuses a handle that matches links to different peers (`NotConnected`). A GATTC/GATTS numeric handle collision is therefore ambiguous only for raw-handle callers; use the `BLEConnInfo` overloads when the same peer has both roles active.
 - **`client.onConnParamsUpdateRequest`:** NimBLE-only. Bluedroid's L2CAP layer accepts/negotiates connection-parameter updates internally and only surfaces the result (`ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT`) after the fact, so there is no application pre-accept hook to bridge.
 - **`onStatus` delivery timing for notifications:** NimBLE reports `SUCCESS_NOTIFY` synchronously before `notify()` returns (its `ble_gatts_notify_custom()` raises the TX event inline); Bluedroid reports it asynchronously on the BTC task via `ESP_GATTS_CONF_EVT`. The status value and ordering relative to later sends are identical; only the execution context/timing differs, and normalizing it would require deferring NimBLE dispatch through a queue/task. Handlers must therefore not assume a task context (already required by the execution-context rule).
 - **Bluedroid `BLEConnInfo::keySize`:** `AUTH_CMPL` carries no key size; stays at default (NimBLE reports `sec_state.key_size`).
@@ -649,7 +806,45 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 - **Bluedroid Service Changed range:** `ESP_GATTC_SRVC_CHG_EVT` carries only the peer address because
   the stack consumes the 0x2A05 indication internally. The client invalidates its entire discovered
   tree and reports the conservative `0x0001–0xFFFF` range; NimBLE delivers the peer's exact payload.
-- **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic sync RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. Classic esp32 Bluedroid libs remain BLE 4.2-only.
+- **Split-controller targets (ESP32-S31, ESP32-H4) cannot narrow the BT mode at runtime:** these chips
+  build the controller from independent BLE and BR/EDR halves (`libble_app` + `libbredr_app` + a
+  broker), and which halves exist is decided at build time (`BTDM_CTRL_MODE`). Unlike the ESP32's
+  monolithic BTDM controller, `esp_bt_controller_enable()` ignores its mode argument and
+  `esp_bt_mem_release()` / `esp_bt_controller_mem_release()` are unimplemented stubs that return
+  `ESP_OK` without freeing anything. So `btMemRelease()` records the *contract* ("this mode's library
+  is terminally released") but never a physical shortage, and `btStartMode()` must not narrow a BTDM
+  request on that basis — a single-half controller under a dual-mode Bluedroid host makes the host
+  assert at disable (`set_ble_resolving_list_max_size`) or hang at enable. `cores/esp32/esp32-hal-bt.c`
+  gates the narrowing on `BT_MODE_MEM_RELEASE_PHYSICAL` and clamps the request to the built-in mode
+  with a `log_w`, instead of crashing. `btMemRelease()` is likewise build-mode-aware: a BTDM build
+  (both halves compiled, both enabled) records the contract only even if the release API is later
+  implemented, while a single-half build calls the physical API and will start freeing automatically
+  when the controller supports it. Runtime classic/BLE separation is therefore a *build-time*
+  property on these targets (pick a matching lib variant), not something `btStartMode()` can do.
+  **To reclaim the unused half in a BTDM build (when the S31 controller gains runtime mode
+  selection), change these together — implementing the release stubs alone is not enough:**
+  1. **Controller:** make `esp_bt_controller_enable(mode)` honor the requested mode (and the
+     broker/OSAL/coexistence path support a single half), and implement
+     `esp_bt_mem_release()` / `esp_bt_controller_mem_release()` with the idle-controller
+     precondition. Until the enable mode is honored, the implementation must refuse to free a
+     half the build-time mode still needs; a direct IDF caller must not be able to strand the
+     other half.
+  2. **Core (`cores/esp32/esp32-hal-bt.c`):** remove or make capability-based the
+     `BT_MODE_MEM_RELEASE_PHYSICAL = 0` gate, remove the
+     `#if defined(CONFIG_BT_DUAL_MODE_ARCH)` clamp in `btStartMode()`, and remove the
+     `BT_MODE == ESP_BT_MODE_BTDM` logical-only early return in `btMemRelease()`. The existing
+     `initArduino()` release then frees the unused half at boot, and the first `btStartMode()`
+     narrows to the surviving half. Keep the ESP32 path (`BT_MODE_MEM_RELEASE_PHYSICAL = 1`)
+     unchanged.
+  3. **Validation:** in `tests/validation/bt_mem_wrap`, phase 8's
+     `CONFIG_BT_DUAL_MODE_ARCH` branch becomes the physical-rejection behavior, phase 9's direct
+     Classic release + `btStartMode(BLE)` becomes valid, and phase 10's BTDM branch must assert
+     the unused half is freed and the surviving half still starts. Add a `bt_classic` scenario
+     that boots with the unused half released, narrows the controller, and still runs SPP/BLE.
+     Update the two READMEs and this section.
+  Until both steps 1 and 2 are done, the Arduino `btMemRelease()` never makes that safe-only
+  partial call in a BTDM build; a direct IDF caller is the implementation's responsibility.
+- **Bluedroid BLE5 surface:** extended adv/scan, PHY/DLE, periodic adv TX, and periodic-advertiser sync creation/report RX are implemented under `BLE5_SUPPORTED` / `BLE_PERIODIC_ADV_SUPPORTED`. PAST receive is supported on both backends when the controller implements BLE 5.1 PAST (guarded by `SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED`; BLE 5.0-only silicon reports `NotSupported`): the public handle is resolved to the live client/server peer address on Bluedroid, and the `BLEConnInfo` overloads bypass handle resolution entirely. A handle that matches both a client and a server link to **different** peers is refused with `NotConnected` rather than acting on the wrong link; use the descriptor overloads in that case. Classic esp32 Bluedroid libs remain BLE 4.2-only.
 - **HITL-pending coverage:** Bluedroid BLE5 leftover `EXT_ADV_STOP_COMPLETE` / `PERIODIC_ADV_STOP_COMPLETE` (phase 2 `staleStopFlag` / `stalePeriodicStop`) needs ESP32-S31 or other Bluedroid BLE5 silicon; this rig HITLs the 4.2 leftover `ADV_STOP_COMPLETE` path as phase 20 `staleLegacyStop`. Bluedroid BLE5 `clearExtended()` while a set is enabled (`HCI_LE_Clear_Advertising_Sets` Command Disallowed, flags retained) is the same contract as NimBLE `BLE_HS_EBUSY`; phase 2 `clearWhileLive` HITLs it on NimBLE. This rig has no Bluedroid BLE5 DUT (classic ESP32 is BLE 4.2-only). Multi-central BLEStream under load (two simultaneous centrals with per-peer routing; needs a third DUT). Passkey-entry pairing + Numeric-Comparison reject, periodic terminate/sync-lost, L2CAP late-connect cleanup after caller timeout, bulk across the credit stall + reconnect, conn-param reject, and the `deleteBond` round-trip are covered by phases 28-34. Directed high-duty advertising with a real InitA plus legacy OOB / OOB-SC reject are covered by phase 36. Indication `ESP_GATT_BUSY` retry, indication queue-full, CCCD bit routing, in-flight `removeService`, abandoned long-read reconnect, read-timeout destroy/re-read, Bluedroid notify-reservation vs indication CONF demux, NimBLE `nimbleRef` keepalive vs `disconnectSync.give()`, BLEStream `writeChunks` vs `end()` handle reset, and NimBLE advertising stop-during-preempt plus remaining-duration resume are covered by phases 4, 5, 12, 13, 23, 33, and 35. See `tests/validation/ble/README.md`.
 - **Untestable on this API / 2-DUT rig:** EATT (no public API). Per-peer CCCD and overlapping snapshots on two ACL links (two `BLEClient` instances on one central share one ACL with the peripheral). Withholding Handle Value Confirmation (both hosts auto-confirm indications, so the 30 s ATT indication timeout cannot be forced without a non-confirming peer).
 
@@ -686,6 +881,7 @@ If you are modifying this library:
 - prefer adapting backend code to the shared API rather than changing the shared API to fit one backend
 - look for existing patterns in handle ownership, callback dispatch, and `BTStatus` conversion before inventing a new one
 - treat `MIGRATION.md` as a user-facing transition guide and this document as the maintainer-facing architecture guide
+- for LE Audio work, read [`../BLEAudio/DESIGN.md`](../BLEAudio/DESIGN.md) — it is the maintainer-facing guide for the `libraries/BLEAudio/src/` subsystem (engine boundary, controller commit model, per-role guards and spec obligations)
 
 If the code and this document disagree, follow the code and update this document.
 

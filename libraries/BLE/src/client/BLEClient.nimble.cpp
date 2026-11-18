@@ -27,7 +27,11 @@
 #include "types/BLEUUID.nimble.h"
 #include "core/BLEImplHelpers.h"
 #include "core/BLEBackend.h"
+#include "core/BLEAudioHooks.h"
 #include "esp32-hal-log.h"
+#if BLE_ISO_SUPPORTED
+#include "iso/BLEIso.nimble.h"
+#endif
 
 /**
  * @file BLEClient.nimble.cpp
@@ -72,6 +76,21 @@ bool dispatchConnParamsRequest(BLEClient::Impl *impl, const BLEConnParams &param
   return accept;
 }
 
+/**
+ * @brief Maps a failed ble_gap_connect / ble_gap_ext_connect return code onto BTStatus.
+ * @note The host tracks a single pending connection attempt shared by every client, so
+ *   BLE_HS_EALREADY (another attempt pending) and BLE_HS_EBUSY (scan in progress) are
+ *   transient; BLE_HS_EDONE means the peer is already connected through another handle.
+ */
+BTStatus connectStartStatus(int rc) {
+  switch (rc) {
+    case BLE_HS_EALREADY:
+    case BLE_HS_EBUSY:    return BTStatus::Busy;
+    case BLE_HS_EDONE:    return BTStatus::AlreadyConnected;
+    default:              return BTStatus::Fail;
+  }
+}
+
 }  // namespace
 
 // --------------------------------------------------------------------------
@@ -99,6 +118,7 @@ BTStatus BLEClient::connect(const BTAddress &address, uint32_t timeoutMs) {
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
 #if BLE_VALIDATION_HOOKS
@@ -110,9 +130,10 @@ BTStatus BLEClient::connect(const BTAddress &address, uint32_t timeoutMs) {
       BLELockGuard lock(impl.mtx);
       impl.nimbleRef.reset();
     }
-    impl.connectSync.give(BTStatus::Fail);
+    BTStatus status = connectStartStatus(rc);
+    impl.connectSync.give(status);
     log_e("ble_gap_connect: rc=%d", rc);
-    return BTStatus::Fail;
+    return status;
   }
 
   BTStatus status = impl.connectSync.wait(timeoutMs + 500);
@@ -192,6 +213,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
   int rc = ble_gap_ext_connect(
@@ -202,9 +224,10 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
       BLELockGuard lock(impl.mtx);
       impl.nimbleRef.reset();
     }
-    impl.connectSync.give(BTStatus::Fail);
+    BTStatus status = connectStartStatus(rc);
+    impl.connectSync.give(status);
     log_e("ble_gap_ext_connect: rc=%d", rc);
-    return BTStatus::Fail;
+    return status;
   }
 
   BTStatus status = impl.connectSync.wait(timeoutMs + 500);
@@ -281,6 +304,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
 
   {
     BLELockGuard lock(impl.mtx);
+    impl.pendingMtuValue = 0;
     impl.nimbleRef = _impl;
   }
   int rc = ble_gap_ext_connect(
@@ -292,7 +316,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
       impl.nimbleRef.reset();
     }
     log_e("connectAsync: rc=%d", rc);
-    return BTStatus::Fail;
+    return connectStartStatus(rc);
   }
   return BTStatus::OK;
 #else
@@ -309,7 +333,9 @@ BTStatus BLEClient::connectAsync(const BLEAdvertisedDevice & /*device*/, BLEPhy 
 
 BTStatus BLEClient::cancelConnect() {
   int rc = ble_gap_conn_cancel();
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("cancelConnect: no connection attempt pending");
+  } else if (rc != 0) {
     log_e("cancelConnect: ble_gap_conn_cancel rc=%d", rc);
     return BTStatus::Fail;
   }
@@ -341,7 +367,9 @@ BTStatus BLEClient::disconnect() {
     log_w("Client: ble_gap_terminate ENOTCONN (no disconnect event will arrive)");
     return BTStatus::NotConnected;
   }
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Client: disconnect already in progress");
+  } else if (rc != 0) {
     if (wait) {
       impl.disconnectSync.give(BTStatus::Fail);
     }
@@ -372,7 +400,9 @@ BTStatus BLEClient::secureConnection() {
     handle = _impl->connHandle;
   }
   int rc = ble_gap_security_initiate(handle);
-  if (rc != 0) {
+  if (rc == BLE_HS_EALREADY) {
+    log_d("Client: security procedure already in progress");
+  } else if (rc != 0) {
     log_e("Client: ble_gap_security_initiate rc=%d", rc);
     return BTStatus::Fail;
   }
@@ -548,6 +578,10 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
   nimParams.latency = params.latency;
   nimParams.supervision_timeout = params.timeout;
   int rc = ble_gap_update_params(handle, &nimParams);
+  if (rc == BLE_HS_EALREADY) {
+    log_w("Client: connection parameter update already in progress");
+    return BTStatus::Busy;
+  }
   if (rc != 0) {
     log_e("Client: ble_gap_update_params rc=%d", rc);
     return BTStatus::Fail;
@@ -555,9 +589,8 @@ BTStatus BLEClient::updateConnParams(const BLEConnParams &params) {
   return BTStatus::OK;
 }
 
-// Returns NotSupported when BLE5_SUPPORTED is off.
-BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
+BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   if (!_impl) {
     log_w("Client: setPhy called but not connected");
     return BTStatus::InvalidState;
@@ -577,15 +610,9 @@ BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
     return BTStatus::Fail;
   }
   return BTStatus::OK;
-#else
-  log_w("Client: setPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
 
-// Returns NotSupported when BLE5_SUPPORTED is off.
 BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
-#if BLE5_SUPPORTED
   if (!_impl) {
     log_w("Client: getPhy called but not connected");
     return BTStatus::InvalidState;
@@ -608,13 +635,8 @@ BTStatus BLEClient::getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
   }
   log_e("Client: ble_gap_read_le_phy rc=%d", rc);
   return BTStatus::Fail;
-#else
-  txPhy = BLEPhy::PHY_1M;
-  rxPhy = BLEPhy::PHY_1M;
-  log_w("Client: getPhy not supported (BLE 5.0 unavailable)");
-  return BTStatus::NotSupported;
-#endif
 }
+#endif
 
 BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t txTime) {
   if (!_impl) {
@@ -639,6 +661,41 @@ BTStatus BLEClient::setDataLen(uint16_t txOctets, uint16_t txTime) {
 }
 
 // --------------------------------------------------------------------------
+// MTU events
+// --------------------------------------------------------------------------
+
+/**
+ * @brief Handles a BLE_GAP_EVENT_MTU for this client.
+ *
+ * A peripheral can start the ATT MTU exchange right after the link is up, and
+ * NimBLE delivers BLE_GAP_EVENT_CONNECT only after reading the peer's LL
+ * feature set and version. The MTU event can therefore arrive before
+ * @c connHandle is published. Latch the value and replay it from the CONNECT
+ * handler after onConnect (DESIGN.md ordering contract) so onMtuChanged is not
+ * lost for that connection.
+ */
+void BLEClient::Impl::handleMtuEvent(uint16_t handle, uint16_t value) {
+  {
+    BLELockGuard lock(mtx);
+    if (handle != connHandle) {
+      if (!connected && nimbleRef) {
+        pendingMtuValue = value;
+        log_d("Client: latched pre-CONNECT MTU %u handle=%u", value, handle);
+      }
+      return;
+    }
+  }
+
+  struct ble_gap_conn_desc desc;
+  if (ble_gap_conn_find(handle, &desc) != 0) {
+    return;
+  }
+
+  log_d("Client: MTU changed, handle=%u mtu=%u", handle, value);
+  dispatchMtuChanged(BLEConnInfoImpl::fromDesc(desc), value);
+}
+
+// --------------------------------------------------------------------------
 // GAP event handler
 // --------------------------------------------------------------------------
 
@@ -656,6 +713,19 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     return 0;
   }
 
+  // Mirror the link events into the IDF ISO/Audio host so a CIS central and a
+  // unicast client's audio profiles track the connection this client opened:
+  // GAP events once through the shared ISO sink, GATT events to the audio
+  // engine (its MTU event kicks client-side profile discovery).
+#if BLE_ISO_SUPPORTED
+  BLEIsoInternal::forwardHostGapEvent(event);
+#endif
+#if BLE_AUDIO_SUPPORTED
+  if (bleAudioForwardHostGattEvent) {
+    bleAudioForwardHostGattEvent(event);
+  }
+#endif
+
   switch (event->type) {
     case BLE_GAP_EVENT_CONNECT:
     {
@@ -666,6 +736,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           BLELockGuard lock(impl->mtx);
           impl->connected = false;
           impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+          impl->pendingMtuValue = 0;
           dying = std::move(impl->nimbleRef);
         }
         impl->connectSync.give(BTStatus::Fail);
@@ -673,6 +744,17 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
         (void)dying;
         return 0;
       }
+
+#if BLE_VALIDATION_HOOKS
+      if (BLEHooks.client.injectPeerMtuBeforeConnect) {
+        // Deterministic peer-first MTU ordering for the validation suite: queue
+        // our own exchange (sets BLE_L2CAP_CHAN_F_TXED_MTU, so connect()'s later
+        // attempt gets BLE_HS_EALREADY) and latch the result as if the peer's
+        // exchange had completed before CONNECT was delivered.
+        (void)ble_gattc_exchange_mtu(event->connect.conn_handle, nullptr, nullptr);
+        impl->handleMtuEvent(event->connect.conn_handle, ble_att_preferred_mtu());
+      }
+#endif
 
       {
         BLELockGuard lock(impl->mtx);
@@ -687,10 +769,26 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // callback has run by the time connect() returns (ordering contract in
       // DESIGN.md).
       struct ble_gap_conn_desc desc;
-      if (ble_gap_conn_find(event->connect.conn_handle, &desc) == 0) {
-        BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
+      bool haveDesc = ble_gap_conn_find(event->connect.conn_handle, &desc) == 0;
+      BLEConnInfo connInfo;
+      if (haveDesc) {
+        connInfo = BLEConnInfoImpl::fromDesc(desc);
         impl->dispatchConnect(connInfo);
       }
+
+      // A peer-initiated MTU exchange that completed before CONNECT was
+      // delivered was latched by handleMtuEvent(); replay it after onConnect.
+      uint16_t pendingMtu;
+      {
+        BLELockGuard lock(impl->mtx);
+        pendingMtu = impl->pendingMtuValue;
+        impl->pendingMtuValue = 0;
+      }
+      if (pendingMtu != 0 && haveDesc) {
+        log_d("Client: replaying pre-CONNECT MTU %u handle=%u", pendingMtu, event->connect.conn_handle);
+        impl->dispatchMtuChanged(connInfo, pendingMtu);
+      }
+
       impl->connectSync.give(BTStatus::OK);
 #if BLE_VALIDATION_HOOKS
       BLEHooks.client.nimbleRefEmptyOnConnect.store(!impl->nimbleRef, std::memory_order_relaxed);
@@ -702,6 +800,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
     {
       uint16_t evtHandle = event->disconnect.conn.conn_handle;
       bool wasConnected;
+      BLEClient::DisconnectHandler disconnectHandler;
       std::shared_ptr<Impl> dying;
       {
         BLELockGuard lock(impl->mtx);
@@ -709,8 +808,12 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
           return 0;
         }
         wasConnected = impl->connected;
+        if (wasConnected) {
+          disconnectHandler = impl->onDisconnectCb;
+        }
         impl->connected = false;
         impl->connHandle = BLE_HS_CONN_HANDLE_NONE;
+        impl->pendingMtuValue = 0;
         impl->clearDiscoveredServices();
         dying = std::move(impl->nimbleRef);
       }
@@ -724,7 +827,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       // suppresses a spurious event when a failed connect attempt tears down.
       impl->authSync.give(BTStatus::Fail);
       if (wasConnected) {
-        impl->dispatchDisconnect(connInfo, reason);
+        impl->dispatchDisconnect(connInfo, reason, disconnectHandler);
       }
       impl->disconnectSync.give(BTStatus::OK);
 #if BLE_VALIDATION_HOOKS
@@ -745,23 +848,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_MTU:
     {
-      {
-        BLELockGuard lock(impl->mtx);
-        if (event->mtu.conn_handle != impl->connHandle) {
-          return 0;
-        }
-      }
-
-      struct ble_gap_conn_desc desc;
-      int rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
-      if (rc != 0) {
-        return 0;
-      }
-
-      BLEConnInfo connInfo = BLEConnInfoImpl::fromDesc(desc);
-
-      log_d("Client: MTU changed, handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
-      impl->dispatchMtuChanged(connInfo, event->mtu.value);
+      impl->handleMtuEvent(event->mtu.conn_handle, event->mtu.value);
       return 0;
     }
 
@@ -931,100 +1018,7 @@ int BLEClient::Impl::mtuExchangeCb(uint16_t connHandle, const struct ble_gatt_er
   return 0;
 }
 
-#else /* !BLE_GATT_CLIENT_SUPPORTED -- stubs */
-
-// Stubs for BLE_GATT_CLIENT_SUPPORTED == 0: log on most entry points; return NotSupported, empty, 0,
-// -128, 0xFFFF, or no-op. getPhy() does not set out-parameters; initialize or check the return.
-
-BTStatus BLEClient::connect(const BTAddress &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BTAddress &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connect(const BLEAdvertisedDevice &, BLEPhy, uint32_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BTAddress &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::connectAsync(const BLEAdvertisedDevice &, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::cancelConnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::disconnect() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::secureConnection() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::discoverServices() {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-void BLEClient::setMTU(uint16_t) {
-  log_w("GATT client not supported");
-}
-
-uint16_t BLEClient::getMTU() const {
-  return 0;
-}
-
-int8_t BLEClient::getRSSI() const {
-  return -128;
-}
-
-uint16_t BLEClient::getHandle() const {
-  return 0xFFFF;
-}
-
-BLEConnInfo BLEClient::getConnInfo() const {
-  return BLEConnInfo();
-}
-
-BTStatus BLEClient::updateConnParams(const BLEConnParams &) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setPhy(BLEPhy, BLEPhy) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::getPhy(BLEPhy &, BLEPhy &) const {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClient::setDataLen(uint16_t, uint16_t) {
-  log_w("GATT client not supported");
-  return BTStatus::NotSupported;
-}
+#else /* !BLE_GATT_CLIENT_SUPPORTED -- NimBLE-only Impl stub */
 
 int BLEClient::Impl::gapEventHandler(struct ble_gap_event *, void *) {
   return 0;

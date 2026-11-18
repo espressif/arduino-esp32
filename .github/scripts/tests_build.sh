@@ -268,6 +268,9 @@ source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 source "${SCRIPTS_DIR}/tests_utils.sh"
 set +e
 
+# ci.yml parsing relies on mikefarah/yq (yq-go); fail early with a clear message.
+require_yq_go || exit 1
+
 args=("-au" "$ARDUINO_USR_PATH")
 if [ "${use_arduino_cli:-0}" -eq 1 ]; then
     args+=("-ai" "$ARDUINO_IDE_PATH" "--arduino-cli")

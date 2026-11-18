@@ -91,7 +91,7 @@ static const BLEUUID PERM_FAIL_CLOSED_CHAR_UUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3
 // Phase 15 (descriptor permissions): custom-UUID descriptor attached to
 // DESC_CHAR with read-only permission. The client reads it (expect success)
 // then attempts a write (expect ATT-layer rejection), proving that
-// bleValidateDescProps + the BluedroidServer descPerm translation enforce
+// validateDescProps + the BluedroidServer descPerm translation enforce
 // the declared descriptor permissions end-to-end.
 static const BLEUUID DESC_READONLY_UUID("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
 
@@ -128,6 +128,9 @@ int notifyStep = 0;
 volatile int currentPhase = 0;
 bool serverDisconnectDone = false;
 bool phase10BondsCleared = false;
+bool phase10MitmGo = false;
+bool phase10MitmDone = false;
+bool phase10MitmRestored = false;
 bool descPermValidationDone = false;
 
 // Phase 16-28 completion flags (each phase fires once)
@@ -153,7 +156,8 @@ volatile bool phase33Continue = false;
 bool phase34Done = false;  // periodic_adv_lifecycle (HITL)
 bool phase35Done = false;  // pending_send_edges
 bool phase36Done = false;  // directed high-duty + OOB reject
-bool phase37Done = false;  // memory_release (tail of suite)
+bool phase37Done = false;  // l2cap_full_mtu
+bool phase38Done = false;  // memory_release (tail of suite)
 volatile bool phase36PeerReady = false;
 BTAddress phase36Peer;
 volatile bool serverAuthCompleteFired = false;
@@ -173,9 +177,19 @@ std::atomic<uint32_t> l2capPhase28Accepts{0};
 std::atomic<uint32_t> l2capPhase28Disconnects{0};
 #if BLE_L2CAP_SUPPORTED
 BLEL2CAPServer l2capBulkServer;
+BLEL2CAPServer l2capFullMtuServer;
 #endif
 
 static const uint32_t L2CAP_BULK_TARGET = 2000;
+static const uint16_t L2CAP_FULL_MTU = 512;
+static const uint16_t L2CAP_FULL_PSM = 0x0084;
+static const uint32_t L2CAP_FULL_SDUS = 16;  // 2 writer tasks × 8 SDUs on one CoC
+
+std::atomic<uint32_t> l2capFullAccepts{0};
+std::atomic<uint32_t> l2capFullDisconnects{0};
+volatile uint32_t l2capFullRx = 0;
+volatile uint32_t l2capFullRxOk = 0;
+volatile uint32_t l2capFullEchoOk = 0;
 
 // Phase 16 — server callback aggregation (set from BLE stack task, read from loop).
 // Without these we'd race the MTU/conn-param update events against the phase
@@ -356,6 +370,8 @@ void checkSerial() {
         }
       } else if (buf == "PHASE13_CONTINUE") {
         phase13Continue = true;
+      } else if (buf == "PHASE10_MITM_GO") {
+        phase10MitmGo = true;
       } else if (buf == "PHASE33_CONTINUE") {
         phase33Continue = true;
       } else if (buf == "PHASE35_CCCD_GO") {
@@ -477,11 +493,25 @@ bool phase_basic() {
   BTStatus afterIdleTrue = BLE.begin(serverName + "_idle_true");
   BLE.end(false);
   BTStatus afterIdleTrueEnd = BLE.begin(serverName + "_idle_true_end");
+  // An aborted BLE.end(true) (e.g. live ISO/audio pre-end refusal) must clear
+  // endReleaseMemory so the following BLE.end(false) does not release memory.
+  BLEHooks.lifecycle.preEndAbortFailures.store(1, std::memory_order_relaxed);
+  BLE.end(true);
+  bool abortedStayedUp = BLE.isInitialized();
+  BLE.end(false);
+  BTStatus afterAbortedTrue = BLE.begin(serverName + "_aborted_true");
+  bool rndOk = false;
+  if (afterAbortedTrue && BLE.setOwnAddressType(BTAddress::Random)) {
+    uint8_t rnd[6] = {};
+    rndOk = BLE.getOwnRandomAddress(rnd) && (rnd[5] & 0xC0) == 0xC0;
+    (void)BLE.setOwnAddressType(BTAddress::Public);
+  }
+  bool idleAndAbortOk = (bool)afterIdleTrueEnd && abortedStayedUp && (bool)afterAbortedTrue && rndOk;
   Serial.printf(
     "[SERVER] Phase1 deferredEnd during=%d failSpawn=%d idleTrue=%d afterIdle=%d heap=%d\n", (int)deferredDuring, (int)deferredFailSpawn,
-    (int)(bool)afterIdleTrue, (int)(bool)afterIdleTrueEnd, (int)heap_caps_check_integrity_all(true)
+    (int)(bool)afterIdleTrue, (int)idleAndAbortOk, (int)heap_caps_check_integrity_all(true)
   );
-  if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !afterIdleTrueEnd) {
+  if (!deferredDuring || !deferredFailSpawn || !afterIdleTrue || !idleAndAbortOk) {
     return false;
   }
 
@@ -1011,6 +1041,29 @@ void setup() {
 void loop() {
   checkSerial();
 
+  // Phase 10 leg 2 (no-MITM regression, client-driven): drop to mitm=false so
+  // the client's re-pairing must negotiate Just Works. Restored to the
+  // authenticated default once the phase moves on.
+  if (phase10MitmGo && !phase10MitmDone) {
+    phase10MitmDone = true;
+    BLESecurity secMitm = BLE.getSecurity();
+    (void)secMitm.deleteAllBonds();
+    secMitm.setAuthenticationMode(true, false, true);
+    {
+      BLEServer srv = BLE.createServer();
+      for (const auto &c : srv.getConnections()) {
+        (void)srv.disconnect(c.getHandle());
+      }
+    }
+    delay(300);
+    Serial.println("[SERVER] Phase10 mitm off");
+  }
+  if (currentPhase > 10 && phase10MitmDone && !phase10MitmRestored) {
+    phase10MitmRestored = true;
+    BLESecurity secMitm = BLE.getSecurity();
+    secMitm.setAuthenticationMode(true, true, true);
+    Serial.println("[SERVER] Phase10 mitm restored");
+  }
   // Phase 10: clear bond store so encrypted read forces a fresh pairing (passkey
   // lines). Runs once on the first loop after START_PHASE_10; disconnect first
   // so the stack can drop the old link before ble_store is cleared.
@@ -1275,8 +1328,9 @@ void loop() {
     if (bleStreamStep == 0 && bleStreamConnectCb.load() && !bleStreamConnectCallbackActive.load()) {
       Serial.println("[SERVER] BLEStream onConnect fired");
       Serial.printf("[SERVER] BLEStream callback mutation safe=%d\n", (int)bleStreamCallbackSnapshotSafe.load());
-      if (bleStream.connected()) {
+      if (bleStream.isConnected()) {
         Serial.println("[SERVER] BLEStream connected OK");
+        Serial.printf("[SERVER] BLEStream alias isConnected=%d legacy=%d\n", (int)bleStream.isConnected(), (int)bleStream.isConnected());
         Serial.printf("[SERVER] BLEStream peerCount=%u\n", bleStream.peerCount());
         auto peerList = bleStream.peers();
         Serial.printf("[SERVER] BLEStream peers=%u\n", (unsigned)peerList.size());
@@ -1422,12 +1476,17 @@ void loop() {
       static unsigned long callbackEndStart = millis();
       BTStatus callbackRestart = bleStream.begin(serverName);
       if (callbackRestart || millis() - callbackEndStart >= 8000) {
+        // Tear the transient advertising down before anything else: the peer
+        // connects by address, so leaving it up while printing would let it
+        // connect to this throwaway instance instead of the final owner.
+        if (callbackRestart) {
+          bleStream.end();
+        }
         Serial.printf(
           "[SERVER] BLEStream callback end returned=%d rebegin=%d heap=%d\n", (int)bleStreamCallbackEndReturned.load(), (int)(bool)callbackRestart,
           (int)heap_caps_check_integrity_all(true)
         );
         if (callbackRestart) {
-          bleStream.end();
           bleStreamFinalOwner = std::make_shared<BLEStream>();
           // Deterministically exercise the callback handoff fallback: one
           // worker-creation failure quarantines immediately, then enough
@@ -1542,7 +1601,7 @@ void loop() {
 
   // Phase 15: Construction-time descriptor permission validation.
   //
-  // Runs bleValidateDescProps through BLECharacteristic::createDescriptor for
+  // Runs validateDescProps through BLECharacteristic::createDescriptor for
   // a handful of malformed specs and verifies each one is rejected (empty
   // BLEDescriptor handle → `!desc` is true). These calls happen after
   // server.start() has already registered the live GATT table, so any
@@ -1589,7 +1648,7 @@ void loop() {
     auto d7 = permFailClosedChr.createDescriptor(BLEUUID("a0000000-0000-4000-8000-000000000003"), BLEPermission::ReadOpen);
     Serial.printf("[SERVER] DescPerm valid accepted: %d\n", (int)((bool)d7));
 
-    // Characteristic construction-time validation (bleValidateCharProps) and
+    // Characteristic construction-time validation (validateCharProps) and
     // included-service removeService() Busy guard.
     BLEServer valSrv = BLE.createServer();
     BLEService valSvc = valSrv.createService(BLEUUID("a0000000-0000-4000-8000-000000000010"));
@@ -1689,6 +1748,14 @@ void loop() {
       while (!phase16ConnParamsSeen && (millis() - paramWait) < 10000) {
         delay(50);
       }
+      // The ATT MTU exchange is not ordered against the conn-params update:
+      // Bluedroid serializes it behind the automatic service discovery, so it
+      // can complete after the param update. Sample only once both landed (or
+      // the bound expires) so this measures the events, not the race.
+      unsigned long mtuWait = millis();
+      while (!phase16MtuSeen && (millis() - mtuWait) < 10000) {
+        delay(50);
+      }
       Serial.printf("[SERVER] MtuChanged seen=%d last=%u\n", (int)phase16MtuSeen, (unsigned)phase16LastMtu);
       Serial.printf(
         "[SERVER] ConnParamsUpdate seen=%d interval=%u latency=%u timeout=%u\n", (int)phase16ConnParamsSeen, (unsigned)phase16LastInterval,
@@ -1712,6 +1779,55 @@ void loop() {
         "[SERVER] Phase16 getConnInfo valid=%d mtu=%u timeout=%u bogusValid=%d refreshedMtu=%d refreshedParams=%d\n", (int)freshValid, (unsigned)fresh.getMTU(),
         (unsigned)fresh.getSupervisionTimeout(), (int)(bool)bogus, (int)refreshedMtu, (int)refreshedParams
       );
+
+      // PAST receive must resolve the peripheral-side connection handle the
+      // same way on both stacks.
+#if BLE_PAST_SUPPORTED
+      BLEScan pastScan = BLE.getScan();
+      BTStatus pastArm = pastScan.receivePeriodicSync(c.getHandle());
+      BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
+      BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(c.getHandle());
+      Serial.printf("[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel);
+#else
+      Serial.println("[SERVER] Phase16 past supported=0");
+#endif
+
+      // Connection lookup must resolve the peripheral-side handle from the
+      // peer address and include the server link in the multi-role list.
+      uint16_t byAddr = BLE.getConnHandle(c.getAddress());
+      std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(c.getAddress());
+      bool hasSelf = false;
+      for (uint16_t h : byAddrHandles) {
+        if (h == c.getHandle()) {
+          hasSelf = true;
+        }
+      }
+      BLEConnInfo byAddrInfo = BLE.getConnInfo(c.getAddress());
+      bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == c.getHandle();
+      bool lookupVolatileOk = byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
+      std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(c.getAddress());
+      bool connsOk = false;
+      for (const auto &ci : byAddrConns) {
+        if (ci.getHandle() == c.getHandle() && ci.isPeripheral()) {
+          connsOk = true;
+        }
+      }
+      BTAddress bogusPeer("00:00:00:00:00:01");
+      bool bogusOk = BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty()
+                     && !(bool)BLE.getConnInfo(bogusPeer);
+      Serial.printf(
+        "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d volatile=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
+        (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (int)lookupVolatileOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
+      );
+
+#if BLE_PAST_SUPPORTED
+      BLEScan infoScan = BLE.getScan();
+      BTStatus pastInfoArm = infoScan.receivePeriodicSync(byAddrInfo);
+      BTStatus pastInfoStop = infoScan.stopPeriodicSyncReceive(byAddrInfo);
+      Serial.printf("[SERVER] Phase16 pastInfo arm=%d stop=%d\n", (int)(bool)pastInfoArm, (int)(bool)pastInfoStop);
+#else
+      Serial.println("[SERVER] Phase16 pastInfo supported=0");
+#endif
     }
     Serial.println("[SERVER] Phase16 done");
   }
@@ -2105,6 +2221,39 @@ void loop() {
     ext.setName(longName);
     bool extFullName = ext.length() >= (longName.length() + 2);
     Serial.printf("[SERVER] Phase20 adCap nameFit=%d oversizeRejected=%d extFullName=%d\n", (int)nameFit, (int)oversizeRejected, (int)extFullName);
+
+    // Broadcast Name (0x30) UTF-8 boundary truncation + 4-octet space padding:
+    //  - 126 ASCII + two 2-octet UTF-8 chars (130 B) cuts cleanly at 128 B
+    //    without slicing the char at [126..127];
+    //  - 125 ASCII + two 2-octet UTF-8 chars (129 B) drops the straddling char
+    //    at [127..128] without slicing the preceding char at [125..126];
+    //  - <4 octets is space-padded to 4 octets (BAP §3.7.2.1).
+    String utfBoundary;
+    utfBoundary.reserve(130);
+    for (int i = 0; i < 126; i++) {
+      utfBoundary += 'A';
+    }
+    utfBoundary += "\xC3\xA9\xC3\xA9";
+    BLEAdvertisementData bnBoundary(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
+    bnBoundary.setBroadcastName(utfBoundary);
+    bool bnBoundaryOk = bnBoundary.length() == 130 && bnBoundary.data()[0] == 129 && bnBoundary.data()[1] == 0x30 && bnBoundary.data()[128] == 0xC3
+                        && bnBoundary.data()[129] == 0xA9;
+
+    String utfStraddle;
+    utfStraddle.reserve(129);
+    for (int i = 0; i < 125; i++) {
+      utfStraddle += 'A';
+    }
+    utfStraddle += "\xC3\xA9\xC3\xA9";
+    BLEAdvertisementData bnStraddle(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
+    bnStraddle.setBroadcastName(utfStraddle);
+    bool bnStraddleOk = bnStraddle.length() == 129 && bnStraddle.data()[0] == 128 && bnStraddle.data()[1] == 0x30 && bnStraddle.data()[127] == 0xC3
+                        && bnStraddle.data()[128] == 0xA9;
+
+    BLEAdvertisementData bnPad;
+    bnPad.setBroadcastName("Hi");
+    bool bnPadOk = bnPad.length() == 6 && bnPad.data()[0] == 5 && bnPad.data()[1] == 0x30 && memcmp(bnPad.data() + 2, "Hi  ", 4) == 0;
+    Serial.printf("[SERVER] Phase20 bcastName boundary=%d straddle=%d pad=%d\n", (int)bnBoundaryOk, (int)bnStraddleOk, (int)bnPadOk);
 
     // Slave Connection Interval Range AD (0x12) encoding guard (no peer needed):
     // setPreferredParams must emit exactly [04 12 <min_lo min_hi> <max_lo max_hi>]
@@ -2631,6 +2780,15 @@ void loop() {
   if (currentPhase >= 24 && !phase24Done) {
     phase24Done = true;
 #if BLE5_SUPPORTED
+    // Phase 23 can leave a deferred BLE.end() in flight. createServer() would
+    // then return an empty server while the stack is still ending, and the
+    // client's phase-24 connection would have no GATTS app to land on. Wait for
+    // the lifecycle to settle and re-begin if needed before creating the server.
+    for (int i = 0; i < 50 && !BLE.isInitialized(); i++) {
+      BLE.begin(serverName);
+      delay(100);
+    }
+
     BLEPhy tx = BLEPhy::PHY_1M;
     BLEPhy rx = BLEPhy::PHY_1M;
     BTStatus gd = BLE.getDefaultPhy(tx, rx);
@@ -2639,6 +2797,17 @@ void loop() {
     Serial.printf("[SERVER] Phase24 setDefaultPhy ok=%d\n", (int)(bool)sd);
 
     BLEServer srv = BLE.createServer();
+    // Phase 23's peer can still be in the list while its disconnect is in
+    // flight. Drop it explicitly and wait for the list to empty, so the
+    // dedicated phase-24 connection is the only one and conns[0] is it.
+    for (auto &c : srv.getConnections()) {
+      (void)srv.disconnect(c.getHandle());
+    }
+    unsigned long clearWait = millis() + 5000;
+    while (srv.getConnectedCount() > 0 && millis() < clearWait) {
+      delay(20);
+    }
+
     // Make sure we're advertising so the client's dedicated phase-24 connection
     // can be established, then wait for it. This exercises the per-connection
     // PHY/DLE path every run rather than only when a stale link lingers from
@@ -2727,7 +2896,7 @@ void loop() {
         (int)detachedFactoriesRejected
       );
 
-      // Pre-registration characteristic validation (bleValidateCharForRegistration):
+      // Pre-registration characteristic validation (validateCharForRegistration):
       //   1. ExtendedProps without 0x2900 descriptor -> InvalidState
       //   2. Broadcast without 0x2903 descriptor -> InvalidState
       //   3. 0x2904 descriptor with length != 7 -> InvalidState
@@ -3851,17 +4020,17 @@ void loop() {
       // the server-side CONNECT event. Synchronize on the actual BLEStream
       // state instead of sampling it at the serial barrier.
       startWait = millis();
-      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.connected() && millis() - startWait < 5000) {
+      while (finalReleaseStart && phase35StreamConnected && !finalReleasePeer.isConnected() && millis() - startWait < 5000) {
         delay(1);
       }
-      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.connected();
+      finalReleaseConnected = phase35StreamConnected && finalReleasePeer.isConnected();
       Serial.printf("[SERVER] Phase35 BLEStream final release connected=%d\n", (int)finalReleaseConnected);
       startWait = millis();
-      while (finalReleaseConnected && finalReleasePeer.connected() && millis() - startWait < 15000) {
+      while (finalReleaseConnected && finalReleasePeer.isConnected() && millis() - startWait < 15000) {
         delay(20);
       }
       finalReleasePeer.end();
-      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.connected()));
+      Serial.printf("[SERVER] Phase35 BLEStream final release done=%d\n", (int)(finalReleaseConnected && !finalReleasePeer.isConnected()));
       Serial.println("[SERVER] Phase35 done");
     }
   }
@@ -3951,10 +4120,112 @@ void loop() {
     }
   }
 
-  // Phase 37: Memory release (tail of the suite; runs after every other phase
-  // so phases 16-36 can exercise the BLE stack while it's still alive).
+  // Phase 37: one L2CAP CoC at MTU 512 with two concurrent writer tasks
+  // exchanging patterned full-MTU SDUs. Packaged NimBLE sets
+  // CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM=1, so two channels cannot be open at
+  // once. Regression for the server SDU pool (a 512-byte SDU must fit in one
+  // block) and for TX mbuf ownership on the echo path. Rebuilds a fresh
+  // connectable stack; restores one afterward so memory_release still
+  // measures a meaningful free. Self-skips without L2CAP.
   if (currentPhase >= 37 && !phase37Done) {
     phase37Done = true;
+#if BLE_L2CAP_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    BTStatus s = BLE.begin(serverName);
+    if (!s) {
+      Serial.printf("[SERVER] Phase37 init FAILED: %s\n", s.toString());
+    } else {
+      BLEServer srv = BLE.createServer();
+      srv.advertiseOnDisconnect(true);
+      BLEService svc = srv.createService(SERVICE_UUID);
+      (void)svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read, BLEPermission::ReadOpen);
+      srv.start();
+
+      l2capFullAccepts = 0;
+      l2capFullDisconnects = 0;
+      l2capFullRx = 0;
+      l2capFullRxOk = 0;
+      l2capFullEchoOk = 0;
+      l2capFullMtuServer = BLE.createL2CAPServer(L2CAP_FULL_PSM, L2CAP_FULL_MTU);
+      if (!l2capFullMtuServer) {
+        Serial.println("[SERVER] Phase37 L2CAP init FAILED");
+      } else {
+        BLEL2CAPChannel acceptedChannel;
+        auto onServerChannelDisconnect = [](BLEL2CAPChannel &) {
+          uint32_t count = l2capFullDisconnects.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase37 L2CAP channel disconnected count=%lu\n", (unsigned long)count);
+        };
+        auto onServerChannelData = [](BLEL2CAPChannel &channel, const uint8_t *data, size_t len) {
+          syncPhaseFromHost();
+          l2capFullRx = l2capFullRx + 1;
+          bool match = (len == L2CAP_FULL_MTU && data[0] <= 1);
+          if (match) {
+            uint8_t ch = data[0];
+            uint8_t seq = data[1];
+            for (size_t i = 2; i < len; i++) {
+              if (data[i] != (uint8_t)(ch * 31u + seq + i)) {
+                match = false;
+                break;
+              }
+            }
+          }
+          if (match) {
+            l2capFullRxOk = l2capFullRxOk + 1;
+            if (channel.write(data, len)) {
+              l2capFullEchoOk = l2capFullEchoOk + 1;
+            }
+          }
+        };
+        l2capFullMtuServer.onAccept([&acceptedChannel](BLEL2CAPChannel &ch) {
+          syncPhaseFromHost();
+          acceptedChannel = ch;
+          uint32_t count = l2capFullAccepts.fetch_add(1) + 1;
+          Serial.printf("[SERVER] Phase37 L2CAP channel accepted count=%lu\n", (unsigned long)count);
+        });
+        l2capFullMtuServer.onDisconnect(onServerChannelDisconnect);
+        l2capFullMtuServer.onData(onServerChannelData);
+        Serial.println("[SERVER] Phase37 L2CAP init OK");
+
+        BLEAdvertising adv = BLE.getAdvertising();
+        adv.reset();
+        adv.setType(BLEAdvType::ConnectableScannable);
+        adv.addServiceUUID(SERVICE_UUID);
+        adv.setName(serverName);
+        adv.start();
+        Serial.println("[SERVER] Phase37 ready");
+
+        // Churn per-channel callbacks on the accepted server channel while
+        // full-MTU SDUs and the final disconnect arrive on the host task
+        // (regression for server-channel callback copying under chan->mtx).
+        unsigned long waitStart = millis();
+        while (l2capFullDisconnects.load() < 1 && millis() - waitStart < 30000) {
+          if (acceptedChannel) {
+            acceptedChannel.onData(onServerChannelData);
+            acceptedChannel.onDisconnect(onServerChannelDisconnect);
+          }
+          delay(2);
+        }
+        Serial.printf(
+          "[SERVER] Phase37 result accepts=%lu rx=%lu rxOk=%lu echoOk=%lu heap=%d\n", (unsigned long)l2capFullAccepts.load(), (unsigned long)l2capFullRx,
+          (unsigned long)l2capFullRxOk, (unsigned long)l2capFullEchoOk, (int)heap_caps_check_integrity_all(true)
+        );
+        l2capFullMtuServer = BLEL2CAPServer();
+      }
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin(serverName);
+    }
+#else
+    Serial.println("[SERVER] Phase37 L2CAP not supported, skipping");
+#endif
+    Serial.println("[SERVER] Phase37 done");
+  }
+
+  // Phase 38: Memory release (tail of the suite; runs after every other phase
+  // so phases 16-37 can exercise the BLE stack while it's still alive).
+  if (currentPhase >= 38 && !phase38Done) {
+    phase38Done = true;
     delay(500);
 
     size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);

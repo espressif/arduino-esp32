@@ -19,40 +19,16 @@
 #include "core/BLEGuards.h"
 #if BLE_BLUEDROID
 
-#include "scan/BLEScan.h"
-#include "core/BLESync.h"
-#include "core/BLEMutex.h"
-#include "core/BLEAdmission.h"
+#include "scan/BLEScanImpl.h"
 
 #include <esp_gap_ble_api.h>
 #include <esp_timer.h>
 
 #include <atomic>
-#include <vector>
-#include <algorithm>
 
-// BLEScan is entirely Bluedroid-specific (no cross-backend shared state), so
-// BLEScan::Impl is defined directly here (a .bluedroid.* file) with no common base.
-struct BLEScan::Impl {
-  // 0x30 = 48 units x 0.625 ms = 30 ms. Interval == window (continuous scan),
-  // matching NimBLE's BLE_GAP_SCAN_FAST_INTERVAL_MIN / BLE_GAP_SCAN_FAST_WINDOW
-  // defaults so both backends discover with the same default timing.
-  uint16_t interval = 0x30;
-  uint16_t window = 0x30;
-  bool activeScan = true;
-  bool filterDuplicates = true;
-  // Set on the user task (startScan/stopScan) and cleared on the BTC host task
-  // (scan-complete/stop GAP events); atomic so the public isScanning() getter
-  // and the start/stop guards observe it without locking across callbacks.
-  std::atomic<bool> isScanning{false};
-  // Closes native GAP admission before BLE.end() disables the host.
-  BLEAdmissionGate nativeAdmission;
-  BLEScan::Results results;
-  std::vector<std::pair<BTAddress, uint8_t>> duplicateKeys;
+struct BLEScan::Impl : BLEScanImplCommon {
   BLESync paramSync{"scanParamSync"};
-  BLESync scanSync{"scanSync"};
   BLESync stopSync{"scanStopSync"};
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   // Legacy Bluedroid scanning takes whole seconds; a sub-second or fractional
   // duration is run as a continuous scan plus this one-shot timer (created
@@ -61,24 +37,10 @@ struct BLEScan::Impl {
   esp_timer_handle_t durationTimer = nullptr;
   std::atomic<bool> timerExpiryStop{false};
 
-  BLEScan::ResultHandler onResultCb = nullptr;
-  BLEScan::CompleteHandler onCompleteCb = nullptr;
-  BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;
-  BLEScan::PeriodicReportHandler periodicReportCb = nullptr;
-  BLEScan::PeriodicLostHandler periodicLostCb = nullptr;
-
-#if BLE_PERIODIC_ADV_SUPPORTED
-  // Active periodic sync handles for terminateAllPeriodicSyncs() on BLE.end().
-  std::vector<uint16_t> periodicSyncs;
-#endif
-
   ~Impl() {
     if (durationTimer) {
       esp_timer_stop(durationTimer);
       esp_timer_delete(durationTimer);
-    }
-    if (mtx) {
-      vSemaphoreDelete(mtx);
     }
   }
 
@@ -86,6 +48,8 @@ struct BLEScan::Impl {
 
   static BLEScan::Impl *s_instance;
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
+  static BTStatus setPeriodicSyncTransferParams(uint16_t connHandle, const BTAddress &peerAddress, uint8_t mode, uint16_t skipCount, uint16_t timeoutMs);
+  static BTStatus receivePeriodicSyncFromPeer(uint16_t connHandle, const BTAddress &peerAddress, uint16_t skipCount, uint16_t timeoutMs);
 };
 
 #endif /* BLE_BLUEDROID */

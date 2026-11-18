@@ -91,6 +91,7 @@ set(ARDUINO_ALL_LIBRARIES
   ArduinoOTA
   AsyncUDP
   BLE
+  BLEAudio
   BluetoothSerial
   Console
   DNSServer
@@ -140,8 +141,15 @@ set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 file(GLOB ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/*.cpp
   libraries/BLE/src/*/*.cpp
+  libraries/BLE/src/*/*.c
 )
 list(SORT ARDUINO_LIBRARY_BLE_SRCS)
+
+file(GLOB ARDUINO_LIBRARY_BLEAudio_SRCS
+  libraries/BLEAudio/src/*.cpp
+  libraries/BLEAudio/src/engine/*.c
+)
+list(SORT ARDUINO_LIBRARY_BLEAudio_SRCS)
 
 set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
   libraries/BluetoothSerial/src/BluetoothSerial.cpp)

@@ -44,6 +44,10 @@
 #include "hid/BLEHIDDevice.h"
 #include "stream/BLEStream.h"
 #include "l2cap/BLEL2CAP.h"
+#include "iso/BLEIso.h"
+
+class BLEAudio;
+class BLEIso;
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -118,6 +122,14 @@ public:
   bool isInitialized() const;
 
   /**
+   * @brief Whether shutdown has claimed the current BLE session.
+   *
+   * Primarily used by retained subsystem handles to reject native operations
+   * during callback-deferred teardown.
+   */
+  bool isEnding() const;
+
+  /**
    * @brief Boolean conversion — equivalent to isInitialized().
    *
    * @return true if BLE is initialized and ready.
@@ -154,6 +166,18 @@ public:
    * @return The BTAddress::Type in use.
    */
   BTAddress::Type getOwnAddressType() const;
+
+  /**
+   * @brief Random device address programmed by `setOwnAddressType(BTAddress::Random)`.
+   *
+   * @internal Used by the Bluedroid advertising backend: extended advertising
+   * sets need the set-level random address (HCI_LE_Set_Extended_Advertising_
+   * Set_Random_Address) before they can be enabled with a random own address.
+   *
+   * @param out  Receives the 6-byte address (LSB-first) when one is programmed.
+   * @return true when an address is available.
+   */
+  bool getOwnRandomAddress(uint8_t out[6]) const;
 
   /**
    * @brief Override the local Bluetooth address.
@@ -198,6 +222,38 @@ public:
    */
   BLESecurity getSecurity();
 
+#if BLE_AUDIO_SUPPORTED
+  /**
+   * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * Declared in the core so a sketch that does not use LE Audio never compiles
+   * the audio engine. Include `<BLEAudio.h>` from the separate BLEAudio
+   * library before using the returned handle; without it `BLEAudio` is only
+   * forward-declared here.
+   *
+   * The first call allocates the single engine-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin(). Named "controller" because it manages the audio subsystem -- it
+   * does not itself carry audio data.
+   *
+   * @return A BLEAudio handle. Check with `operator bool()` for validity.
+   */
+  BLEAudio getAudioController();
+#endif
+
+#if BLE_ISO_SUPPORTED
+  /**
+   * @brief Get the ISO transport controller handle (raw CIS/BIS entry point).
+   *
+   * The first call allocates the single transport-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin().
+   *
+   * @return A BLEIso handle. Check with `operator bool()` for validity.
+   */
+  BLEIso getIsoController();
+#endif
+
   /**
    * @brief Create a new GATT client instance.
    *
@@ -207,6 +263,64 @@ public:
    * @return A BLEClient handle. Check with `operator bool()` for validity.
    */
   BLEClient createClient();
+
+  // --- Connection lookup ---
+
+  /**
+   * @brief Find the connection handle for a connected peer.
+   *
+   * This is the same handle reported by `BLEClient::getHandle()` and
+   * `BLEConnInfo::getHandle()`, and the one connection-scoped APIs take.
+   * Accepts the peer's OTA address (the one reported by
+   * `BLEConnInfo::getAddress()`); NimBLE also matches the resolved identity
+   * address.
+   *
+   * @param peerAddress Peer address.
+   * @return The connection handle, or 0xFFFF if the peer is not connected.
+   */
+  uint16_t getConnHandle(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find the live connection handle for a connected peer.
+   *
+   * Returns one handle per ACL. Bluedroid may have several GATTC client
+   * objects and a GATTS server link on one ACL; the first client handle is
+   * returned, otherwise the server handle. Use the owning handle when you
+   * need a specific GATT application's connection.
+   *
+   * @param peerAddress Peer address.
+   * @return Unique handles in client-before-server order; empty when the peer
+   *         is not connected.
+   */
+  std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find the connection descriptor for a connected peer.
+   *
+   * Returns one descriptor per ACL on both backends. A local device can be both
+   * GATT client and server on that ACL; the descriptor's GAP role is the link
+   * role, and the handle is the application connection that owns the link.
+   * Use the owning `BLEClient`/`BLEServer` handle for a specific GATT
+   * application.
+   *
+   * @param peerAddress Peer address.
+   * @return A valid descriptor, or an empty vector when the peer is not
+   *         connected.
+   * @note PHY/RSSI are normalized as in @ref getConnInfo(const BTAddress &).
+   */
+  std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find connection information for a connected peer.
+   *
+   * @param peerAddress Peer address (OTA, or the identity address on NimBLE).
+   * @return A valid BLEConnInfo snapshot, or an invalid one when the peer is
+   *         not connected.
+   * @note The address lookup normalizes the volatile fields: TX/RX PHY are
+   *       reported as PHY_1M and RSSI as 0 on both backends. Use the owning
+   *       BLEClient/BLEServer handle for live PHY/RSSI values.
+   */
+  BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
 
   // --- L2CAP CoC ---
 
@@ -483,11 +597,12 @@ public:
   BLEClass(BLEClass &&) = delete;
   BLEClass &operator=(BLEClass &&) = delete;
 
+  struct Impl;
+
 private:
   friend class BLEStream;
   // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
   // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
-  struct Impl;
   Impl *_impl;
   bool setStreamEndHooks(void (*preHook)(), void (*postHook)());
 

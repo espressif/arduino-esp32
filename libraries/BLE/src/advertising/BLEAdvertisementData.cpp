@@ -24,6 +24,8 @@
 #include "core/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
 
+#include <cstring>
+
 // A single AD structure carries a 1-octet Length field covering Type + Value, so
 // its value can be at most 254 octets regardless of the payload budget
 // (BT Core Spec v5.x, Vol 3, Part C, §11).
@@ -197,6 +199,29 @@ void BLEAdvertisementData::setName(const String &name, bool complete) {
   } else {
     addField(0x08, bytes, nameLen < avail ? nameLen : avail);
   }
+}
+
+// Broadcast Name (0x30), CSS Assigned Numbers. BAP requires 4–128 octets.
+void BLEAdvertisementData::setBroadcastName(const String &name) {
+  uint8_t buf[128];
+  size_t n = name.length();
+  const auto *bytes = reinterpret_cast<const uint8_t *>(name.c_str());
+  if (n > sizeof(buf)) {
+    // Truncate on a UTF-8 boundary: bytes[n] is the first excluded byte, so
+    // stepping back over any continuation bytes (10xxxxxx) stops at the lead
+    // byte of a split sequence (excluding it) or right after a complete one.
+    n = sizeof(buf);
+    while (n > 0 && (bytes[n] & 0xC0) == 0x80) {
+      n--;
+    }
+  }
+  if (n > 0) {
+    memcpy(buf, bytes, n);
+  }
+  while (n < 4) {
+    buf[n++] = ' ';
+  }
+  addField(0x30, buf, n);
 }
 
 // Appearance (0x19), CSS Part A §1.12; 16-bit little-endian GAP appearance value.

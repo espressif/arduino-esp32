@@ -66,7 +66,7 @@ uint8_t BLERemoteDescriptor::readUInt8(uint32_t timeoutMs) {
   }
   auto mtx = remoteDescMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
+  return static_cast<uint8_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
 uint16_t BLERemoteDescriptor::readUInt16(uint32_t timeoutMs) {
@@ -75,7 +75,7 @@ uint16_t BLERemoteDescriptor::readUInt16(uint32_t timeoutMs) {
   }
   auto mtx = remoteDescMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
+  return static_cast<uint16_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
 uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
@@ -84,7 +84,7 @@ uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
   }
   auto mtx = remoteDescMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
+  return BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
 const uint8_t *BLERemoteDescriptor::readRawData(size_t *len) const {
@@ -171,5 +171,23 @@ String BLERemoteDescriptor::toString() const {
   BLE_CHECK_IMPL("BLERemoteDescriptor(empty)");
   return "BLERemoteDescriptor(uuid=" + impl.uuid.toString() + ")";
 }
+
+// ==========================================================================
+// Feature-disabled stubs (!BLE_GATT_CLIENT_SUPPORTED)
+// ==========================================================================
+
+#if !BLE_GATT_CLIENT_SUPPORTED
+
+bool BLERemoteDescriptor::readInto(uint32_t) {
+  log_w("GATT client not supported");
+  return false;
+}
+
+BTStatus BLERemoteDescriptor::writeValue(const uint8_t *, size_t, bool) {
+  log_w("GATT client not supported");
+  return BTStatus::NotSupported;
+}
+
+#endif /* !BLE_GATT_CLIENT_SUPPORTED */
 
 #endif /* BLE_ENABLED */

@@ -28,7 +28,7 @@
  *
  * Keep this header PURE SELECTION: no function declarations, no shim classes,
  * no logic. Backend operations live in their own headers (e.g.
- * @c bleServerRemoveService in @c server/BLEServerImpl.h; the @c BLESecurity
+ * @c removeService in @c server/BLEServerImpl.h (namespace BLEServerInternal); the @c BLESecurity
  * pairing hooks on @c BLESecurityImplCommon in @c security/BLESecurityImpl.h).
  */
 
@@ -36,6 +36,7 @@
 
 #if BLE_NIMBLE
 
+#include "BLE.nimble.h"
 #include "server/BLEServer.nimble.h"
 #include "gatt/BLEGattAttributes.nimble.h"
 #include "client/BLEClient.nimble.h"
@@ -46,6 +47,7 @@
 
 #elif BLE_BLUEDROID
 
+#include "BLE.bluedroid.h"
 #include "server/BLEServer.bluedroid.h"
 #include "gatt/BLEGattAttributes.bluedroid.h"
 #include "client/BLEClient.bluedroid.h"

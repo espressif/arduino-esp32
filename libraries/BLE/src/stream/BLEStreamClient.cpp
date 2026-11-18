@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEStreamClient.cpp
+ * @brief Central (client) NUS role for `BLEStream` (`beginClient()`).
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -27,6 +32,10 @@
 #include <freertos/task.h>
 
 #include "core/BLEValidationHooks.h"
+
+// ==========================================================================
+// 1. Client role state & GATT callback handlers
+// ==========================================================================
 
 struct BLEStreamClientRole final : BLEStream::Impl::Role {
   BLEStream::Impl &common;
@@ -42,6 +51,43 @@ struct BLEStreamClientRole final : BLEStream::Impl::Role {
     BLEValidationHooks::holdWhile(BLEHooks.stream.holdFinalRoleRelease);
   }
 #endif
+
+  static void onClientConnect(const std::weak_ptr<BLEStream::Impl> &common, const BLEConnInfo &connInfo) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    if (auto callback = impl->loadConnectHandler()) {
+      callback(connInfo);
+    }
+  }
+
+  static void onClientDisconnect(const std::weak_ptr<BLEStream::Impl> &common, const BLEConnInfo &connInfo, uint8_t reason) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    if (auto callback = impl->loadDisconnectHandler()) {
+      callback(connInfo, reason);
+    }
+  }
+
+  static void onRemoteTxNotify(const std::weak_ptr<BLEStream::Impl> &common, const BLEClient &streamClient, const uint8_t *data, size_t len) {
+    auto impl = common.lock();
+    if (!impl || !data || len == 0) {
+      return;
+    }
+    if (auto callback = impl->loadPeerDataHandler()) {
+      callback(streamClient.getConnInfo(), data, len);
+    }
+    impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+  }
+
+  static BTStatus abortStart(BLEStream &stream, const std::shared_ptr<BLEStreamClientRole> &role, BTStatus status) {
+    BLEStream::Impl::finishRoleStart(role);
+    stream.end();
+    return status;
+  }
 
   BTStatus end() override {
     ending = true;
@@ -125,6 +171,10 @@ private:
   }
 };
 
+// ==========================================================================
+// 2. Public BLEStream::beginClient() entry point
+// ==========================================================================
+
 BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   if (!BLE.setStreamEndHooks(Impl::prepareHostShutdown, Impl::releaseQuarantined)) {
     return BTStatus::Busy;
@@ -151,64 +201,37 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   if (!Impl::activateRole(_impl, role)) {
     return BTStatus::Busy;
   }
-  auto abortStart = [&](BTStatus status) {
-    Impl::finishRoleStart(role);
-    end();
-    return status;
-  };
   auto &active = *role;
   std::weak_ptr<Impl> common = _impl;
   active.client.onConnect([common](BLEClient, const BLEConnInfo &connInfo) {
-    auto impl = common.lock();
-    if (!impl) {
-      return;
-    }
-    auto callback = impl->loadConnectHandler();
-    if (callback) {
-      callback(connInfo);
-    }
+    BLEStreamClientRole::onClientConnect(common, connInfo);
   });
   active.client.onDisconnect([common](BLEClient, const BLEConnInfo &connInfo, uint8_t reason) {
-    auto impl = common.lock();
-    if (!impl) {
-      return;
-    }
-    auto callback = impl->loadDisconnectHandler();
-    if (callback) {
-      callback(connInfo, reason);
-    }
+    BLEStreamClientRole::onClientDisconnect(common, connInfo, reason);
   });
 
   BTStatus status = active.client.connect(address, timeoutMs);
   if (!status) {
-    return abortStart(status);
+    return BLEStreamClientRole::abortStart(*this, role, status);
   }
 
   BLERemoteService service = active.client.getService(nusServiceUUID());
   if (!service) {
-    return abortStart(BTStatus::NotFound);
+    return BLEStreamClientRole::abortStart(*this, role, BTStatus::NotFound);
   }
   active.remoteTx = service.getCharacteristic(nusTxCharUUID());
   active.remoteRx = service.getCharacteristic(nusRxCharUUID());
   if (!active.remoteTx || !active.remoteRx) {
-    return abortStart(BTStatus::NotFound);
+    return BLEStreamClientRole::abortStart(*this, role, BTStatus::NotFound);
   }
 
   BLEClient streamClient = active.client;
   status =
     active.remoteTx.subscribe(BLESubscription::Notify, [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription) {
-      auto impl = common.lock();
-      if (!impl || !data || len == 0) {
-        return;
-      }
-      auto callback = impl->loadPeerDataHandler();
-      if (callback) {
-        callback(streamClient.getConnInfo(), data, len);
-      }
-      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+      BLEStreamClientRole::onRemoteTxNotify(common, streamClient, data, len);
     });
   if (!status) {
-    return abortStart(status);
+    return BLEStreamClientRole::abortStart(*this, role, status);
   }
   if (!Impl::finishRoleStart(role)) {
     end();

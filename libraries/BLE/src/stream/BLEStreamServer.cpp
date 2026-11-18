@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @file BLEStreamServer.cpp
+ * @brief Peripheral (server) NUS role for `BLEStream` (`begin()`).
+ */
+
 #include "core/BLEGuards.h"
 #if BLE_ENABLED
 
@@ -26,6 +31,20 @@
 
 #include "core/BLEValidationHooks.h"
 
+namespace {
+
+void retainFirstFailure(BTStatus &result, BTStatus status) {
+  if (result && !status) {
+    result = status;
+  }
+}
+
+}  // namespace
+
+// ==========================================================================
+// 1. Server role state & GATT callback handlers
+// ==========================================================================
+
 struct BLEStreamServerRole final : BLEStream::Impl::Role {
   BLEStream::Impl &common;
   BLEServer server;
@@ -35,15 +54,75 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
 
   explicit BLEStreamServerRole(BLEStream::Impl &impl) : common(impl) {}
 
+  static void onServerConnect(const std::weak_ptr<BLEStream::Impl> &common, const BLEConnInfo &connInfo) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    if (auto callback = impl->loadConnectHandler()) {
+      callback(connInfo);
+    }
+  }
+
+  static void onServerDisconnect(const std::weak_ptr<BLEStream::Impl> &common, const BLEConnInfo &connInfo, uint8_t reason) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    if (auto callback = impl->loadDisconnectHandler()) {
+      callback(connInfo, reason);
+    }
+  }
+
+  static void onRxCharacteristicWrite(const std::weak_ptr<BLEStream::Impl> &common, BLECharacteristic &chr, const BLEConnInfo &connInfo) {
+    auto impl = common.lock();
+    if (!impl) {
+      return;
+    }
+    size_t len = 0;
+    const uint8_t *data = chr.getValue(&len);
+    if (data && len > 0) {
+      if (auto callback = impl->loadPeerDataHandler()) {
+        callback(connInfo, data, len);
+      }
+      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
+    }
+  }
+
+  static BTStatus
+    cancelStart(BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status) {
+    if (BLEStream::Impl::cancelRoleStart(impl, role)) {
+      return status;
+    }
+    stream.end();
+    return BTStatus(BTStatus::Busy);
+  }
+
+  static BTStatus
+    abortRegisteredStart(BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status) {
+    BTStatus removeStatus;
+#if BLE_VALIDATION_HOOKS
+    if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {
+      removeStatus = BTStatus::Busy;
+    } else
+#endif
+    {
+      removeStatus = role->server.removeService(role->service);
+    }
+    if (removeStatus) {
+      return cancelStart(stream, impl, role, status);
+    }
+    // Keep the role registered and close admission until normal teardown or
+    // recovery can remove the partially registered native service.
+    BLEStream::Impl::finishRoleStart(role);
+    stream.end();
+    return status;
+  }
+
   BTStatus end() override {
     ending = true;
     BTStatus result = BTStatus::OK;
     bool disconnectTerminal = true;
-    auto retainFailure = [&result](BTStatus status) {
-      if (result && !status) {
-        result = status;
-      }
-    };
     if (server) {
       // Close the restart gate before stopping advertising. Deferred backend
       // restart callbacks take the same server mutex and re-check this flag.
@@ -52,7 +131,7 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
     if (BLE.isInitialized()) {
       BLEAdvertising adv = BLE.getAdvertising();
       if (adv) {
-        retainFailure(adv.stop());
+        retainFirstFailure(result, adv.stop());
       }
     }
     if (server) {
@@ -68,7 +147,7 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
         // A peer may close between getConnections() and disconnect(). In that
         // case the requested terminal state is already reached.
         if (status != BTStatus::NotConnected) {
-          retainFailure(status);
+          retainFirstFailure(result, status);
           if (!status) {
             disconnectTerminal = false;
           }
@@ -93,11 +172,11 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
       if (service && service.getServer()) {
 #if BLE_VALIDATION_HOOKS
         if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {
-          retainFailure(BTStatus::Busy);
+          retainFirstFailure(result, BTStatus::Busy);
         } else
 #endif
         {
-          retainFailure(server.removeService(service));
+          retainFirstFailure(result, server.removeService(service));
         }
       }
     }
@@ -178,6 +257,10 @@ private:
   }
 };
 
+// ==========================================================================
+// 2. Public BLEStream::begin() entry point
+// ==========================================================================
+
 BTStatus BLEStream::begin(const String &deviceName) {
   if (!BLE.setStreamEndHooks(Impl::prepareHostShutdown, Impl::releaseQuarantined)) {
     return BTStatus::Busy;
@@ -208,92 +291,40 @@ BTStatus BLEStream::begin(const String &deviceName) {
   if (!Impl::activateRole(_impl, role)) {
     return BTStatus::Busy;
   }
-  auto cancelStart = [&](BTStatus status) {
-    if (Impl::cancelRoleStart(_impl, role)) {
-      return status;
-    }
-    end();
-    return BTStatus(BTStatus::Busy);
-  };
-  auto abortRegisteredStart = [&](BTStatus status) {
-    BTStatus removeStatus;
-#if BLE_VALIDATION_HOOKS
-    if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {
-      removeStatus = BTStatus::Busy;
-    } else
-#endif
-    {
-      removeStatus = role->server.removeService(role->service);
-    }
-    if (removeStatus) {
-      return cancelStart(status);
-    }
-    // Keep the role registered and close admission until normal teardown or
-    // recovery can remove the partially registered native service.
-    Impl::finishRoleStart(role);
-    end();
-    return status;
-  };
   role->service = role->server.createService(serviceUuid);
   if (!role->service) {
-    return cancelStart(BTStatus::Fail);
+    return BLEStreamServerRole::cancelStart(*this, _impl, role, BTStatus::Fail);
   }
 
   role->txChr = role->service.createCharacteristic(nusTxCharUUID(), BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
   role->rxChr = role->service.createCharacteristic(nusRxCharUUID(), BLEProperty::Write | BLEProperty::WriteNR, BLEPermission::WriteOpen);
   if (!role->txChr || !role->rxChr) {
-    return abortRegisteredStart(BTStatus::Fail);
+    return BLEStreamServerRole::abortRegisteredStart(*this, _impl, role, BTStatus::Fail);
   }
 
   BLEAdvertising advertising = BLE.getAdvertising();
   advertising.stop();
   BTStatus status = role->server.start();
   if (!status) {
-    return abortRegisteredStart(status);
+    return BLEStreamServerRole::abortRegisteredStart(*this, _impl, role, status);
   }
 #if BLE_VALIDATION_HOOKS
   if (BLEValidationHooks::consumeFailure(BLEHooks.stream.startFailures)) {
-    return abortRegisteredStart(BTStatus::Fail);
+    return BLEStreamServerRole::abortRegisteredStart(*this, _impl, role, BTStatus::Fail);
   }
 #endif
 
   auto &active = *role;
   std::weak_ptr<Impl> common = _impl;
-  active.server.onConnect([common](BLEServer server, const BLEConnInfo &connInfo) {
-    auto impl = common.lock();
-    if (!impl) {
-      return;
-    }
-    auto callback = impl->loadConnectHandler();
-    if (callback) {
-      callback(connInfo);
-    }
+  active.server.onConnect([common](BLEServer, const BLEConnInfo &connInfo) {
+    BLEStreamServerRole::onServerConnect(common, connInfo);
   });
-  active.server.onDisconnect([common](BLEServer server, const BLEConnInfo &connInfo, uint8_t reason) {
-    auto impl = common.lock();
-    if (!impl) {
-      return;
-    }
-    auto callback = impl->loadDisconnectHandler();
-    if (callback) {
-      callback(connInfo, reason);
-    }
+  active.server.onDisconnect([common](BLEServer, const BLEConnInfo &connInfo, uint8_t reason) {
+    BLEStreamServerRole::onServerDisconnect(common, connInfo, reason);
   });
   active.server.advertiseOnDisconnect(true);
   active.rxChr.onWrite([common](BLECharacteristic chr, const BLEConnInfo &connInfo) {
-    auto impl = common.lock();
-    if (!impl) {
-      return;
-    }
-    size_t len = 0;
-    const uint8_t *data = chr.getValue(&len);
-    if (data && len > 0) {
-      auto callback = impl->loadPeerDataHandler();
-      if (callback) {
-        callback(connInfo, data, len);
-      }
-      impl->rxBuf.write(reinterpret_cast<const char *>(data), len);
-    }
+    BLEStreamServerRole::onRxCharacteristicWrite(common, chr, connInfo);
   });
 
   advertising.reset();

@@ -72,6 +72,12 @@ void BLEAdvertisedDeviceImplCommon::parsePayload(const uint8_t *data, size_t len
         name = String(reinterpret_cast<const char *>(adData), dataLen);
         hasName = true;
         break;
+      case 0x30:  // Broadcast Name (BAP/PBP; Auracast UIs use this, not 0x09)
+        if (!hasName) {
+          name = String(reinterpret_cast<const char *>(adData), dataLen);
+          hasName = true;
+        }
+        break;
       case 0x0A:  // TX Power Level
         if (dataLen >= 1) {
           txPower = static_cast<int8_t>(adData[0]);

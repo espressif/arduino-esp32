@@ -27,7 +27,9 @@ Native events reach the shared handlers as follows:
 
 - **GAP.** A single `ble_gap_event_listener` (registered in `BLE.nimble`) plus per-object GAP callbacks
   fan out to `BLEServer::Impl`, `BLEClient::Impl`, `BLEAdvertising::Impl`, and `BLEScan::Impl`, and
-  to the security hooks on `BLESecurity::Impl::instance()`.
+  to the security hooks on `BLESecurity::Impl::instance()`. ISO GAP events and
+  periodic-transfer events are also forwarded to the active LE Audio/raw-ISO
+  engine; the core installs those hooks lazily with the corresponding factory.
 - **GATTS.** The characteristic/descriptor access callbacks
   (`BLECharacteristic::Impl::accessCallback` / `descAccessCallback`) invoke the user read/write
   hooks and copy the value to/from the ATT mbuf.
@@ -58,9 +60,10 @@ is the `BLEFoo.nimble.{h,cpp}` file inside its component folder:
 
 ## Two-layer Impl model here
 
-Every `Foo::Impl` in a `.nimble.*` file inherits its `FooImplCommon` base (when one exists) and adds
+Every `Foo::Impl` in a `.nimble.*` file inherits its `FooImplCommon` base (`BLEClass`, `Server`, `Service`,
+`Characteristic`, `Descriptor`, `Client`, `Remote*`, `Scan`, `Advertising`, `Security`) and adds
 only NimBLE-native state (e.g. `ble_uuid_any_t nimbleUUID`, per-request `BLESync` objects, connection
-handles). `BLEClass::Impl` and `BLEScan`/`BLEAdvertising`/L2CAP `Impl`s have no shared base. Access is
+handles). Only NimBLE-exclusive `BLEL2CAPServer`/`BLEL2CAPChannel` `Impl`s have no shared base. Access is
 always cast-free `impl.member`.
 
 ## Stack-specific quirks
@@ -73,6 +76,25 @@ always cast-free `impl.member`.
 - **CCCD discovery** on `subscribe()`/`unsubscribe()` resolves `0x2902` via `getDescriptor(0x2902)` within the characteristic's bounded handle range rather than assuming `valHandle + 1`.
 - **Service Changed invalidation** caches and delivers the peer's real four-byte 0x2A05 range, but conservatively detaches the full discovered remote tree before the callback because remote handles do not retain enough range metadata for partial invalidation. The sketch must rediscover before reusing remote handles.
 - **Service removal while connected.** `ble_gatts_reset()` returns `BLE_HS_EBUSY` while GAP is active or a peer is connected; `bleServerRemoveService` falls back to `ble_gatts_svc_set_visibility(startHandle, 0)` + `ble_svc_gatt_changed(startHandle, endHandle)` so runtime removal and Service Changed (`0x2A05`) match Bluedroid.
+- **Audio-owned GATT table.** Between `audio.begin()` and `audio.start()`, the
+  classic server records its latest service tree through `BLEGattDatabase`.
+  The coordinator publishes that tree once immediately before the audio
+  engine's single commit, so repeated pre-commit staging cannot duplicate
+  services or invalidate a retained NimBLE definition pointer. After that
+  commit, late server restaging returns `InvalidState`. Removing a committed
+  classic service hides its range and emits Service Changed without resetting
+  the audio table.
+- **PAST receive.** `BLEScan::receivePeriodicSync()` and
+  `stopPeriodicSyncReceive()` use NimBLE's periodic-transfer receive API when
+  `BLE_PAST_SUPPORTED` is set. That guard now also requires a controller that
+  implements BLE 5.1 PAST (`SOC_BLE_PERIODIC_ADV_ENH_SUPPORTED`), so BLE 5.0
+  silicon (ESP32-S3/C3) returns `NotSupported` instead of failing at runtime.
+  Hosted NimBLE builds have no local controller caps and are assumed capable,
+  since all supported hosted companions implement PAST.
+  They share the retained-handle admission gate with periodic sync creation,
+  validate the Core skip/timeout ranges, map invalid parameters, missing ACLs,
+  allocation failures, busy and disabled states to public statuses, and reject
+  calls after shutdown admission closes.
 - **Re-advertise event lifetime.** `nimbleResetReAdvertiseEvent()` drops the deferred
   re-advertise event's backing reference on `end()` so a later `begin()` re-initializes it (avoids a
   use-after-free across a stack restart — the FreeRTOS NimBLE port frees the event pool on

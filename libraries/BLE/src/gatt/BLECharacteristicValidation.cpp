@@ -116,7 +116,7 @@ uint16_t uuid16Of(const BLEUUID &u) {
 // --------------------------------------------------------------------------
 
 // Contract documented on the declaration in BLECharacteristicValidation.h.
-bool bleValidateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission perms) {
+bool BLEGattInternal::validateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission perms) {
   String ustr = uuid.toString();
   [[maybe_unused]]
   const char *u = ustr.c_str();
@@ -203,14 +203,14 @@ bool bleValidateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission 
 // --------------------------------------------------------------------------
 
 // Contract documented on the declaration in BLECharacteristicValidation.h.
-bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool stackIsNimble) {
+bool BLEGattInternal::validateCharForRegistration(const BLECharacteristic::Impl &chr, bool stackIsNimble) {
   BLEProperty props = chr.properties;
   BLEPermission perms = chr.permissions;
   String ustr = chr.uuid.toString();
   [[maybe_unused]]
   const char *u = ustr.c_str();
 
-  bool ok = bleValidateCharProps(chr.uuid, props, perms);
+  bool ok = BLEGattInternal::validateCharProps(chr.uuid, props, perms);
 
   const BLEDescriptor::Impl *cccd = findDescriptorByUuid16(chr, DSC_UUID_CCCD);
   const BLEDescriptor::Impl *sccd = findDescriptorByUuid16(chr, DSC_UUID_SCCD);
@@ -310,7 +310,7 @@ bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool sta
     log_w("Characteristic %s: NOTIFY/INDICATE without READ — some clients may not function correctly", u);
   }
 
-  // 2.x Per-descriptor access profile recheck. `bleValidateDescProps` already
+  // 2.x Per-descriptor access profile recheck. `validateDescProps` already
   // runs at construction time, but re-running here catches post-creation
   // `setPermissions()` mutations and keeps the pre-registration gate
   // authoritative for the final descriptor state.
@@ -318,7 +318,7 @@ bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool sta
     if (!d) {
       continue;
     }
-    if (!bleValidateDescProps(d->uuid, chr.uuid, d->permissions)) {
+    if (!BLEGattInternal::validateDescProps(d->uuid, chr.uuid, d->permissions)) {
       ok = false;
     }
 
@@ -358,7 +358,7 @@ bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool sta
 // --------------------------------------------------------------------------
 
 // Contract documented on the declaration in BLECharacteristicValidation.h.
-bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPermission perms) {
+bool BLEGattInternal::validateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPermission perms) {
   String dstr = descUuid.toString();
   String cstr = chrUuid.toString();
   [[maybe_unused]]

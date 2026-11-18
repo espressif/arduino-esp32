@@ -343,8 +343,8 @@ bool BLEServerImplCommon::pumpIndications(uint16_t connHandle) {
 
     BLECharacteristic::NotifyStatus status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     uint32_t code = 0;
-    BLEIndicationSend result = bleServerSendIndication(server, connHandle, chr->handle, payload.data(), payload.size(), status, code);
-    if (result == BLEIndicationSend::Sent) {
+    BLEServerInternal::IndicationSend result = BLEServerInternal::sendIndication(server, connHandle, chr->handle, payload.data(), payload.size(), status, code);
+    if (result == BLEServerInternal::IndicationSend::Sent) {
       return firstOk;
     }
 
@@ -354,7 +354,7 @@ bool BLEServerImplCommon::pumpIndications(uint16_t connHandle) {
       IndicationLink *link = indicationLink(connHandle);
       if (link && link->inFlightSeq == seq && link->inFlight == chr) {
         link->inFlight.reset();
-        if (result == BLEIndicationSend::Busy && markFrontBusy(*link)) {
+        if (result == BLEServerInternal::IndicationSend::Busy && markFrontBusy(*link)) {
           return firstOk;
         }
         link->frontBusy = false;
@@ -623,7 +623,7 @@ static void shelveServices(std::vector<std::shared_ptr<BLEService::Impl>> roots)
     for (auto &included : svc->includedServices) {
       roots.push_back(std::move(included));
     }
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
   }
 }
 
@@ -663,7 +663,7 @@ void BLEServerImplCommon::releaseGattTree() {
   disconnectSync.give(BTStatus::Fail);
 }
 
-void bleDetachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc) {
+void BLEGattInternal::detachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc) {
   if (!desc) {
     return;
   }
@@ -675,7 +675,7 @@ void bleDetachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc) 
   desc->onWriteCb = nullptr;
 }
 
-void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl> &chr) {
+void BLEGattInternal::detachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl> &chr) {
   if (!chr) {
     return;
   }
@@ -702,11 +702,11 @@ void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl>
     descs.swap(chr->descriptors);
   }
   for (auto &desc : descs) {
-    bleDetachLocalDescriptor(desc);
+    BLEGattInternal::detachLocalDescriptor(desc);
   }
 }
 
-void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
+void BLEGattInternal::detachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
   if (!svc) {
     return;
   }
@@ -715,7 +715,7 @@ void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
     // Service-tree fields are guarded by the owning server's mtx (the same
     // lock createService/createCharacteristic take). Snapshot and clear them
     // under it, then release it before detaching characteristics, each of
-    // which takes its own chr->mtx in bleDetachLocalCharacteristic().
+    // which takes its own chr->mtx in BLEGattInternal::detachLocalCharacteristic().
     auto server = svc->serverOwner.lock();
     BLELockGuard lock(server ? server->mtx : nullptr);
     svc->includedServices.clear();
@@ -726,7 +726,7 @@ void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc) {
     svc->server = nullptr;
   }
   for (auto &chr : chrs) {
-    bleDetachLocalCharacteristic(chr);
+    BLEGattInternal::detachLocalCharacteristic(chr);
   }
 }
 

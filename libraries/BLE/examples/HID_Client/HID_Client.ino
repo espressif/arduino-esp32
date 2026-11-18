@@ -28,8 +28,9 @@ static const BLEUUID hidServiceUUID((uint16_t)0x1812);     // HID Service (Bluet
 static const BLEUUID reportCharUUID((uint16_t)0x2A4D);     // HID Report characteristic
 static const BLEUUID reportRefDescUUID((uint16_t)0x2908);  // Report Reference descriptor
 
+// Report payload as sent over GATT notifications. The Report ID is not part of
+// the payload; it is read from the Report Reference descriptor (0x2908).
 struct __attribute__((packed)) GamepadReport {
-  uint8_t reportId;
   int8_t x;
   int8_t y;
   uint8_t buttons;
@@ -134,7 +135,7 @@ void setup() {
   sec.setAuthenticationMode(true, false, true);
 
   client = BLE.createClient();
-  // MTU 185 = 3 bytes ATT header + 182 bytes payload; large enough for typical HID report maps
+  // MTU 185 = 3 bytes ATT header + 182 bytes payload. Large enough for typical HID report maps
   client.setMTU(185);
   client.onDisconnect([](BLEClient, const BLEConnInfo &, uint8_t reason) {
     Serial.printf("Disconnected (reason 0x%02X)\n", reason);

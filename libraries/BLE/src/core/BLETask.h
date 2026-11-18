@@ -20,11 +20,23 @@
 #if BLE_ENABLED
 
 /**
+ * @brief Task predicates for the BLE host/stack callback context.
+ *
+ * Namespaced (not bare `ble*` globals) like every other internal helper.
+ */
+namespace BLETask {
+
+/**
  * @brief True when the caller is running on the BLE host/BTC callback task.
  *
  * Blocking native teardown (service removal, disconnect wait) must not run
  * here; defer it to an application or worker task.
  */
-bool bleInStackCallbackTask();
+bool inStackCallbackTask();
+
+/** @brief Backend-specific check for the native host callback task (NimBLE host / Bluedroid BTC). */
+bool isHostStackTask();
+
+}  // namespace BLETask
 
 #endif /* BLE_ENABLED */

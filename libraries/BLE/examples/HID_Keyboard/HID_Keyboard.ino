@@ -30,7 +30,7 @@
 #include <cstring>
 #include <BLE.h>
 #include <hid/HIDTypes.h>
-// Provides keymap[] for ASCII-to-HID translation (default: UK layout; define
+// Provides keymap[] for ASCII-to-HID translation (default: UK layout. Define
 // US_KEYBOARD before this include to switch to US layout)
 #include <hid/HIDKeyboardTypes.h>
 // HID Report Descriptor for a standard keyboard.
@@ -39,7 +39,7 @@
 //          (standard USB HID boot keyboard layout).
 //
 // The macros below (USAGE_PAGE, COLLECTION, HIDINPUT, etc.) are defined
-// in HIDTypes.h. Each macro produces the HID short-item prefix byte; the
+// in HIDTypes.h. Each macro produces the HID short-item prefix byte. The
 // parameter is the number of data bytes that follow (usually 1). See
 // HIDTypes.h for a full explanation of the encoding.
 // clang-format off
