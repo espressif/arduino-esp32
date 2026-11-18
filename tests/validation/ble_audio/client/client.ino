@@ -320,12 +320,14 @@ void setup() {
   waitForPhase(2);
 #if BLE_ISO_SUPPORTED
   {
+    BLEIso iso;  // assigned after BLE.begin(); retained across end()/begin() below
     BLE.end(false);
     delay(500);
     isoCisClientConnected = false;
     isoCisClientRxCount = 0;
     BTStatus st = BLE.begin("BLE_CLT_ISO");
     uint32_t sent = 0;
+    iso = BLE.getIsoController();
     if (st) {
       BLEScan scn = BLE.getScan();
       scn.resetCallbacks();
@@ -350,16 +352,16 @@ void setup() {
         // ISO must be brought up before the ACL exists: LE Set Host Feature
         // (bit 32) is Command Disallowed on a connection, so begin() after
         // connect() fails with IsoEnableCisFail[524].
-        BTStatus ib = BLEIso::begin();
+        BTStatus ib = iso.begin();
         Serial.printf("[CLIENT] IsoCis transport: %s\n", ib.toString());
         BLEClient client = BLE.createClient();
         BTStatus cs = client.connect(addr);
         if (cs) {
           BLEIso::CisParams params;
           params.returnSduSize = 120;  // bidirectional: must match the server
-          BLEIso::Channel *cis = BLEIso::connectCis(client.getHandle(), params);
+          BLEIso::Channel cis = iso.connectCis(client.getHandle(), params);
           if (cis) {
-            cis->onConnected([](BLEIso::Channel &) {
+            cis.onConnected([](BLEIso::Channel &) {
                  syncPhaseFromHost();
                  isoCisClientConnected = true;
                })
@@ -376,7 +378,7 @@ void setup() {
             uint8_t sdu[120];
             for (int i = 0; i < 200 && isoCisClientConnected; i++) {
               memset(sdu, (uint8_t)i, sizeof(sdu));
-              if (cis->send(sdu, sizeof(sdu))) {
+              if (cis.send(sdu, sizeof(sdu))) {
                 sent++;
               }
               delay(10);
@@ -397,12 +399,13 @@ void setup() {
     // Exercise standalone ISO ownership cleanup through BLE.end(), then prove
     // the host can be claimed again after BLE re-initialization.
     BLE.end(false);
-    bool isoCoreEnded = !BLEIso::isActive();
+    bool isoCoreEnded = !iso.isActive();
     delay(500);
     BTStatus restore = BLE.begin("BLE_CLT");
-    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    iso = BLE.getIsoController();
+    BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry;
-    BLEIso::end();
+    iso.end();
     Serial.printf(
       "[CLIENT] IsoCis teardown coreEnded=%d restore=%d retry=%d\n", isoCoreEnded ? 1 : 0, restore ? 1 : 0, isoRetry ? 1 : 0
     );
@@ -424,22 +427,24 @@ void setup() {
   waitForPhase(3);
 #if BLE_ISO_SUPPORTED && BLE5_SUPPORTED
   {
+    BLEIso iso;  // assigned after BLE.begin(); retained across end()/begin() below
     BLE.end(false);
     delay(500);
     isoBisClientSynced = false;
     isoBisRxCount = 0;
     BTStatus st = BLE.begin("BLE_CLT_ISO2");
+    iso = BLE.getIsoController();
     if (st) {
-      BTStatus ib = BLEIso::begin();
+      BTStatus ib = iso.begin();
       Serial.printf("[CLIENT] IsoBis transport: %s\n", ib.toString());
       BLEIso::BigParams params;
-      BLEIso::Channel *bis = BLEIso::syncBig(1, params);
+      BLEIso::Channel bis = iso.syncBig(1, params);
       if (bis) {
-        bis->onConnected([](BLEIso::Channel &) {
+        bis.onConnected([](BLEIso::Channel &) {
           syncPhaseFromHost();
           isoBisClientSynced = true;
         });
-        bis->onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
+        bis.onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
           if (info.valid) {
             isoBisRxCount = isoBisRxCount + 1;
           }
@@ -465,12 +470,13 @@ void setup() {
       }
     }
     BLE.end(false);
-    bool isoCoreEnded = !BLEIso::isActive();
+    bool isoCoreEnded = !iso.isActive();
     delay(500);
     BTStatus restore = BLE.begin("BLE_CLT");
-    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    iso = BLE.getIsoController();
+    BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry;
-    BLEIso::end();
+    iso.end();
     Serial.printf("[CLIENT] IsoBis result synced=%d received=%lu lifecycle=%d\n", (int)isoBisClientSynced, (unsigned long)isoBisRxCount, isoLifecycle ? 1 : 0);
   }
 #else

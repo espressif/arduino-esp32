@@ -495,11 +495,13 @@ void loop() {
   if (currentPhase >= 2 && !phaseIsoCisDone) {
     phaseIsoCisDone = true;
 #if BLE_ISO_SUPPORTED
+    BLEIso iso;  // assigned after BLE.begin(); retained across end()/begin() below
     BLE.end(false);
     delay(500);
     isoCisConnected = false;
     isoCisRxCount = 0;
     BTStatus s = BLE.begin(serverName);
+    iso = BLE.getIsoController();
     uint32_t returned = 0;
     std::atomic<bool> isoCbEndBusy{false};
     if (!s) {
@@ -512,7 +514,7 @@ void loop() {
       rc.setValue("iso_cis");
       srv.start();
 
-      BTStatus ib = BLEIso::begin();
+      BTStatus ib = iso.begin();
       Serial.printf("[SERVER] IsoCis transport: %s\n", ib.toString());
 
       BLEIso::CisParams params;  // defaults: 120 B SDU, 10 ms, 2M PHY
@@ -522,15 +524,15 @@ void loop() {
           isoCisRxCount = isoCisRxCount + 1;
         }
       };
-      BLEIso::Channel *cis = BLEIso::listenCis(params);
+      BLEIso::Channel cis = iso.listenCis(params);
       if (cis) {
-        cis->onConnected([&isoCbEndBusy](BLEIso::Channel &) {
+        cis.onConnected([&isoCbEndBusy, &iso](BLEIso::Channel &) {
           syncPhaseFromHost();
-          isoCbEndBusy.store(BLEIso::end() == BTStatus::Busy);
+          isoCbEndBusy.store(iso.end() == BTStatus::Busy);
           isoCisConnected = true;
         });
-        cis->onReceive(onIsoRx);
-        cis->onDisconnected([](BLEIso::Channel &, uint8_t) {
+        cis.onReceive(onIsoRx);
+        cis.onDisconnected([](BLEIso::Channel &, uint8_t) {
           syncPhaseFromHost();
           isoCisConnected = false;
         });
@@ -551,10 +553,10 @@ void loop() {
         unsigned long deadline = millis() + 25000;
         while (millis() < deadline && !phaseRelease) {
           syncPhaseFromHost();
-          if (isoCisConnected && cis->canSend()) {
-            cis->onReceive(onIsoRx);
+          if (isoCisConnected && cis.canSend()) {
+            cis.onReceive(onIsoRx);
             memset(sdu, (uint8_t)returned, sizeof(sdu));
-            if (cis->send(sdu, sizeof(sdu))) {
+            if (cis.send(sdu, sizeof(sdu))) {
               returned++;
             }
           }
@@ -565,14 +567,15 @@ void loop() {
       }
     }
     // Leave the standalone ISO owner active and make BLE.end() release it.
-    // A fresh BLEIso::begin() after host re-init proves common_deinit did not
+    // A fresh iso.begin() after host re-init proves common_deinit did not
     // leave stale ownership or channel state behind.
     BLE.end(false);
-    bool isoCoreEnded = !BLEIso::isActive();
+    bool isoCoreEnded = !iso.isActive();
     delay(500);
     BTStatus restore = BLE.begin(serverName);
-    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
-    BTStatus isoCleanEnd = isoRetry ? BLEIso::end() : BTStatus::Fail;
+    iso = BLE.getIsoController();
+    BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
+    BTStatus isoCleanEnd = isoRetry ? iso.end() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry && isoCleanEnd && isoCbEndBusy.load();
     Serial.printf(
       "[SERVER] IsoCis result connected=%d received=%lu returned=%lu lifecycle=%d\n", (int)isoCisConnected, (unsigned long)isoCisRxCount,
@@ -591,11 +594,13 @@ void loop() {
   if (currentPhase >= 3 && !phaseIsoBisDone) {
     phaseIsoBisDone = true;
 #if BLE_ISO_SUPPORTED && BLE5_SUPPORTED
+    BLEIso iso;  // assigned after BLE.begin(); retained across end()/begin() below
     BLE.end(false);
     delay(500);
     isoBisConnected = false;
     uint32_t sent = 0;
     BTStatus s = BLE.begin(serverName);
+    iso = BLE.getIsoController();
     if (!s) {
       Serial.printf("[SERVER] IsoBis init FAILED: %s\n", s.toString());
     } else {
@@ -613,13 +618,13 @@ void loop() {
       (void)adv.startExtended(0, 0, 0);
       adv.startPeriodicAdv(0);
 
-      BTStatus ib = BLEIso::begin();
+      BTStatus ib = iso.begin();
       Serial.printf("[SERVER] IsoBis transport: %s\n", ib.toString());
 
       BLEIso::BigParams params;  // defaults: 120 B SDU, 10 ms, 2M PHY
-      BLEIso::Channel *bis = BLEIso::createBig(0, params);
+      BLEIso::Channel bis = iso.createBig(0, params);
       if (bis) {
-        bis->onConnected([](BLEIso::Channel &) {
+        bis.onConnected([](BLEIso::Channel &) {
           syncPhaseFromHost();
           isoBisConnected = true;
         });
@@ -633,7 +638,7 @@ void loop() {
           syncPhaseFromHost();
           if (isoBisConnected) {
             memset(sdu, (uint8_t)sent, sizeof(sdu));
-            if (bis->send(sdu, sizeof(sdu))) {
+            if (bis.send(sdu, sizeof(sdu))) {
               sent++;
             }
           }
@@ -646,12 +651,13 @@ void loop() {
       }
     }
     BLE.end(false);
-    bool isoCoreEnded = !BLEIso::isActive();
+    bool isoCoreEnded = !iso.isActive();
     delay(500);
     BTStatus restore = BLE.begin(serverName);
-    BTStatus isoRetry = restore ? BLEIso::begin() : BTStatus::Fail;
+    iso = BLE.getIsoController();
+    BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry;
-    BLEIso::end();
+    iso.end();
     Serial.printf(
       "[SERVER] IsoBis result connected=%d sent=%lu lifecycle=%d\n", (int)isoBisConnected, (unsigned long)sent, isoLifecycle ? 1 : 0
     );
@@ -1749,12 +1755,13 @@ void loop() {
     delay(500);
     int nullFFFF = 0, nullDead = 0;
     BTStatus s = BLE.begin(serverName);
-    if (s && BLEIso::begin()) {
+    BLEIso iso = BLE.getIsoController();
+    if (s && iso.begin()) {
       BLEIso::CisParams qos;
-      nullFFFF = (BLEIso::connectCis(0xFFFF, qos) == nullptr) ? 1 : 0;
-      nullDead = (BLEIso::connectCis(0x0042, qos) == nullptr) ? 1 : 0;
+      nullFFFF = (!iso.connectCis(0xFFFF, qos)) ? 1 : 0;
+      nullDead = (!iso.connectCis(0x0042, qos)) ? 1 : 0;
       Serial.printf("[SERVER] IsoGates nullFFFF=%d nullDead=%d\n", nullFFFF, nullDead);
-      BLEIso::end();
+      iso.end();
       BLE.end(false);
       delay(500);
       (void)BLE.begin(serverName);

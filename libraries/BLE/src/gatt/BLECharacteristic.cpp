@@ -331,7 +331,7 @@ void BLECharacteristic::removeDescriptor(const BLEDescriptor &desc) {
       }
     }
   }
-  bleDetachLocalDescriptor(removed);
+  BLEGattInternal::detachLocalDescriptor(removed);
 }
 
 std::shared_ptr<BLEServer::Impl> BLECharacteristicImplCommon::activeServer() {
@@ -353,7 +353,7 @@ std::shared_ptr<BLEServer::Impl> BLECharacteristicImplCommon::activeServer() {
 }
 
 static BTStatus sendNotifyAdapter(BLECharacteristic::Impl &chr, BLEServer::Impl *, uint16_t connHandle, const uint8_t *data, size_t length) {
-  return bleCharacteristicSendNotify(chr, connHandle, data, length);
+  return BLEServerInternal::characteristicSendNotify(chr, connHandle, data, length);
 }
 
 static BTStatus sendIndicateAdapter(BLECharacteristic::Impl &chr, BLEServer::Impl *server, uint16_t connHandle, const uint8_t *data, size_t length) {
@@ -495,7 +495,7 @@ BTStatus BLECharacteristic::indicate(uint16_t connHandle, const uint8_t *data, s
 
 BLEDescriptor BLECharacteristic::createDescriptor(const BLEUUID &uuid, BLEPermission perms, size_t maxLen) {
   BLE_CHECK_IMPL(BLEDescriptor());
-  if (!bleValidateDescProps(uuid, impl.uuid, perms)) {
+  if (!BLEGattInternal::validateDescProps(uuid, impl.uuid, perms)) {
     return BLEDescriptor();
   }
 

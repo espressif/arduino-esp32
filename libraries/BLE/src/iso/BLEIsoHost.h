@@ -22,7 +22,7 @@
  *
  * The IDF host (`bt_le_host_init`) and its single GAP app callback can only be
  * claimed once. Either the ISO transport claims it (`esp_ble_iso_common_init`,
- * from `BLEIso::begin()`) or the LE Audio engine does
+ * from the `BLEIso` controller's `begin()`) or the LE Audio engine does
  * (`esp_ble_audio_common_init`, which also brings ISO up). When audio owns the
  * host it calls bleIsoAttachShared() and forwards its GAP events through
  * bleIsoOnGapEvent(), so ISO is never initialized twice.
@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-/** @brief Whether the ISO transport itself claimed the host (`BLEIso::begin()` without audio). */
+/** @brief Whether the ISO transport itself claimed the host (controller `begin()` without audio). */
 bool bleIsoOwnsHost(void);
 
 /** @brief Whether the IDF host is up (claimed by ISO or shared by audio). */
@@ -58,12 +58,23 @@ void bleIsoAttachShared(bool attached);
 /** @brief GAP app event from the audio engine's callback (`esp_ble_iso_gap_app_event_t *`). */
 void bleIsoOnGapEvent(void *event);
 
+#ifdef __cplusplus
+}  // extern "C"
+
+/**
+ * C++-only ISO transport internals (called from the BLE library's C++ TUs).
+ * The four functions above stay global `extern "C"` because the C LE Audio
+ * engine calls them; everything else lives here. The NimBLE GAP forwarder
+ * (`forwardHostGapEvent`, in `iso/BLEIso.nimble.h`) completes the set.
+ */
+namespace BLEIsoInternal {
+
 /**
  * @brief Map a public connection handle onto the HCI ACL handle expected by `esp_ble_iso_chan_connect`.
  *
  * Identity on NimBLE; resolves `BLEClient` GATTC connection IDs on Bluedroid.
  */
-uint16_t bleIsoResolveAclHandle(uint16_t connHandle);
+uint16_t resolveAclHandle(uint16_t connHandle);
 
 /**
  * @brief Whether @p connHandle names a live ACL (false for 0xFFFF and for
@@ -73,10 +84,16 @@ uint16_t bleIsoResolveAclHandle(uint16_t connHandle);
  * reaching the controller (where a recycled handle could address the wrong
  * peer).
  */
-bool bleIsoAclHandleLive(uint16_t connHandle);
+bool aclHandleLive(uint16_t connHandle);
 
-#ifdef __cplusplus
-}
-#endif
+/** @brief End the retained ISO controller, if any; silent when never minted. */
+void preEnd();
+
+/** @brief Whether the retained ISO controller, if any, is still active. */
+bool isActive();
+
+}  // namespace BLEIsoInternal
+
+#endif /* __cplusplus */
 
 #endif /* BLE_ISO_SUPPORTED */

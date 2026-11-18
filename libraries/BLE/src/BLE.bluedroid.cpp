@@ -81,7 +81,7 @@ void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 
 // API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-bool bleIsHostStackTask() {
+bool BLETask::isHostStackTask() {
   TaskHandle_t current = xTaskGetCurrentTaskHandle();
   const char *name = current ? pcTaskGetName(current) : nullptr;
   return name && strcmp(name, "BTC_TASK") == 0;
@@ -509,7 +509,7 @@ BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   if (!_impl || !isInitialized()) {
     return BTStatus::NotInitialized;
   }
-  esp_err_t err = esp_ble_gap_set_preferred_default_phy(blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy));
+  esp_err_t err = esp_ble_gap_set_preferred_default_phy(bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy));
   if (err != ESP_OK) {
     log_e("setDefaultPhy: esp_ble_gap_set_preferred_default_phy: %s", esp_err_to_name(err));
     return BTStatus::Fail;

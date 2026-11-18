@@ -30,6 +30,8 @@
 #include "types/BLEAdvTypes.h"
 #include <stdint.h>
 
+namespace BLEAdvInternal {
+
 /**
  * @brief Convert milliseconds to 0.625 ms controller time units.
  *
@@ -42,7 +44,7 @@
  * @param ms Duration in milliseconds.
  * @return   Duration in 0.625 ms units.
  */
-inline uint16_t bleMsToUnits0625(uint16_t ms) {
+inline uint16_t msToUnits0625(uint16_t ms) {
   return static_cast<uint16_t>((static_cast<uint32_t>(ms) * 1000) / 625);
 }
 
@@ -101,8 +103,10 @@ inline BLEExtAdvProps advTypeToExtAdvProps(BLEAdvType type, bool legacyPdu) {
 /**
  * @brief True when @p type is a directed advertising PDU (InitA required).
  */
-inline bool bleAdvTypeIsDirected(BLEAdvType type) {
+inline bool advTypeIsDirected(BLEAdvType type) {
   return advTypeToExtAdvProps(type, true).directed;
 }
+
+}  // namespace BLEAdvInternal
 
 #endif /* BLE_ENABLED */

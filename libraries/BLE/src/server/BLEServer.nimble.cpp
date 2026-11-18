@@ -290,7 +290,7 @@ uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
 
 static thread_local bool sInIndicateSend = false;
 
-BLEIndicationSend bleServerSendIndication(
+BLEServerInternal::IndicationSend BLEServerInternal::sendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
   {
@@ -298,7 +298,7 @@ BLEIndicationSend bleServerSendIndication(
     if (!impl->active || !impl->started || !impl->connFind(connHandle)) {
       status = BLECharacteristic::ERROR_NO_CLIENT;
       code = BLE_HS_ENOTCONN;
-      return BLEIndicationSend::Failed;
+      return BLEServerInternal::IndicationSend::Failed;
     }
   }
   struct os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
@@ -306,7 +306,7 @@ BLEIndicationSend bleServerSendIndication(
     log_e("Server: indicate - no memory for mbuf (conn=%u)", connHandle);
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = BLE_HS_ENOMEM;
-    return BLEIndicationSend::Failed;
+    return BLEServerInternal::IndicationSend::Failed;
   }
   // EALREADY: the connection's indication slot is held by one NimBLE sent
   // itself (e.g. Service Changed); the queue retries when that one completes.
@@ -317,17 +317,17 @@ BLEIndicationSend bleServerSendIndication(
   int rc = ble_gatts_indicate_custom(connHandle, attrHandle, om);
   sInIndicateSend = false;
   if (rc == 0) {
-    return BLEIndicationSend::Sent;
+    return BLEServerInternal::IndicationSend::Sent;
   }
   if (rc == BLE_HS_EALREADY) {
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = BLE_HS_EALREADY;
-    return BLEIndicationSend::Busy;
+    return BLEServerInternal::IndicationSend::Busy;
   }
   log_w("Server: indicate failed for conn=%u handle=%u rc=%d", connHandle, attrHandle, rc);
   status = (rc == BLE_HS_ENOTCONN) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_INDICATE_FAILURE;
   code = rc;
-  return BLEIndicationSend::Failed;
+  return BLEServerInternal::IndicationSend::Failed;
 }
 
 // Parameters are validated locally against the BT Core Spec ranges (v5.x, Vol 6, Part B,
@@ -722,7 +722,7 @@ int BLEServer::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       }
 
       // A notification completion consumes the pending entry registered by
-      // bleCharacteristicSendNotify() before native submission. An event with
+      // characteristicSendNotify() before native submission. An event with
       // no pending entry is not one of ours (already consumed on a failed
       // synchronous submission); do not report it twice.
       bool wasPending = false;
@@ -777,7 +777,7 @@ int BLEServer::handleGapEvent(void *rawEvent) {
 
 // NimBLE has no single-service delete; a started server rebuilds the entire GATT database
 // (like BLEServer::start), unlike Bluedroid's esp_ble_gatts_delete_service.
-BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
   }
@@ -827,7 +827,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   }
 
   if (!svc->started || !impl->started) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     return BTStatus::OK;
   }
 
@@ -843,7 +843,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
       impl->services.insert(impl->services.begin() + insertIndex, svc);
       return BTStatus::Busy;
     }
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     ble_svc_gatt_changed(startHandle, endHandle);
     log_i("Server: service hidden in audio GATT table (handle=%u..%u)", startHandle, endHandle);
     return BTStatus::OK;
@@ -851,7 +851,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
 
   BTStatus st = nimbleRebuildGattDatabase(*impl);
   if (st == BTStatus::OK) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     // Handles were reassigned by the rebuild; advertise the full ATT range
     // rather than the pre-reset values (Vol 3, Part G, §7.1).
     ble_svc_gatt_changed(0x0001, 0xFFFF);
@@ -864,7 +864,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
   // ATT server and emit the Service Changed (0x2A05) indication so runtime
   // removal works identically to Bluedroid.
   if (st == BTStatus::Busy && startHandle != 0 && ble_gatts_svc_set_visibility(startHandle, 0) == 0) {
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     ble_svc_gatt_changed(startHandle, endHandle);
     log_i("Server: service hidden while active (handle=%u..%u), %u service(s) registered", startHandle, endHandle, (unsigned)impl->services.size());
     return BTStatus::OK;

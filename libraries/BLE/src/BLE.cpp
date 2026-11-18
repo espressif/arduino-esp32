@@ -25,6 +25,7 @@
 #if BLE_ENABLED
 
 #include "BLE.h"
+#include "BLEImpl.h"
 #include "core/BLEBackend.h"
 #include "core/BLEAudioHooks.h"
 #include "core/BLEMutex.h"
@@ -32,6 +33,7 @@
 #include "core/BLEValidationHooks.h"
 #if BLE_ISO_SUPPORTED
 #include "iso/BLEIso.h"
+#include "iso/BLEIsoHost.h"
 #endif
 #include "HEXBuilder.h"
 #include "base64.h"
@@ -53,8 +55,8 @@ BLEClass BLE;
 // 1. Stack-task detection & deferred shutdown worker
 // ==========================================================================
 
-bool bleInStackCallbackTask() {
-  if (bleIsHostStackTask()) {
+bool BLETask::inStackCallbackTask() {
+  if (BLETask::isHostStackTask()) {
     return true;
   }
 #if BLE_AUDIO_SUPPORTED || BLE_ISO_SUPPORTED
@@ -70,7 +72,7 @@ namespace {
 
 #if BLE_ISO_SUPPORTED
 void isoPreEndTrampoline() {
-  (void)BLEIso::end();
+  BLEIsoInternal::preEnd();
 }
 #endif
 
@@ -185,7 +187,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
 }
 
 void BLEClass::end(bool releaseMemory) {
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     // Claim ending before returning so begin() cannot treat the still-live
     // stack as a successful re-init. The worker, or a later user-thread end(),
     // runs the teardown body.
@@ -254,7 +256,7 @@ void BLEClass::end(bool releaseMemory) {
   if (auto hook = _impl->loadHook(_impl->isoPreEndHook)) {
     hook();
   }
-  if (BLEIso::isActive()) {
+  if (BLEIsoInternal::isActive()) {
     log_e("BLE.end: ISO teardown did not complete; host shutdown aborted");
     _impl->abortEnd();
     return;

@@ -222,7 +222,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
         extInst->durationMs = remainingMs;
         extInst->sessionDeadlineUs = remainingMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(remainingMs) * 1000;
         extInst->isAdvertising = true;
-        int duration = static_cast<int>(bleGapDurationMsTo10ms(remainingMs));
+        int duration = static_cast<int>(BLECoreInternal::gapDurationMsTo10ms(remainingMs));
         int rc = ble_gap_ext_adv_start(inst, duration, extInst->maxEvents);
         if (rc != 0) {
           extInst->isAdvertising = false;
@@ -265,7 +265,7 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
       }
       int32_t duration = (remainingMs == 0) ? BLE_HS_FOREVER : static_cast<int32_t>(remainingMs);
       ble_addr_t peerAddr = toNimblePeerAddr(impl->directedPeer);
-      const ble_addr_t *directAddr = bleAdvTypeIsDirected(impl->advType) ? &peerAddr : nullptr;
+      const ble_addr_t *directAddr = BLEAdvInternal::advTypeIsDirected(impl->advType) ? &peerAddr : nullptr;
       int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), directAddr, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, impl);
       if (rc != 0) {
         impl->isAdvertising = false;
@@ -396,13 +396,13 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if (impl.advType == BLEAdvType::DirectedHighDuty && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+  if (impl.advType == BLEAdvType::DirectedHighDuty && !BLECoreInternal::highDutyDirectedDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if (bleAdvTypeIsDirected(impl.advType) && impl.directedPeer.isZero()) {
+  if (BLEAdvInternal::advTypeIsDirected(impl.advType) && impl.directedPeer.isZero()) {
     return BTStatus::InvalidParam;
   }
   if (impl.isAdvertising.load()) {
@@ -607,7 +607,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   int32_t duration = (durationMs == 0) ? BLE_HS_FOREVER : static_cast<int32_t>(durationMs);
   impl.isAdvertising = true;
   ble_addr_t peerAddr = toNimblePeerAddr(impl.directedPeer);
-  const ble_addr_t *directAddr = bleAdvTypeIsDirected(impl.advType) ? &peerAddr : nullptr;
+  const ble_addr_t *directAddr = BLEAdvInternal::advTypeIsDirected(impl.advType) ? &peerAddr : nullptr;
   int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), directAddr, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, &impl);
   if (rc == BLE_HS_EALREADY) {
     impl.isAdvertising = false;
@@ -791,7 +791,7 @@ int BLEAdvertising::Impl::extEnsureConfigured(uint8_t instance) {
 // Fills a legacy-PDU extended params block from the shared advertising-type
 // mapping (BT Core Spec v5.x, Vol 6, Part B, §4.4.2.4 legacy PDU combinations).
 static void fillLegacyPduExtAdvParams(BLEAdvType type, struct ble_gap_ext_adv_params &params) {
-  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/true);
+  const BLEAdvInternal::BLEExtAdvProps props = BLEAdvInternal::advTypeToExtAdvProps(type, /*legacyPdu=*/true);
   params.legacy_pdu = 1;
   params.connectable = props.connectable;
   params.scannable = props.scannable;
@@ -895,7 +895,7 @@ int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   }
 
   // Extended advertising duration is in 10 ms units; 0 == no expiration.
-  int duration = static_cast<int>(bleGapDurationMsTo10ms(durationMs));
+  int duration = static_cast<int>(BLECoreInternal::gapDurationMsTo10ms(durationMs));
   return ble_gap_ext_adv_start(kLegacyInstance, duration, 0);
 }
 
@@ -907,7 +907,7 @@ void BLEAdvertising::setExtType(uint8_t instance, BLEAdvType type) {
     return;
   }
   // Extended PDU: a connectable set cannot also be scannable (Vol 6, Part B, §4.4.2.4).
-  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/false);
+  const BLEAdvInternal::BLEExtAdvProps props = BLEAdvInternal::advTypeToExtAdvProps(type, /*legacyPdu=*/false);
   extInst->params.legacy_pdu = 0;
   extInst->params.connectable = props.connectable;
   extInst->params.scannable = props.scannable;
@@ -1087,10 +1087,10 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if (extInst->params.high_duty_directed && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+  if (extInst->params.high_duty_directed && !BLECoreInternal::highDutyDirectedDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   int rc = impl.extEnsureConfigured(instance);
@@ -1099,7 +1099,7 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
     return BTStatus::Fail;
   }
   // Extended advertising duration is in 10 ms units; 0 == no expiration.
-  int duration = static_cast<int>(bleGapDurationMsTo10ms(durationMs));
+  int duration = static_cast<int>(BLECoreInternal::gapDurationMsTo10ms(durationMs));
   extInst->isAdvertising = true;
   rc = ble_gap_ext_adv_start(instance, duration, maxEvents);
   if (rc != 0) {

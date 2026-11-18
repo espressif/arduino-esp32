@@ -6,7 +6,7 @@
  * scan, syncs to its periodic advertising train, and the BIGInfo carried on
  * that train tells the controller how to sync to the BIG itself.
  *
- * BLEIso::syncBig() arms the sync before the scan starts. The actual BIG sync
+ * iso.syncBig() arms the sync before the scan starts. The actual BIG sync
  * is issued automatically when the first BIGInfo report arrives. While armed,
  * a lost sync is issued again on the next BIGInfo, so the receiver recovers
  * by itself when the broadcaster comes back.
@@ -34,7 +34,8 @@ static const uint8_t BIS_INDEX = 1;      // 1-based BIS within the BIG
 static const char *BROADCAST_CODE = "";  // must match the broadcaster when it encrypts
 static const uint16_t SDU_SIZE = 8;
 
-BLEIso::Channel *bis = nullptr;
+BLEIso iso;
+BLEIso::Channel bis;
 volatile bool paSyncRequested = false;
 volatile uint32_t paSyncRequestMs = 0;
 volatile bool paSyncUp = false;
@@ -60,20 +61,21 @@ void setup() {
   if (!st) {
     halt("BLE.begin", st);
   }
-  st = BLEIso::begin();
+  iso = BLE.getIsoController();
+  st = iso.begin();
   if (!st) {
-    halt("BLEIso::begin", st);
+    halt("iso.begin", st);
   }
 
   // Arm the BIG sync first: it is issued on the first BIGInfo of the train.
   BLEIso::BigParams qos;
   qos.sduSize = SDU_SIZE;
   qos.broadcastCode = BROADCAST_CODE;
-  bis = BLEIso::syncBig(BIS_INDEX, qos);
+  bis = iso.syncBig(BIS_INDEX, qos);
   if (!bis) {
-    halt("BLEIso::syncBig", BTStatus::Fail);
+    halt("iso.syncBig", BTStatus::Fail);
   }
-  bis->onConnected([](BLEIso::Channel &) {
+  bis.onConnected([](BLEIso::Channel &) {
        Serial.println("Synced to the BIG");
        bisUp = true;
      })

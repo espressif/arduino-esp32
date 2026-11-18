@@ -34,7 +34,8 @@ static const uint8_t ADV_SID = 1;       // receivers sync to this SID
 static const char *BROADCAST_CODE = "";  // up to 16 characters. empty = unencrypted
 static const uint16_t SDU_SIZE = 8;
 
-BLEIso::Channel *bis = nullptr;
+BLEIso iso;
+BLEIso::Channel bis;
 volatile bool bisUp = false;  // written from the ISO host task
 
 void halt(const char *what, BTStatus st) {
@@ -80,9 +81,10 @@ void setup() {
     halt("startPeriodicAdv", st);
   }
 
-  st = BLEIso::begin();
+  iso = BLE.getIsoController();
+  st = iso.begin();
   if (!st) {
-    halt("BLEIso::begin", st);
+    halt("iso.begin", st);
   }
 
   BLEIso::BigParams qos;
@@ -92,11 +94,11 @@ void setup() {
   qos.phy = BLEIso::Phy::Phy2M;
   qos.rtn = 2;                // each SDU is sent up to 3 times
   qos.broadcastCode = BROADCAST_CODE;
-  bis = BLEIso::createBig(ADV_INSTANCE, qos);
+  bis = iso.createBig(ADV_INSTANCE, qos);
   if (!bis) {
-    halt("BLEIso::createBig", BTStatus::Fail);
+    halt("iso.createBig", BTStatus::Fail);
   }
-  bis->onConnected([](BLEIso::Channel &ch) {
+  bis.onConnected([](BLEIso::Channel &ch) {
        Serial.printf("BIG up (BIS on channel %d)%s\n", ch.slot(), BROADCAST_CODE[0] ? ", encrypted" : "");
        bisUp = true;
      })
@@ -117,7 +119,7 @@ void loop() {
     uint32_t now = millis();
     memcpy(sdu, &counter, 4);
     memcpy(sdu + 4, &now, 4);
-    if (bis->send(sdu, sizeof(sdu))) {
+    if (bis.send(sdu, sizeof(sdu))) {
       counter++;
     }
   }

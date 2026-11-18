@@ -34,7 +34,8 @@ static const BLEUUID SVC_UUID("6c1e0001-5f6b-4d5a-9f0e-0a7d6f1a2b3c");
 static const uint16_t SDU_SIZE = 8;         // Central to Peripheral
 static const uint16_t RETURN_SDU_SIZE = 8;  // Peripheral to Central
 
-BLEIso::Channel *cis = nullptr;
+BLEIso iso;
+BLEIso::Channel cis;
 
 // Written from the ISO host task, read from loop().
 volatile bool cisUp = false;
@@ -99,9 +100,10 @@ void setup() {
     halt("server.start", st);
   }
 
-  st = BLEIso::begin();
+  iso = BLE.getIsoController();
+  st = iso.begin();
   if (!st) {
-    halt("BLEIso::begin", st);
+    halt("iso.begin", st);
   }
 
   // The Central picks the interval, latency, PHY and retransmissions. This
@@ -109,11 +111,11 @@ void setup() {
   BLEIso::CisParams qos;
   qos.sduSize = SDU_SIZE;
   qos.returnSduSize = RETURN_SDU_SIZE;
-  cis = BLEIso::listenCis(qos);
+  cis = iso.listenCis(qos);
   if (!cis) {
-    halt("BLEIso::listenCis", BTStatus::Fail);
+    halt("iso.listenCis", BTStatus::Fail);
   }
-  cis->onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
+  cis.onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
 
   BLEAdvertising adv = BLE.getAdvertising();
   adv.addServiceUUID(SVC_UUID);
@@ -136,7 +138,7 @@ void loop() {
     uint32_t peer = lastPeerCounter;
     memcpy(sdu, &counter, 4);
     memcpy(sdu + 4, &peer, 4);
-    if (cis->send(sdu, sizeof(sdu))) {
+    if (cis.send(sdu, sizeof(sdu))) {
       counter++;
     }
   }

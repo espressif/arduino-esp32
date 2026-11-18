@@ -279,7 +279,7 @@ void BLEAudioStreamAccess::setTap(const BLEAudioStream &s, const BLEAudioStreamT
   if (!impl) {
     return;
   }
-  if (bleInStackCallbackTask() && s_tapDepth > 0) {
+  if (BLETask::inStackCallbackTask() && s_tapDepth > 0) {
     log_e("Stream: setTap() from inside a tap hook would wedge the host task; detach outside the data path");
     return;
   }
@@ -292,7 +292,7 @@ void BLEAudioStreamAccess::clearTap(const BLEAudioStream &s, const BLEAudioStrea
   if (!impl || !tap) {
     return;
   }
-  if (bleInStackCallbackTask() && s_tapDepth > 0) {
+  if (BLETask::inStackCallbackTask() && s_tapDepth > 0) {
     log_e("Stream: clearTap() from inside a tap hook would wedge the host task; detach outside the data path");
     return;
   }

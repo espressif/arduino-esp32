@@ -28,7 +28,7 @@
  *
  * Keep this header PURE SELECTION: no function declarations, no shim classes,
  * no logic. Backend operations live in their own headers (e.g.
- * @c bleServerRemoveService in @c server/BLEServerImpl.h; the @c BLESecurity
+ * @c removeService in @c server/BLEServerImpl.h (namespace BLEServerInternal); the @c BLESecurity
  * pairing hooks on @c BLESecurityImplCommon in @c security/BLESecurityImpl.h).
  */
 

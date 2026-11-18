@@ -526,7 +526,7 @@ BTStatus BLEServer::start() {
           }
         }
       }
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
+      if (!BLEGattInternal::validateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
         log_e("Server: characteristic %s rejected by validation", chr->uuid.toString().c_str());
         return BTStatus::InvalidState;
       }
@@ -772,7 +772,7 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   return BTStatus::OK;
 }
 
-BLEIndicationSend bleServerSendIndication(
+BLEServerInternal::IndicationSend BLEServerInternal::sendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 ) {
   esp_gatt_if_t gattsIf = ESP_GATT_IF_NONE;
@@ -781,14 +781,14 @@ BLEIndicationSend bleServerSendIndication(
     if (!impl->active || !impl->started || impl->gattsIf == ESP_GATT_IF_NONE || !impl->connFind(connHandle)) {
       status = BLECharacteristic::ERROR_NO_CLIENT;
       code = ESP_ERR_INVALID_STATE;
-      return BLEIndicationSend::Failed;
+      return BLEServerInternal::IndicationSend::Failed;
     }
     gattsIf = impl->gattsIf;
   }
   // Bluedroid copies the payload; the outcome arrives as ESP_GATTS_CONF_EVT.
   esp_err_t err = esp_ble_gatts_send_indicate(gattsIf, connHandle, attrHandle, length, const_cast<uint8_t *>(data), true);
   if (err == ESP_OK) {
-    return BLEIndicationSend::Sent;
+    return BLEServerInternal::IndicationSend::Sent;
   }
   if (err == ESP_FAIL) {
     // The public API returns ESP_FAIL when ATT's L2CAP channel is congested
@@ -797,12 +797,12 @@ BLEIndicationSend bleServerSendIndication(
     status = BLECharacteristic::ERROR_INDICATE_FAILURE;
     code = static_cast<uint32_t>(err);
     impl->scheduleBusyRetry();
-    return BLEIndicationSend::Busy;
+    return BLEServerInternal::IndicationSend::Busy;
   }
   log_e("Server: esp_ble_gatts_send_indicate (indicate) conn=%u: %s", connHandle, esp_err_to_name(err));
   status = (err == ESP_ERR_INVALID_STATE) ? BLECharacteristic::ERROR_NO_CLIENT : BLECharacteristic::ERROR_INDICATE_FAILURE;
   code = static_cast<uint32_t>(err);
-  return BLEIndicationSend::Failed;
+  return BLEServerInternal::IndicationSend::Failed;
 }
 
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
@@ -860,7 +860,7 @@ BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
     BLEAddressUtil::toNative(conn->getAddress(), bda);
   }
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Server: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);
@@ -1882,7 +1882,7 @@ bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server) {
 
 // Uses esp_ble_gatts_delete_service and clears local handles, instead of a NimBLE-wide
 // ble_gatts_reset and full re-register of every service.
-BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
   }
@@ -1918,7 +1918,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
         }
       }
     }
-    bleDetachLocalService(svc);
+    BLEGattInternal::detachLocalService(svc);
     return BTStatus::OK;
   }
 
@@ -1944,7 +1944,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
       }
     }
   }
-  bleDetachLocalService(svc);
+  BLEGattInternal::detachLocalService(svc);
   return BTStatus::OK;
 }
 
@@ -1952,7 +1952,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
 
 #include "core/BLEBackend.h"
 
-BTStatus bleServerRemoveService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {
+BTStatus BLEServerInternal::removeService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {
   return BTStatus::NotSupported;
 }
 

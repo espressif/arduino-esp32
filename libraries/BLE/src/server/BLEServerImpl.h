@@ -250,8 +250,14 @@ private:
   bool markFrontBusy(IndicationLink &link);
 };
 
-/** @brief Outcome of handing one indication to the stack (see @c bleServerSendIndication). */
-enum class BLEIndicationSend : uint8_t {
+/** @brief Outcome of handing one indication to the stack (see @c sendIndication). */
+namespace BLEServerInternal {
+
+/**
+ * Indication/notify plumbing shared by the server backends. Namespaced (not
+ * bare `ble*` globals) like every other internal helper.
+ */
+enum class IndicationSend : uint8_t {
   Sent,    // Accepted; the confirmation is reported through indicationDone().
   Busy,    // The stack is still waiting on an indication this queue did not send.
   Failed,  // Rejected; status/code say why.
@@ -265,14 +271,14 @@ enum class BLEIndicationSend : uint8_t {
  * Implemented per-backend (BLEServer.nimble.cpp / BLEServer.bluedroid.cpp) and called by the
  * indication queue without mtx held.
  */
-BLEIndicationSend bleServerSendIndication(
+IndicationSend sendIndication(
   BLEServer::Impl *impl, uint16_t connHandle, uint16_t attrHandle, const uint8_t *data, size_t length, BLECharacteristic::NotifyStatus &status, uint32_t &code
 );
 
 /**
  * @brief Send one notification to @p connHandle on the active backend.
  */
-BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length);
+BTStatus characteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length);
 
 #if BLE_GATT_SERVER_SUPPORTED
 /**
@@ -285,7 +291,9 @@ BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t con
  * Implemented per-backend (BLEServer.nimble.cpp / BLEServer.bluedroid.cpp). Declared here
  * so callers get it alongside the shared server Impl base without a selector header.
  */
-BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc);
+BTStatus removeService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc);
 #endif
+
+}  // namespace BLEServerInternal
 
 #endif /* BLE_ENABLED */

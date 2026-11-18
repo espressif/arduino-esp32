@@ -106,7 +106,7 @@ std::vector<std::shared_ptr<BLEClient::Impl>> BLEClient::Impl::snapshotClients()
   return clients;
 }
 
-extern "C" bool bleClientConnLive(uint16_t connId) {
+bool BLEClientInternal::connLive(uint16_t connId) {
   if (connId == 0xFFFF) {
     return false;
   }
@@ -121,13 +121,13 @@ extern "C" bool bleClientConnLive(uint16_t connId) {
       return false;
     }
   }
-  /* Not one of ours: likely already an ACL handle (see bleClientAclHandle
+  /* Not one of ours: likely already an ACL handle (see aclHandle
    * fallback). Accept optimistically like NimBLE's host-live check and let
    * the stack reject it if invalid, instead of refusing a valid raw ACL. */
   return true;
 }
 
-extern "C" uint16_t bleClientAclHandle(uint16_t connId) {
+uint16_t BLEClientInternal::aclHandle(uint16_t connId) {
   if (connId == 0xFFFF) {
     return 0xFFFF; /* No link: never resolve a dead or never-connected client. */
   }
@@ -295,7 +295,7 @@ BTStatus BLEClient::connect(const BTAddress &address, BLEPhy phy, uint32_t timeo
     connParams.supervision_timeout = 0x1F4;
     connParams.min_ce_len = 0;
     connParams.max_ce_len = 0;
-    esp_ble_gap_phy_mask_t phyMask = blePhyToPrefMask(phy);
+    esp_ble_gap_phy_mask_t phyMask = bluedroidPhyToPrefMask(phy);
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
@@ -417,7 +417,7 @@ BTStatus BLEClient::connectAsync(const BTAddress &address, BLEPhy phy) {
     connParams.interval_max = 0x28;
     connParams.latency = 0;
     connParams.supervision_timeout = 0x1F4;
-    esp_ble_gap_phy_mask_t phyMask = blePhyToPrefMask(phy);
+    esp_ble_gap_phy_mask_t phyMask = bluedroidPhyToPrefMask(phy);
     const esp_ble_gap_conn_params_t *p1m = (phyMask & ESP_BLE_GAP_PHY_1M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *p2m = (phyMask & ESP_BLE_GAP_PHY_2M_PREF_MASK) ? &connParams : nullptr;
     const esp_ble_gap_conn_params_t *pcoded = (phyMask & ESP_BLE_GAP_PHY_CODED_PREF_MASK) ? &connParams : nullptr;
@@ -714,7 +714,7 @@ BTStatus BLEClient::setPhy(BLEPhy txPhy, BLEPhy rxPhy) {
   esp_bd_addr_t bda;
   BLEAddressUtil::toNative(impl.peerAddress, bda);
   impl.phySync.take();
-  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
+  esp_err_t err = esp_ble_gap_set_preferred_phy(bda, 0, bluedroidPhyToPrefMask(txPhy), bluedroidPhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF);
   if (err != ESP_OK) {
     log_e("Client: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
     impl.phySync.give(BTStatus::Fail);

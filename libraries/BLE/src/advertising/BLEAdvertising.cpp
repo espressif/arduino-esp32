@@ -113,8 +113,8 @@ void BLEAdvertising::setType(BLEAdvType type) {
 
 void BLEAdvertising::setInterval(uint16_t minMs, uint16_t maxMs) {
   BLE_CHECK_IMPL();
-  impl.minInterval = bleMsToUnits0625(minMs);
-  impl.maxInterval = bleMsToUnits0625(maxMs);
+  impl.minInterval = BLEAdvInternal::msToUnits0625(minMs);
+  impl.maxInterval = BLEAdvInternal::msToUnits0625(maxMs);
 }
 
 void BLEAdvertising::setMinPreferred(uint16_t val) {

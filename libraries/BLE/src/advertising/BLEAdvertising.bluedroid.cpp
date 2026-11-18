@@ -527,13 +527,13 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if (impl.advType == BLEAdvType::DirectedHighDuty && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+  if (impl.advType == BLEAdvType::DirectedHighDuty && !BLECoreInternal::highDutyDirectedDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if (bleAdvTypeIsDirected(impl.advType) && impl.directedPeer.isZero()) {
+  if (BLEAdvInternal::advTypeIsDirected(impl.advType) && impl.directedPeer.isZero()) {
     return BTStatus::InvalidParam;
   }
 
@@ -650,7 +650,7 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
     advParams.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
     advParams.channel_map = ADV_CHNL_ALL;
     advParams.adv_filter_policy = mapFilterPolicy(impl.scanRequestWhitelistOnly, impl.connectWhitelistOnly);
-    if (bleAdvTypeIsDirected(impl.advType)) {
+    if (BLEAdvInternal::advTypeIsDirected(impl.advType)) {
       BLEAddressUtil::toNative(impl.directedPeer, advParams.peer_addr);
       advParams.peer_addr_type = static_cast<esp_ble_addr_type_t>(impl.directedPeer.type());
     } else {
@@ -821,9 +821,9 @@ void BLEAdvertising::resetCallbacks() {
 
 // Extended (non-legacy) PDU property mask, assembled from the shared neutral
 // property flags. An extended PDU cannot be both connectable and scannable
-// (Vol 6, Part B, §4.4.2.4), which advTypeToExtAdvProps already enforces.
+// (Vol 6, Part B, §4.4.2.4), which BLEAdvInternal::advTypeToExtAdvProps already enforces.
 static esp_ble_ext_adv_type_mask_t extAdvTypeMask(BLEAdvType type) {
-  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/false);
+  const BLEAdvInternal::BLEExtAdvProps props = BLEAdvInternal::advTypeToExtAdvProps(type, /*legacyPdu=*/false);
   esp_ble_ext_adv_type_mask_t mask = ESP_BLE_GAP_SET_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED;
   if (props.connectable) {
     mask |= ESP_BLE_GAP_SET_EXT_ADV_PROP_CONNECTABLE;
@@ -842,7 +842,7 @@ static esp_ble_ext_adv_type_mask_t extAdvTypeMask(BLEAdvType type) {
 // Legacy-PDU property mask (used by the reserved legacy set so legacy-only peers
 // still discover us). Derived from the same neutral flags with legacy semantics.
 static esp_ble_ext_adv_type_mask_t legacyExtAdvTypeMask(BLEAdvType type) {
-  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/true);
+  const BLEAdvInternal::BLEExtAdvProps props = BLEAdvInternal::advTypeToExtAdvProps(type, /*legacyPdu=*/true);
   if (props.directed) {
     if (props.highDutyDirected) {
       // ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY_HD_DIR is built as LEGACY|CONNECTABLE|
@@ -969,7 +969,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   params.interval_max = maxInterval;
   params.channel_map = ADV_CHNL_ALL;
   params.own_addr_type = static_cast<esp_ble_addr_type_t>(BLE.getOwnAddressType());
-  if (bleAdvTypeIsDirected(advType)) {
+  if (BLEAdvInternal::advTypeIsDirected(advType)) {
     BLEAddressUtil::toNative(directedPeer, params.peer_addr);
     params.peer_addr_type = static_cast<esp_ble_addr_type_t>(directedPeer.type());
   } else {
@@ -986,7 +986,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   // ADV_DIRECT_IND carries no AD or SCAN_RSP (Vol 6, Part B, §2.3.1.2). Drop
   // leftover payload before Set_Ext_Adv_Params: high-duty directed with data
   // is Invalid HCI Command Parameters (Vol 4, Part E, §7.8.53).
-  if (bleAdvTypeIsDirected(advType)) {
+  if (BLEAdvInternal::advTypeIsDirected(advType)) {
     advSync.take();
     err = esp_ble_gap_config_ext_adv_data_raw(kLegacyInstance, 0, nullptr);
     if (err == ESP_OK) {
@@ -1025,7 +1025,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
   const bool nameInScanRsp = scanResp && scannable;
 
   // ADV_DIRECT_IND carries only AdvA and InitA (Vol 6, Part B, §2.3.1.2).
-  if (!bleAdvTypeIsDirected(advType)) {
+  if (!BLEAdvInternal::advTypeIsDirected(advType)) {
     {
       // Point directly at the source bytes (a member vector for custom data, or a
       // locally built payload) instead of copying into a temporary; the payload
@@ -1091,7 +1091,7 @@ BTStatus BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
 
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = kLegacyInstance;
-  startSet.duration = bleGapDurationMsTo10ms(durationMs);
+  startSet.duration = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   startSet.max_events = 0;
   advSync.take();
   err = esp_ble_gap_ext_adv_start(1, &startSet);
@@ -1332,10 +1332,10 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   if (!extInst) {
     return BTStatus::InvalidParam;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
-  if ((extInst->params.type & ESP_BLE_GAP_SET_EXT_ADV_PROP_HD_DIRECTED) && !bleHighDutyDirectedDurationMsValid(durationMs)) {
+  if ((extInst->params.type & ESP_BLE_GAP_SET_EXT_ADV_PROP_HD_DIRECTED) && !BLECoreInternal::highDutyDirectedDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   // Ensure params are applied even if the caller started without setting data.
@@ -1345,7 +1345,7 @@ BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, ui
   }
   esp_ble_gap_ext_adv_t startSet = {};
   startSet.instance = instance;
-  startSet.duration = bleGapDurationMsTo10ms(durationMs);
+  startSet.duration = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   startSet.max_events = maxEvents;
   impl.advSync.take();
   esp_err_t err = esp_ble_gap_ext_adv_start(1, &startSet);

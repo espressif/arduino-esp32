@@ -417,7 +417,7 @@ void BLEStream::end() {
   // begin() remains closed because the ending role stays installed. If either
   // allocation fails, keep it closed and make end() retryable rather than
   // silently exposing a half-torn-down stream.
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     {
       BLELockGuard lock(common->roleMtx);
       common->deferredSelf = common;

@@ -87,7 +87,13 @@
  * @param count Octets to read (1..4).
  * @return The assembled value, or 0 if fewer than @p count bytes are available.
  */
-inline uint32_t bleReadLEUint(const uint8_t *data, size_t len, size_t count) {
+namespace BLECoreInternal {
+
+/**
+ * Core byte/time validators shared across components (remote reads,
+ * advertising/scan durations). Namespaced like every other internal helper.
+ */
+inline uint32_t readLEUint(const uint8_t *data, size_t len, size_t count) {
   if (len < count) {
     return 0;
   }
@@ -105,14 +111,14 @@ inline uint32_t bleReadLEUint(const uint8_t *data, size_t len, size_t count) {
 inline constexpr uint32_t BLE_GAP_DURATION_10MS_MAX = 0xFFFF;
 inline constexpr uint32_t BLE_HIGH_DUTY_DIRECTED_MAX_MS = 1280;
 
-inline bool bleGapDurationMsValid(uint32_t durationMs) {
+inline bool gapDurationMsValid(uint32_t durationMs) {
   if (durationMs == 0) {
     return true;
   }
   return ((durationMs + 9u) / 10u) <= BLE_GAP_DURATION_10MS_MAX;
 }
 
-inline uint16_t bleGapDurationMsTo10ms(uint32_t durationMs) {
+inline uint16_t gapDurationMsTo10ms(uint32_t durationMs) {
   if (durationMs == 0) {
     return 0;
   }
@@ -125,6 +131,8 @@ inline uint16_t bleGapDurationMsTo10ms(uint32_t durationMs) {
 
 // High duty cycle directed advertising is limited to 1.28 s
 // (Vol 6, Part B, §4.4.2.4.2). Duration 0 (forever) is invalid.
-inline bool bleHighDutyDirectedDurationMsValid(uint32_t durationMs) {
+inline bool highDutyDirectedDurationMsValid(uint32_t durationMs) {
   return durationMs != 0 && durationMs <= BLE_HIGH_DUTY_DIRECTED_MAX_MS;
 }
+
+}  // namespace BLECoreInternal

@@ -43,7 +43,7 @@
 // Hands one notification (need_confirm=false) to the stack and records it in
 // pendingNotifies so ESP_GATTS_CONF_EVT can distinguish local notification
 // completions from peer indication confirmations without delaying notifications.
-BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
+BTStatus BLEServerInternal::characteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
   auto serverOwner = impl.activeServer();
   BLEServer::Impl *server = serverOwner.get();
   if (!server) {

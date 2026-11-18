@@ -747,7 +747,7 @@ Note:
 
 | Constant | Value |
 |---|---|
-| `BLE_APPEARANCE_GENERIC_HID` | `0x03C0` |
+| `BLE_APPEARANCE_HID_GENERIC` | `0x03C0` |
 | `BLE_APPEARANCE_HID_KEYBOARD` | `0x03C1` |
 | `BLE_APPEARANCE_HID_MOUSE` | `0x03C2` |
 | `BLE_APPEARANCE_HID_JOYSTICK` | `0x03C3` |
@@ -1181,7 +1181,7 @@ These features are new and were not available in v3.x:
 | Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSyncCreate()`, `scan.terminatePeriodicSync(handle)`; PAST receive (both stacks): `scan.receivePeriodicSync(connHandle)`, `scan.stopPeriodicSyncReceive(connHandle)` — take the handle from `BLEClient::getHandle()` or `BLEConnInfo::getHandle()` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
 | L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
-| Isochronous channels (raw CIS / BIS) | `BLEIso::begin()`, then `BLEIso::connectCis(connHandle, qos)` / `BLEIso::listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `BLEIso::createBig(advHandle, qos)` / `BLEIso::syncBig(bisIndex, qos)` (BIS). Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |
+| Isochronous channels (raw CIS / BIS) | `BLEIso iso = BLE.getIsoController()`, then `iso.begin()` and `iso.connectCis(connHandle, qos)` / `iso.listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `iso.createBig(advHandle, qos)` / `iso.syncBig(bisIndex, qos)` (BIS). Channels are shared handles returned by value: copies share the channel, and a handle outliving its channel (disconnect, `end()`, slot reuse) becomes a detached shell whose operations fail safe. Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |
 | LE Audio (GAF) | Include `<BLEAudio.h>` from the separate `BLEAudio` library (in addition to `<BLE.h>`). `BLE.getAudioController()` → `audio.begin()`, `audio.create*()` role handles, `audio.start()`; `audio.connect(addr)` + `audio.onLinkReady()` for central links (required on Bluedroid). Roles: BAP unicast server/client (multi-stream), broadcast source/sink (1–2 BIS, Scan Delegator), Broadcast Assistant; CAP acceptor/initiator/commander incl. unicast↔broadcast handover; CSIP; VCP/MICP/MCP (GMCS)/CCP (GTBS); TMAP/GMAP/HAS/PBP. Audio flows through `BLEAudioStream` handles (`write()`, `onReceive()`); LC3 via `BLEAudioPlayer`/`BLEAudioRecorder` attached to streams (I2S or PCM callback). See the `libraries/BLEAudio/examples/*` sketches and [BLEAudio/DESIGN.md](../BLEAudio/DESIGN.md). |
 | BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Server mode accepts multiple centrals; `write()` broadcasts, `read()` merges RX. Per-peer: `peerCount()`, `peers()`, `writeTo()`, `onPeerData()`. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |

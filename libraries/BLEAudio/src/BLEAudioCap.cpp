@@ -921,7 +921,7 @@ BTStatus BLEAudioCapInitiator::stopBroadcast() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("CapInitiator: stopBroadcast() cannot run from a stack callback; defer it to loop()");
     return BTStatus::Busy;
   }

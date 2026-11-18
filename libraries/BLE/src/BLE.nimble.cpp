@@ -118,7 +118,7 @@ bool nimbleIsHostTask() {
   return h != nullptr && xTaskGetCurrentTaskHandle() == h;
 }
 
-bool bleIsHostStackTask() {
+bool BLETask::isHostStackTask() {
   return nimbleIsHostTask();
 }
 
@@ -132,7 +132,7 @@ void BLEClass::Impl::hostTask(void *param) {
 
 int nimbleForwardServerGapEvent(struct ble_gap_event *event) {
 #if BLE_ISO_SUPPORTED
-  BLEIso::forwardHostGapEvent(event);
+  BLEIsoInternal::forwardHostGapEvent(event);
 #endif
 #if BLE_AUDIO_SUPPORTED
   if (bleAudioForwardHostGattEvent) {

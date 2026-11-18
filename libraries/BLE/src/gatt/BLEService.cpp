@@ -176,7 +176,7 @@ void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
   }
   if (removed) {
     log_d("Service %s: removeCharacteristic %s", impl.uuid.toString().c_str(), chr.getUUID().toString().c_str());
-    bleDetachLocalCharacteristic(removed);
+    BLEGattInternal::detachLocalCharacteristic(removed);
   }
 }
 
@@ -192,7 +192,7 @@ BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEPrope
   // permission/property combinations) before the characteristic enters the
   // service. Permissions are taken at face value — there is no auto-fill —
   // so rule 3.1 (open access) and related warnings can fire honestly.
-  if (!bleValidateCharProps(uuid, properties, permissions)) {
+  if (!BLEGattInternal::validateCharProps(uuid, properties, permissions)) {
     log_e("Service %s: createCharacteristic %s rejected by validation", impl.uuid.toString().c_str(), uuid.toString().c_str());
     return BLECharacteristic();
   }

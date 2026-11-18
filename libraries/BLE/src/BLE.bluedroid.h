@@ -42,7 +42,7 @@
  * Preferred-PHY APIs take masks (@c ESP_BLE_GAP_PHY_*_PREF_MASK), not the single-PHY
  * enum values used by read/update events. Coded is 3 as a @c BLEPhy but bit 2 (4) as a mask.
  */
-inline esp_ble_gap_phy_mask_t blePhyToPrefMask(BLEPhy phy) {
+inline esp_ble_gap_phy_mask_t bluedroidPhyToPrefMask(BLEPhy phy) {
   switch (phy) {
     case BLEPhy::PHY_2M:    return ESP_BLE_GAP_PHY_2M_PREF_MASK;
     case BLEPhy::PHY_Coded: return ESP_BLE_GAP_PHY_CODED_PREF_MASK;

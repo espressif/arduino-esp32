@@ -30,7 +30,8 @@ static const uint16_t SDU_SIZE = 8;         // Central to Peripheral
 static const uint16_t RETURN_SDU_SIZE = 8;  // Peripheral to Central
 
 BLEClient client;
-BLEIso::Channel *cis = nullptr;
+BLEIso iso;
+BLEIso::Channel cis;
 BTAddress peerAddress;
 volatile bool doConnect = false;
 
@@ -96,13 +97,13 @@ bool openLinkAndCis() {
   qos.rtn = 2;
 
   // Reconnecting reuses the same channel. Its callbacks are registered again.
-  cis = BLEIso::connectCis(client.getHandle(), qos);
+  cis = iso.connectCis(client.getHandle(), qos);
   if (!cis) {
     Serial.println("CIS connect FAILED");
     client.disconnect();
     return false;
   }
-  cis->onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
+  cis.onConnected(onCisConnected).onDisconnected(onCisDisconnected).onReceive(onCisReceive);
 
   // The CIS is established asynchronously.
   unsigned long deadline = millis() + 5000;
@@ -128,9 +129,10 @@ void setup() {
       delay(1000);
     }
   }
-  st = BLEIso::begin();
+  iso = BLE.getIsoController();
+  st = iso.begin();
   if (!st) {
-    Serial.printf("BLEIso::begin failed: %s\n", st.toString());
+    Serial.printf("iso.begin failed: %s\n", st.toString());
     while (true) {
       delay(1000);
     }
@@ -171,7 +173,7 @@ void loop() {
   if (linked && cisUp) {
     uint8_t sdu[SDU_SIZE] = {0};
     memcpy(sdu, &counter, 4);
-    if (cis->send(sdu, sizeof(sdu))) {
+    if (cis.send(sdu, sizeof(sdu))) {
       counter++;
     }
   }

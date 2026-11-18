@@ -47,6 +47,7 @@
 #include "iso/BLEIso.h"
 
 class BLEAudio;
+class BLEIso;
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.
@@ -238,6 +239,19 @@ public:
    * @return A BLEAudio handle. Check with `operator bool()` for validity.
    */
   BLEAudio getAudioController();
+#endif
+
+#if BLE_ISO_SUPPORTED
+  /**
+   * @brief Get the ISO transport controller handle (raw CIS/BIS entry point).
+   *
+   * The first call allocates the single transport-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin().
+   *
+   * @return A BLEIso handle. Check with `operator bool()` for validity.
+   */
+  BLEIso getIsoController();
 #endif
 
   /**

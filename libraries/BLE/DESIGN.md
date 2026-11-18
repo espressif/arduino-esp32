@@ -506,12 +506,12 @@ Important lifecycle invariants:
   runs them while the host is still up, before clearing the public session; an
   active audio controller is therefore released even when the sketch omits
   `audio.end()`, and standalone `BLEIso` ownership cannot leak into the next
-  `begin()`. `BLEIso::end()`, `BLEAudio::end()`, and Broadcast Source/Sink
-  `stop()` wait on native ISO disconnect and keep ownership on failure (audio
+  `begin()`. The ISO controller's `end()`, `BLEAudio::end()`, and Broadcast
+  Source/Sink `stop()` wait on native ISO disconnect and keep ownership on failure (audio
   stops share one 5 s budget across their waits; see `../BLEAudio/DESIGN.md`).
   If ISO or audio is still live after the hook, `BLE.end()` aborts
   host shutdown: a CONNECTED BIG must be terminated over HCI, not
-  software-reset (controller assert). `BLEIso::begin()` after a failed `end()`
+  software-reset (controller assert). The ISO controller's `begin()` after a failed `end()`
   retries the teardown instead of reporting OK over it; `connectCis()` refuses
   dead handles before creating the CIG (`bleIsoAclHandleLive`, both backends:
   Bluedroid accepts the CONNECT→OPEN window via the latched ACL and treats an
@@ -745,7 +745,7 @@ header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 - **Bluedroid notify/indicate CONF:** `ESP_GATTS_CONF_EVT` has no notify/indicate bit. A notify CONF is local TX-complete and arrives before the peer indication confirm, so a submitted notification is consumed first; an in-flight indication is the fallback. Preferring the in-flight indication would steal leftover notify CONFs once `indicationDone()` starts the next queued indication (ATT still has one outstanding; the stack returns Busy and a dual notify+indicate burst drops a payload). A reservation that has not been handed to the stack must not consume a CONF. Notifications are marked submitted only after `esp_ble_gatts_send_indicate` returns `ESP_OK`.
 - **NimBLE GATT rebuild:** a failed rebuild after `ble_gatts_reset()` clears `started` and attribute handles so the next `start()` retries instead of treating the empty table as live. After a successful rebuild, Service Changed uses the full ATT range `0x0001–0xFFFF` (handles were reassigned). The connected/EBUSY visibility path still uses the pre-reset range.
 - **`BLE.end()` from a stack callback:** claims `ending` under the lifecycle mutex (so `begin()` returns `InvalidState` and factories refuse) then defers the teardown body to a worker (`bleInStackCallbackTask()` + `xTaskCreate`), matching `BLEStream::end()`. Calling `end()` inline on the host/BTC task deadlocks deferred stream teardown that still needs the host. A failed worker create leaves `ending` set; the next user-thread `end()` runs the body. User-thread `end()` waits out an in-flight worker so returning means the host is down. A nested `end()` from the teardown task itself returns immediately so it cannot deadlock on its own `endRunning` flag. `end(true)` latches onto the in-flight session only; a no-op `end()` after the host is already down does not leak that latch into the next `begin()`.
-- **ACL loss with active CIS:** the ISO host treats a physical ACL disconnect as terminal for every CIS still attached to it. Bluedroid controllers can report the local CIS Disconnect as ACL loss without delivering the local CIS-complete event; force-completing those channels releases `BLEIso::end()` waiters and the deferred ACL slot. A later duplicate CIS-complete is ignored.
+- **ACL loss with active CIS:** the ISO host treats a physical ACL disconnect as terminal for every CIS still attached to it. Bluedroid controllers can report the local CIS Disconnect as ACL loss without delivering the local CIS-complete event; force-completing those channels releases the ISO controller `end()` waiters and the deferred ACL slot. A later duplicate CIS-complete is ignored.
 - **NimBLE L2CAP:** `connectL2CAP` drops `lifecycleMtx` before the 5 s `connectSync` wait. Host-callback writes larger than one peer CoC SDU return `Busy` before any send (a retry would otherwise resend a prefix).
 - **NimBLE legacy OOB:** `ble_sm_inject_io` copies a 16-byte TK; a zeroed TK is the public Temporary Key and pairing would succeed. OOB is not supported: fail with `BLE_SM_ERR_OOB` and wake the auth waiter. OOB-SC injects null `oob_sc_data` pointers, which NimBLE already maps to `BLE_SM_ERR_OOB`. Validation-only `BLEHooks.security.advertiseOob` sets `ble_hs_cfg.sm_oob_data_flag` so HITL can force `BLE_SM_IOACT_OOB` / `BLE_SM_IOACT_OOB_SC`.
 - **Bluedroid OOB:** `ESP_GAP_BLE_OOB_REQ_EVT` / `ESP_GAP_BLE_SC_OOB_REQ_EVT` must not reply with a zero TK (public Temporary Key). The library disconnects the ACL so SMP aborts. The same validation hook sets `ESP_BLE_SM_OOB_SUPPORT`.
@@ -784,7 +784,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 - Object mutex on every Impl: **`mtx`** (one name).
 - Callback storage: `on<Event>Cb`; public typedefs: `<Event>Handler`.
 - `connHandle` = stack-agnostic 16-bit connection handle; `connId` = Bluedroid-native GATT id (backend only); `handle` = GATT attribute handle.
-- Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: neutral `ble*` name.
+- Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: `<Component>Internal` namespaces (`BLEIsoInternal`, `BLEServerInternal`, `BLEGattInternal`, `BLEAdvInternal`, `BLEClientInternal`, `BLETask`, `BLECoreInternal`); the four `extern "C"` ISO host hand-over functions stay global because the C LE Audio engine calls them.
 
 ### Enforcement
 

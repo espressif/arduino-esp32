@@ -115,14 +115,14 @@ void BLEScan::setInterval(uint16_t intervalMs) {
   BLE_CHECK_IMPL();
   log_d("Scan: setInterval %u ms", intervalMs);
   BLELockGuard lock(impl.mtx);
-  impl.interval = bleMsToUnits0625(intervalMs);
+  impl.interval = BLEAdvInternal::msToUnits0625(intervalMs);
 }
 
 void BLEScan::setWindow(uint16_t windowMs) {
   BLE_CHECK_IMPL();
   log_d("Scan: setWindow %u ms", windowMs);
   BLELockGuard lock(impl.mtx);
-  impl.window = bleMsToUnits0625(windowMs);
+  impl.window = BLEAdvInternal::msToUnits0625(windowMs);
 }
 
 void BLEScan::setActiveScan(bool active) {

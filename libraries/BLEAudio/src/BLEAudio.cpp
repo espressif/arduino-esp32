@@ -52,7 +52,7 @@ bool waitBapIdle() {
   if (!bleAudioBapIsoBusy()) {
     return true;
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("Audio: cannot wait for ISO idle from a stack callback");
     return false;
   }
@@ -201,7 +201,7 @@ extern "C" void bleAudioArmBsrcStateWait(void) {
 }
 
 extern "C" bool bleAudioWaitBsrcState(uint32_t timeoutMs) {
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     return false;
   }
   return sBsrcStateSync.wait(timeoutMs) == BTStatus::OK;
@@ -328,7 +328,7 @@ BTStatus BLEAudio::end() {
   if (!impl.active) {
     return BTStatus::OK;
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("Audio: end() cannot run from a stack callback; defer it to loop()");
     return BTStatus::Busy;
   }

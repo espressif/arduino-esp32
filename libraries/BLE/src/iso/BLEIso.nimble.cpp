@@ -32,7 +32,7 @@
 #include "esp_ble_iso_common_api.h"
 #include <host/ble_gap.h>
 
-namespace BLEIso {
+namespace BLEIsoInternal {
 
 void forwardHostGapEvent(struct ble_gap_event *event) {
   if (event == nullptr || !bleIsoHostUp()) {
@@ -65,13 +65,13 @@ void forwardHostGapEvent(struct ble_gap_event *event) {
   }
 }
 
-}  // namespace BLEIso
+}  // namespace BLEIsoInternal
 
-extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
+uint16_t BLEIsoInternal::resolveAclHandle(uint16_t connHandle) {
   return connHandle;
 }
 
-extern "C" bool bleIsoAclHandleLive(uint16_t connHandle) {
+bool BLEIsoInternal::aclHandleLive(uint16_t connHandle) {
   if (connHandle == 0xFFFF) {
     return false;
   }

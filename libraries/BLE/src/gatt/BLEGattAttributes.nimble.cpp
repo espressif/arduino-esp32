@@ -260,7 +260,7 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
 // onStatus through BLE_GAP_EVENT_NOTIFY_TX, which NimBLE raises synchronously
 // before ble_gatts_notify_custom returns, so server->mtx must NOT be held
 // across ble_gatts_notify_custom.
-BTStatus bleCharacteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
+BTStatus BLEServerInternal::characteristicSendNotify(BLECharacteristic::Impl &impl, uint16_t connHandle, const uint8_t *data, size_t length) {
   auto serverOwner = impl.activeServer();
   BLEServer::Impl *server = serverOwner.get();
   if (!server) {

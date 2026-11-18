@@ -70,7 +70,7 @@
 #define BLE_APPEARANCE_GENERIC_BLOOD_PRESSURE              0x0380
 #define BLE_APPEARANCE_BLOOD_PRESSURE_ARM                  0x0381
 #define BLE_APPEARANCE_BLOOD_PRESSURE_WRIST                0x0382
-#define BLE_APPEARANCE_GENERIC_HID                         0x03C0
+#define BLE_APPEARANCE_HID_GENERIC                         0x03C0
 #define BLE_APPEARANCE_HID_KEYBOARD                        0x03C1
 #define BLE_APPEARANCE_HID_MOUSE                           0x03C2
 #define BLE_APPEARANCE_HID_JOYSTICK                        0x03C3

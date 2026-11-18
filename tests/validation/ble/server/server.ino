@@ -91,7 +91,7 @@ static const BLEUUID PERM_FAIL_CLOSED_CHAR_UUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3
 // Phase 15 (descriptor permissions): custom-UUID descriptor attached to
 // DESC_CHAR with read-only permission. The client reads it (expect success)
 // then attempts a write (expect ATT-layer rejection), proving that
-// bleValidateDescProps + the BluedroidServer descPerm translation enforce
+// validateDescProps + the BluedroidServer descPerm translation enforce
 // the declared descriptor permissions end-to-end.
 static const BLEUUID DESC_READONLY_UUID("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
 
@@ -1601,7 +1601,7 @@ void loop() {
 
   // Phase 15: Construction-time descriptor permission validation.
   //
-  // Runs bleValidateDescProps through BLECharacteristic::createDescriptor for
+  // Runs validateDescProps through BLECharacteristic::createDescriptor for
   // a handful of malformed specs and verifies each one is rejected (empty
   // BLEDescriptor handle → `!desc` is true). These calls happen after
   // server.start() has already registered the live GATT table, so any
@@ -1648,7 +1648,7 @@ void loop() {
     auto d7 = permFailClosedChr.createDescriptor(BLEUUID("a0000000-0000-4000-8000-000000000003"), BLEPermission::ReadOpen);
     Serial.printf("[SERVER] DescPerm valid accepted: %d\n", (int)((bool)d7));
 
-    // Characteristic construction-time validation (bleValidateCharProps) and
+    // Characteristic construction-time validation (validateCharProps) and
     // included-service removeService() Busy guard.
     BLEServer valSrv = BLE.createServer();
     BLEService valSvc = valSrv.createService(BLEUUID("a0000000-0000-4000-8000-000000000010"));
@@ -2903,7 +2903,7 @@ void loop() {
         (int)detachedFactoriesRejected
       );
 
-      // Pre-registration characteristic validation (bleValidateCharForRegistration):
+      // Pre-registration characteristic validation (validateCharForRegistration):
       //   1. ExtendedProps without 0x2900 descriptor -> InvalidState
       //   2. Broadcast without 0x2903 descriptor -> InvalidState
       //   3. 0x2904 descriptor with length != 7 -> InvalidState

@@ -29,17 +29,17 @@
 #include "client/BLEClient.bluedroid.h"
 #endif
 
-extern "C" uint16_t bleIsoResolveAclHandle(uint16_t connHandle) {
+uint16_t BLEIsoInternal::resolveAclHandle(uint16_t connHandle) {
 #if BLE_GATT_CLIENT_SUPPORTED
-  return bleClientAclHandle(connHandle);
+  return BLEClientInternal::aclHandle(connHandle);
 #else
   return connHandle;
 #endif
 }
 
-extern "C" bool bleIsoAclHandleLive(uint16_t connHandle) {
+bool BLEIsoInternal::aclHandleLive(uint16_t connHandle) {
 #if BLE_GATT_CLIENT_SUPPORTED
-  return bleClientConnLive(connHandle);
+  return BLEClientInternal::connLive(connHandle);
 #else
   return connHandle != 0xFFFF;
 #endif

@@ -56,7 +56,14 @@
  *       but do not cause failure. Spec: BT Core Spec v5.x, Vol 3, Part G §3.3.1.1
  *       (Characteristic Properties), Part F §3.2.5 (Attribute Permissions).
  */
-bool bleValidateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission perms);
+namespace BLEGattInternal {
+
+/**
+ * GATT characteristic/descriptor validation and local-tree detach helpers.
+ * Namespaced (not bare `ble*` globals) like every other internal helper;
+ * shared by the GATT facades, the server backends and the NimBLE coordinator.
+ */
+bool validateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission perms);
 
 /**
  * @brief Validate the full characteristic (props/perms/descriptors) before
@@ -66,13 +73,13 @@ bool bleValidateCharProps(const BLEUUID &uuid, BLEProperty props, BLEPermission 
  * @param stackIsNimble true if NimBLE backend (stack auto-creates the CCCD;
  *                     a manually-added CCCD becomes a hard error)
  * @return true if valid (no hard errors), false otherwise
- * @note Runs bleValidateCharProps() first, then descriptor-level checks:
+ * @note Runs validateCharProps() first, then descriptor-level checks:
  *       CCCD/SCCD presence vs. NOTIFY/INDICATE/BROADCAST, Extended Properties
  *       (0x2900) requirement, Presentation Format (0x2904) length, SIG-reserved
  *       descriptor value lengths, and per-descriptor re-validation via
- *       bleValidateDescProps() (catches post-creation setPermissions() changes).
+ *       validateDescProps() (catches post-creation setPermissions() changes).
  */
-bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool stackIsNimble);
+bool validateCharForRegistration(const BLECharacteristic::Impl &chr, bool stackIsNimble);
 
 /**
  * @brief Validate a descriptor's permission combination at construction time.
@@ -94,6 +101,8 @@ bool bleValidateCharForRegistration(const BLECharacteristic::Impl &chr, bool sta
  * @param perms    Requested permissions
  * @return true if valid (no hard errors), false otherwise
  */
-bool bleValidateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPermission perms);
+bool validateDescProps(const BLEUUID &descUuid, const BLEUUID &chrUuid, BLEPermission perms);
+
+}  // namespace BLEGattInternal
 
 #endif /* BLE_ENABLED */

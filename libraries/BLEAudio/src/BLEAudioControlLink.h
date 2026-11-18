@@ -53,7 +53,7 @@ inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const 
       return BTStatus::OK;
     }
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("%s: cannot wait for BIG teardown from a stack callback", roleName);
     return BTStatus::InvalidState;
   }

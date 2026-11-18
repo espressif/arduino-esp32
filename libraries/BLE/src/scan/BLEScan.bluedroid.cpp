@@ -78,7 +78,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   if (!admission) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
 
@@ -131,7 +131,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
 
   // Extended scan duration is in 10 ms units; 0 == scan until stopped.
-  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  uint32_t durationUnits = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   impl.scanSync.take();
   if (!onBtcTask) {
     impl.paramSync.take();
@@ -299,7 +299,7 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   if (!admission) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
@@ -323,13 +323,13 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   // already in 0.625 ms controller units.
   extParams.cfg_mask = ESP_BLE_GAP_EXT_SCAN_CFG_UNCODE_MASK;
   extParams.uncoded_cfg.scan_type = type;
-  extParams.uncoded_cfg.scan_interval = uncodedConfig ? bleMsToUnits0625(uncodedConfig->interval) : impl.interval;
-  extParams.uncoded_cfg.scan_window = uncodedConfig ? bleMsToUnits0625(uncodedConfig->window) : impl.window;
+  extParams.uncoded_cfg.scan_interval = uncodedConfig ? BLEAdvInternal::msToUnits0625(uncodedConfig->interval) : impl.interval;
+  extParams.uncoded_cfg.scan_window = uncodedConfig ? BLEAdvInternal::msToUnits0625(uncodedConfig->window) : impl.window;
   if (codedConfig) {
     extParams.cfg_mask |= ESP_BLE_GAP_EXT_SCAN_CFG_CODE_MASK;
     extParams.coded_cfg.scan_type = type;
-    extParams.coded_cfg.scan_interval = bleMsToUnits0625(codedConfig->interval);
-    extParams.coded_cfg.scan_window = bleMsToUnits0625(codedConfig->window);
+    extParams.coded_cfg.scan_interval = BLEAdvInternal::msToUnits0625(codedConfig->interval);
+    extParams.coded_cfg.scan_window = BLEAdvInternal::msToUnits0625(codedConfig->window);
   }
 
   impl.paramSync.take();
@@ -347,7 +347,7 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   const char *taskName = pcTaskGetName(nullptr);
   const bool onBtcTask = taskName && strcmp(taskName, "BTC_TASK") == 0;
 
-  uint32_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  uint32_t durationUnits = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   impl.scanSync.take();
   if (!onBtcTask) {
     impl.paramSync.take();

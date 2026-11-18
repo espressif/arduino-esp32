@@ -119,26 +119,29 @@ struct BLECharacteristicImplCommon : std::enable_shared_from_this<BLECharacteris
   }
 };
 
+namespace BLEGattInternal {
+
 /**
  * @brief Detach a local descriptor and release its retained state.
  *
  * The public handle remains a valid, empty shell after this call.
  */
-void bleDetachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc);
+void detachLocalDescriptor(const std::shared_ptr<BLEDescriptor::Impl> &desc);
 
 /**
  * @brief Detach a local characteristic and all its descriptors.
  *
  * The public handles remain valid, empty shells after this call.
  */
-void bleDetachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl> &chr);
+void detachLocalCharacteristic(const std::shared_ptr<BLECharacteristic::Impl> &chr);
 
 /**
  * @brief Detach a local service and its owned characteristic tree.
  *
  * Included services are only unlinked; they remain owned by the server.
  */
-void bleDetachLocalService(const std::shared_ptr<BLEService::Impl> &svc);
+void detachLocalService(const std::shared_ptr<BLEService::Impl> &svc);
+}  // namespace BLEGattInternal
 
 /**
  * @brief Shared, stack-agnostic state for a GATT descriptor.

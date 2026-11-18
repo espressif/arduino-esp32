@@ -2767,16 +2767,17 @@ interoperability use ``BLEAudio`` instead (see :doc:`ble_audio`); both can run i
 
 .. code-block:: cpp
 
-    #include <BLE.h>   // BLEIso is part of the BLE library (namespace BLEIso)
+    #include <BLE.h>   // BLEIso is part of the BLE library
 
-    BLEIso::begin();
+    BLEIso iso = BLE.getIsoController();
+    iso.begin();
     BLEIso::CisParams qos;
-    BLEIso::Channel *ch = BLEIso::connectCis(client.getHandle(), qos);
-    ch->onConnected([](BLEIso::Channel &c) { /* CIS up */ })
+    BLEIso::Channel ch = iso.connectCis(client.getHandle(), qos);
+    ch.onConnected([](BLEIso::Channel &c) { /* CIS up */ })
       .onDisconnected([](BLEIso::Channel &c, uint8_t reason) { /* CIS down */ });
 
 Roles, each guarded by its own ``BLE_ISO_*_SUPPORTED`` flag (the factory logs and returns
-``nullptr`` when its role is not compiled in):
+an empty handle when its role is not compiled in):
 
 * CIS Central (``connectCis``) -- creates the CIG and connects a CIS on an existing ACL link.
 * CIS Peripheral (``listenCis``) -- registers the ISO server; the CIS is accepted when the
@@ -2789,19 +2790,24 @@ Roles, each guarded by its own ``BLE_ISO_*_SUPPORTED`` flag (the factory logs an
 A CIS carries data central-to-peripheral (``CisParams::sduSize``) and optionally back
 (``CisParams::returnSduSize``); a BIS carries data broadcaster-to-receivers. Limits: one
 Central CIS, one BIG and one BIG sync at a time (one BIS each); a peripheral may listen on
-several channels, one per incoming CIS. Every channel comes from a fixed pool and stays
-valid until ``end()``.
+several channels, one per incoming CIS. Every channel comes from a fixed pool. Channels
+are shared handles returned by value: copies share the channel, and a handle outliving
+its channel (after ``disconnect()``, ``end()``, or slot reuse) becomes a detached shell
+whose operations fail safe.
 
 .. code-block:: cpp
 
+    BLEIso iso = BLE.getIsoController();
     BTStatus begin();   // idempotent; call after BLE.begin()
     BTStatus end();     // refused with Busy from a stack callback; defer to loop()
     bool isActive();
 
 .. code-block:: cpp
 
-    Channel *connectCis(uint16_t connHandle, const CisParams &params = CisParams());
-    Channel *listenCis(const CisParams &params = CisParams());
+    Channel connectCis(uint16_t connHandle, const CisParams &params);
+    Channel connectCis(uint16_t connHandle);   // default QoS
+    Channel listenCis(const CisParams &params);
+    Channel listenCis();                        // default QoS
 
 Stale handles (``0xFFFF``, dead or recycled links) are refused before any CIG is created.
 ``listenCis()`` keeps listening after its CIS disconnects; a second call reserves an
@@ -2995,7 +3001,7 @@ Defined in ``advertising/BLEAppearance.h`` (pulled in transitively by ``<BLE.h>`
 
 .. code-block:: cpp
 
-    #define BLE_APPEARANCE_GENERIC_HID             0x03C0
+    #define BLE_APPEARANCE_HID_GENERIC             0x03C0
     #define BLE_APPEARANCE_HID_KEYBOARD            0x03C1
     #define BLE_APPEARANCE_HID_MOUSE               0x03C2
     #define BLE_APPEARANCE_HID_JOYSTICK            0x03C3

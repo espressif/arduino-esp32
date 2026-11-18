@@ -33,7 +33,7 @@
 
 struct ble_gap_event;
 
-namespace BLEIso {
+namespace BLEIsoInternal {
 
 /**
  * @brief Forward a NimBLE GAP event (connect/disconnect/encryption, extended
@@ -44,6 +44,6 @@ namespace BLEIso {
  */
 void forwardHostGapEvent(struct ble_gap_event *event);
 
-}  // namespace BLEIso
+}  // namespace BLEIsoInternal
 
 #endif /* BLE_NIMBLE && BLE_ISO_SUPPORTED */

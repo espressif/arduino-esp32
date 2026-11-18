@@ -659,7 +659,7 @@ BTStatus BLEAudioBroadcastSink::stop() {
   if (!_impl) {
     return BTStatus::InvalidState;
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("BroadcastSink: stop() cannot run from a stack callback; defer it to loop()");
     return BTStatus::Busy;
   }

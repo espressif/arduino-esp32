@@ -718,7 +718,7 @@ int BLEClient::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   // GAP events once through the shared ISO sink, GATT events to the audio
   // engine (its MTU event kicks client-side profile discovery).
 #if BLE_ISO_SUPPORTED
-  BLEIso::forwardHostGapEvent(event);
+  BLEIsoInternal::forwardHostGapEvent(event);
 #endif
 #if BLE_AUDIO_SUPPORTED
   if (bleAudioForwardHostGattEvent) {

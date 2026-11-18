@@ -310,7 +310,7 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
   // ISO and GAF share this host event sink. Broadcast roles need extended
   // discovery, periodic-sync, BIGInfo, and PAST events before the scan facade
   // consumes them.
-  BLEIso::forwardHostGapEvent(event);
+  BLEIsoInternal::forwardHostGapEvent(event);
 #endif
 
   switch (event->type) {
@@ -615,7 +615,7 @@ static BTStatus nimbleStartScanSession(BLEScan::Impl &impl, uint32_t durationMs,
   coded.itvl = impl.hasCodedConfig ? impl.codedInterval : impl.interval;
   coded.window = impl.hasCodedConfig ? impl.codedWindow : impl.window;
 
-  uint16_t durationUnits = bleGapDurationMsTo10ms(durationMs);
+  uint16_t durationUnits = BLECoreInternal::gapDurationMsTo10ms(durationMs);
   // Keep controller filtering disabled. Some controllers key legacy duplicates
   // only by address/event type and suppress a same-length payload update. The
   // host callback filters byte-identical primary and scan-response segments so
@@ -660,7 +660,7 @@ BTStatus BLEScan::start(uint32_t durationMs, bool appendToExistingResults) {
   if (!publisher) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
@@ -805,7 +805,7 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
   if (!publisher) {
     return BTStatus::InvalidState;
   }
-  if (!bleGapDurationMsValid(durationMs)) {
+  if (!BLECoreInternal::gapDurationMsValid(durationMs)) {
     return BTStatus::InvalidParam;
   }
   if (impl.isScanning) {
@@ -828,13 +828,13 @@ BTStatus BLEScan::startExtended(uint32_t durationMs, const ExtScanConfig *codedC
     impl.sessionDeadlineUs = durationMs == 0 ? 0 : esp_timer_get_time() + static_cast<int64_t>(durationMs) * 1000;
     impl.hasUncodedConfig = (uncodedConfig != nullptr);
     if (uncodedConfig) {
-      impl.uncodedInterval = bleMsToUnits0625(uncodedConfig->interval);
-      impl.uncodedWindow = bleMsToUnits0625(uncodedConfig->window);
+      impl.uncodedInterval = BLEAdvInternal::msToUnits0625(uncodedConfig->interval);
+      impl.uncodedWindow = BLEAdvInternal::msToUnits0625(uncodedConfig->window);
     }
     impl.hasCodedConfig = (codedConfig != nullptr);
     if (codedConfig) {
-      impl.codedInterval = bleMsToUnits0625(codedConfig->interval);
-      impl.codedWindow = bleMsToUnits0625(codedConfig->window);
+      impl.codedInterval = BLEAdvInternal::msToUnits0625(codedConfig->interval);
+      impl.codedWindow = BLEAdvInternal::msToUnits0625(codedConfig->window);
     }
     const uint32_t generation = ++impl.activeGeneration;
     return nimbleStartScanSession(impl, durationMs, generation);

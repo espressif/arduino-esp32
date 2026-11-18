@@ -67,7 +67,7 @@ bool validateServices(BLEServer::Impl &impl, const std::vector<std::shared_ptr<B
       chrs = svc->characteristics;
     }
     for (const auto &chr : chrs) {
-      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
+      if (!BLEGattInternal::validateCharForRegistration(*chr, /*stackIsNimble=*/true)) {
         log_e("GATT: characteristic %s rejected by validation", chr->uuid.toString().c_str());
         return false;
       }

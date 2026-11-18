@@ -133,35 +133,16 @@ struct BLEClient::Impl : BLEClientImplCommon {
  */
 bool bluedroidRegisterClient(const std::shared_ptr<BLEClient::Impl> &impl);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace BLEClientInternal {
 
 /**
- * @brief Whether @p connId names a live library link.
- *
- * Accepts the CONNECT→OPEN window (ACL latched on CONNECT_EVT before OPEN_EVT
- * sets connected) as live; disconnect clears both, so a dead link still fails.
- * A @p connId that is not one of ours is likely already a raw ACL handle, so it
- * is accepted optimistically like NimBLE's host-live check and the stack
- * arbitrates: it rejects the call if the handle is invalid, instead of this
- * layer refusing a valid raw ACL. 0xFFFF is never live.
+ * Bluedroid GATT-client connection helpers for cross-component use (currently
+ * the ISO transport's ACL resolution). Namespaced like every other internal
+ * helper; C++ linkage only (all callers are C++).
  */
-bool bleClientConnLive(uint16_t connId);
+bool connLive(uint16_t connId);
+uint16_t aclHandle(uint16_t connId);
 
-/**
- * @brief Resolve a library connection id to its HCI ACL handle.
- *
- * @param connId Library conn id, or 0xFFFF when there is no link.
- * @return The latched ACL handle when the link is live (including the
- *         CONNECT→OPEN window); @p connId itself for a dead link miss or when
- *         it is already a raw ACL handle (the stack arbitrates); 0xFFFF when
- *         @p connId is 0xFFFF.
- */
-uint16_t bleClientAclHandle(uint16_t connId);
-
-#ifdef __cplusplus
-}
-#endif
+}  // namespace BLEClientInternal
 
 #endif /* BLE_BLUEDROID */

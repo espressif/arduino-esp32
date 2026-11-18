@@ -228,7 +228,7 @@ BTStatus BLEServer::removeService(const BLEService &service) {
     service._impl->removing = true;
   }
   // Backend-specific: Bluedroid deletes the service; NimBLE rebuilds or hides the GATT range.
-  BTStatus status = bleServerRemoveService(&impl, service._impl);
+  BTStatus status = BLEServerInternal::removeService(&impl, service._impl);
   if (!status) {
     BLELockGuard lock(impl.mtx);
     if (service._impl->server == &impl) {

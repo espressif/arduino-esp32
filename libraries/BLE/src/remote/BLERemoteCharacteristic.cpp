@@ -123,7 +123,7 @@ uint8_t BLERemoteCharacteristic::readUInt8(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
+  return static_cast<uint8_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
 uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
@@ -132,7 +132,7 @@ uint16_t BLERemoteCharacteristic::readUInt16(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
+  return static_cast<uint16_t>(BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
 uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
@@ -141,7 +141,7 @@ uint32_t BLERemoteCharacteristic::readUInt32(uint32_t timeoutMs) {
   }
   auto mtx = remoteChrMtx(_impl.get());
   BLELockGuard lock(mtx ? mtx->get() : nullptr);
-  return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
+  return BLECoreInternal::readLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
 float BLERemoteCharacteristic::readFloat(uint32_t timeoutMs) {
