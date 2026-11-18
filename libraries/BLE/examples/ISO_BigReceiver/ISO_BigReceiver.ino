@@ -36,6 +36,8 @@ static const uint16_t SDU_SIZE = 8;
 
 BLEIso::Channel *bis = nullptr;
 volatile bool paSyncRequested = false;
+volatile uint32_t paSyncRequestMs = 0;
+volatile bool paSyncUp = false;
 
 // Written from the ISO host task, read from loop().
 volatile bool bisUp = false;
@@ -102,15 +104,25 @@ void setup() {
       return;
     }
     paSyncRequested = true;
+    paSyncRequestMs = millis();
     Serial.printf("Found \"%s\" at %s, syncing to its periodic train\n", TARGET_NAME, dev.getAddress().toString().c_str());
-    BLE.getScan().createPeriodicSync(dev.getAddress(), TARGET_SID);
+    BTStatus st = BLE.getScan().createPeriodicSync(dev.getAddress(), TARGET_SID);
+    if (!st) {
+      // Submission failed (invalid state, host busy, ...): release the flag
+      // so the next scan report retries instead of wedging on a sync that
+      // will never be attempted.
+      Serial.printf("createPeriodicSync failed: %s, will retry on next report\n", st.toString());
+      paSyncRequested = false;
+    }
   });
   scan.onPeriodicSync([](uint16_t syncHandle, uint8_t sid, const BTAddress &, BLEPhy, uint16_t interval) {
     Serial.printf("Periodic sync 0x%04X established (SID %u, interval %u x 1.25 ms)\n", syncHandle, sid, interval);
+    paSyncUp = true;
   });
   scan.onPeriodicLost([](uint16_t syncHandle) {
     Serial.printf("Periodic sync 0x%04X lost, scanning again\n", syncHandle);
     paSyncRequested = false;
+    paSyncUp = false;
   });
   st = scan.startExtended(0);
   if (!st) {
@@ -121,6 +133,15 @@ void setup() {
 
 void loop() {
   static uint32_t lastPrint = 0;
+  // The sync request was submitted but never established (broadcaster gone,
+  // host busy): give up the attempt so the next scan report retries instead
+  // of waiting on a sync that will never arrive. An established sync that
+  // later drops is recovered through onPeriodicLost above.
+  if (paSyncRequested && !paSyncUp && millis() - paSyncRequestMs > 15000) {
+    Serial.println("Periodic sync not established in time, retrying...");
+    BLE.getScan().cancelPeriodicSyncCreate();
+    paSyncRequested = false;
+  }
   if (bisUp && millis() - lastPrint >= 1000) {
     lastPrint = millis();
     Serial.printf("rx %lu SDUs (%lu lost), last counter %lu\n", (unsigned long)rxCount, (unsigned long)rxLost, (unsigned long)lastCounter);

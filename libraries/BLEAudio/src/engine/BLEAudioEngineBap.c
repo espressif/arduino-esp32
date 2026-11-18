@@ -254,6 +254,10 @@ struct ble_audio_slot {
   _Atomic(esp_ble_audio_bap_ep_t *) uc_ep;  /* Unicast client: remote endpoint. */
   _Atomic(struct ble_audio_slot *) partner; /* Opposite direction sharing the same CIS. */
   esp_ble_audio_codec_cfg_t codec_cfg;  /* Slot-owned: the engine keeps pointers to these. */
+  /* qos_cfg is written only by setup paths (SetCodec/SetQos at configure
+   * time, slot reset at alloc/deinit) and read by Send only while streaming,
+   * so no lock guards it: re-running SetQos on a streaming slot would race
+   * the codec-task read. Snapshots (below) are the cross-task API. */
   esp_ble_audio_bap_qos_cfg_t qos_cfg;
   ble_audio_codec_t snap_codec;         /* Decoded snapshot for cross-core codecConfig(). */
   ble_audio_qos_t snap_qos;             /* Decoded snapshot for cross-core qos(). */

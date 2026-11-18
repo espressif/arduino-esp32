@@ -217,14 +217,16 @@ BTStatus BLEAudioBroadcastAssistant::discover(uint16_t connHandle) {
   }
   /* Source_IDs are per remote: forget them when switching peers. */
   if (connHandle != old) {
-    /* Release a scan started for the previous peer before rebinding. */
+    /* Release a scan started for the previous peer before rebinding. Runs
+     * without the lock: it touches the shared scanner and the engine. */
     (void)stopRemoteScan();
     BLELockGuard lock(_impl->mtx.get());
-    memset(_impl->known, 0, sizeof(_impl->known));
-  }
-  {
-    BLELockGuard lock(_impl->mtx.get());
-    _impl->conn = connHandle;
+    /* Bind only if nobody rebound concurrently; otherwise leave the winner's
+     * binding alone (engine discovery below is per-connection anyway). */
+    if (_impl->conn == old) {
+      memset(_impl->known, 0, sizeof(_impl->known));
+      _impl->conn = connHandle;
+    }
   }
   return bleAudioStatus(bleAudioBaDiscover(connHandle));
 }
