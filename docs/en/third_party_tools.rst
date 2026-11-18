@@ -14,3 +14,4 @@ Here you will find documentation pages for third party tools that can be used wi
 
   pioarduino <third_party/pioarduino>
   Wokwi <third_party/wokwi>
+  Visual Micro <third_party/visual_micro>
