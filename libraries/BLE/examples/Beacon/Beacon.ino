@@ -37,7 +37,7 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = beacon.getAdvertisementData();
-  // GeneralDisc: device is always discoverable; BrEdrNotSupported: BLE-only, no Classic Bluetooth
+  // GeneralDisc: device is always discoverable. BrEdrNotSupported: BLE-only, no Classic Bluetooth
   advData.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);

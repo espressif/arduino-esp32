@@ -32,7 +32,7 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = eddystoneUrl.getAdvertisementData();
-  // GeneralDisc: device is always discoverable; BrEdrNotSupported: BLE-only, no Classic Bluetooth
+  // GeneralDisc: device is always discoverable. BrEdrNotSupported: BLE-only, no Classic Bluetooth
   advData.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
   advData.addServiceUUID(BLEEddystoneURL::serviceUUID());
   adv.setAdvertisementData(advData);

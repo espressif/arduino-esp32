@@ -27,7 +27,7 @@
 
 // HID Report Descriptor for a gamepad with 2 axes (X, Y) and 8 buttons.
 // The macros (USAGE_PAGE, COLLECTION, etc.) are defined in HIDTypes.h.
-// Each macro produces the HID short-item prefix byte; the parameter is the
+// Each macro produces the HID short-item prefix byte. The parameter is the
 // number of data bytes that follow (usually 1). See HIDTypes.h for details.
 // clang-format off
 static const uint8_t kReportMap[] = {

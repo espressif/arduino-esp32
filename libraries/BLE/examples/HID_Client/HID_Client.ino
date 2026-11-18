@@ -134,7 +134,7 @@ void setup() {
   sec.setAuthenticationMode(true, false, true);
 
   client = BLE.createClient();
-  // MTU 185 = 3 bytes ATT header + 182 bytes payload; large enough for typical HID report maps
+  // MTU 185 = 3 bytes ATT header + 182 bytes payload. Large enough for typical HID report maps
   client.setMTU(185);
   client.onDisconnect([](BLEClient, const BLEConnInfo &, uint8_t reason) {
     Serial.printf("Disconnected (reason 0x%02X)\n", reason);

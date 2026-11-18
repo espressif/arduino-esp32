@@ -106,7 +106,7 @@ void setup() {
     haltWith("advertising", st);
   }
 
-  Serial.printf("Ready. Advertising; L2CAP listening on PSM 0x%04X (MTU %u).\n", L2CAP_PSM, L2CAP_MTU);
+  Serial.printf("Ready. Advertising. L2CAP listening on PSM 0x%04X (MTU %u).\n", L2CAP_PSM, L2CAP_MTU);
   Serial.println("Connect the L2CAP_Client example to echo data.");
 }
 

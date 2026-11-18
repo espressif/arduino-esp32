@@ -95,7 +95,7 @@ bool openLinkAndCis() {
   qos.phy = BLEIso::Phy::Phy2M;
   qos.rtn = 2;
 
-  // Reconnecting reuses the same channel; its callbacks are registered again.
+  // Reconnecting reuses the same channel. Its callbacks are registered again.
   cis = BLEIso::connectCis(client.getHandle(), qos);
   if (!cis) {
     Serial.println("CIS connect FAILED");

@@ -76,7 +76,7 @@ bool openChannel() {
     channelReady = false;
   });
 
-  // The CoC connection completes asynchronously; wait for it to come up.
+  // The CoC connection completes asynchronously. Wait for it to come up.
   unsigned long deadline = millis() + 10000;
   while (!channel.isConnected() && millis() < deadline) {
     delay(20);

@@ -58,7 +58,7 @@ void onCisConnected(BLEIso::Channel &ch) {
 
 void onCisDisconnected(BLEIso::Channel &ch, uint8_t reason) {
   (void)ch;
-  Serial.printf("CIS down (reason 0x%02X); still listening\n", reason);
+  Serial.printf("CIS down (reason 0x%02X). Still listening\n", reason);
   cisUp = false;
 }
 
@@ -104,7 +104,7 @@ void setup() {
     halt("BLEIso::begin", st);
   }
 
-  // The Central picks the interval, latency, PHY and retransmissions; this
+  // The Central picks the interval, latency, PHY and retransmissions. This
   // side only sizes its two directions.
   BLEIso::CisParams qos;
   qos.sduSize = SDU_SIZE;
@@ -122,7 +122,7 @@ void setup() {
   if (!st) {
     halt("advertising", st);
   }
-  Serial.println("Advertising; waiting for ISO_CisCentral to connect the CIS.");
+  Serial.println("Advertising. Waiting for ISO_CisCentral to connect the CIS.");
 }
 
 void loop() {

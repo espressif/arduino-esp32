@@ -6,12 +6,12 @@
  * scan, syncs to its periodic advertising train, and the BIGInfo carried on
  * that train tells the controller how to sync to the BIG itself.
  *
- * BLEIso::syncBig() arms the sync before the scan starts; the actual BIG sync
+ * BLEIso::syncBig() arms the sync before the scan starts. The actual BIG sync
  * is issued automatically when the first BIGInfo report arrives. While armed,
  * a lost sync is issued again on the next BIGInfo, so the receiver recovers
  * by itself when the broadcaster comes back.
  *
- * Each SDU carries the broadcaster's counter; the sketch prints how many SDUs
+ * Each SDU carries the broadcaster's counter. The sketch prints how many SDUs
  * arrived, how many were lost or damaged, and the last counter per second.
  *
  * Set BROADCAST_CODE to the broadcaster's code for an encrypted BIG.
@@ -76,7 +76,7 @@ void setup() {
        bisUp = true;
      })
     .onDisconnected([](BLEIso::Channel &, uint8_t reason) {
-      Serial.printf("BIG sync lost (reason 0x%02X); waiting for the next BIGInfo\n", reason);
+      Serial.printf("BIG sync lost (reason 0x%02X). Waiting for the next BIGInfo\n", reason);
       bisUp = false;
     })
     .onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *sdu, uint16_t len) {

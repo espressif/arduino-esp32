@@ -28,7 +28,7 @@ void onNotification(BLERemoteCharacteristic chr, const uint8_t *data, size_t len
 
 // NOTE: Keep this callback lightweight. Blocking BLE operations (createClient,
 // connect, etc.) must NOT be called here — they would deadlock the BLE stack
-// task that delivers this callback. Save the address and set a flag; do the
+// task that delivers this callback. Save the address and set a flag. Do the
 // actual connection from loop().
 void onDeviceFound(BLEAdvertisedDevice device) {
   if (!device.isAdvertisingService(SVC_UUID)) {
