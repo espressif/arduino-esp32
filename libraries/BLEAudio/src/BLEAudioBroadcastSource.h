@@ -113,7 +113,7 @@ public:
    */
   BTStatus setChannels(uint8_t channels);
   /**
-   * @brief 24-bit Broadcast ID receivers use to recognise the source. Default: random.
+   * @brief 24-bit Broadcast ID receivers use to recognize the source. Default: random.
    * @param broadcastId Only the low 24 bits are kept; advertised, not baked into the source.
    * @return BTStatus::OK when staged; InvalidState on an empty handle.
    */
@@ -177,8 +177,7 @@ public:
    * setBroadcastCode() separately. Individual setters can still override any
    * field afterwards.
    */
-  BTStatus configureAuracast(const String &name, uint8_t channels = 2,
-                                             BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
+  BTStatus configureAuracast(const String &name, uint8_t channels = 2, BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
 
   // --- Control (after audio.begin()) ---
 

@@ -110,15 +110,15 @@ typedef enum {
 } ble_audio_evt_group_t;
 
 /** Event type: group in the high byte, event number within the group in the low byte. */
-#define BLE_AUDIO_EVT(grp, n)      ((uint16_t)(((grp) << 8) | (n)))
+#define BLE_AUDIO_EVT(grp, n) ((uint16_t)(((grp) << 8) | (n)))
 /** Group of an event type (index into the handler table). */
-#define BLE_AUDIO_EVT_GROUP(type)  ((uint8_t)((type) >> 8))
+#define BLE_AUDIO_EVT_GROUP(type) ((uint8_t)((type) >> 8))
 
 /** Core events (no payload; `err` carries the HCI/engine status). */
 enum {
   BLE_AUDIO_EVT_ACL_CONNECTED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 0),
-  BLE_AUDIO_EVT_ACL_DISCONNECTED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 1),  /*!< err = HCI reason. */
-  BLE_AUDIO_EVT_SECURITY_CHANGED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 2),  /*!< err = 0 when encrypted. */
+  BLE_AUDIO_EVT_ACL_DISCONNECTED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 1), /*!< err = HCI reason. */
+  BLE_AUDIO_EVT_SECURITY_CHANGED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 2), /*!< err = 0 when encrypted. */
   /** GATT client discovery of the peer finished; profile discovery may start. */
   BLE_AUDIO_EVT_GATT_DISCOVERED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_CORE, 3),
 };

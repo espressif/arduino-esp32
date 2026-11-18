@@ -57,8 +57,7 @@ bool es8311Write(uint8_t reg, uint8_t value) {
 
 bool es8311Read(uint8_t reg, uint8_t &value) {
   size_t got = 0;
-  return i2cWriteReadNonStop(ES8311_I2C_BUS, ES8311_I2C_ADDR, &reg, 1, &value, 1, ES8311_I2C_TIMEOUT_MS, &got) == ESP_OK
-         && got == 1;
+  return i2cWriteReadNonStop(ES8311_I2C_BUS, ES8311_I2C_ADDR, &reg, 1, &value, 1, ES8311_I2C_TIMEOUT_MS, &got) == ESP_OK && got == 1;
 }
 
 bool es8311Update(uint8_t reg, uint8_t mask, uint8_t value) {
@@ -108,7 +107,7 @@ bool es8311Begin() {
   ok &= es8311Write(ES8311_REG_SYSTEM0E, 0x02);
   ok &= es8311Write(ES8311_REG_SYSTEM12, 0x00);
   ok &= es8311Write(ES8311_REG_SYSTEM13, 0x10);
-  // ADC: analog microphone, maximum PGA gain, DC offset cancelled.
+  // ADC: analog microphone, maximum PGA gain, DC offset canceled.
   ok &= es8311Write(ES8311_REG_SYSTEM14, 0x1A);
   ok &= es8311Write(ES8311_REG_ADC17, 0xC8);
   ok &= es8311Write(ES8311_REG_ADC1C, 0x6A);

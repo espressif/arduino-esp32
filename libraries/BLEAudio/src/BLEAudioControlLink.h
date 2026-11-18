@@ -45,8 +45,7 @@
  * @brief Shared 5 s `BLESync` wait helper for broadcast roles (`BroadcastSource`, `BroadcastSink`, `CapInitiator`).
  */
 template<typename BusyFn>
-inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const char *roleName, BusyFn &&isBusy,
-                                      uint32_t timeoutMs = 5000) {
+inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const char *roleName, BusyFn &&isBusy, uint32_t timeoutMs = 5000) {
   {
     BLELockGuard lock(mtx.get());
     if (!isBusy()) {
@@ -87,7 +86,7 @@ inline BTStatus bleAudioWaitUntilIdle(BLESharedMutex &mtx, BLESync &sync, const 
  * expiry (only differences shorter than half the wrap period occur here).
  */
 class BLEAudioStopBudget {
- public:
+public:
   void start(uint32_t totalMs = 5000) {
     _start = xTaskGetTickCount();
     _total = pdMS_TO_TICKS(totalMs);
@@ -112,7 +111,7 @@ class BLEAudioStopBudget {
     return BTStatus::Fail;
   }
 
- private:
+private:
   TickType_t _start = 0;
   TickType_t _total = 0;
 };

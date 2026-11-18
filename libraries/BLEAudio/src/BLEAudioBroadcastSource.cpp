@@ -63,32 +63,34 @@ constexpr uint8_t kAdTypeServiceData16 = BLEAudioAuracast::kAdTypeServiceData16;
 
 struct BLEAudioBroadcastSource::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (defaults, role list).
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
+  BLESharedMutex mtx;                     ///< Protects this role's callbacks and shared state.
   BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_16_2_1;
-  BLEAudioQos qos;                        ///< Used instead of the preset QoS when customQos.
+  BLEAudioQos qos;  ///< Used instead of the preset QoS when customQos.
   bool customQos = false;
-  uint8_t channels = 1;                   ///< BIS count (1 or 2).
+  uint8_t channels = 1;  ///< BIS count (1 or 2).
   uint32_t broadcastId = esp_random() & 0xFFFFFF;
-  String code;                            ///< Broadcast Code; empty = unencrypted.
-  String name;                            ///< Broadcast Name; empty = device name.
+  String code;  ///< Broadcast Code; empty = unencrypted.
+  String name;  ///< Broadcast Name; empty = device name.
   BLEAudioContext context = BLEAudioContext::Media;
   bool publicBroadcast = true;
-  bool created = false;                   ///< Engine source exists.
-  bool dirty = true;                      ///< A baked-in setting changed; re-create at start().
-  bool starting = false;                  ///< start() called, BSRC_STARTED not received yet.
-  bool streaming = false;                 ///< BIG up (BSRC_STARTED .. BSRC_STOPPED).
-  int16_t advInstance = -1;               ///< Advertising instance in use, -1 when stopped.
+  bool created = false;      ///< Engine source exists.
+  bool dirty = true;         ///< A baked-in setting changed; re-create at start().
+  bool starting = false;     ///< start() called, BSRC_STARTED not received yet.
+  bool streaming = false;    ///< BIG up (BSRC_STARTED .. BSRC_STOPPED).
+  int16_t advInstance = -1;  ///< Advertising instance in use, -1 when stopped.
   BLESync stopSync{"bsrc-stop"};
-  std::vector<BLEAudioStream> streams;    ///< One Tx stream per BIS.
+  std::vector<BLEAudioStream> streams;  ///< One Tx stream per BIS.
   Callback startedCb;
   StoppedCallback stoppedCb;
 
   BTStatus waitStopped(uint32_t timeoutMs = 5000) {
     return bleAudioWaitUntilIdle(
-        mtx, stopSync, "BroadcastSource",
-        [this]() {
-      return streaming || starting;
-    }, timeoutMs);
+      mtx, stopSync, "BroadcastSource",
+      [this]() {
+        return streaming || starting;
+      },
+      timeoutMs
+    );
   }
 
   /** @brief Match the owned streams to the channel count (stops at the first pool failure). */

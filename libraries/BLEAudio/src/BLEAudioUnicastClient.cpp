@@ -60,18 +60,18 @@ struct Peer {
 
 struct BLEAudioUnicastClient::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (defaults, link table).
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
+  BLESharedMutex mtx;                     ///< Protects this role's callbacks and shared state.
   BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_16_2_1;
-  BLEAudioQos qos;                        ///< Used instead of the preset QoS when customQos.
+  BLEAudioQos qos;  ///< Used instead of the preset QoS when customQos.
   bool customQos = false;
   BLEAudioContext context = BLEAudioContext::Media;
-  uint8_t sinkPerPeer = 1;                ///< Tx streams requested per peer.
-  uint8_t sourcePerPeer = 0;              ///< Rx streams requested per peer.
-  bool starting = false;                  ///< bleAudioUcStart() call in flight.
-  bool running = false;                   ///< bleAudioUcStart() accepted, not stopped yet.
-  bool streaming = false;                 ///< UC_STARTED received.
+  uint8_t sinkPerPeer = 1;    ///< Tx streams requested per peer.
+  uint8_t sourcePerPeer = 0;  ///< Rx streams requested per peer.
+  bool starting = false;      ///< bleAudioUcStart() call in flight.
+  bool running = false;       ///< bleAudioUcStart() accepted, not stopped yet.
+  bool streaming = false;     ///< UC_STARTED received.
   std::vector<Peer> peers;
-  std::vector<BLEAudioStream> streams;    ///< Streams of the current setup, in request order.
+  std::vector<BLEAudioStream> streams;  ///< Streams of the current setup, in request order.
 
   DiscoveredCallback discoveredCb;
   Callback startedCb;
@@ -216,7 +216,8 @@ struct BLEAudioUnicastClient::Impl {
   /** @brief Event handler: core link events plus the UNICAST_CLIENT group (host task). */
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
-      case BLE_AUDIO_EVT_GATT_DISCOVERED: {
+      case BLE_AUDIO_EVT_GATT_DISCOVERED:
+      {
         bool known;
         {
           BLELockGuard lock(mtx.get());
@@ -228,7 +229,8 @@ struct BLEAudioUnicastClient::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_ACL_DISCONNECTED: {
+      case BLE_AUDIO_EVT_ACL_DISCONNECTED:
+      {
         BLELockGuard lock(mtx.get());
         for (auto it = peers.begin(); it != peers.end(); ++it) {
           if (it->info.connHandle == e.conn_handle) {
@@ -238,7 +240,8 @@ struct BLEAudioUnicastClient::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_UC_PAC: {
+      case BLE_AUDIO_EVT_UC_PAC:
+      {
         // One per remote LC3 PAC record, before UC_DISCOVERED; a peer may publish several per direction.
         if (!e.data) {
           break;
@@ -253,7 +256,8 @@ struct BLEAudioUnicastClient::Impl {
         mask |= bleAudioPacPresets(&r->pac);
         break;
       }
-      case BLE_AUDIO_EVT_UC_DISCOVERED: {
+      case BLE_AUDIO_EVT_UC_DISCOVERED:
+      {
         BLEAudioUnicastPeerInfo info;
         DiscoveredCallback cb;
         bool autoStart = false;
@@ -297,7 +301,8 @@ struct BLEAudioUnicastClient::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_UC_STARTED: {
+      case BLE_AUDIO_EVT_UC_STARTED:
+      {
         Callback cb;
         {
           BLELockGuard lock(mtx.get());
@@ -310,7 +315,8 @@ struct BLEAudioUnicastClient::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_UC_STOPPED: {
+      case BLE_AUDIO_EVT_UC_STOPPED:
+      {
         Callback cb;
         {
           BLELockGuard lock(mtx.get());

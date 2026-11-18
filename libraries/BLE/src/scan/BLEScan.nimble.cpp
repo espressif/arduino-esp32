@@ -88,14 +88,14 @@ void dispatchComplete(BLEScan::Impl *impl) {
 #if BLE_PAST_SUPPORTED && defined(BLE_GAP_EVENT_PERIODIC_TRANSFER)
 BTStatus periodicSyncStatus(int rc) {
   switch (rc) {
-    case 0:                 return BTStatus::OK;
-    case BLE_HS_EINVAL:     return BTStatus::InvalidParam;
-    case BLE_HS_ENOTCONN:   return BTStatus::NotConnected;
-    case BLE_HS_ENOMEM:     return BTStatus::NoMemory;
+    case 0:                return BTStatus::OK;
+    case BLE_HS_EINVAL:    return BTStatus::InvalidParam;
+    case BLE_HS_ENOTCONN:  return BTStatus::NotConnected;
+    case BLE_HS_ENOMEM:    return BTStatus::NoMemory;
     case BLE_HS_EDISABLED:
-    case BLE_HS_EALREADY:   return BTStatus::InvalidState;
-    case BLE_HS_EBUSY:      return BTStatus::Busy;
-    default:                return BTStatus::Fail;
+    case BLE_HS_EALREADY:  return BTStatus::InvalidState;
+    case BLE_HS_EBUSY:     return BTStatus::Busy;
+    default:               return BTStatus::Fail;
   }
 }
 #endif
@@ -556,8 +556,8 @@ int BLEScan::Impl::gapEventHandler(struct ble_gap_event *event, void *arg) {
       }
       BTAddress addr(event->periodic_transfer.adv_addr.val, static_cast<BTAddress::Type>(event->periodic_transfer.adv_addr.type));
       dispatchPeriodicSync(
-        impl, event->periodic_transfer.sync_handle, event->periodic_transfer.sid, addr,
-        static_cast<BLEPhy>(event->periodic_transfer.adv_phy), event->periodic_transfer.per_adv_itvl
+        impl, event->periodic_transfer.sync_handle, event->periodic_transfer.sid, addr, static_cast<BLEPhy>(event->periodic_transfer.adv_phy),
+        event->periodic_transfer.per_adv_itvl
       );
       return 0;
     }

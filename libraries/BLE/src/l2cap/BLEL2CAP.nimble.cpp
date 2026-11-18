@@ -884,9 +884,7 @@ static bool scheduleAbandonedDisconnect() {
     return false;
   }
   if (!sAbandonedDisconnectCalloutInited) {
-    int initRc = ble_npl_callout_init(
-      &sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(), onAbandonedDisconnectCallout, nullptr
-    );
+    int initRc = ble_npl_callout_init(&sAbandonedDisconnectCallout, nimble_port_get_dflt_eventq(), onAbandonedDisconnectCallout, nullptr);
     if (initRc != 0) {
       log_e("L2CAP: orphan disconnect callout init failed: rc=%d", initRc);
       return false;

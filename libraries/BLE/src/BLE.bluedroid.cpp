@@ -881,8 +881,8 @@ bool bluedroidFindPeerAddress(uint16_t connHandle, BTAddress &peerAddress) {
     // A collision between links to different peers must not resolve to the
     // wrong one; make the caller retry with a role-specific handle/address.
     log_w(
-      "connection handle %u matches a client link (%s) and a server link (%s); refusing ambiguous lookup", (unsigned)connHandle,
-      clientPeer.toString().c_str(), serverPeer.toString().c_str()
+      "connection handle %u matches a client link (%s) and a server link (%s); refusing ambiguous lookup", (unsigned)connHandle, clientPeer.toString().c_str(),
+      serverPeer.toString().c_str()
     );
     return false;
   }
@@ -1053,6 +1053,5 @@ BLESecurity BLEClass::getSecurity() {
   return BLESecurity(slot);
 }
 #endif
-
 
 #endif /* BLE_BLUEDROID */

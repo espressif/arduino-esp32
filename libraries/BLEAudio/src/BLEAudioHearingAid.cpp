@@ -197,7 +197,10 @@ BLEAudioHearingAidDevice BLEAudio::createHearingAidDevice() {
     return BLEAudioHearingAidDevice();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidDevice>(
-    _impl, "createHearingAidDevice", BLE_AUDIO_GRP_HAS_SERVER, [](BLEAudioHearingAidDevice::Impl &s) { return s.apply(); }
+    _impl, "createHearingAidDevice", BLE_AUDIO_GRP_HAS_SERVER,
+    [](BLEAudioHearingAidDevice::Impl &s) {
+      return s.apply();
+    }
   );
 }
 #endif
@@ -245,7 +248,8 @@ struct BLEAudioHearingAidController::Impl {
           }
         }
         break;
-      case BLE_AUDIO_EVT_HAS_CLI_ACTIVE: {
+      case BLE_AUDIO_EVT_HAS_CLI_ACTIVE:
+      {
         const uint8_t index = *static_cast<const uint8_t *>(e.data);
         if (!e.err) {
           active.store(index, std::memory_order_relaxed);
@@ -344,7 +348,10 @@ BLEAudioHearingAidController BLEAudio::createHearingAidController() {
     return BLEAudioHearingAidController();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioHearingAidController>(
-    _impl, "createHearingAidController", BLE_AUDIO_GRP_HAS_CLIENT, [](BLEAudioHearingAidController::Impl &) { return bleAudioStatus(bleAudioHasCliInit()); }
+    _impl, "createHearingAidController", BLE_AUDIO_GRP_HAS_CLIENT,
+    [](BLEAudioHearingAidController::Impl &) {
+      return bleAudioStatus(bleAudioHasCliInit());
+    }
   );
 }
 #endif

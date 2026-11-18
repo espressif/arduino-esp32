@@ -985,9 +985,8 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         BLEAdvertising::Impl::s_instance->isAdvertising = false;
       }
 #endif
-      BLEConnInfo connInfo = BLEConnInfoImpl::make(
-        connId, param->connect.remote_bda, 23, param->connect.link_role == 0, static_cast<BTAddress::Type>(param->connect.ble_addr_type)
-      );
+      BLEConnInfo connInfo =
+        BLEConnInfoImpl::make(connId, param->connect.remote_bda, 23, param->connect.link_role == 0, static_cast<BTAddress::Type>(param->connect.ble_addr_type));
       {
         BLELockGuard lock(impl->mtx);
         impl->connSet(connId, connInfo);

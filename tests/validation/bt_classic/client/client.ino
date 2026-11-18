@@ -230,9 +230,7 @@ void setup() {
     BLE.end(true);
     bool endTrueKeep = SerialBT.connected();
     BTStatus endTrueAgain = BLE.begin(clientName + "_ble_endtrue2");
-    Serial.printf(
-      "[CLIENT] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain
-    );
+    Serial.printf("[CLIENT] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain);
   }
 
   // Ask server to disconnect this peer by address

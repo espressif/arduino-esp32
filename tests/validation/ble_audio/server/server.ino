@@ -36,25 +36,25 @@ volatile int currentPhase = 0;
 volatile bool phaseRelease = false;  // pytest PHASE_RELEASE: client finished this phase
 
 // Phase completion flags (each phase fires once).
-bool phaseAudioDone = false;           // audio_lifecycle (phase 1)
-bool phaseIsoCisDone = false;          // iso_cis (phase 2, CIS peripheral)
-bool phaseIsoBisDone = false;          // iso_bis (phase 3, BIS broadcaster)
-bool phaseBapUnicastDone = false;      // bap_unicast (phase 4, BAP Unicast Server)
-bool phaseBapBroadcastDone = false;    // bap_broadcast (phase 5, BAP Broadcast Source)
-bool phaseLC3LoopbackDone = false;     // lc3_loopback (phase 6, LC3 decode via BLEAudioPlayer)
-bool phaseControlProfilesDone = false; // control_profiles (phase 7, VCP/MICP/MCP/CCP server)
-bool phaseTopProfilesDone = false;     // top_profiles (phase 8, TMAP/GMAP identity server)
-bool phaseHearingAidDone = false;      // hearing_aid (phase 9, HAS presets server)
-bool phaseStereoDone = false;          // stereo (phase 10, 2-BIS Broadcast Source)
-bool phaseAssistantDone = false;       // broadcast_assistant (phase 11, Broadcast Sink + Scan Delegator)
-bool phaseHandoverDone = false;        // cap_handover (phase 12, CAP acceptor: unicast server + delegator sink)
-bool phaseStopRaceDone = false;        // bcast_stop_race (phase 13, BroadcastSource start/stop race)
-bool phaseCapBcDone = false;           // cap_bc_interleave (phase 14, CAP startBroadcast vs streams() snapshot)
-bool phaseStartRetryDone = false;      // start_retry_refused (phase 15, failed start() must not retry)
-bool phaseSecPolicyDone = false;       // security_policy (phase 16, explicit audio security policy)
-bool phaseIsoGatesDone = false;        // iso_handle_gates (phase 17, dead-handle connectCis refusal)
-bool phaseMicDisableDone = false;        // mic_mute_disabled (phase 18, MICS tri-state)
-bool phaseMemoryDone = false;          // memory_release (phase 19, tail of suite)
+bool phaseAudioDone = false;            // audio_lifecycle (phase 1)
+bool phaseIsoCisDone = false;           // iso_cis (phase 2, CIS peripheral)
+bool phaseIsoBisDone = false;           // iso_bis (phase 3, BIS broadcaster)
+bool phaseBapUnicastDone = false;       // bap_unicast (phase 4, BAP Unicast Server)
+bool phaseBapBroadcastDone = false;     // bap_broadcast (phase 5, BAP Broadcast Source)
+bool phaseLC3LoopbackDone = false;      // lc3_loopback (phase 6, LC3 decode via BLEAudioPlayer)
+bool phaseControlProfilesDone = false;  // control_profiles (phase 7, VCP/MICP/MCP/CCP server)
+bool phaseTopProfilesDone = false;      // top_profiles (phase 8, TMAP/GMAP identity server)
+bool phaseHearingAidDone = false;       // hearing_aid (phase 9, HAS presets server)
+bool phaseStereoDone = false;           // stereo (phase 10, 2-BIS Broadcast Source)
+bool phaseAssistantDone = false;        // broadcast_assistant (phase 11, Broadcast Sink + Scan Delegator)
+bool phaseHandoverDone = false;         // cap_handover (phase 12, CAP acceptor: unicast server + delegator sink)
+bool phaseStopRaceDone = false;         // bcast_stop_race (phase 13, BroadcastSource start/stop race)
+bool phaseCapBcDone = false;            // cap_bc_interleave (phase 14, CAP startBroadcast vs streams() snapshot)
+bool phaseStartRetryDone = false;       // start_retry_refused (phase 15, failed start() must not retry)
+bool phaseSecPolicyDone = false;        // security_policy (phase 16, explicit audio security policy)
+bool phaseIsoGatesDone = false;         // iso_handle_gates (phase 17, dead-handle connectCis refusal)
+bool phaseMicDisableDone = false;       // mic_mute_disabled (phase 18, MICS tri-state)
+bool phaseMemoryDone = false;           // memory_release (phase 19, tail of suite)
 
 // Control-profile server-side observation counters (written from role callbacks).
 volatile uint32_t ctrlVolWrites = 0;  // VCP renderer state changes seen
@@ -68,6 +68,7 @@ volatile uint8_t topVolume = 0;       // phase 8: last volume written (by the cl
 // ISO transport counters — written from the ISO host task, read from loop().
 volatile bool isoCisConnected = false;
 volatile uint32_t isoCisRxCount = 0;
+volatile uint32_t isoCisConnects = 0;  // CISes accepted in phase 2 (one per client handover stage)
 volatile bool isoBisConnected = false;
 
 // BAP unicast server sink RX counter — written from the audio host task.
@@ -91,8 +92,8 @@ constexpr uint32_t kGoertzelN = 160;
 volatile uint32_t goertzelCount = 0;  // samples in the current block
 volatile float goertzelS1 = 0.0f, goertzelS2 = 0.0f;
 volatile double goertzelBlockEnergy = 0.0;
-volatile double goertzelTone = 0.0;    // accumulated tone-bin power
-volatile double goertzelTotal = 0.0;   // accumulated total power
+volatile double goertzelTone = 0.0;   // accumulated tone-bin power
+volatile double goertzelTotal = 0.0;  // accumulated total power
 volatile uint32_t goertzelBlocks = 0;
 
 // CAP handover (phase 12) SDU counters — written from the audio host task.
@@ -304,8 +305,8 @@ void loop() {
           BTStatus pend = audio.end();
           purePeriphOk = pureConn.load() != 0xFFFF && pureVol.load() >= 1 && (bool)pdisc && pureDown.load() && (bool)pend && busyGuardOk;
           Serial.printf(
-            "[SERVER] Audio purePeriph link=%d vol=%d disc=%d end=%d busyGuard=%d\n", pureConn.load() != 0xFFFF ? 1 : 0,
-            pureVol.load() >= 1 ? 1 : 0, (pdisc && pureDown.load()) ? 1 : 0, (int)(bool)pend, (int)busyGuardOk
+            "[SERVER] Audio purePeriph link=%d vol=%d disc=%d end=%d busyGuard=%d\n", pureConn.load() != 0xFFFF ? 1 : 0, pureVol.load() >= 1 ? 1 : 0,
+            (pdisc && pureDown.load()) ? 1 : 0, (int)(bool)pend, (int)busyGuardOk
           );
         }
 #else
@@ -333,8 +334,7 @@ void loop() {
           unsigned long endMs = millis() - t0;
           sameHostOk = (bool)sb && (bool)ss && badStartRejected && (bool)se && endMs < 1000;
           Serial.printf(
-            "[SERVER] Audio sameHostReinit ok=%d badStart=%d fastEnd=%d ms=%lu\n", (int)(sb && ss && se), (int)badStartRejected,
-            (int)(endMs < 1000), endMs
+            "[SERVER] Audio sameHostReinit ok=%d badStart=%d fastEnd=%d ms=%lu\n", (int)(sb && ss && se), (int)badStartRejected, (int)(endMs < 1000), endMs
           );
         }
 
@@ -353,8 +353,7 @@ void loop() {
         // profiles; both are committed by the single audio.begin() below.
         BLEServer srv = BLE.createServer();
         BLEService coexSvc = srv.createService(AUDIO_COEX_SVC_UUID);
-        BLECharacteristic coexChr =
-          coexSvc.createCharacteristic(AUDIO_COEX_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
+        BLECharacteristic coexChr = coexSvc.createCharacteristic(AUDIO_COEX_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermission::ReadOpen);
         coexChr.setValue("coexist");
         coexChr.onRead([](BLECharacteristic &, const BLEConnInfo &) {
           audioEndCallbackEntered = true;
@@ -426,8 +425,7 @@ void loop() {
 #endif
         bool activeEnded = audioEndCallbackEntered && !BLE.isInitialized() && !BLE.isEnding() && !audio.isActive();
         Serial.printf(
-          "[SERVER] Audio callback end=%d activeEnded=%d admission=%d\n", audioEndCallbackEntered ? 1 : 0, activeEnded ? 1 : 0,
-          admissionClosed ? 1 : 0
+          "[SERVER] Audio callback end=%d activeEnded=%d admission=%d\n", audioEndCallbackEntered ? 1 : 0, activeEnded ? 1 : 0, admissionClosed ? 1 : 0
         );
 
         // Re-initialize both BLE and audio after callback-safe terminal
@@ -455,7 +453,7 @@ void loop() {
           BLEService firstSvc = srvFirst.createService(BLEUUID("a10c0007-0000-1000-8000-00805f9b34fb"));
           auto firstChr = firstSvc.createCharacteristic(BLEUUID("a10c0008-0000-1000-8000-00805f9b34fb"), BLEProperty::Read, BLEPermission::ReadOpen);
           firstChr.setValue("first");
-          bool firstPublished = (bool)srvFirst.start();  // standalone (no audio roles yet)
+          bool firstPublished = (bool)srvFirst.start();                            // standalone (no audio roles yet)
           BTStatus firstCommit = firstPublished ? audio.begin() : BTStatus::Fail;  // adopt + single commit
           bool firstLive = firstCommit && firstSvc.getHandle() != 0;
           BLEService lateFirst = srvFirst.createService(BLEUUID("a10c0009-0000-1000-8000-00805f9b34fb"));
@@ -466,12 +464,11 @@ void loop() {
           Serial.printf("[SERVER] Audio gattfirst live=%d guard=%d remove=%d\n", firstLive ? 1 : 0, firstGuarded ? 1 : 0, firstRemoved ? 1 : 0);
           audio.end();
         }
-        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend && gfirstOk) {
+        if (purePeriphOk && sameHostOk && ab && firstStage && secondStage && gattGuarded && advStart && activeEnded && admissionClosed && rb && rs && aend
+            && gfirstOk) {
           Serial.println("[SERVER] Audio lifecycle OK");
         } else {
-          Serial.printf(
-            "[SERVER] Audio lifecycle FAILED begin=%d end=%d\n", ab ? 1 : 0, aend ? 1 : 0
-          );
+          Serial.printf("[SERVER] Audio lifecycle FAILED begin=%d end=%d\n", ab ? 1 : 0, aend ? 1 : 0);
         }
       }
     }
@@ -488,10 +485,13 @@ void loop() {
   // Phase 2: ISO CIS transport integrity — the server is the CIS Peripheral.
   // Stands up a minimal connectable server so the client (Central) can create
   // the ACL, brings up the BLEIso transport, registers an ISO server that
-  // accepts one inbound bidirectional CIS, counts the transparent SDUs streamed
-  // by the client and streams SDUs back on the Peripheral-to-Central direction. Self-skips when host ISO is not compiled in (non-audio targets), so
-  // this only truly runs on a dual-ISO (esp32s31<->esp32s31) bench. Restores a
-  // normal stack afterward so memory_release still measures a meaningful free.
+  // accepts one inbound bidirectional CIS per client handover stage (standalone
+  // transport, LE-Audio-owned host, re-claimed host), counts the transparent
+  // SDUs streamed by the client and streams SDUs back on the Peripheral-to-
+  // Central direction. Self-skips when host ISO is not compiled in (non-audio
+  // targets), so this only truly runs on a dual-ISO (esp32s31<->esp32s31)
+  // bench. Restores a normal stack afterward so memory_release still measures
+  // a meaningful free.
   if (currentPhase >= 2 && !phaseIsoCisDone) {
     phaseIsoCisDone = true;
 #if BLE_ISO_SUPPORTED
@@ -500,6 +500,7 @@ void loop() {
     delay(500);
     isoCisConnected = false;
     isoCisRxCount = 0;
+    isoCisConnects = 0;
     BTStatus s = BLE.begin(serverName);
     iso = BLE.getIsoController();
     uint32_t returned = 0;
@@ -517,26 +518,39 @@ void loop() {
       BTStatus ib = iso.begin();
       Serial.printf("[SERVER] IsoCis transport: %s\n", ib.toString());
 
-      BLEIso::CisParams params;  // defaults: 120 B SDU, 10 ms, 2M PHY
+      BLEIso::CisParams params;    // defaults: 120 B SDU, 10 ms, 2M PHY
       params.returnSduSize = 120;  // bidirectional: the Peripheral streams back
       auto onIsoRx = [](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
         if (info.valid) {
           isoCisRxCount = isoCisRxCount + 1;
         }
       };
-      BLEIso::Channel cis = iso.listenCis(params);
-      if (cis) {
-        cis.onConnected([&isoCbEndBusy, &iso](BLEIso::Channel &) {
+      // One listening channel per CIS the client brings up: the standalone
+      // transport, the transport on the host the LE Audio engine owns, and the
+      // transport after that engine released it. A dedicated slot per stage
+      // keeps acceptance independent of how each stack retires a disconnected
+      // Peripheral channel.
+      BLEIso::Channel cisList[3];
+      int cisN = 0;
+      for (int i = 0; i < 3; i++) {
+        cisList[i] = iso.listenCis(params);
+        if (!cisList[i]) {
+          continue;
+        }
+        cisN++;
+        cisList[i].onConnected([&isoCbEndBusy, &iso](BLEIso::Channel &) {
           syncPhaseFromHost();
           isoCbEndBusy.store(iso.end() == BTStatus::Busy);
+          isoCisConnects = isoCisConnects + 1;
           isoCisConnected = true;
         });
-        cis.onReceive(onIsoRx);
-        cis.onDisconnected([](BLEIso::Channel &, uint8_t) {
+        cisList[i].onReceive(onIsoRx);
+        cisList[i].onDisconnected([](BLEIso::Channel &, uint8_t) {
           syncPhaseFromHost();
           isoCisConnected = false;
         });
-
+      }
+      if (cisN > 0) {
         BLEAdvertising adv = BLE.getAdvertising();
         adv.reset();
         adv.setType(BLEAdvType::ConnectableScannable);
@@ -548,16 +562,21 @@ void loop() {
         // Let the client connect, establish the CIS, and stream SDUs; stream
         // back on the Peripheral-to-Central direction while re-binding the
         // receive callback to exercise BLEIso callback locking under load.
+        // The window covers the client's three CIS stages, so it stays open
+        // until pytest releases the phase (the deadline is only a backstop for
+        // a client that never reports).
         uint8_t sdu[120];
         beginPhaseWait();
-        unsigned long deadline = millis() + 25000;
+        unsigned long deadline = millis() + 180000;
         while (millis() < deadline && !phaseRelease) {
           syncPhaseFromHost();
-          if (isoCisConnected && cis.canSend()) {
-            cis.onReceive(onIsoRx);
-            memset(sdu, (uint8_t)returned, sizeof(sdu));
-            if (cis.send(sdu, sizeof(sdu))) {
-              returned++;
+          for (int i = 0; i < cisN; i++) {
+            if (isoCisConnected && cisList[i].canSend()) {
+              cisList[i].onReceive(onIsoRx);
+              memset(sdu, (uint8_t)returned, sizeof(sdu));
+              if (cisList[i].send(sdu, sizeof(sdu))) {
+                returned++;
+              }
             }
           }
           delay(10);
@@ -578,8 +597,8 @@ void loop() {
     BTStatus isoCleanEnd = isoRetry ? iso.end() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry && isoCleanEnd && isoCbEndBusy.load();
     Serial.printf(
-      "[SERVER] IsoCis result connected=%d received=%lu returned=%lu lifecycle=%d\n", (int)isoCisConnected, (unsigned long)isoCisRxCount,
-      (unsigned long)returned, isoLifecycle ? 1 : 0
+      "[SERVER] IsoCis result connected=%d received=%lu returned=%lu lifecycle=%d connects=%lu\n", (int)isoCisConnected, (unsigned long)isoCisRxCount,
+      (unsigned long)returned, isoLifecycle ? 1 : 0, (unsigned long)isoCisConnects
     );
 #else
     Serial.println("[SERVER] IsoCis not supported");
@@ -658,9 +677,7 @@ void loop() {
     BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry;
     iso.end();
-    Serial.printf(
-      "[SERVER] IsoBis result connected=%d sent=%lu lifecycle=%d\n", (int)isoBisConnected, (unsigned long)sent, isoLifecycle ? 1 : 0
-    );
+    Serial.printf("[SERVER] IsoBis result connected=%d sent=%lu lifecycle=%d\n", (int)isoBisConnected, (unsigned long)sent, isoLifecycle ? 1 : 0);
 #else
     Serial.println("[SERVER] IsoBis not supported");
 #endif
@@ -698,7 +715,7 @@ void loop() {
         // so the marker service stages into the coordinated (audio-owned)
         // table instead of publishing standalone.
         BLEAudioUnicastServer us = audio.createUnicastServer();
-                us.setSinkStreams(1);
+        us.setSinkStreams(1);
         us.setSourceStreams(1);
         us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
         for (size_t i = 0; i < us.streamCount(); i++) {
@@ -779,7 +796,7 @@ void loop() {
       audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         source.setBroadcastId(0x123456);
         source.setName(serverName);
         source.onStarted([&bcStreaming]() {
@@ -861,7 +878,7 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-                    us.setSinkStreams(1);
+          us.setSinkStreams(1);
           us.setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
           us.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_441_2_1));
@@ -920,8 +937,8 @@ void loop() {
                 if (us.stream(0).isStreaming()) {
                   BLEAudioCodecConfig sc = us.stream(0).codecConfig();
                   BLEAudioQos sq = us.stream(0).qos();
-                  const bool snapOk = (lc3Round == 0) ? (sc.samplingRateHz == 16000 && sq.sduIntervalUs == 10000)
-                                                  : (sc.samplingRateHz == 44100 && sq.sduIntervalUs == 10884);
+                  const bool snapOk =
+                    (lc3Round == 0) ? (sc.samplingRateHz == 16000 && sq.sduIntervalUs == 10000) : (sc.samplingRateHz == 44100 && sq.sduIntervalUs == 10884);
                   if (snapOk) {
                     streamSnapOk = true;
                   }
@@ -944,11 +961,15 @@ void loop() {
           }
         }
         if (lc3Round == 0) {
-          Serial.printf("[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg,
-          (unsigned long)plcFrames, (unsigned long)playerUnderruns, tonePermille);
+          Serial.printf(
+            "[SERVER] LC3Loopback result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg, (unsigned long)plcFrames,
+            (unsigned long)playerUnderruns, tonePermille
+          );
         } else {
-          Serial.printf("[SERVER] LC3Loopback44 result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg,
-          (unsigned long)plcFrames, (unsigned long)playerUnderruns, tonePermille);
+          Serial.printf(
+            "[SERVER] LC3Loopback44 result samples=%lu meanamp=%llu plc=%lu underruns=%lu tone=%u\n", (unsigned long)lc3RxSamples, avg,
+            (unsigned long)plcFrames, (unsigned long)playerUnderruns, tonePermille
+          );
         }
       }
     }  // end LC3 rounds
@@ -982,7 +1003,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-                cap.setSetSize(2);
+        cap.setSetSize(2);
         cap.setRank(1);
 
         BLEAudioVolumeRenderer vol = audio.createVolumeRenderer();
@@ -1027,8 +1048,8 @@ void loop() {
         audio.end();
       }
       Serial.printf(
-        "[SERVER] ControlProfiles result volwrites=%lu micmutes=%lu media=%lu calls=%lu\n", (unsigned long)ctrlVolWrites,
-        (unsigned long)ctrlMicMutes, (unsigned long)ctrlMediaCmds, (unsigned long)ctrlCallReqs
+        "[SERVER] ControlProfiles result volwrites=%lu micmutes=%lu media=%lu calls=%lu\n", (unsigned long)ctrlVolWrites, (unsigned long)ctrlMicMutes,
+        (unsigned long)ctrlMediaCmds, (unsigned long)ctrlCallReqs
       );
     }
     BLE.end(false);
@@ -1069,7 +1090,7 @@ void loop() {
         // terminal. Bounded so a stuck stack still fails fast.
         // Underlying roles that back the advertised TMAP/GMAP identities.
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-                cap.setSetSize(1);
+        cap.setSetSize(1);
         cap.setRank(1);
         cap.coordinatedSet().onLockChanged([](bool locked, uint16_t connHandle) {
           (void)locked;
@@ -1077,7 +1098,7 @@ void loop() {
           topSetLocks = topSetLocks + 1;
         });
         BLEAudioUnicastServer us = audio.createUnicastServer();
-                us.setSinkStreams(1);
+        us.setSinkStreams(1);
         us.setSourceStreams(1);
         BLEAudioVolumeRenderer vol = audio.createVolumeRenderer();
         vol.setInitialVolume(100);
@@ -1092,7 +1113,7 @@ void loop() {
         BLEAudioGmap gmap = audio.createGmap();
         BLEAudioGmapFeatures gf;
         gf.unicastTerminal = BLEAudioGmapFeatures::UgtSink;
-                gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
+        gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
         gmap.setFeatures(gf);
 
         BTStatus bst = audio.begin();  // commit
@@ -1151,7 +1172,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioHearingAidDevice ha = audio.createHearingAidDevice();
-                ha.setType(BLEHearingAidType::Binaural);
+        ha.setType(BLEHearingAidType::Binaural);
         ha.setPresetSync(false);
         ha.addPreset(1, "Universal");
         ha.addPreset(2, "Outdoor");
@@ -1211,7 +1232,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         source.setChannels(2);
         source.setName(serverName);
         source.setBroadcastCode(STEREO_BROADCAST_CODE);
@@ -1277,7 +1298,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-                sink.setScanDelegator(true);
+        sink.setScanDelegator(true);
         sink.setAutoSync(false);
         if (sink && audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
@@ -1324,11 +1345,11 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-                cap.setSetSize(1);
+        cap.setSetSize(1);
         cap.setRank(1);
 
         BLEAudioUnicastServer us = audio.createUnicastServer();
-                us.setSinkStreams(1);
+        us.setSinkStreams(1);
         us.setSourceStreams(0);
         us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
         us.stream(0).onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
@@ -1369,10 +1390,12 @@ void loop() {
       uint8_t pbaFeatures = 0;
       const uint8_t *pbaOut = nullptr;
       size_t pbaOutLen = 0;
-      const bool pbaOk = pbaLen > 2 && BLEAudioPublicBroadcast::parseAnnouncement(pba, pbaLen, pbaFeatures, pbaOut, pbaOutLen) &&
-                         pbaFeatures == BLEAudioPublicBroadcast::HighQuality && pbaOutLen == sizeof(pbaMeta);
-      Serial.printf("[SERVER] CapHandover result unicast=%lu joined=%d broadcast=%lu pba=%d\n", (unsigned long)hoUnicastRx, (int)hoBigJoined,
-                    (unsigned long)hoBroadcastRx, pbaOk ? 1 : 0);
+      const bool pbaOk = pbaLen > 2 && BLEAudioPublicBroadcast::parseAnnouncement(pba, pbaLen, pbaFeatures, pbaOut, pbaOutLen)
+                         && pbaFeatures == BLEAudioPublicBroadcast::HighQuality && pbaOutLen == sizeof(pbaMeta);
+      Serial.printf(
+        "[SERVER] CapHandover result unicast=%lu joined=%d broadcast=%lu pba=%d\n", (unsigned long)hoUnicastRx, (int)hoBigJoined, (unsigned long)hoBroadcastRx,
+        pbaOk ? 1 : 0
+      );
     }
     BLE.end(false);
     delay(500);
@@ -1402,7 +1425,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         source.setChannels(1);
         source.setName(serverName);
         source.onStarted([&bcStreaming]() {
@@ -1450,8 +1473,10 @@ void loop() {
             }
           }
           audio.end();
-          Serial.printf("[SERVER] StopRace result races=%u startOk=%u stopOk=%u stoppedEv=%lu clean=%d\n",
-                        races, okStart, okStop, (unsigned long)stoppedEvents.load(), clean ? 1 : 0);
+          Serial.printf(
+            "[SERVER] StopRace result races=%u startOk=%u stopOk=%u stoppedEv=%lu clean=%d\n", races, okStart, okStop, (unsigned long)stoppedEvents.load(),
+            clean ? 1 : 0
+          );
         } else {
           Serial.println("[SERVER] StopRace audio begin failed");
         }
@@ -1487,7 +1512,7 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapInitiator cap = audio.createCapInitiator();
-                cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         cap.setBroadcastName(serverName);
         cap.onBroadcastStarted([]() {});
         cap.onBroadcastStopped([&stoppedEvents](uint8_t) {
@@ -1512,8 +1537,7 @@ void loop() {
             if (st) {
               okStop++;
             } else {
-              Serial.printf("[SERVER] CapBC round %d stop failed: %s streaming=%d\n", i, st.toString(),
-                            cap.isBroadcasting() ? 1 : 0);
+              Serial.printf("[SERVER] CapBC round %d stop failed: %s streaming=%d\n", i, st.toString(), cap.isBroadcasting() ? 1 : 0);
             }
             rounds++;
             delay(200);
@@ -1531,8 +1555,7 @@ void loop() {
             }
             clean = cap.isBroadcasting() && cap.streamCount() == 2;
             if (!clean) {
-              Serial.printf("[SERVER] CapBC clean not streaming (broadcasting=%d streams=%u)\n",
-                            cap.isBroadcasting() ? 1 : 0, (unsigned)cap.streamCount());
+              Serial.printf("[SERVER] CapBC clean not streaming (broadcasting=%d streams=%u)\n", cap.isBroadcasting() ? 1 : 0, (unsigned)cap.streamCount());
             }
             cap.stopBroadcast();
           } else {
@@ -1544,8 +1567,10 @@ void loop() {
             delay(10);
           }
           audio.end();
-          Serial.printf("[SERVER] CapBC result rounds=%u startOk=%u stopOk=%u stoppedEv=%lu reads=%lu clean=%d\n",
-                        rounds, okStart, okStop, (unsigned long)stoppedEvents.load(), (unsigned long)snapshotReads.load(), clean ? 1 : 0);
+          Serial.printf(
+            "[SERVER] CapBC result rounds=%u startOk=%u stopOk=%u stoppedEv=%lu reads=%lu clean=%d\n", rounds, okStart, okStop,
+            (unsigned long)stoppedEvents.load(), (unsigned long)snapshotReads.load(), clean ? 1 : 0
+          );
         } else {
           snapStop.store(true, std::memory_order_release);
           Serial.println("[SERVER] CapBC audio begin failed");
@@ -1611,7 +1636,7 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-                    us.setSinkStreams(1);
+          us.setSinkStreams(1);
           us.setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Media);
           pacsFirst = audio.begin() ? 1 : 0;
@@ -1622,7 +1647,7 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-                    us.setSinkStreams(1);
+          us.setSinkStreams(1);
           us.setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Conversational);
           pacsSecond = audio.begin() ? 1 : 0;
@@ -1641,7 +1666,7 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioBroadcastSource src = audio.createBroadcastSource();
-                    src.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+          src.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
           src.setChannels(1);
           src.setName(serverName);
           volatile bool cbEntered = false;
@@ -1666,7 +1691,7 @@ void loop() {
             {
               BLEAudioBroadcastSource lazy = audio.createBroadcastSource();
               if (lazy && audio.isActive()) {
-                                lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+                lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
                 lazy.setChannels(1);
                 lazy.setName(serverName);
                 endRebegin = audio.begin() ? 1 : 0;
@@ -1698,8 +1723,10 @@ void loop() {
 #else
       int tbsLong = -1;
 #endif
-      Serial.printf("[SERVER] StartRetry first=%d retry=%d recovered=%d pacs=%d%d tbslong=%d endtwice=%d endfromcb=%d endrebegin=%d\n",
-                    firstRc, retryRc, recovered, pacsFirst, pacsSecond, tbsLong, endTwice, endFromCb, endRebegin);
+      Serial.printf(
+        "[SERVER] StartRetry first=%d retry=%d recovered=%d pacs=%d%d tbslong=%d endtwice=%d endfromcb=%d endrebegin=%d\n", firstRc, retryRc, recovered,
+        pacsFirst, pacsSecond, tbsLong, endTwice, endFromCb, endRebegin
+      );
       BLE.end(false);
       delay(500);
       (void)BLE.begin(serverName);

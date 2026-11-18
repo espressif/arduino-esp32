@@ -45,11 +45,11 @@ class BLEAudio;
 
 /** @brief A broadcast source seen while scanning. */
 struct BLEAudioBroadcastSourceInfo {
-  BTAddress address;        //!< Advertiser address (with its type)
-  uint8_t sid = 0;          //!< Advertising SID of the periodic train
-  uint32_t broadcastId = 0; //!< 24-bit Broadcast_ID
-  String name;              //!< Broadcast Name, else the device name
-  int8_t rssi = 0;          //!< dBm, from the report that found it
+  BTAddress address;             //!< Advertiser address (with its type)
+  uint8_t sid = 0;               //!< Advertising SID of the periodic train
+  uint32_t broadcastId = 0;      //!< 24-bit Broadcast_ID
+  String name;                   //!< Broadcast Name, else the device name
+  int8_t rssi = 0;               //!< dBm, from the report that found it
   uint16_t paInterval = 0xFFFF;  //!< Periodic advertising interval (1.25 ms units), 0xFFFF unknown
 };
 
@@ -79,8 +79,8 @@ struct BLEAudioReceiveState {
   uint32_t broadcastId = 0;
   PaState paState = PaState::NotSynced;
   Encryption encryption = Encryption::None;
-  uint8_t badCode[16] = {};  //!< Code the sink rejected (Encryption::BadCode)
-  uint8_t numSubgroups = 0;  //!< As reported; only the first kMaxSubgroups have a bisSync entry
+  uint8_t badCode[16] = {};              //!< Code the sink rejected (Encryption::BadCode)
+  uint8_t numSubgroups = 0;              //!< As reported; only the first kMaxSubgroups have a bisSync entry
   uint32_t bisSync[kMaxSubgroups] = {};  //!< BIS indexes synced, per subgroup (bit n = BIS n+1)
 };
 

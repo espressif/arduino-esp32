@@ -93,8 +93,12 @@ def _phase_audio_lifecycle(server, client):
         timeout=30,
     )
     assert int(mps.group(5)) == 1, "audio.begin() while advertising did not enforce the active-GAP guard"
-    assert int(mps.group(1)) == 1 and int(mpc.group(1)) == 1, "pure-audio peripheral without BLEServer failed to connect/discover"
-    assert int(mps.group(2)) == 1 and int(mpc.group(2)) == 1, "inline VCP write inside onDiscovered did not land on pure-audio peripheral"
+    assert (
+        int(mps.group(1)) == 1 and int(mpc.group(1)) == 1
+    ), "pure-audio peripheral without BLEServer failed to connect/discover"
+    assert (
+        int(mps.group(2)) == 1 and int(mpc.group(2)) == 1
+    ), "inline VCP write inside onDiscovered did not land on pure-audio peripheral"
     assert int(mps.group(3)) == 1 and int(mpc.group(3)) == 1, "peripheral audio.disconnect() failed without BLEServer"
     assert int(mps.group(4)) == 1, "audio.end() failed after pure-audio peripheral session"
 
@@ -104,7 +108,9 @@ def _phase_audio_lifecycle(server, client):
     )
     assert int(msh.group(1)) == 1, "same-host audio.end()->begin()->start() without BLE.end() failed"
     assert int(msh.group(2)) == 1, "BroadcastSource::start(255) did not reject an invalid advertising instance"
-    assert int(msh.group(3)) == 1, f"audio.end() after failed BroadcastSource::start() stalled ({msh.group(4).decode()} ms)"
+    assert (
+        int(msh.group(3)) == 1
+    ), f"audio.end() after failed BroadcastSource::start() stalled ({msh.group(4).decode()} ms)"
 
     mg = server.expect(r"\[SERVER\] Audio GATT remove=(\d+) guarded=(\d+)", timeout=30)
     assert int(mg.group(1)) == 1, "plain-GATT service removal failed while audio owned the GATT table"
@@ -130,9 +136,7 @@ def _phase_audio_lifecycle(server, client):
     cr = client.expect(r"\[CLIENT\] Audio callback read: (\d+)", timeout=30)
     assert int(cr.group(1)) == 1, "client did not find/read the plain-GATT service committed with audio"
     client.expect(r"\[CLIENT\] (Audio lifecycle OK|Audio not supported, skipping)", timeout=20)
-    assert b"FAILED" not in m.group(0), (
-        f"audio lifecycle failed: begin={m.group(2)} end={m.group(3)}"
-    )
+    assert b"FAILED" not in m.group(0), f"audio lifecycle failed: begin={m.group(2)} end={m.group(3)}"
     server.expect_exact("[SERVER] Phase1 audio done", timeout=20)
     client.expect_exact("[CLIENT] Phase1 audio done", timeout=10)
     return True
@@ -142,35 +146,60 @@ def _phase_iso_cis(server, client):
     """BLEIso CIS transport integrity (server = Peripheral, client = Central).
 
     The CIS is bidirectional: the Central streams to the Peripheral and the
-    Peripheral streams back. Returns False (SKIP) when host ISO is not compiled
-    into either build (the only rig that truly runs this is a dual-ISO
-    esp32s31<->esp32s31 pair).
+    Peripheral streams back. The client then repeats the transport on the ISO
+    host the LE Audio engine owns, releases that host with the CIG still
+    allocated, and brings up one more CIS on the host it re-claims. Returns
+    False (SKIP) when host ISO is not compiled into either build (the only rig
+    that truly runs this is a dual-ISO esp32s31<->esp32s31 pair).
     """
-    mc = client.expect(
-        r"\[CLIENT\] IsoCis (not supported|result connected=(\d+) sent=(\d+) received=(\d+) lifecycle=(\d+))",
-        timeout=90,
+    msh = client.expect(
+        r"\[CLIENT\] IsoCis (not supported|sharedhost=(\d+) sharedcis=(\d+) sharedsdu=(\d+) "
+        r"groupdrop=(\d+) hostbusy=(\d+) rehandover=(\d+))",
+        timeout=120,
     )
+    client_iso = b"not supported" not in msh.group(0)
+    mc = None
+    if client_iso:
+        mc = client.expect(
+            r"\[CLIENT\] IsoCis result connected=(\d+) sent=(\d+) received=(\d+) lifecycle=(\d+)",
+            timeout=30,
+        )
     _release_server(server)
     ms = server.expect(
-        r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+) lifecycle=(\d+))",
+        r"\[SERVER\] IsoCis (not supported|result connected=(\d+) received=(\d+) returned=(\d+) "
+        r"lifecycle=(\d+) connects=(\d+))",
         timeout=60,
     )
-    server.expect_exact("[SERVER] Phase2 iso_cis done", timeout=40)
-    client.expect_exact("[CLIENT] Phase2 iso_cis done", timeout=40)
+    server.expect_exact("[SERVER] Phase2 iso_cis done", timeout=60)
+    client.expect_exact("[CLIENT] Phase2 iso_cis done", timeout=60)
 
-    if b"not supported" in ms.group(0) or b"not supported" in mc.group(0):
+    if b"not supported" in ms.group(0) or not client_iso:
         return False
 
     received = int(ms.group(3))
     returned = int(ms.group(4))
-    sent = int(mc.group(3))
-    returned_rx = int(mc.group(4))
+    sent = int(mc.group(2))
+    returned_rx = int(mc.group(3))
     assert int(ms.group(5)) == 1, "server BLE.end() did not release standalone ISO ownership"
-    assert int(mc.group(5)) == 1, "client BLE.end() did not release standalone ISO ownership"
+    assert int(mc.group(4)) == 1, "client BLE.end() did not release standalone ISO ownership"
     assert sent > 0, "CIS Central sent no SDUs"
     assert received > 0, f"CIS Peripheral received no SDUs (Central sent {sent})"
     assert returned > 0, "CIS Peripheral sent no SDUs back"
     assert returned_rx > 0, f"CIS Central received no SDUs back (Peripheral sent {returned})"
+
+    # Shared-host handover: raw CIS on the ISO host the LE Audio engine owns,
+    # then the engine releases that host while the CIG is still allocated.
+    assert int(msh.group(2)) == 1, "LE Audio engine did not claim the ISO host for the shared-host stage"
+    assert int(msh.group(3)) == 1, "CIS did not come up on the audio-owned ISO host"
+    assert int(msh.group(4)) > 0, "no SDUs were sent on the audio-owned ISO host"
+    assert int(msh.group(5)) == 1, "iso.end() did not drop the CIG created on the shared host"
+    # hostbusy is informational: this IDF refuses to release the shared host
+    # while a CIG slot is allocated (bt_le_iso_report_busy() counts them).
+    assert int(msh.group(7)) == 1, (
+        "connectCis() came back empty after the audio engine released the shared ISO host: "
+        "a CIG handle survived the release and was terminated on freed state"
+    )
+    assert int(ms.group(6)) >= 3, f"server accepted {int(ms.group(6))} CISes; expected one per client handover stage"
     return True
 
 
@@ -179,9 +208,13 @@ def _phase_iso_bis(server, client):
 
     Returns False (SKIP) when host ISO or BLE5 is not compiled into either build.
     """
-    mc = client.expect(r"\[CLIENT\] IsoBis (not supported|result synced=(\d+) received=(\d+) lifecycle=(\d+))", timeout=90)
+    mc = client.expect(
+        r"\[CLIENT\] IsoBis (not supported|result synced=(\d+) received=(\d+) lifecycle=(\d+))", timeout=90
+    )
     _release_server(server)
-    ms = server.expect(r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+) lifecycle=(\d+))", timeout=60)
+    ms = server.expect(
+        r"\[SERVER\] IsoBis (not supported|result connected=(\d+) sent=(\d+) lifecycle=(\d+))", timeout=60
+    )
     server.expect_exact("[SERVER] Phase3 iso_bis done", timeout=40)
     client.expect_exact("[CLIENT] Phase3 iso_bis done", timeout=40)
 
@@ -206,7 +239,9 @@ def _phase_bap_unicast(server, client):
     """
     ms = server.expect(r"\[SERVER\] BapUnicast (not supported|ready)", timeout=120)
     if b"not supported" in ms.group(0):
-        client.expect(r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120)
+        client.expect(
+            r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+))", timeout=120
+        )
         server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
         client.expect_exact("[CLIENT] Phase4 bap_unicast done", timeout=40)
         return False
@@ -228,8 +263,8 @@ def _phase_bap_unicast(server, client):
     assert int(m_pdisc_c.group(1)) == 1, "client did not observe the server-initiated disconnect"
     ms2 = server.expect(r"\[SERVER\] BapUnicast result received=(\d+)", timeout=120)
     mc = client.expect(
-        r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+) restarted=(\d+) resent=(\d+) "
-        r"target=(\d+) other=(\d+))",
+        r"\[CLIENT\] BapUnicast (not supported|result streaming=(\d+) sent=(\d+) presets=(\d+) "
+        r"restarted=(\d+) resent=(\d+) target=(\d+) other=(\d+))",
         timeout=120,
     )
     server.expect_exact("[SERVER] Phase4 bap_unicast done", timeout=40)
@@ -244,10 +279,12 @@ def _phase_bap_unicast(server, client):
     assert streaming == 1, "unicast stream never reached Streaming on the client"
     assert sent > 0, "Unicast Client sent no SDUs"
     assert received > 0, f"Unicast Server received no SDUs (Client sent {sent})"
-    assert restarted == 1 and resent > 0, f"a second unicast session on the same peer failed (restarted={restarted}, resent={resent})"
-    assert target_accept == 1 and other_reject == 1, (
-        f"target-aware connect mismatch (target={target_accept}, other_reject={other_reject})"
-    )
+    assert (
+        restarted == 1 and resent > 0
+    ), f"a second unicast session on the same peer failed (restarted={restarted}, resent={resent})"
+    assert (
+        target_accept == 1 and other_reject == 1
+    ), f"target-aware connect mismatch (target={target_accept}, other_reject={other_reject})"
     return True
 
 
@@ -259,7 +296,9 @@ def _phase_bap_broadcast(server, client):
     BIG, and counts SDUs received. Returns False (SKIP) when the LE Audio engine
     is not compiled into either build (only a dual-audio esp32s31 pair runs it).
     """
-    mc = client.expect(r"\[CLIENT\] BapBroadcast (not supported|result received=(\d+) base=(\d+) lifecycle=(\d+))", timeout=120)
+    mc = client.expect(
+        r"\[CLIENT\] BapBroadcast (not supported|result received=(\d+) base=(\d+) lifecycle=(\d+))", timeout=120
+    )
     _release_server(server)
     ms = server.expect(r"\[SERVER\] BapBroadcast (not supported|result sent=(\d+) lifecycle=(\d+))", timeout=90)
     server.expect_exact("[SERVER] Phase5 bap_broadcast done", timeout=40)
@@ -305,17 +344,13 @@ def _phase_lc3_loopback(server, client):
         return False
     mstall = mprobe
     mpre0 = client.expect(r"\[CLIENT\] LC3Preset round=0 ok=(\d+)", timeout=30)
-    mc0 = client.expect(
-        r"\[CLIENT\] LC3Loopback result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=60
-    )
+    mc0 = client.expect(r"\[CLIENT\] LC3Loopback result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=60)
     _release_server(server)
     ms0 = server.expect(
         r"\[SERVER\] LC3Loopback result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+) tone=(\d+)", timeout=120
     )
     mpre1 = client.expect(r"\[CLIENT\] LC3Preset round=1 ok=(\d+)", timeout=120)
-    mc1 = client.expect(
-        r"\[CLIENT\] LC3Loopback44 result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=120
-    )
+    mc1 = client.expect(r"\[CLIENT\] LC3Loopback44 result streaming=(\d+) sent=(\d+) errors=(\d+)", timeout=120)
     _release_server(server)
     ms1 = server.expect(
         r"\[SERVER\] LC3Loopback44 result samples=(\d+) meanamp=(\d+) plc=(\d+) underruns=(\d+) tone=(\d+)", timeout=120
@@ -336,13 +371,25 @@ def _phase_lc3_loopback(server, client):
         streaming = int(mc.group(1))
         encoded = int(mc.group(2))
         errors = int(mc.group(3))
-        LOGGER.info("lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d tone=%d/1000", label, encoded, errors, samples, meanamp, int(ms.group(3)), underruns, tone)
+        LOGGER.info(
+            "lc3_loopback %s: sent=%d errors=%d samples=%d meanamp=%d plc=%d underruns=%d tone=%d/1000",
+            label,
+            encoded,
+            errors,
+            samples,
+            meanamp,
+            int(ms.group(3)),
+            underruns,
+            tone,
+        )
         assert streaming == 1, f"unicast stream never reached Streaming on the client ({label})"
         assert encoded > 0, f"Recorder sent no LC3 SDUs ({label}, {errors} send errors)"
         assert samples > 0, f"Player decoded no PCM samples ({label})"
         assert underruns == 0, f"Player underran {underruns} times ({label}); the PCM sink is not paced to the stream"
         assert meanamp > 500, f"decoded audio too quiet (meanamp={meanamp}, {label}); tone did not survive LC3"
-        assert tone >= 700, f"decoded audio is not the transmitted tone (tone-bin share {tone}/1000, {label}); waveform corrupted"
+        assert (
+            tone >= 700
+        ), f"decoded audio is not the transmitted tone (tone-bin share {tone}/1000, {label}); waveform corrupted"
     return True
 
 
@@ -354,13 +401,23 @@ def _phase_control_profiles(server, client):
     once and drives every profile end-to-end. Both client and server outcomes
     are strictly asserted for all five profiles.
     """
-    ma = client.expect(r"\[CLIENT\] (AsyncError result vcpQ=(\d+) micQ=(\d+) vcpTerms=(\d+) vcpNotConn=(\d+) micTerms=(\d+) micNotConn=(\d+) quiet=(\d)(\d+)|ControlProfiles not supported)", timeout=120)
+    ma = client.expect(
+        r"\[CLIENT\] (AsyncError result vcpQ=(\d+) micQ=(\d+) vcpTerms=(\d+) vcpNotConn=(\d+) "
+        r"micTerms=(\d+) micNotConn=(\d+) quiet=(\d)(\d+)|ControlProfiles not supported)",
+        timeout=120,
+    )
     if b"not supported" in ma.group(0):
         mc = ma
     else:
-        mc = client.expect(r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))", timeout=60)
+        mc = client.expect(
+            r"\[CLIENT\] ControlProfiles (not supported|result cap=(\d+) vcp=(\d+) mic=(\d+) media=(\d+) call=(\d+))",
+            timeout=60,
+        )
     _release_server(server)
-    ms = server.expect(r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) media=(\d+) calls=(\d+))", timeout=120)
+    ms = server.expect(
+        r"\[SERVER\] ControlProfiles (not supported|result volwrites=(\d+) micmutes=(\d+) media=(\d+) calls=(\d+))",
+        timeout=120,
+    )
     server.expect_exact("[SERVER] Phase7 control_profiles done", timeout=40)
     client.expect_exact("[CLIENT] Phase7 control_profiles done", timeout=40)
 
@@ -378,19 +435,40 @@ def _phase_control_profiles(server, client):
     call_ok = int(mc.group(6))
     LOGGER.info(
         "control_profiles: cap=%d vcp=%d/%d mic=%d/%d media=%d/%d call=%d/%d",
-        cap_disc, vcp_ok, vol_writes, mic_ok, mic_mutes, media_ok, media_cmds, call_ok, call_reqs,
+        cap_disc,
+        vcp_ok,
+        vol_writes,
+        mic_ok,
+        mic_mutes,
+        media_ok,
+        media_cmds,
+        call_ok,
+        call_reqs,
     )
 
     assert cap_disc == 1, "CAP initiator did not discover the acceptor's CAS"
     assert vcp_ok == 1 and vol_writes >= 1, f"VCP round-trip failed (client={vcp_ok}, server_writes={vol_writes})"
     assert mic_ok == 1 and mic_mutes >= 1, f"MICP mute round-trip failed (client={mic_ok}, server_mutes={mic_mutes})"
-    assert media_ok == 1 and media_cmds >= 1, f"MCP Play round-trip failed (client={media_ok}, server_cmds={media_cmds})"
-    assert call_ok == 1 and call_reqs >= 1, f"CCP Originate round-trip failed (client={call_ok}, server_calls={call_reqs})"
+    assert (
+        media_ok == 1 and media_cmds >= 1
+    ), f"MCP Play round-trip failed (client={media_ok}, server_cmds={media_cmds})"
+    assert (
+        call_ok == 1 and call_reqs >= 1
+    ), f"CCP Originate round-trip failed (client={call_ok}, server_calls={call_reqs})"
     vcp_q, mic_q = int(ma.group(2)), int(ma.group(3))
     vcp_terms, mic_terms = int(ma.group(4)), int(ma.group(6))
     vcp_quiet, mic_quiet = int(ma.group(8)), int(ma.group(9))
-    LOGGER.info("async_error: vcpQ=%d micQ=%d vcpTerms=%d(vcpNotConn=%s) micTerms=%d(micNotConn=%s) quiet=%d%d",
-                vcp_q, mic_q, vcp_terms, ma.group(5).decode(), mic_terms, ma.group(7).decode(), vcp_quiet, mic_quiet)
+    LOGGER.info(
+        "async_error: vcpQ=%d micQ=%d vcpTerms=%d(vcpNotConn=%s) micTerms=%d(micNotConn=%s) quiet=%d%d",
+        vcp_q,
+        mic_q,
+        vcp_terms,
+        ma.group(5).decode(),
+        mic_terms,
+        ma.group(7).decode(),
+        vcp_quiet,
+        mic_quiet,
+    )
     assert vcp_q == 1 and mic_q == 1, "async-error injection did not queue both control writes"
     assert vcp_terms == 1 and mic_terms == 1, "queued control write did not terminate exactly once after disconnect"
     assert vcp_quiet == 1 and mic_quiet == 1, "duplicate terminal arrived after quiescence; exactly-once violated"
@@ -420,7 +498,9 @@ def _phase_top_profiles(server, client):
         # Neither side runs a reinit round without the roles; the server
         # never waits in this path, so release and collect its lines as usual.
         _release_server(server)
-        ms = server.expect(r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+) reinit=(\d+))", timeout=120)
+        ms = server.expect(
+            r"\[SERVER\] TopProfiles (not supported|result done locks=(\d+) volume=(\d+) reinit=(\d+))", timeout=120
+        )
         server.expect_exact("[SERVER] Phase8 top_profiles done", timeout=40)
         return False
     # The round-1 set-control line (guard-dependent) is printed before the
@@ -449,14 +529,19 @@ def _phase_top_profiles(server, client):
         csip_size2, commander2 = -1, -1
     client.expect_exact("[CLIENT] Phase8 top_profiles done", timeout=40)
     _release_server(server)
-    ms = server.expect(
-        r"\[SERVER\] TopProfiles result done locks=(\d+) volume=(\d+) reinit=(\d+)", timeout=120
-    )
+    ms = server.expect(r"\[SERVER\] TopProfiles result done locks=(\d+) volume=(\d+) reinit=(\d+)", timeout=120)
     server.expect_exact("[SERVER] Phase8 top_profiles done", timeout=40)
 
     if b"SetControl result" in msc.group(0):
         locks, volume = int(ms.group(1)), int(ms.group(2))
-        LOGGER.info("set_control: csip=%d locked=%d commander=%d locks=%d volume=%d", csip_size, locked, commander, locks, volume)
+        LOGGER.info(
+            "set_control: csip=%d locked=%d commander=%d locks=%d volume=%d",
+            csip_size,
+            locked,
+            commander,
+            locks,
+            volume,
+        )
         assert csip_size == 1, f"CSIP coordinator read set size {csip_size}, expected 1"
         assert locked == 1, "CSIP coordinator failed to lock the set"
         assert locks >= 2, f"server saw {locks} lock changes, expected lock + release"
@@ -502,10 +587,14 @@ def _phase_hearing_aid(server, client):
     audio.begin() on the client without a BLE restart: the controller callback must be
     re-linked on re-registration, or the preset re-read observes nothing.
     """
-    mc = client.expect(r"\[CLIENT\] HearingAid (not supported|result disc=(\d+) read=(\d+) switched=(\d+))", timeout=120)
+    mc = client.expect(
+        r"\[CLIENT\] HearingAid (not supported|result disc=(\d+) read=(\d+) switched=(\d+))", timeout=120
+    )
     if b"not supported" in mc.group(0):
         _release_server(server)
-        ms = server.expect(r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90)
+        ms = server.expect(
+            r"\[SERVER\] HearingAid (not supported|result presets=3 selects=(\d+) active=(\d+))", timeout=90
+        )
         server.expect_exact("[SERVER] Phase9 hearing_aid done", timeout=40)
         client.expect_exact("[CLIENT] Phase9 hearing_aid done", timeout=40)
         return False
@@ -563,7 +652,15 @@ def _phase_stereo_broadcast(server, client):
     left, right, mismatched, cb_hits, cleared = (int(mc.group(i)) for i in range(2, 7))
     LOGGER.info(
         "stereo_broadcast: bis=%d sent=%d ms=%d rate=%d/s left=%d right=%d mismatched=%d cb=%d cleared=%d",
-        bis, sent, elapsed, rate, left, right, mismatched, cb_hits, cleared,
+        bis,
+        sent,
+        elapsed,
+        rate,
+        left,
+        right,
+        mismatched,
+        cb_hits,
+        cleared,
     )
     assert bis == 2, f"source created {bis} BIS instead of 2"
     assert left > 0 and right > 0, f"sink did not receive both channels (left={left}, right={right})"
@@ -630,7 +727,8 @@ def _phase_cap_handover(server, client):
     )
     _release_server(server)
     ms = server.expect(
-        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+) pba=(\d+))", timeout=150
+        r"\[SERVER\] CapHandover (not supported|result unicast=(\d+) joined=(\d+) broadcast=(\d+) pba=(\d+))",
+        timeout=150,
     )
     server.expect_exact("[SERVER] Phase12 cap_handover done", timeout=40)
     client.expect_exact("[CLIENT] Phase12 cap_handover done", timeout=40)
@@ -642,9 +740,7 @@ def _phase_cap_handover(server, client):
     disc, unicast, handover, uc_sent, bc_sent, badho, badafter, uc_stopped, uc_rc, bc_rc, ho_fail, ho_restart = (
         int(mc.group(i)) for i in range(2, 14)
     )
-    LOGGER.info(
-        "cap_handover: ucsent=%d ucrx=%d bcsent=%d bcrx=%d joined=%d", uc_sent, uc_rx, bc_sent, bc_rx, joined
-    )
+    LOGGER.info("cap_handover: ucsent=%d ucrx=%d bcsent=%d bcrx=%d joined=%d", uc_sent, uc_rx, bc_sent, bc_rx, joined)
     assert disc == 1, "CAP initiator did not discover the acceptor (or it has no sink ASE)"
     assert unicast == 1, "CAP unicast start failed"
     assert uc_rx > 0, f"acceptor received no unicast SDUs (initiator sent {uc_sent})"
@@ -654,8 +750,17 @@ def _phase_cap_handover(server, client):
     assert pba == 1, "Public Broadcast Announcement build/parse round-trip failed"
     assert badho == 1, "handoverToBroadcast() accepted an invalid advertising instance"
     assert badafter == 1, "a locally failed handover stopped the running unicast session"
-    LOGGER.info("cap_handover: ucstop=%d rc=%d bcstop_rc=%d hofail=%d horestart=%d", uc_stopped, uc_rc, bc_rc, ho_fail, ho_restart)
-    assert bc_rc == 0, f"stopBroadcast() after the handover failed (rc={bc_rc}) — source left live instead of Fail-with-retry"
+    LOGGER.info(
+        "cap_handover: ucstop=%d rc=%d bcstop_rc=%d hofail=%d horestart=%d",
+        uc_stopped,
+        uc_rc,
+        bc_rc,
+        ho_fail,
+        ho_restart,
+    )
+    assert (
+        bc_rc == 0
+    ), f"stopBroadcast() after the handover failed (rc={bc_rc}) — source left live instead of Fail-with-retry"
     assert ho_fail == 1, "the forced asynchronous handover failure did not report"
     assert ho_restart == 1, "the initiator could not rebuild unicast after the forced handover failure"
     return True
@@ -671,7 +776,11 @@ def _phase_bcast_stop_race(server, client):
     afterward (which also proves the advertising instance was released).
     Server-side stress; the client only observes.
     """
-    ms = server.expect(r"\[SERVER\] StopRace (not supported|result races=(\d+) startOk=(\d+) stopOk=(\d+) stoppedEv=(\d+) clean=([01]))", timeout=90)
+    ms = server.expect(
+        r"\[SERVER\] StopRace (not supported|result races=(\d+) startOk=(\d+) stopOk=(\d+) "
+        r"stoppedEv=(\d+) clean=([01]))",
+        timeout=90,
+    )
     server.expect_exact("[SERVER] Phase13 bcast_stop_race done", timeout=30)
     client.expect_exact("[CLIENT] Phase13 bcast_stop_race done", timeout=30)
     if b"not supported" in ms.group(0):
@@ -695,7 +804,11 @@ def _phase_cap_bc_interleave(server, client):
     no stuck state, and one clean broadcast still runs afterward.
     Server-side stress; the client only observes.
     """
-    ms = server.expect(r"\[SERVER\] CapBC (not supported|result rounds=(\d+) startOk=(\d+) stopOk=(\d+) stoppedEv=(\d+) reads=(\d+) clean=([01]))", timeout=90)
+    ms = server.expect(
+        r"\[SERVER\] CapBC (not supported|result rounds=(\d+) startOk=(\d+) stopOk=(\d+) "
+        r"stoppedEv=(\d+) reads=(\d+) clean=([01]))",
+        timeout=90,
+    )
     server.expect_exact("[SERVER] Phase14 cap_bc_interleave done", timeout=30)
     client.expect_exact("[CLIENT] Phase14 cap_bc_interleave done", timeout=30)
     if b"not supported" in ms.group(0):
@@ -722,7 +835,11 @@ def _phase_start_retry(server, client):
     TBS provider rejection, and the end() contract (Busy from a stack
     callback, safe double-end with begin() recovery).
     """
-    ms = server.expect(r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+) pacs=(-?\d)(-?\d) tbslong=(-?\d+) endtwice=(-?\d+) endfromcb=(-?\d+) endrebegin=(-?\d+))", timeout=180)
+    ms = server.expect(
+        r"\[SERVER\] StartRetry (not supported|first=(-?\d+) retry=(-?\d+) recovered=(\d+) pacs=(-?\d)(-?\d) "
+        r"tbslong=(-?\d+) endtwice=(-?\d+) endfromcb=(-?\d+) endrebegin=(-?\d+))",
+        timeout=180,
+    )
     server.expect_exact("[SERVER] Phase15 start_retry_refused done", timeout=30)
     client.expect_exact("[CLIENT] Phase15 start_retry_refused done", timeout=30)
     if b"not supported" in ms.group(0):
@@ -896,7 +1013,9 @@ def test_ble_audio(dut, ci_job_id, record_property):
         try:
             result = fn(*args)
             if num in SKIP_REASONS and not result:
-                assert not audio_required, f"esp32s31 validation must execute phase {num} ({label}); skip-green is forbidden"
+                assert (
+                    not audio_required
+                ), f"esp32s31 validation must execute phase {num} ({label}); skip-green is forbidden"
                 record_property(f"phase_{label}", f"SKIP: {SKIP_REASONS[num]}")
                 LOGGER.info("SKIPPED: phase %d (%s)", num, label)
             else:

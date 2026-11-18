@@ -60,14 +60,14 @@ struct BLEClient::Impl : BLEClientImplCommon {
   std::atomic<bool> secAuthenticated{false};
   std::atomic<bool> secBonded{false};
 
-  BLESync regSync{"regSync"};              // For blocking GATTC app registration
+  BLESync regSync{"regSync"};  // For blocking GATTC app registration
   // Bluedroid BTA runs its own GATT auto-discovery on uncached (re)connects
   // (DIS_SRVC_CMPL_EVT), racing our MTU exchange and service search. The sync
   // below serializes them: armed (take + done=false) before enh_open, signaled
   // by DIS_SRVC_CMPL_EVT. Cached reconnects skip the wait (see the
   // get_attr_count cache probe). Best effort with a 2 s budget — see DESIGN.md.
-  BLESync autoDiscSync{"autoDiscSync"};    // Waits for Bluedroid BTA auto-discovery (DIS_SRVC_CMPL_EVT) when uncached
-  std::atomic<bool> autoDiscDone{true};    // True when BTA already held a server cache at OPEN_EVT or auto-discovery finished
+  BLESync autoDiscSync{"autoDiscSync"};  // Waits for Bluedroid BTA auto-discovery (DIS_SRVC_CMPL_EVT) when uncached
+  std::atomic<bool> autoDiscDone{true};  // True when BTA already held a server cache at OPEN_EVT or auto-discovery finished
   // Only one GATT read/write can be in-flight per client at a time because
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync{"readSync"};

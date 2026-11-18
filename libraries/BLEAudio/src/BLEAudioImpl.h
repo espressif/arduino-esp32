@@ -52,14 +52,14 @@ struct BLEAudioImplCommon {
   using EventHandler = std::function<void(const ble_audio_evt_t &)>;
   using LinkCallback = std::function<void(uint16_t connHandle)>;
 
-  BLESharedMutex mtx;                                  ///< Protects handlers and link callbacks.
-  std::atomic<uint32_t> presentationDelayUs{40000};    ///< Default for new roles (setPresentationDelay()).
-  std::atomic<bool> autoSecurity{true};                 ///< begin() installs the default audio policy unless disabled.
-  LinkCallback onLinkReadyCb;                          ///< Application onLinkReady().
-  LinkCallback onDisconnectedCb;                       ///< Application onDisconnected().
-  std::atomic<bool> active{false};                     ///< begin() succeeded, end() not called.
-  std::atomic<bool> started{false};                    ///< begin() committed the roles and GATT.
-  std::atomic<bool> beginFailed{false};                ///< begin() failed midway; end() + begin() required.
+  BLESharedMutex mtx;                                ///< Protects handlers and link callbacks.
+  std::atomic<uint32_t> presentationDelayUs{40000};  ///< Default for new roles (setPresentationDelay()).
+  std::atomic<bool> autoSecurity{true};              ///< begin() installs the default audio policy unless disabled.
+  LinkCallback onLinkReadyCb;                        ///< Application onLinkReady().
+  LinkCallback onDisconnectedCb;                     ///< Application onDisconnected().
+  std::atomic<bool> active{false};                   ///< begin() succeeded, end() not called.
+  std::atomic<bool> started{false};                  ///< begin() committed the roles and GATT.
+  std::atomic<bool> beginFailed{false};              ///< begin() failed midway; end() + begin() required.
 
   std::vector<std::function<BTStatus()>> roleApplies;
   std::vector<std::shared_ptr<void>> roles;
@@ -90,9 +90,7 @@ struct BLEAudioImplCommon {
    * post-start creation do not fit the shared shape.
    */
   template<typename Handle, typename AudioImpl, typename ApplyFn>
-  static Handle createStagedRole(
-    const std::shared_ptr<AudioImpl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply
-  ) {
+  static Handle createStagedRole(const std::shared_ptr<AudioImpl> &audio, const char *factoryName, ble_audio_evt_group_t group, ApplyFn &&apply) {
     if (!audio || !audio->active || audio->started) {
       log_e("%s(): create before audio.begin() commits", factoryName);
       return Handle();

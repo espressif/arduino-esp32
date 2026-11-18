@@ -29,8 +29,8 @@
 #if BLE_ISO_BROADCASTER_SUPPORTED && BLE_PERIODIC_ADV_TX_SUPPORTED
 
 static const char *DEVICE_NAME = "ISO BIG Broadcaster";
-static const uint8_t ADV_INSTANCE = 0;  // advertising set that carries the BIG
-static const uint8_t ADV_SID = 1;       // receivers sync to this SID
+static const uint8_t ADV_INSTANCE = 0;   // advertising set that carries the BIG
+static const uint8_t ADV_SID = 1;        // receivers sync to this SID
 static const char *BROADCAST_CODE = "";  // up to 16 characters. empty = unencrypted
 static const uint16_t SDU_SIZE = 8;
 
@@ -92,7 +92,7 @@ void setup() {
   qos.latencyMs = 10;
   qos.sduSize = SDU_SIZE;
   qos.phy = BLEIso::Phy::Phy2M;
-  qos.rtn = 2;                // each SDU is sent up to 3 times
+  qos.rtn = 2;  // each SDU is sent up to 3 times
   qos.broadcastCode = BROADCAST_CODE;
   bis = iso.createBig(ADV_INSTANCE, qos);
   if (!bis) {

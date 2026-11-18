@@ -886,5 +886,4 @@ BLESecurity BLEClass::getSecurity() {
 }
 #endif
 
-
 #endif /* BLE_NIMBLE */

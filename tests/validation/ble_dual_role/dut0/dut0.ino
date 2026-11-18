@@ -177,9 +177,7 @@ void setup() {
   BTAddress lookupAddr = (reverseConns > 0) ? reverseInfo.getAddress() : peerAddr;
   std::vector<BLEConnInfo> conns = BLE.getConnections(lookupAddr);
   bool lookupCentral = !conns.empty() && conns[0].isCentral();
-  Serial.printf(
-    "[DUT0] Lookup stack=%s conns=%u reverseConns=%d central=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns, (int)lookupCentral
-  );
+  Serial.printf("[DUT0] Lookup stack=%s conns=%u reverseConns=%d central=%d\n", BLE.getStackName(), (unsigned)conns.size(), reverseConns, (int)lookupCentral);
 
   // The lookup above sampled while DUT1 holds the reverse links open (it only
   // tears them down after the harness sends REVERSE_GO), so the sample cannot

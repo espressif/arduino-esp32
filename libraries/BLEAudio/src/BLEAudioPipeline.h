@@ -45,8 +45,8 @@
 #include "BLEAudioStream.h"
 #include "BLEAudioStreamImpl.h"
 
-static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;   ///< Codec task stack (bytes); LC3 state lives on the heap.
-static constexpr UBaseType_t BLE_AUDIO_CODEC_PRIO = 15;   ///< Above the Arduino loop, below the BT host tasks.
+static constexpr uint32_t BLE_AUDIO_CODEC_STACK = 4096;  ///< Codec task stack (bytes); LC3 state lives on the heap.
+static constexpr UBaseType_t BLE_AUDIO_CODEC_PRIO = 15;  ///< Above the Arduino loop, below the BT host tasks.
 
 /** @brief Internal I2S pin/port map used by BLEAudioI2SPort. */
 struct BLEAudioI2SConfig {
@@ -184,8 +184,8 @@ struct BLEAudioDataPath {
   BLEAudioStream streams[2];
   BLEAudioStream::Direction dir = BLEAudioStream::Direction::Unknown;  ///< Expected stream direction.
   Port ports[2] = {{this, 0}, {this, 1}};
-  BLEAudioStreamTap taps[2];                ///< Installed on `streams` by pointer; only rewritten while detached.
-  uint8_t count = 0;                        ///< Attached streams (0-2).
+  BLEAudioStreamTap taps[2];  ///< Installed on `streams` by pointer; only rewritten while detached.
+  uint8_t count = 0;          ///< Attached streams (0-2).
   BLEAudioTapGate gate;
   std::atomic<TaskHandle_t> task{nullptr};  ///< Codec task, null when not running.
   std::atomic<bool> quit{false};            ///< Set by stop(); the task body must return.
@@ -289,8 +289,7 @@ struct BLEAudioDataPath {
     return BTStatus::OK;
   }
 
-  template<typename Impl>
-  static void endHandle(std::shared_ptr<Impl> &impl, const char *roleName) {
+  template<typename Impl> static void endHandle(std::shared_ptr<Impl> &impl, const char *roleName) {
     if (!impl) {
       return;
     }

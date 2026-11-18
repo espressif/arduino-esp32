@@ -170,9 +170,9 @@ BLEAudioMediaPlayer BLEAudio::createMediaPlayer() {
   if (ensureActive() != BTStatus::OK) {
     return BLEAudioMediaPlayer();  // begin() already logged the cause
   }
-  return BLEAudioImplCommon::createStagedRole<BLEAudioMediaPlayer>(
-    _impl, "createMediaPlayer", BLE_AUDIO_GRP_MCP_SERVER, [](BLEAudioMediaPlayer::Impl &s) { return s.apply(); }
-  );
+  return BLEAudioImplCommon::createStagedRole<BLEAudioMediaPlayer>(_impl, "createMediaPlayer", BLE_AUDIO_GRP_MCP_SERVER, [](BLEAudioMediaPlayer::Impl &s) {
+    return s.apply();
+  });
 }
 #endif
 
@@ -242,7 +242,8 @@ struct BLEAudioMediaController::Impl {
         }
         break;
       case BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME:
-      case BLE_AUDIO_EVT_MCP_CLI_TRACK_TITLE: {
+      case BLE_AUDIO_EVT_MCP_CLI_TRACK_TITLE:
+      {
         const TextCallback cb = bleAudioCopyCallback(*this, e.type == BLE_AUDIO_EVT_MCP_CLI_PLAYER_NAME ? &Impl::onPlayerNameCb : &Impl::onTrackTitleCb);
         if (!e.err && e.data && cb) {
           cb(String(static_cast<const char *>(e.data)));
@@ -362,7 +363,10 @@ BLEAudioMediaController BLEAudio::createMediaController() {
     return BLEAudioMediaController();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMediaController>(
-    _impl, "createMediaController", BLE_AUDIO_GRP_MCP_CLIENT, [](BLEAudioMediaController::Impl &) { return bleAudioStatus(bleAudioMcpCliInit()); }
+    _impl, "createMediaController", BLE_AUDIO_GRP_MCP_CLIENT,
+    [](BLEAudioMediaController::Impl &) {
+      return bleAudioStatus(bleAudioMcpCliInit());
+    }
   );
 }
 #endif

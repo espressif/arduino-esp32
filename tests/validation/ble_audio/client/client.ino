@@ -25,6 +25,10 @@ volatile int currentPhase = 0;
 // ISO transport state — written from the ISO host task, read from the phase code.
 volatile bool isoCisClientConnected = false;
 volatile uint32_t isoCisClientRxCount = 0;  // SDUs on the Peripheral-to-Central direction
+// Phase 2 shared-host handover: a CIS created while the LE Audio engine owns
+// the ISO host, and the CIS created after that engine released it.
+volatile bool isoCisSharedConnected = false;
+volatile bool isoCisRehandoverConnected = false;
 volatile bool isoBisClientSynced = false;
 volatile uint32_t isoBisRxCount = 0;
 
@@ -286,8 +290,7 @@ void setup() {
       BLEClient callbackClient = BLE.createClient();
       if (callbackClient.connect(addr)) {
         BLERemoteService svc = callbackClient.getService(BLEUUID("a10c0001-0000-1000-8000-00805f9b34fb"));
-        BLERemoteCharacteristic chr =
-          svc ? svc.getCharacteristic(BLEUUID("a10c0002-0000-1000-8000-00805f9b34fb")) : BLERemoteCharacteristic();
+        BLERemoteCharacteristic chr = svc ? svc.getCharacteristic(BLEUUID("a10c0002-0000-1000-8000-00805f9b34fb")) : BLERemoteCharacteristic();
         if (chr) {
           requested = true;
           (void)chr.readValue();
@@ -315,8 +318,13 @@ void setup() {
   // ===== Phase 2: ISO CIS transport integrity (client = CIS Central) =====
   // Scans for the server, opens the ACL, brings up the BLEIso transport,
   // creates the CIG + bidirectional CIS on that link, streams transparent SDUs
-  // the server counts and counts the SDUs the server streams back. Self-skips when host ISO is not compiled in, so it only truly runs
-  // on a dual-ISO (esp32s31<->esp32s31) bench. Restores a normal stack after.
+  // the server counts and counts the SDUs the server streams back. Then repeats
+  // the transport on the ISO host the LE Audio engine owns, releases that host
+  // with the CIG still allocated, and brings up one more CIS on the host it
+  // re-claims (a group handle surviving the release would break that last
+  // connectCis()). Self-skips when host ISO is not compiled in, so it only
+  // truly runs on a dual-ISO (esp32s31<->esp32s31) bench. Restores a normal
+  // stack after.
   waitForPhase(2);
 #if BLE_ISO_SUPPORTED
   {
@@ -327,14 +335,16 @@ void setup() {
     isoCisClientRxCount = 0;
     BTStatus st = BLE.begin("BLE_CLT_ISO");
     uint32_t sent = 0;
+    BTAddress addr;
+    bool found = false;
+    BLEIso::CisParams params;    // 120 B SDU, 10 ms, 2M PHY
+    params.returnSduSize = 120;  // bidirectional: must match the server
     iso = BLE.getIsoController();
     if (st) {
       BLEScan scn = BLE.getScan();
       scn.resetCallbacks();
       scn.clearResults();
       scn.setActiveScan(true);
-      BTAddress addr;
-      bool found = false;
       unsigned long sdl = millis() + 15000;
       while (!found && millis() < sdl) {
         BLEScan::Results res = scn.startBlocking(3000);
@@ -357,8 +367,6 @@ void setup() {
         BLEClient client = BLE.createClient();
         BTStatus cs = client.connect(addr);
         if (cs) {
-          BLEIso::CisParams params;
-          params.returnSduSize = 120;  // bidirectional: must match the server
           BLEIso::Channel cis = iso.connectCis(client.getHandle(), params);
           if (cis) {
             cis.onConnected([](BLEIso::Channel &) {
@@ -406,8 +414,116 @@ void setup() {
     BTStatus isoRetry = restore ? iso.begin() : BTStatus::Fail;
     bool isoLifecycle = isoCoreEnded && restore && isoRetry;
     iso.end();
+    Serial.printf("[CLIENT] IsoCis teardown coreEnded=%d restore=%d retry=%d\n", isoCoreEnded ? 1 : 0, restore ? 1 : 0, isoRetry ? 1 : 0);
+
+    // Shared-host handover: the LE Audio engine owns the ISO host, a raw BLEIso
+    // CIG is created on top of it, and the engine then releases the host while
+    // that group is still allocated. resetState() must drop the group handle on
+    // that release: one retained across it would make the next connectCis()
+    // terminate the CIG the released host already freed.
+    int sharedHost = 0, sharedCis = 0, sharedSdu = 0, groupDrop = 0, hostBusy = 0, rehandover = 0;
+#if BLE_AUDIO_SUPPORTED
+    if (found) {
+      BLEAudio audio = BLE.getAudioController();
+      if (audio.begin()) {
+        sharedHost = 1;
+        iso = BLE.getIsoController();
+        if (iso.begin()) {  // shared: the audio engine already owns the host
+          BLEClient sharedClient = BLE.createClient();
+          // The peer only advertises while the previous link is down, so a
+          // failure here is transient right after a phase transition. Retry on
+          // the same client: each createClient() registers a new one.
+          BTStatus sharedCc = sharedClient.connect(addr);
+          for (int attempt = 0; attempt < 3 && !sharedCc; attempt++) {
+            delay(500);
+            sharedCc = sharedClient.connect(addr);
+          }
+          if (sharedCc) {
+            BLEIso::Channel sharedCisCh = iso.connectCis(sharedClient.getHandle(), params);
+            if (sharedCisCh) {
+              sharedCisCh.onConnected([](BLEIso::Channel &) {
+                syncPhaseFromHost();
+                isoCisSharedConnected = true;
+              });
+              sharedCisCh.onReceive([](BLEIso::Channel &, const BLEIso::SduInfo &info, const uint8_t *, uint16_t) {
+                if (info.valid) {
+                  isoCisClientRxCount = isoCisClientRxCount + 1;
+                }
+              });
+              unsigned long shdl = millis() + 15000;
+              while (!isoCisSharedConnected && millis() < shdl) {
+                delay(50);
+              }
+              if (isoCisSharedConnected) {
+                sharedCis = 1;
+                uint8_t sharedSduData[120];
+                for (int i = 0; i < 100 && isoCisSharedConnected; i++) {
+                  memset(sharedSduData, (uint8_t)i, sizeof(sharedSduData));
+                  if (sharedCisCh.send(sharedSduData, sizeof(sharedSduData))) {
+                    sharedSdu++;
+                  }
+                  delay(10);
+                }
+              }
+              // Drop the CIS but leave the CIG allocated, then release the
+              // audio-owned host. On this IDF that release is refused while a
+              // CIG slot is still allocated (bt_le_iso_report_busy() counts
+              // them), so the group handle is state that perforce outlives the
+              // host it points into.
+              sharedCisCh.disconnect();
+            }
+            hostBusy = audio.end() ? 0 : 1;  // 1: refused, the CIG is still allocated
+          } else {
+            hostBusy = audio.end() ? 0 : 1;
+          }
+          groupDrop = iso.end() ? 1 : 0;  // drops the CIG, keeps the audio host up
+          // Release the ACL before the audio host goes down: the server stops
+          // advertising while a link is up, and the re-handover stage below
+          // needs a connectable peer.
+          sharedClient.disconnect();
+          if (hostBusy) {
+            (void)audio.end();  // now idle: the group above is gone
+          }
+        } else {
+          (void)audio.end();
+        }
+        // The next connectCis() must mint a fresh CIG instead of terminating a
+        // group the released host left behind. Fails with an empty handle when
+        // a stale handle survived the release.
+        BTStatus reBegin = iso.begin();  // this transport owns the host again
+        if (reBegin) {
+          BLEClient reClient = BLE.createClient();
+          BTStatus reCc = reClient.connect(addr);
+          for (int attempt = 0; attempt < 3 && !reCc; attempt++) {
+            delay(500);
+            reCc = reClient.connect(addr);
+          }
+          if (reCc) {
+            BLEIso::Channel reCis = iso.connectCis(reClient.getHandle(), params);
+            if (reCis) {
+              reCis.onConnected([](BLEIso::Channel &) {
+                syncPhaseFromHost();
+                isoCisRehandoverConnected = true;
+              });
+              unsigned long rhdl = millis() + 15000;
+              while (!isoCisRehandoverConnected && millis() < rhdl) {
+                delay(50);
+              }
+              rehandover = isoCisRehandoverConnected ? 1 : 0;
+              reCis.disconnect();
+            } else {
+              Serial.println("[CLIENT] IsoCis re-handover connect FAILED");
+            }
+            reClient.disconnect();
+          }
+        }
+        iso.end();
+      }
+    }
+#endif
     Serial.printf(
-      "[CLIENT] IsoCis teardown coreEnded=%d restore=%d retry=%d\n", isoCoreEnded ? 1 : 0, restore ? 1 : 0, isoRetry ? 1 : 0
+      "[CLIENT] IsoCis sharedhost=%d sharedcis=%d sharedsdu=%d groupdrop=%d hostbusy=%d rehandover=%d\n", sharedHost, sharedCis, sharedSdu, groupDrop, hostBusy,
+      rehandover
     );
     Serial.printf(
       "[CLIENT] IsoCis result connected=%d sent=%lu received=%lu lifecycle=%d\n", (int)isoCisClientConnected, (unsigned long)sent,
@@ -514,7 +630,7 @@ void setup() {
           audioLinkDown = true;
         });
         BLEAudioUnicastClient uc = audio.createUnicastClient();
-                uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         uc.setSinkStreams(1);
         // PACS discovery: the server's sink PAC must cover the preset we configure.
         uc.onDiscovered([](const BLEAudioUnicastPeerInfo &peer) {
@@ -654,9 +770,10 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d restarted=%d resent=%lu target=%d other=%d\n",
-                    (int)everStreamed, (unsigned long)sent, (int)bapPresetPublished, restarted, (unsigned long)restartSent, targetAccept,
-                    otherReject);
+      Serial.printf(
+        "[CLIENT] BapUnicast result streaming=%d sent=%lu presets=%d restarted=%d resent=%lu target=%d other=%d\n", (int)everStreamed, (unsigned long)sent,
+        (int)bapPresetPublished, restarted, (unsigned long)restartSent, targetAccept, otherReject
+      );
     }
     BLE.end(false);
     delay(500);
@@ -752,7 +869,7 @@ void setup() {
           volatile bool presetDisc = false;
           volatile bool presetOk = false;
           bool stallPrinted = false, presetPrinted = false;
-                    uc.setPreset(wantPreset);
+          uc.setPreset(wantPreset);
           uc.setSinkStreams(1);
           uc.onDiscovered([wantPreset, &presetDisc, &presetOk](const BLEAudioUnicastPeerInfo &peer) {
             presetDisc = true;
@@ -858,7 +975,9 @@ void setup() {
         if (lc3Round == 0) {
           Serial.printf("[CLIENT] LC3Loopback result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
         } else {
-          Serial.printf("[CLIENT] LC3Loopback44 result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors);
+          Serial.printf(
+            "[CLIENT] LC3Loopback44 result streaming=%d sent=%lu errors=%lu\n", (int)everStreamed, (unsigned long)encSent, (unsigned long)encErrors
+          );
         }
       }
     }  // end LC3 rounds
@@ -1044,8 +1163,10 @@ void setup() {
                 delay(1500);
                 int vcpQuiet = (vcpTerms == vcpFirst) ? 1 : 0;
                 int micQuiet = (micTerms == micFirst) ? 1 : 0;
-                Serial.printf("[CLIENT] AsyncError result vcpQ=%d micQ=%d vcpTerms=%d vcpNotConn=%d micTerms=%d micNotConn=%d quiet=%d%d\n",
-                              vcpQ, micQ, vcpTerms, vcpNotConn, micTerms, micNotConn, vcpQuiet, micQuiet);
+                Serial.printf(
+                  "[CLIENT] AsyncError result vcpQ=%d micQ=%d vcpTerms=%d vcpNotConn=%d micTerms=%d micNotConn=%d quiet=%d%d\n", vcpQ, micQ, vcpTerms,
+                  vcpNotConn, micTerms, micNotConn, vcpQuiet, micQuiet
+                );
               }
               delay(200);
             } else {
@@ -1132,8 +1253,7 @@ void setup() {
 
         // Pre-start guard: TMAP/GMAP discover() before audio.begin() must fail
         // with InvalidState.
-        bool preStartGuarded =
-          tmap.discover(0) == BTStatus::InvalidState && gmap.discover(0) == BTStatus::InvalidState;
+        bool preStartGuarded = tmap.discover(0) == BTStatus::InvalidState && gmap.discover(0) == BTStatus::InvalidState;
 
         uint16_t h = 0xFFFF;
         if (preStartGuarded && audio.begin()) {
@@ -1217,31 +1337,31 @@ void setup() {
         BLEAudioGmap gmap2 = audio.createGmap();  // lazy init
         volatile bool gmapDone2 = false;
         gmap2.onDiscovered([&gmapDone2, &gmapRoles2, &gmapUgt2](uint16_t, BTStatus s2, BLEAudioGmapRole roles, const BLEAudioGmapFeatures &f) {
-            gmapRoles2 = s2 ? (int)(uint8_t)roles : -1;
-            gmapUgt2 = s2 ? f.unicastTerminal : -1;
-            gmapDone2 = true;
+          gmapRoles2 = s2 ? (int)(uint8_t)roles : -1;
+          gmapUgt2 = s2 ? f.unicastTerminal : -1;
+          gmapDone2 = true;
         });
 #if SET_CONTROL_TEST
         BLEAudioCoordinatedSetCoordinator csip2 = audio.createCoordinatedSetCoordinator();
         volatile bool csipDone2 = false;
         csip2.onDiscovered([&csipDone2, &csipSize2](BTStatus s2, const BLEAudioCoordinatedSetInfo &info) {
-            csipSize2 = s2 ? info.setSize : -1;
-            csipDone2 = true;
+          csipSize2 = s2 ? info.setSize : -1;
+          csipDone2 = true;
         });
         BLEAudioCapCommander commander2 = audio.createCapCommander();
         volatile bool cmdDisc2 = false, cmdDone2 = false;
         commander2.onDiscovered([&cmdDisc2](BTStatus s2, uint16_t, bool, bool) {
-            cmdDisc2 = (bool)s2;
+          cmdDisc2 = (bool)s2;
         });
         commander2.onResult([&cmdDone2, &cmdVolume2](BLEAudioCapCommander::Operation op, BTStatus s2) {
-            if (op == BLEAudioCapCommander::Operation::Volume) {
-              cmdVolume2 = s2 ? 1 : 0;
-              cmdDone2 = true;
-            }
+          if (op == BLEAudioCapCommander::Operation::Volume) {
+            cmdVolume2 = s2 ? 1 : 0;
+            cmdDone2 = true;
+          }
         });
 #endif
         audio.onLinkReady([](uint16_t conn) {
-            audioLinkConn = conn;
+          audioLinkConn = conn;
         });
         BTStatus rb2 = audio.begin();  // commit (lazy init ran at creation)
         Serial.printf("[CLIENT] TopProfiles reinit begin=%s initialized=%d\n", rb2.toString(), (int)BLE.isInitialized());
@@ -1400,47 +1520,47 @@ void setup() {
         BLEAudioHearingAidController hac2 = audio.createHearingAidController();  // lazy init
         volatile bool discDone2 = false;
         hac2.onDiscovered([&discDone2, &discOk2](BTStatus s2, BLEHearingAidType type) {
-            (void)type;
-            discOk2 = s2 ? 1 : 0;
-            discDone2 = true;
+          (void)type;
+          discOk2 = s2 ? 1 : 0;
+          discDone2 = true;
         });
         hac2.onPreset([&readCount2, &presetsDone2](uint8_t index, bool available, const String &name, bool isLast) {
-            (void)index;
-            (void)available;
-            (void)name;
-            readCount2 = readCount2 + 1;
-            if (isLast) {
-              presetsDone2 = true;
-            }
+          (void)index;
+          (void)available;
+          (void)name;
+          readCount2 = readCount2 + 1;
+          if (isLast) {
+            presetsDone2 = true;
+          }
         });
         audio.onLinkReady([](uint16_t conn) {
-            audioLinkConn = conn;
+          audioLinkConn = conn;
         });
         BTStatus haRb2 = audio.begin();  // commit
-          Serial.printf("[CLIENT] HearingAid reinit begin=%s\n", haRb2.toString());
-          if (haRb2) {
-            uint16_t h2 = 0xFFFF;
-            for (int att = 0; att < 4 && h2 == 0xFFFF; att++) {
-              BTAddress addr2;
-              if (findTarget(addr2)) {
-                h2 = audioConnect(audio, addr2);
-              }
+        Serial.printf("[CLIENT] HearingAid reinit begin=%s\n", haRb2.toString());
+        if (haRb2) {
+          uint16_t h2 = 0xFFFF;
+          for (int att = 0; att < 4 && h2 == 0xFFFF; att++) {
+            BTAddress addr2;
+            if (findTarget(addr2)) {
+              h2 = audioConnect(audio, addr2);
             }
-            Serial.printf("[CLIENT] HearingAid reinit link=%u (0 is a valid handle)\n", (unsigned)h2);
-            if (h2 != 0xFFFF) {
-              hac2.discover(h2);
-              for (int i = 0; i < 60 && !discDone2; i++) {
+          }
+          Serial.printf("[CLIENT] HearingAid reinit link=%u (0 is a valid handle)\n", (unsigned)h2);
+          if (h2 != 0xFFFF) {
+            hac2.discover(h2);
+            for (int i = 0; i < 60 && !discDone2; i++) {
+              delay(50);
+            }
+            if (discOk2) {
+              hac2.readPresets(1, 255);
+              for (int i = 0; i < 60 && !presetsDone2; i++) {
                 delay(50);
-              }
-              if (discOk2) {
-                hac2.readPresets(1, 255);
-                for (int i = 0; i < 60 && !presetsDone2; i++) {
-                  delay(50);
-                }
               }
             }
           }
-          audio.end();
+        }
+        audio.end();
         Serial.printf("[CLIENT] HearingAid reinit disc=%d read=%d\n", discOk2, readCount2);
       }
     }
@@ -1477,7 +1597,7 @@ void setup() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-                sink.setStreams(2);
+        sink.setStreams(2);
         sink.setLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
         sink.setTargetName(targetName);
         sink.setBroadcastCode("ArduinoStereo");  // must match the server's STEREO_BROADCAST_CODE
@@ -1516,8 +1636,10 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] Stereo result left=%lu right=%lu mismatched=%lu cb=%lu cleared=%d\n", (unsigned long)rx[0],
-                    (unsigned long)(rx[1] + stressRxRight), (unsigned long)(mismatched + stressMismatch), (unsigned long)stressChurnHits, cbCleared);
+      Serial.printf(
+        "[CLIENT] Stereo result left=%lu right=%lu mismatched=%lu cb=%lu cleared=%d\n", (unsigned long)rx[0], (unsigned long)(rx[1] + stressRxRight),
+        (unsigned long)(mismatched + stressMismatch), (unsigned long)stressChurnHits, cbCleared
+      );
     }
     BLE.end(false);
     delay(500);
@@ -1564,7 +1686,7 @@ void setup() {
         ba.onResult([&](BLEAudioBroadcastAssistant::Op op, BTStatus s2) {
           int ok = s2 ? 1 : 0;
           switch (op) {
-            case BLEAudioBroadcastAssistant::Op::ScanStart:    scanStart = ok; break;
+            case BLEAudioBroadcastAssistant::Op::ScanStart: scanStart = ok; break;
             case BLEAudioBroadcastAssistant::Op::ScanStop:
               scanStop = ok;
               scanStopCount = scanStopCount + 1;
@@ -1671,9 +1793,10 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] BroadcastAssistant result disc=%d states=%d scan=%d added=%d state=%d removed=%d gone=%d stops=%d stopfail=%d again=%d\n",
-                    discOk, states, (scanStart && scanStop) ? 1 : 0, addOk, addedId >= 0 ? 1 : 0, removeOk, removedSeen ? 1 : 0, scanStopCount,
-                    scanStopFail, scanAgain);
+      Serial.printf(
+        "[CLIENT] BroadcastAssistant result disc=%d states=%d scan=%d added=%d state=%d removed=%d gone=%d stops=%d stopfail=%d again=%d\n", discOk, states,
+        (scanStart && scanStop) ? 1 : 0, addOk, addedId >= 0 ? 1 : 0, removeOk, removedSeen ? 1 : 0, scanStopCount, scanStopFail, scanAgain
+      );
     }
     BLE.end(false);
     delay(500);
@@ -1708,7 +1831,7 @@ void setup() {
           audioLinkConn = conn;
         });
         BLEAudioCapInitiator initiator = audio.createCapInitiator();
-                initiator.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        initiator.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
         initiator.setBroadcastName("BLE_CLT_HO");
         initiator.onDiscovered([&](BTStatus s2, const BLEAudioCapPeerInfo &peer) {
           discOk = (s2 && peer.sinkEndpoints > 0) ? 1 : 0;
@@ -1831,9 +1954,11 @@ void setup() {
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu badho=%d badafter=%d ucstopped=%d ucrc=%d bcrc=%d hofail=%d horestart=%d\n",
-                    discOk, ucOk, hoOk, (unsigned long)ucSent, (unsigned long)bcSent, badHoFailed, badHoUcAlive, ucStopped,
-                    ucStopRc, bcStopRc, hoFailRecovered, hoRestart);
+      Serial.printf(
+        "[CLIENT] CapHandover result disc=%d unicast=%d handover=%d ucsent=%lu bcsent=%lu badho=%d badafter=%d ucstopped=%d ucrc=%d bcrc=%d hofail=%d "
+        "horestart=%d\n",
+        discOk, ucOk, hoOk, (unsigned long)ucSent, (unsigned long)bcSent, badHoFailed, badHoUcAlive, ucStopped, ucStopRc, bcStopRc, hoFailRecovered, hoRestart
+      );
     }
     BLE.end(false);
     delay(500);
@@ -1911,14 +2036,12 @@ void setup() {
                 }
                 noresult = resultFired ? 0 : 1;
               }
-
             }
           }
         }
         audio.end();
       }
-      Serial.printf("[CLIENT] MicDisable disabled=%d unmuteRc=%d noresult=%d sawFalse=%d\n", disabled, unmuteRc,
-                    noresult, sawFalse);
+      Serial.printf("[CLIENT] MicDisable disabled=%d unmuteRc=%d noresult=%d sawFalse=%d\n", disabled, unmuteRc, noresult, sawFalse);
       BLE.end(false);
       delay(500);
       (void)BLE.begin("BLE_CLT");

@@ -21,8 +21,8 @@ echo "=== pytest ble_audio_host ==="
 # Invoke via the venv python — the pytest console script shebang may still
 # point at a relocated tree (this venv was created under ~/arduino-esp32).
 exec "$VENV/python" -m pytest -s \
-  "$HOST_DIR/test_ble_audio_host.py" \
-  --build-dir "$BUILD_DIR" \
-  --embedded-services esp,arduino \
-  --skip-autoflash y \
-  --tb=short
+    "$HOST_DIR/test_ble_audio_host.py" \
+    --build-dir "$BUILD_DIR" \
+    --embedded-services esp,arduino \
+    --skip-autoflash y \
+    --tb=short

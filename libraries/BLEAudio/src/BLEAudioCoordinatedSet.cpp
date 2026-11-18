@@ -61,7 +61,7 @@ struct BLEAudioCoordinatedSetMember::Impl {
   uint8_t setSize = 2;
   uint8_t rank = 1;
   bool lockable = true;
-  String name;  ///< Optional CSIS name (empty = none).
+  String name;         ///< Optional CSIS name (empty = none).
   BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
   LockCallback lockCb;
   SirkReadCallback sirkCb;
@@ -109,7 +109,8 @@ struct BLEAudioCoordinatedSetMember::Impl {
           cb(static_cast<const ble_audio_csis_lock_t *>(e.data)->locked, e.conn_handle);
         }
         break;
-      case BLE_AUDIO_CSIS_EVT_SIRK_REQ: {
+      case BLE_AUDIO_CSIS_EVT_SIRK_REQ:
+      {
         auto cb = bleAudioCopyCallback(*this, &Impl::sirkCb);
         if (cb) {
           *static_cast<const ble_audio_csis_sirk_req_t *>(e.data)->reply = static_cast<uint8_t>(cb(e.conn_handle));
@@ -257,9 +258,9 @@ void BLEAudioCoordinatedSetMember::resetCallbacks() {
 
 struct BLEAudioCoordinatedSetCoordinator::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
-  std::vector<uint16_t> pending;  ///< discover() called before the link's GATT discovery finished.
-  BLEAudioCoordinatedSetInfo set; ///< First discovered set (setCount 0 until then).
+  BLESharedMutex mtx;              ///< Protects this role's callbacks and shared state.
+  std::vector<uint16_t> pending;   ///< discover() called before the link's GATT discovery finished.
+  BLEAudioCoordinatedSetInfo set;  ///< First discovered set (setCount 0 until then).
   DiscoveredCallback discoveredCb;
   LockCallback lockCb;
   LockChangedCallback lockChangedCb;
@@ -281,7 +282,8 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
       case BLE_AUDIO_EVT_GATT_DISCOVERED:
-      case BLE_AUDIO_EVT_ACL_DISCONNECTED: {
+      case BLE_AUDIO_EVT_ACL_DISCONNECTED:
+      {
         bool doStart = false;
         {
           BLELockGuard lock(mtx.get());
@@ -305,7 +307,8 @@ struct BLEAudioCoordinatedSetCoordinator::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_CSIP_DISCOVERED: {
+      case BLE_AUDIO_EVT_CSIP_DISCOVERED:
+      {
         BLEAudioCoordinatedSetInfo info;
         info.connHandle = e.conn_handle;
         if (e.err == 0 && e.data) {

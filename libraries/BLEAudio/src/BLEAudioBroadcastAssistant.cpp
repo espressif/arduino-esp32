@@ -45,9 +45,9 @@
 
 struct BLEAudioBroadcastAssistant::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list); same ownership as every other role.
-  BLESharedMutex mtx;                   ///< Protects the callbacks and the state below.
-  uint16_t conn = BLE_AUDIO_CONN_NONE;  ///< The Scan Delegator being driven.
-  bool remoteScanning = false;          ///< startRemoteScan() is in effect (remote + local scan).
+  BLESharedMutex mtx;                     ///< Protects the callbacks and the state below.
+  uint16_t conn = BLE_AUDIO_CONN_NONE;    ///< The Scan Delegator being driven.
+  bool remoteScanning = false;            ///< startRemoteScan() is in effect (remote + local scan).
 
   // Subgroup count per remote source, needed to build a Modify Source.
   struct Known {
@@ -279,7 +279,7 @@ BTStatus BLEAudioBroadcastAssistant::startRemoteScan() {
   scan.setFilterDuplicates(false);
   st = scan.startExtended(0);
   if (!st) {
-    log_e("BroadcastAssistant: local extended scan failed to start (%s); remote scan cancelled", st.toString());
+    log_e("BroadcastAssistant: local extended scan failed to start (%s); remote scan canceled", st.toString());
     {
       BLELockGuard lock(_impl->mtx.get());
       _impl->remoteScanning = false;
@@ -458,15 +458,17 @@ BLEAudioBroadcastAssistant BLEAudio::createBroadcastAssistant() {
   ba->audio = _impl;
   if (_impl->started) {
     /* Created after the commit: the staged apply below would never run
-     * (start() already drained roleApplies), so initialise eagerly. The
-     * engine unit also initialises lazily on first use; both are idempotent. */
+     * (start() already drained roleApplies), so initialize eagerly. The
+     * engine unit also initializes lazily on first use; both are idempotent. */
     const BTStatus st = bleAudioStatus(bleAudioBaInit());
     if (!st) {
       log_e("createBroadcastAssistant(): engine init failed (%s)", st.toString());
       return BLEAudioBroadcastAssistant();
     }
   } else {
-    _impl->roleApplies.push_back([]() -> BTStatus { return bleAudioStatus(bleAudioBaInit()); });
+    _impl->roleApplies.push_back([]() -> BTStatus {
+      return bleAudioStatus(bleAudioBaInit());
+    });
   }
   _impl->roles.push_back(ba);
   /* `roles` owns the role until end(); a strong capture here would form a cycle. */

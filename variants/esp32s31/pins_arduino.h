@@ -84,17 +84,17 @@ static const uint8_t T13 = 19;
 
 // ESP32-S31 EV Function board pin header for SDMMC
 #define BOARD_HAS_SDMMC
-#define BOARD_SDMMC_SLOT           0
+#define BOARD_SDMMC_SLOT 0
 //#define BOARD_SDMMC_POWER_PIN      39   //Korvo board power pin
 //#define BOARD_SDMMC_POWER_ON_LEVEL LOW  //Korvo board power level
 
 // Audio codec: ES8311 on I2C, I2S and PA control
 #define BOARD_HAS_ES8311
 #define ES8311_I2C_ADDR 0x18
-#define SCL1           50
-#define SDA1           51
-#define I2S_MCLK       52
-#define I2S_SCLK       53
+#define SCL1            50
+#define SDA1            51
+#define I2S_MCLK        52
+#define I2S_SCLK        53
 // I2S_DOUT is ESP -> codec DSDIN (playback); I2S_DIN is codec ASDOUT -> ESP (capture).
 #define I2S_DOUT       56
 #define I2S_LRCK       55

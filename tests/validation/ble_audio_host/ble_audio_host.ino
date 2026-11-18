@@ -267,13 +267,13 @@ static void phaseControlGatt() {
 
   // CAP acceptor (CAS + included CSIS) — the coordination umbrella.
   BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-    cap.setSetSize(2);
+  cap.setSetSize(2);
   cap.setRank(1);
 
   // BAP unicast server (PACS/ASCS) so the host sees a full acceptor. BASS is
   // covered in its own scan_delegator phase.
   BLEAudioUnicastServer us = audio.createUnicastServer();
-    us.setSinkStreams(1);
+  us.setSinkStreams(1);
   us.setSourceStreams(1);
   us.setSinkLocation(BLEAudioLocation::Mono);
   us.setSourceLocation(BLEAudioLocation::Mono);
@@ -301,7 +301,7 @@ static void phaseControlGatt() {
 
   // CCP call server (GTBS).
   BLEAudioCallServer call = audio.createCallServer();
-    call.setProviderName("ESP Phone");
+  call.setProviderName("ESP Phone");
   call.setUci("un000");
   // GTBS answers Originate with Invalid Outgoing URI because it has no
   // telephone bearer to route the call to, so this never fires; it stays wired
@@ -318,7 +318,7 @@ static void phaseControlGatt() {
 
   // HAS hearing-aid device with a small preset list.
   BLEAudioHearingAidDevice ha = audio.createHearingAidDevice();
-    ha.setType(BLEHearingAidType::Binaural);
+  ha.setType(BLEHearingAidType::Binaural);
   ha.setPresetSync(false);
   ha.addPreset(1, "Universal");
   ha.addPreset(2, "Outdoor");
@@ -335,7 +335,7 @@ static void phaseControlGatt() {
   BLEAudioGmap gmap = audio.createGmap();
   BLEAudioGmapFeatures gf;
   gf.unicastTerminal = BLEAudioGmapFeatures::UgtSink;
-    gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
+  gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
   gmap.setFeatures(gf);
 
   if (!audio.start()) {
@@ -389,7 +389,7 @@ static void phaseBroadcastAnnouncement() {
     return;
   }
   BLEAudioBroadcastSource source = audio.createBroadcastSource();
-    source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+  source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
   source.setBroadcastId(0x123456);
   source.setName(dutName);
 
@@ -469,7 +469,7 @@ static void phaseUnicastAudio() {
   });
 
   BLEAudioUnicastServer us = audio.createUnicastServer();
-    us.setSinkStreams(1);
+  us.setSinkStreams(1);
   us.setSourceStreams(1);
   us.setSinkLocation(BLEAudioLocation::Mono);
   us.setSourceLocation(BLEAudioLocation::Mono);
@@ -564,7 +564,7 @@ static void phaseBroadcastAudio() {
   BLEAudioBroadcastSource source = audio.createBroadcastSource();
   // 48 kHz HQ matches typical Galaxy Auracast Listen; 16 kHz SQ often shows as
   // "Unknown" / ignores taps even when the announcement is visible.
-    source.setPreset(BLEAudioCodecPreset::LC3_48_4_1);
+  source.setPreset(BLEAudioCodecPreset::LC3_48_4_1);
   source.setBroadcastId(0x123456);
   source.setName(dutName);
   BLEAudioStream src = source.stream(0);
@@ -649,8 +649,12 @@ static void phaseScanDelegator() {
   bcastRxSdus = 0;
   BLEAudioBroadcastSink bsink = audio.createBroadcastSink();
   BLEAudioStream rx = bsink.stream(0);
-  rx.onStarted([](BLEAudioStream &) { bcastSinkStreaming = true; });
-  rx.onStopped([](BLEAudioStream &, uint8_t) { bcastSinkStreaming = false; });
+  rx.onStarted([](BLEAudioStream &) {
+    bcastSinkStreaming = true;
+  });
+  rx.onStopped([](BLEAudioStream &, uint8_t) {
+    bcastSinkStreaming = false;
+  });
   rx.onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
     if (info.status == BLEAudioSduInfo::Status::Valid) {
       bcastRxSdus = bcastRxSdus + 1;
@@ -671,8 +675,7 @@ static void phaseScanDelegator() {
     checkSerial();
     if (reportRequested) {
       reportRequested = false;
-      Serial.printf("[DUT] BcastSink result received=%lu streaming=%d\n", (unsigned long)bcastRxSdus,
-                    bcastSinkStreaming ? 1 : 0);
+      Serial.printf("[DUT] BcastSink result received=%lu streaming=%d\n", (unsigned long)bcastRxSdus, bcastSinkStreaming ? 1 : 0);
     }
     delay(20);
   }
@@ -759,12 +762,8 @@ static void runPhaseBody(int n) {
 #endif
       Serial.println("[DUT] Phase5 scan_delegator done");
       break;
-    case 6:
-      runMemoryReleasePhase();
-      break;
-    default:
-      Serial.printf("[DUT] Unknown phase %d\n", n);
-      break;
+    case 6:  runMemoryReleasePhase(); break;
+    default: Serial.printf("[DUT] Unknown phase %d\n", n); break;
   }
 }
 

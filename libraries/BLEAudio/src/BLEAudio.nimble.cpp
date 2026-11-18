@@ -114,8 +114,8 @@ extern "C" void bleAudioForwardHostGattEvent(struct ble_gap_event *event) {
     case BLE_GAP_EVENT_MTU:
     case BLE_GAP_EVENT_NOTIFY_RX:
     case BLE_GAP_EVENT_NOTIFY_TX:
-    case BLE_GAP_EVENT_SUBSCRIBE:  esp_ble_audio_gatt_app_post_event(static_cast<uint8_t>(event->type), event); break;
-    default:                       break;
+    case BLE_GAP_EVENT_SUBSCRIBE: esp_ble_audio_gatt_app_post_event(static_cast<uint8_t>(event->type), event); break;
+    default:                      break;
   }
 }
 
@@ -199,9 +199,7 @@ extern "C" void bleAudioHostResetGatt(void) {
 // 4. Periodic Advertising Sync Transfer (PAST) hooks & feature stubs
 // ==========================================================================
 
-extern "C" int bleAudioEngineReceivePeriodicSync(
-  uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms
-) {
+extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms) {
   (void)peer_addr_type;
   if (!peer_addr) {
     return static_cast<int>(BTStatus::InvalidParam);

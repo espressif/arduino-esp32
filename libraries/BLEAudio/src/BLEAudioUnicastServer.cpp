@@ -45,17 +45,15 @@
 // --------------------------------------------------------------------------
 
 /** Every 10 ms preset at 16/24/32/48 kHz: the rates most clients propose first. */
-static constexpr uint32_t kDefaultPresets =
-  BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_32_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_4_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_6_1);
+static constexpr uint32_t kDefaultPresets = BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
+                                            | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_32_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1)
+                                            | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_4_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_6_1);
 
 static constexpr BLEAudioContext kDefaultContexts = BLEAudioContext::Unspecified | BLEAudioContext::Conversational | BLEAudioContext::Media;
 
 /** Presets every interoperable phone offers first: 16/24/48 kHz at 10 ms. */
 static constexpr uint32_t kMediaPresets =
-  BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1);
+  BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1);
 
 // --------------------------------------------------------------------------
 // Impl
@@ -72,10 +70,10 @@ struct BLEAudioUnicastServer::Impl {
   BLEAudioContext sourceContexts = kDefaultContexts;
   BLEAudioLocation sinkLocation = BLEAudioLocation::Mono;
   BLEAudioLocation sourceLocation = BLEAudioLocation::Mono;
-  uint32_t pdMinUs = 20000;               ///< Supported presentation delay range.
-  uint32_t pdMaxUs = 0;                   ///< 0 = controller default.
-  bool applied = false;                   ///< ASCS registered; the ASE counts are frozen.
-  std::vector<BLEAudioStream> streams;    ///< One pool slot per ASE.
+  uint32_t pdMinUs = 20000;             ///< Supported presentation delay range.
+  uint32_t pdMaxUs = 0;                 ///< 0 = controller default.
+  bool applied = false;                 ///< ASCS registered; the ASE counts are frozen.
+  std::vector<BLEAudioStream> streams;  ///< One pool slot per ASE.
 
   /**
    * @brief Match the owned streams to the configured ASE count.
@@ -133,8 +131,7 @@ struct BLEAudioUnicastServer::Impl {
       return bleAudioStatus(err);
     }
     applied = true;
-    log_d("UnicastServer: registered %u sink + %u source ASEs (pd %lu-%lu us)", sinkStreams, sourceStreams, (unsigned long)pdMin,
-          (unsigned long)pdMax);
+    log_d("UnicastServer: registered %u sink + %u source ASEs (pd %lu-%lu us)", sinkStreams, sourceStreams, (unsigned long)pdMin, (unsigned long)pdMax);
     return BTStatus::OK;
   }
 };

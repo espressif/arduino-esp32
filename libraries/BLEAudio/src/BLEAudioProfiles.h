@@ -44,7 +44,7 @@ class BLEAudio;
 
 /** @brief TMAP roles (TMAP Role characteristic bits). */
 enum class BLEAudioTmapRole : uint16_t {
-  None = 0x0000,               ///< No TMAP role.
+  None = 0x0000,                    ///< No TMAP role.
   CallGateway = 0x0001,             //!< CG: places / controls calls
   CallTerminal = 0x0002,            //!< CT: the headset end of a call
   UnicastMediaSender = 0x0004,      //!< UMS
@@ -94,25 +94,25 @@ inline bool operator&(BLEAudioGmapRole a, BLEAudioGmapRole b) {
 /** @brief GMAP feature bitfields, one per role; a role's field is ignored unless the role is set. */
 struct BLEAudioGmapFeatures {
   enum : uint8_t {
-    UggMultiplex = 0x01,    ///< UGG supports multiplex.
-    Ugg96kbpsSource = 0x02, ///< UGG supports 96 kbps source.
-    UggMultisink = 0x04,    ///< UGG supports multisink.
+    UggMultiplex = 0x01,     ///< UGG supports multiplex.
+    Ugg96kbpsSource = 0x02,  ///< UGG supports 96 kbps source.
+    UggMultisink = 0x04,     ///< UGG supports multisink.
   };
   enum : uint8_t {
-    UgtSource = 0x01,      ///< UGT supports source.
-    Ugt80kbpsSource = 0x02, ///< UGT supports 80 kbps source.
-    UgtSink = 0x04,        ///< UGT supports sink.
-    Ugt64kbpsSink = 0x08,  ///< UGT supports 64 kbps sink.
-    UgtMultiplex = 0x10,   ///< UGT supports multiplex.
-    UgtMultisink = 0x20,   ///< UGT supports multisink.
-    UgtMultisource = 0x40, ///< UGT supports multisource.
+    UgtSource = 0x01,        ///< UGT supports source.
+    Ugt80kbpsSource = 0x02,  ///< UGT supports 80 kbps source.
+    UgtSink = 0x04,          ///< UGT supports sink.
+    Ugt64kbpsSink = 0x08,    ///< UGT supports 64 kbps sink.
+    UgtMultiplex = 0x10,     ///< UGT supports multiplex.
+    UgtMultisink = 0x20,     ///< UGT supports multisink.
+    UgtMultisource = 0x40,   ///< UGT supports multisource.
   };
   enum : uint8_t {
-    Bgs96kbps = 0x01, ///< BGS supports 96 kbps.
+    Bgs96kbps = 0x01,  ///< BGS supports 96 kbps.
   };
   enum : uint8_t {
-    BgrMultisink = 0x01, ///< BGR supports multisink.
-    BgrMultiplex = 0x02, ///< BGR supports multiplex.
+    BgrMultisink = 0x01,  ///< BGR supports multisink.
+    BgrMultiplex = 0x02,  ///< BGR supports multiplex.
   };
 
   uint8_t unicastGateway = 0;     //!< Ugg* bits

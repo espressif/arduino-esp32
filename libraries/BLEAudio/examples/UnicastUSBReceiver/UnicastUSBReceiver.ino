@@ -39,7 +39,7 @@ USBAudioCard uac(kUsbRateHz, UAC_BPS_16, UAC_SPK_NONE, UAC_MIC_STEREO);
 static volatile bool sinkReady = false;
 
 // USB-mic state, touched from the USB event callback.
-static volatile bool usbMicOn = false;   // PC opened the mic streaming interface
+static volatile bool usbMicOn = false;    // PC opened the mic streaming interface
 static volatile uint8_t usbVolume = 255;  // VCP volume 0..255 (255 = unity)
 static volatile bool usbMuted = false;
 
@@ -135,10 +135,14 @@ void setup() {
   }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
-  audio.onLinkReady([](uint16_t conn) { Serial.printf("Sender connected (link %u)\n", conn); });
+  audio.onLinkReady([](uint16_t conn) {
+    Serial.printf("Sender connected (link %u)\n", conn);
+  });
 
   // onDisconnected() fires when the link drops (or a connect() attempt fails).
-  audio.onDisconnected([](uint16_t conn) { Serial.printf("Sender disconnected (link %u)\n", conn); });
+  audio.onDisconnected([](uint16_t conn) {
+    Serial.printf("Sender disconnected (link %u)\n", conn);
+  });
 
   // One standalone bridge is a coordinated set of one.
   // createCapAcceptor() publishes CAS (+ included CSIS): the CAP identity of this device.
@@ -179,10 +183,14 @@ void setup() {
   unicastServer.stream(0).onConfigured(onSinkConfigured);
 
   // onStarted() fires when the CIS starts streaming. connHandle() is the ACL link it runs on.
-  unicastServer.stream(0).onStarted([](BLEAudioStream &s) { Serial.printf("Playing (link %u)\n", s.connHandle()); });
+  unicastServer.stream(0).onStarted([](BLEAudioStream &s) {
+    Serial.printf("Playing (link %u)\n", s.connHandle());
+  });
 
   // onStopped() fires when streaming ends. Reason is the HCI/ASCS code.
-  unicastServer.stream(0).onStopped([](BLEAudioStream &, uint8_t reason) { Serial.printf("Stopped (reason 0x%02X)\n", reason); });
+  unicastServer.stream(0).onStopped([](BLEAudioStream &, uint8_t reason) {
+    Serial.printf("Stopped (reason 0x%02X)\n", reason);
+  });
 
   // Let the sender change our volume. Applied as software gain in onPlayerPcm().
   // createVolumeRenderer() publishes VCS: the volume service the peer drives.

@@ -226,9 +226,10 @@ BTStatus BLEStream::beginClient(const BTAddress &address, uint32_t timeoutMs) {
   }
 
   BLEClient streamClient = active.client;
-  status = active.remoteTx.subscribe(BLESubscription::Notify, [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription) {
-    BLEStreamClientRole::onRemoteTxNotify(common, streamClient, data, len);
-  });
+  status =
+    active.remoteTx.subscribe(BLESubscription::Notify, [common, streamClient](BLERemoteCharacteristic, const uint8_t *data, size_t len, BLESubscription) {
+      BLEStreamClientRole::onRemoteTxNotify(common, streamClient, data, len);
+    });
   if (!status) {
     return BLEStreamClientRole::abortStart(*this, role, status);
   }

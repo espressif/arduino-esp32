@@ -37,19 +37,19 @@
 extern "C" {
 #endif
 
-#define BLE_AUDIO_BA_MAX_SUBGROUPS      4           /*!< Subgroups carried per source (more are dropped). */
-#define BLE_AUDIO_BA_NAME_MAX           32          /*!< Longest reported source name, without the NUL. */
-#define BLE_AUDIO_BA_CODE_SIZE          16          /*!< Broadcast Code length. */
-#define BLE_AUDIO_BA_BIS_NO_PREF        0xFFFFFFFFu /*!< bis_sync value: let the sink pick the BISes. */
+#define BLE_AUDIO_BA_MAX_SUBGROUPS       4           /*!< Subgroups carried per source (more are dropped). */
+#define BLE_AUDIO_BA_NAME_MAX            32          /*!< Longest reported source name, without the NUL. */
+#define BLE_AUDIO_BA_CODE_SIZE           16          /*!< Broadcast Code length. */
+#define BLE_AUDIO_BA_BIS_NO_PREF         0xFFFFFFFFu /*!< bis_sync value: let the sink pick the BISes. */
 #define BLE_AUDIO_BA_PA_INTERVAL_UNKNOWN 0xFFFF
-#define BLE_AUDIO_BA_SRC_ID_NONE        0xFF        /*!< ble_audio_ba_result_t::src_id when not applicable. */
+#define BLE_AUDIO_BA_SRC_ID_NONE         0xFF /*!< ble_audio_ba_result_t::src_id when not applicable. */
 
 enum {
-  BLE_AUDIO_EVT_BA_DISCOVERED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 0),     /* ble_audio_ba_discovered_t */
-  BLE_AUDIO_EVT_BA_SOURCE_FOUND = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 1),   /* ble_audio_ba_source_t */
-  BLE_AUDIO_EVT_BA_RECV_STATE = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 2),     /* ble_audio_ba_recv_state_t */
+  BLE_AUDIO_EVT_BA_DISCOVERED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 0),         /* ble_audio_ba_discovered_t */
+  BLE_AUDIO_EVT_BA_SOURCE_FOUND = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 1),       /* ble_audio_ba_source_t */
+  BLE_AUDIO_EVT_BA_RECV_STATE = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 2),         /* ble_audio_ba_recv_state_t */
   BLE_AUDIO_EVT_BA_RECV_STATE_REMOVED = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 3), /* ble_audio_ba_result_t (src_id) */
-  BLE_AUDIO_EVT_BA_RESULT = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 4),         /* ble_audio_ba_result_t; err */
+  BLE_AUDIO_EVT_BA_RESULT = BLE_AUDIO_EVT(BLE_AUDIO_GRP_BROADCAST_ASSISTANT, 4),             /* ble_audio_ba_result_t; err */
 };
 
 /** Operation completed by BLE_AUDIO_EVT_BA_RESULT. */
@@ -72,24 +72,24 @@ typedef struct {
 typedef struct {
   uint8_t addr_type;
   uint8_t addr[6];
-  uint8_t sid;          /*!< Advertising SID. */
+  uint8_t sid; /*!< Advertising SID. */
   int8_t rssi;
   uint32_t broadcast_id;
-  uint16_t pa_interval; /*!< 1.25 ms units, or BLE_AUDIO_BA_PA_INTERVAL_UNKNOWN. */
+  uint16_t pa_interval;                 /*!< 1.25 ms units, or BLE_AUDIO_BA_PA_INTERVAL_UNKNOWN. */
   char name[BLE_AUDIO_BA_NAME_MAX + 1]; /*!< Broadcast Name, else Complete Local Name, else empty. */
 } ble_audio_ba_source_t;
 
 /** One remote Receive State. */
 typedef struct {
-  uint8_t src_id;        /*!< Source_ID assigned by the remote. */
+  uint8_t src_id; /*!< Source_ID assigned by the remote. */
   uint8_t addr_type;
   uint8_t addr[6];
   uint8_t sid;
   uint32_t broadcast_id;
-  uint8_t pa_sync_state; /*!< BASS PA_Sync_State (0 not synced .. 4 no PAST). */
-  uint8_t encrypt_state; /*!< BASS BIG_Encryption (0 none, 1 code required, 2 decrypting, 3 bad code). */
-  uint8_t bad_code[BLE_AUDIO_BA_CODE_SIZE]; /*!< Valid when encrypt_state is 3. */
-  uint8_t num_subgroups; /*!< Capped at BLE_AUDIO_BA_MAX_SUBGROUPS. */
+  uint8_t pa_sync_state;                         /*!< BASS PA_Sync_State (0 not synced .. 4 no PAST). */
+  uint8_t encrypt_state;                         /*!< BASS BIG_Encryption (0 none, 1 code required, 2 decrypting, 3 bad code). */
+  uint8_t bad_code[BLE_AUDIO_BA_CODE_SIZE];      /*!< Valid when encrypt_state is 3. */
+  uint8_t num_subgroups;                         /*!< Capped at BLE_AUDIO_BA_MAX_SUBGROUPS. */
   uint32_t bis_sync[BLE_AUDIO_BA_MAX_SUBGROUPS]; /*!< BISes the sink is synced to, per subgroup. */
 } ble_audio_ba_recv_state_t;
 
@@ -105,11 +105,11 @@ typedef struct {
   uint8_t addr[6];
   uint8_t sid;
   uint32_t broadcast_id;
-  bool pa_sync;          /*!< Ask the sink to sync to the periodic advertising. */
-  uint16_t pa_interval;  /*!< Helps the sink schedule the sync; BLE_AUDIO_BA_PA_INTERVAL_UNKNOWN if not known. */
-  uint8_t num_subgroups; /*!< 1..BLE_AUDIO_BA_MAX_SUBGROUPS */
+  bool pa_sync;                                  /*!< Ask the sink to sync to the periodic advertising. */
+  uint16_t pa_interval;                          /*!< Helps the sink schedule the sync; BLE_AUDIO_BA_PA_INTERVAL_UNKNOWN if not known. */
+  uint8_t num_subgroups;                         /*!< 1..BLE_AUDIO_BA_MAX_SUBGROUPS */
   uint32_t bis_sync[BLE_AUDIO_BA_MAX_SUBGROUPS]; /*!< BIT(index-1) per BIS, or BLE_AUDIO_BA_BIS_NO_PREF. */
-  const uint8_t *meta; /*!< Metadata applied to every subgroup, or NULL. */
+  const uint8_t *meta;                           /*!< Metadata applied to every subgroup, or NULL. */
   uint8_t meta_len;
 } ble_audio_ba_add_src_t;
 

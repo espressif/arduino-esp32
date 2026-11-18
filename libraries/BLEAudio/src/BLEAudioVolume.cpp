@@ -62,8 +62,7 @@ struct BLEAudioVolumeRenderer::Impl {
       return;
     }
     if (e.err) {
-      const auto op = static_cast<BLEAudioVolumeRenderer::Operation>(
-          lastOp.exchange((uint8_t)BLEAudioVolumeRenderer::Operation::Unknown));
+      const auto op = static_cast<BLEAudioVolumeRenderer::Operation>(lastOp.exchange((uint8_t)BLEAudioVolumeRenderer::Operation::Unknown));
       if (auto cb = bleAudioCopyCallback(*this, &Impl::onResultCb)) {
         cb(op, bleAudioStatus(e.err));
       }
@@ -179,7 +178,8 @@ BLEAudioVolumeRenderer BLEAudio::createVolumeRenderer() {
     return BLEAudioVolumeRenderer();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeRenderer>(
-    _impl, "createVolumeRenderer", BLE_AUDIO_GRP_VCP_RENDERER, [](BLEAudioVolumeRenderer::Impl &s) {
+    _impl, "createVolumeRenderer", BLE_AUDIO_GRP_VCP_RENDERER,
+    [](BLEAudioVolumeRenderer::Impl &s) {
       return bleAudioStatus(bleAudioVcpRendInit(s.volume.load(), s.muted.load(), s.step.load()));
     }
   );
@@ -230,8 +230,7 @@ struct BLEAudioVolumeController::Impl {
   }
 
   void reportError(int err) {
-    const auto op = static_cast<BLEAudioVolumeController::Operation>(
-        lastOp.exchange((uint8_t)BLEAudioVolumeController::Operation::Unknown));
+    const auto op = static_cast<BLEAudioVolumeController::Operation>(lastOp.exchange((uint8_t)BLEAudioVolumeController::Operation::Unknown));
     if (auto cb = bleAudioCopyCallback(*this, &Impl::onResultCb)) {
       cb(op, bleAudioStatus(err));
     }
@@ -243,8 +242,7 @@ struct BLEAudioVolumeController::Impl {
         // Same fail-fast contract as the microphone controller: a queued
         // write reports NotConnected here so every operation ends exactly
         // once, even when the link drops before the stack answers.
-        const auto pending = static_cast<BLEAudioVolumeController::Operation>(
-            lastOp.exchange((uint8_t)BLEAudioVolumeController::Operation::Unknown));
+        const auto pending = static_cast<BLEAudioVolumeController::Operation>(lastOp.exchange((uint8_t)BLEAudioVolumeController::Operation::Unknown));
         volume.store(0, std::memory_order_relaxed);
         muted.store(false, std::memory_order_relaxed);
         if (pending != BLEAudioVolumeController::Operation::Unknown) {
@@ -265,7 +263,8 @@ struct BLEAudioVolumeController::Impl {
       return;
     }
     switch (e.type) {
-      case BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED: {
+      case BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED:
+      {
         const auto *d = static_cast<const ble_audio_vcp_discovered_t *>(e.data);
         if (auto cb = bleAudioCopyCallback(*this, &Impl::onDiscoveredCb)) {
           cb(bleAudioStatus(e.err), d ? d->vocs_count : 0, d ? d->aics_count : 0);
@@ -451,7 +450,8 @@ BLEAudioVolumeController BLEAudio::createVolumeController() {
     return BLEAudioVolumeController();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioVolumeController>(
-    _impl, "createVolumeController", BLE_AUDIO_GRP_VCP_CONTROLLER, [](BLEAudioVolumeController::Impl &) {
+    _impl, "createVolumeController", BLE_AUDIO_GRP_VCP_CONTROLLER,
+    [](BLEAudioVolumeController::Impl &) {
       return bleAudioStatus(bleAudioVcpCtlrInit());
     }
   );

@@ -216,10 +216,10 @@ inline constexpr uint32_t operator&(BLEAudioCodecPreset a, uint32_t b) {
  * `BLEAudioStream::codecConfig()`.
  */
 struct BLEAudioCodecConfig {
-  uint32_t samplingRateHz = 16000;   ///< PCM sampling rate (8000 to 48000).
-  uint16_t frameDurationUs = 10000;  ///< LC3 frame duration: 7500 or 10000.
-  uint16_t octetsPerFrame = 40;      ///< Encoded octets per channel per frame.
-  uint8_t framesPerSdu = 1;          ///< Codec frame blocks packed into one SDU.
+  uint32_t samplingRateHz = 16000;                              ///< PCM sampling rate (8000 to 48000).
+  uint16_t frameDurationUs = 10000;                             ///< LC3 frame duration: 7500 or 10000.
+  uint16_t octetsPerFrame = 40;                                 ///< Encoded octets per channel per frame.
+  uint8_t framesPerSdu = 1;                                     ///< Codec frame blocks packed into one SDU.
   BLEAudioLocation channelAllocation = BLEAudioLocation::Mono;  ///< One channel per set bit.
 
   /**
@@ -300,8 +300,8 @@ struct BLEAudioSduInfo {
     Invalid = 1,  ///< Received, but the controller flagged possible errors.
     Lost = 2,     ///< Nothing received for this interval; the payload is empty.
   };
-  uint32_t timestamp = 0;       ///< Controller SDU reference timestamp (us); see timestampValid.
-  uint16_t seq = 0;             ///< Packet sequence number, one per SDU interval.
+  uint32_t timestamp = 0;  ///< Controller SDU reference timestamp (us); see timestampValid.
+  uint16_t seq = 0;        ///< Packet sequence number, one per SDU interval.
   Status status = Status::Valid;
   bool timestampValid = false;  ///< Whether the controller supplied a timestamp.
 };

@@ -79,14 +79,20 @@ void setup() {
   });
 
   // onStarted() fires once the BIG is joined and the streams carry audio.
-  sink.onStarted([] { Serial.println("Joined: playing"); });
+  sink.onStarted([] {
+    Serial.println("Joined: playing");
+  });
 
   // onStopped() fires when we leave the BIG (stop(), source gone, or sync lost). Reason is the HCI code.
-  sink.onStopped([](uint8_t reason) { Serial.printf("Left (reason 0x%02X)\n", reason); });
+  sink.onStopped([](uint8_t reason) {
+    Serial.printf("Left (reason 0x%02X)\n", reason);
+  });
 
   // onSyncFailed() fires when the BIG cannot be joined: NotFound (no BIS fits our PAC) or
   // PermissionDenied (encrypted and no/wrong Broadcast Code).
-  sink.onSyncFailed([](BTStatus status) { Serial.printf("Join failed: %s\n", status.toString()); });
+  sink.onSyncFailed([](BTStatus status) {
+    Serial.printf("Join failed: %s\n", status.toString());
+  });
 
   // 3. Commit the roles (starts no audio by itself).
 

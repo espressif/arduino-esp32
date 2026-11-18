@@ -68,10 +68,11 @@
  *   }
  * @endcode
  */
-#define BLE_CHECK_IMPL(...)              \
-  if (!_impl)                            \
-    return __VA_ARGS__;                  \
-  [[maybe_unused]] auto &impl = *_impl
+#define BLE_CHECK_IMPL(...) \
+  if (!_impl)               \
+    return __VA_ARGS__;     \
+  [[maybe_unused]]          \
+  auto &impl = *_impl
 
 #include <stddef.h>
 #include <stdint.h>

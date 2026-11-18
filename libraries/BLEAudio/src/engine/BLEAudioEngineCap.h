@@ -50,7 +50,12 @@ enum {
 };
 
 /** SIRK read response, same order as ESP_BLE_AUDIO_CSIP_READ_SIRK_REQ_RSP_*. */
-enum { BLE_AUDIO_SIRK_ACCEPT = 0, BLE_AUDIO_SIRK_ACCEPT_ENC, BLE_AUDIO_SIRK_REJECT, BLE_AUDIO_SIRK_OOB_ONLY };
+enum {
+  BLE_AUDIO_SIRK_ACCEPT = 0,
+  BLE_AUDIO_SIRK_ACCEPT_ENC,
+  BLE_AUDIO_SIRK_REJECT,
+  BLE_AUDIO_SIRK_OOB_ONLY
+};
 
 /** Set lock state (local instance or a remote member). */
 typedef struct {
@@ -71,7 +76,7 @@ typedef struct {
   uint8_t set_size;                 /*!< Number of members in the set. */
   uint8_t rank;                     /*!< This member's rank, 1..set_size, unique in the set. */
   bool lockable;                    /*!< Expose the Set Member Lock characteristic. */
-  const uint8_t *name; /*!< Coordinated Set Name (CSIS 1.1), may be NULL. */
+  const uint8_t *name;              /*!< Coordinated Set Name (CSIS 1.1), may be NULL. */
   uint8_t name_len;
 } ble_audio_csis_cfg_t;
 
@@ -112,9 +117,9 @@ enum {
 
 /** First set of the peer (set_count == 0: no CSIS). */
 typedef struct {
-  uint8_t set_count;                /*!< CSIS instances on the peer. */
-  uint8_t set_size;                 /*!< Members in the first set. */
-  uint8_t rank;                     /*!< The peer's rank in the first set. */
+  uint8_t set_count; /*!< CSIS instances on the peer. */
+  uint8_t set_size;  /*!< Members in the first set. */
+  uint8_t rank;      /*!< The peer's rank in the first set. */
   bool lockable;
   uint8_t sirk[BLE_AUDIO_SIRK_LEN]; /*!< SIRK of the first set, as held by the stack. */
 } ble_audio_csip_set_t;
@@ -156,11 +161,11 @@ typedef struct {
 
 /** Extended advertising set carrying the broadcast (see `esp_ble_iso_ext_adv_info_t`). */
 typedef struct {
-  uint8_t handle;       /*!< Host advertising instance/handle. */
-  uint8_t sid;          /*!< Advertising SID. */
+  uint8_t handle; /*!< Host advertising instance/handle. */
+  uint8_t sid;    /*!< Advertising SID. */
   uint8_t addr_type;
-  uint8_t addr[6];      /*!< Local advertiser address, LSB first. */
-  uint16_t pa_interval; /*!< Periodic advertising interval (1.25 ms units). */
+  uint8_t addr[6];       /*!< Local advertiser address, LSB first. */
+  uint16_t pa_interval;  /*!< Periodic advertising interval (1.25 ms units). */
   uint32_t broadcast_id; /*!< 24-bit Broadcast_ID advertised in the service data. */
 } ble_audio_cap_adv_t;
 
@@ -183,8 +188,10 @@ int bleAudioCapUnicastStop(void);
 bool bleAudioCapUnicastGroupExists(void);
 
 /** @brief Same contract as bleAudioBsrcCreate(), on the CAP broadcast source. */
-int bleAudioCapBroadcastCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
-                               const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code);
+int bleAudioCapBroadcastCreate(
+  ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec, const ble_audio_qos_t *qos, uint16_t context,
+  const uint8_t *code
+);
 /** @brief Encoded BASE (starting with the 0x1851 UUID) for the periodic advertising data. */
 int bleAudioCapBroadcastGetBase(uint8_t *out, uint16_t cap, uint16_t *out_len);
 /** @brief Register @p adv with the stack (once) and attach the BIG to it. */
@@ -253,9 +260,9 @@ typedef struct {
 
 /** A peer's BASS Receive State, reported on read and on every notification. */
 typedef struct {
-  uint8_t src_id;    /*!< Source_ID the peer assigned. */
-  uint8_t pa_state;  /*!< BASS PA sync state. */
-  uint8_t big_enc;   /*!< BASS BIG encryption state. */
+  uint8_t src_id;   /*!< Source_ID the peer assigned. */
+  uint8_t pa_state; /*!< BASS PA sync state. */
+  uint8_t big_enc;  /*!< BASS BIG encryption state. */
   uint32_t broadcast_id;
   uint32_t bis_sync; /*!< Union of the subgroups' BIS sync bits. */
 } ble_audio_cap_recv_state_t;
@@ -263,11 +270,11 @@ typedef struct {
 /** Broadcast the commander asks acceptors to receive. */
 typedef struct {
   uint8_t addr_type;
-  uint8_t addr[6]; /*!< Broadcaster address, LSB first. */
-  uint8_t sid;     /*!< Advertising SID of the broadcast. */
+  uint8_t addr[6];      /*!< Broadcaster address, LSB first. */
+  uint8_t sid;          /*!< Advertising SID of the broadcast. */
   uint16_t pa_interval; /*!< 0xFFFF = unknown. */
   uint32_t broadcast_id;
-  uint32_t bis_sync;    /*!< BIT(index-1) per BIS; 0xFFFFFFFF = no preference. */
+  uint32_t bis_sync; /*!< BIT(index-1) per BIS; 0xFFFFFFFF = no preference. */
 } ble_audio_cap_bcast_src_t;
 
 /*

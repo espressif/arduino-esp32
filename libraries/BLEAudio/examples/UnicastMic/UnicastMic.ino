@@ -105,10 +105,16 @@ void setup() {
   }
 
   // onStarted() fires once every requested stream is streaming.
-  audioClient.onStarted([] { Serial.println("Streaming to the speaker"); pendingStart = true; });
+  audioClient.onStarted([] {
+    Serial.println("Streaming to the speaker");
+    pendingStart = true;
+  });
 
   // onStopped() fires once all streams are released (after stop() or a failure).
-  audioClient.onStopped([] { Serial.println("Stream released"); pendingStop = true; });
+  audioClient.onStopped([] {
+    Serial.println("Stream released");
+    pendingStop = true;
+  });
 
   // onError() reports the failed ASCS setup step plus the server's response/reason codes.
   audioClient.onError([](BLEAudioUnicastClient::Step step, uint8_t rsp, uint8_t reason) {

@@ -163,14 +163,15 @@ bool BLEAudioI2SPort::open(const BLEAudioI2SConfig &pins, bool tx, uint32_t rate
   i2s_std_config_t sc = {
     .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(rateHz),
     .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, mode),
-    .gpio_cfg = {
-      .mclk = static_cast<gpio_num_t>(pins.mclk),
-      .bclk = static_cast<gpio_num_t>(pins.bclk),
-      .ws = static_cast<gpio_num_t>(pins.ws),
-      .dout = tx ? static_cast<gpio_num_t>(pins.dout) : I2S_GPIO_UNUSED,
-      .din = tx ? I2S_GPIO_UNUSED : static_cast<gpio_num_t>(pins.din),
-      .invert_flags = {0, 0, 0},
-    },
+    .gpio_cfg =
+      {
+        .mclk = static_cast<gpio_num_t>(pins.mclk),
+        .bclk = static_cast<gpio_num_t>(pins.bclk),
+        .ws = static_cast<gpio_num_t>(pins.ws),
+        .dout = tx ? static_cast<gpio_num_t>(pins.dout) : I2S_GPIO_UNUSED,
+        .din = tx ? I2S_GPIO_UNUSED : static_cast<gpio_num_t>(pins.din),
+        .invert_flags = {0, 0, 0},
+      },
   };
   // Newer I2S hardware (S3/S31/P4) leaves slot_mask = BOTH even in mono, so
   // DMA delivers both slots and a mono read spans half the expected audio
@@ -387,8 +388,8 @@ uint8_t BLEAudioDataPath::mapChannels(Channel out[2]) const {
   }
   // Two separate streams must describe the same codec/QoS; the player and
   // recorder build one session from the first stream and map both onto it.
-  if (a.samplingRateHz != b.samplingRateHz || a.frameDurationUs != b.frameDurationUs || a.octetsPerFrame != b.octetsPerFrame
-      || a.framesPerSdu != b.framesPerSdu || qa.sduIntervalUs != qb.sduIntervalUs) {
+  if (a.samplingRateHz != b.samplingRateHz || a.frameDurationUs != b.frameDurationUs || a.octetsPerFrame != b.octetsPerFrame || a.framesPerSdu != b.framesPerSdu
+      || qa.sduIntervalUs != qb.sduIntervalUs) {
     return 0;
   }
   for (uint8_t s = 0; s < 2; s++) {

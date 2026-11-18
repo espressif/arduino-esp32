@@ -45,10 +45,10 @@ namespace {
 // Pacing keeps 1-2 SDUs queued in the controller (written minus released).
 // Tuned for 10 ms SDU intervals; at 7.5 ms the same tick counts cover
 // proportionally less time, which only makes stall detection faster.
-constexpr int32_t kAhead = 3;        // skip a tick at or above this backlog (clock drift between timer and ISO)
-constexpr uint8_t kStallTicks = 8;   // no releases for this long (~80 ms): assume drained and resync
-constexpr uint16_t kExtraGap = 32;   // min ticks between catch-up SDUs so one late release never bursts
-constexpr uint32_t kMaxBurst = 3;    // ticks served per wake-up after the codec task was busy
+constexpr int32_t kAhead = 3;       // skip a tick at or above this backlog (clock drift between timer and ISO)
+constexpr uint8_t kStallTicks = 8;  // no releases for this long (~80 ms): assume drained and resync
+constexpr uint16_t kExtraGap = 32;  // min ticks between catch-up SDUs so one late release never bursts
+constexpr uint32_t kMaxBurst = 3;   // ticks served per wake-up after the codec task was busy
 
 }  // namespace
 
@@ -80,7 +80,7 @@ struct BLEAudioRecorder::Impl : BLEAudioDataPath {
   uint8_t nch = 0;         // Captured channels (1 or 2).
   uint8_t frames = 1;      // LC3 frames per channel per SDU.
   uint16_t octets = 0;     // Octets per LC3 frame.
-  uint16_t samples = 0;  // per channel per frame
+  uint16_t samples = 0;    // per channel per frame
   int pcmBytes = 0;        // Encoder PCM input per frame (one channel).
   int outBytes = 0;        // Encoder output buffer size it requires.
   uint32_t readMs = 1;     // I2S read timeout (one SDU interval).

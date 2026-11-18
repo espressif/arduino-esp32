@@ -52,11 +52,10 @@ namespace {
 constexpr uint16_t kPaSyncTimeoutMs = 10000;
 
 /** 16/24 kHz for voice-grade sources plus every 48 kHz preset (what Auracast sources use). */
-constexpr uint32_t kDefaultPresets =
-  BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_1_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_3_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_4_1)
-  | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_5_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_6_1);
+constexpr uint32_t kDefaultPresets = BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_24_2_1)
+                                     | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_1_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_2_1)
+                                     | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_3_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_4_1)
+                                     | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_5_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_48_6_1);
 
 }  // namespace
 
@@ -66,33 +65,35 @@ constexpr uint32_t kDefaultPresets =
 
 struct BLEAudioBroadcastSink::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (role list).
-  BLESharedMutex mtx;  ///< Protects this role's callbacks and shared state.
+  BLESharedMutex mtx;                     ///< Protects this role's callbacks and shared state.
   uint8_t streamCount = 1;                ///< BISes to join (1 or 2).
   uint8_t maxChannels = 2;                ///< Max channels per BIS advertised in the sink PAC (1 or 2).
   uint32_t presets = kDefaultPresets;     ///< BLEAudioPresetBit() mask for the sink PAC.
   BLEAudioLocation location = BLEAudioLocation::Mono;
   BLEAudioContext contexts = BLEAudioContext::Unspecified | BLEAudioContext::Media;
   bool delegator = BLE_AUDIO_SCAN_DELEGATOR_SUPPORTED;
-  String code;                            ///< Local Broadcast Code; empty = none.
-  String targetName;                      ///< Auto-sync filter; empty = any.
-  uint32_t targetId = 0;                  ///< Auto-sync filter; 0 = any.
-  uint32_t bisMask = 0;                   ///< Preferred BIS indexes; 0 = lowest ones in the BASE.
+  String code;            ///< Local Broadcast Code; empty = none.
+  String targetName;      ///< Auto-sync filter; empty = any.
+  uint32_t targetId = 0;  ///< Auto-sync filter; 0 = any.
+  uint32_t bisMask = 0;   ///< Preferred BIS indexes; 0 = lowest ones in the BASE.
   bool autoSync = true;
-  bool applied = false;                   ///< Sink registered by BLEAudio::begin().
-  bool running = false;                   ///< Between start() and stop(): keep (re)scanning.
-  bool scanStarted = false;               ///< This sink started the shared extended scan.
-  bool syncPending = false;               ///< PA sync create / PAST receive in flight.
-  bool synced = false;                    ///< PA sync established.
-  bool streaming = false;                 ///< BIG joined.
+  bool applied = false;      ///< Sink registered by BLEAudio::begin().
+  bool running = false;      ///< Between start() and stop(): keep (re)scanning.
+  bool scanStarted = false;  ///< This sink started the shared extended scan.
+  bool syncPending = false;  ///< PA sync create / PAST receive in flight.
+  bool synced = false;       ///< PA sync established.
+  bool streaming = false;    ///< BIG joined.
   BLESync stopSync{"bsink-stop"};
-  std::vector<BLEAudioStream> streams;    ///< One Rx stream per BIS.
+  std::vector<BLEAudioStream> streams;  ///< One Rx stream per BIS.
 
   BTStatus waitStopped(uint32_t timeoutMs = 5000) {
     return bleAudioWaitUntilIdle(
-        mtx, stopSync, "BroadcastSink",
-        [this]() {
-      return streaming;
-    }, timeoutMs);
+      mtx, stopSync, "BroadcastSink",
+      [this]() {
+        return streaming;
+      },
+      timeoutMs
+    );
   }
 
   SourceFoundCallback foundCb;
@@ -245,7 +246,8 @@ struct BLEAudioBroadcastSink::Impl {
   /** @brief Event handler for the BROADCAST_SINK group (host task). */
   void handle(const ble_audio_evt_t &e) {
     switch (e.type) {
-      case BLE_AUDIO_EVT_BSINK_FOUND: {
+      case BLE_AUDIO_EVT_BSINK_FOUND:
+      {
         const auto *f = static_cast<const ble_audio_bsink_found_t *>(e.data);
         if (!f) {
           break;
@@ -271,7 +273,8 @@ struct BLEAudioBroadcastSink::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_PA_SYNCED: {
+      case BLE_AUDIO_EVT_BSINK_PA_SYNCED:
+      {
         Callback cb;
         bool ok;
         {
@@ -300,7 +303,8 @@ struct BLEAudioBroadcastSink::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_BASE: {
+      case BLE_AUDIO_EVT_BSINK_BASE:
+      {
         const auto *b = static_cast<const ble_audio_bsink_base_t *>(e.data);
         if (!b) {
           break;
@@ -325,7 +329,8 @@ struct BLEAudioBroadcastSink::Impl {
           cb();
         }
         break;
-      case BLE_AUDIO_EVT_BSINK_PA_LOST: {
+      case BLE_AUDIO_EVT_BSINK_PA_LOST:
+      {
         ReasonCallback cb;
         bool runningNow;
         {
@@ -350,7 +355,8 @@ struct BLEAudioBroadcastSink::Impl {
           cb(e.err == -EACCES ? BTStatus::PermissionDenied : bleAudioStatus(e.err));
         }
         break;
-      case BLE_AUDIO_EVT_BSINK_STARTED: {
+      case BLE_AUDIO_EVT_BSINK_STARTED:
+      {
         Callback cb;
         {
           BLELockGuard lock(mtx.get());
@@ -363,7 +369,8 @@ struct BLEAudioBroadcastSink::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_STOPPED: {
+      case BLE_AUDIO_EVT_BSINK_STOPPED:
+      {
         ReasonCallback cb;
         {
           BLELockGuard lock(mtx.get());
@@ -377,7 +384,8 @@ struct BLEAudioBroadcastSink::Impl {
         }
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_PA_REQ: {
+      case BLE_AUDIO_EVT_BSINK_PA_REQ:
+      {
         // An assistant selected a source: sync to it directly, or wait for it
         // to transfer its own sync over the connection (PAST). The PAST
         // receive occupies the controller's single sync-create slot, so it is
@@ -394,8 +402,7 @@ struct BLEAudioBroadcastSink::Impl {
         }
         BTStatus st;
         if (r->past) {
-          st = bleAudioEngineStatus(
-              bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
+          st = bleAudioEngineStatus(bleAudioEngineReceivePeriodicSync(e.conn_handle, r->peer_addr_type, r->peer_addr, 0, kPaSyncTimeoutMs));
         } else {
           BLEScan sc = BLE.getScan();
           st = sc.createPeriodicSync(BTAddress(r->addr, static_cast<BTAddress::Type>(r->addr_type)), r->sid, 0, kPaSyncTimeoutMs);
@@ -412,7 +419,8 @@ struct BLEAudioBroadcastSink::Impl {
         *r->reply = st ? 0 : -EIO;
         break;
       }
-      case BLE_AUDIO_EVT_BSINK_PA_TERM_REQ: {
+      case BLE_AUDIO_EVT_BSINK_PA_TERM_REQ:
+      {
         log_d("BroadcastSink: assistant asked to stop the PA sync");
         bool wasPending;
         {

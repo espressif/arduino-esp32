@@ -69,7 +69,7 @@ static void profiles_on_deinit(void) {
 
 static const ble_audio_unit_hooks_t s_hooks = {.on_gap = NULL, .on_deinit = profiles_on_deinit};
 
-/** Require an initialised engine and register this unit's hooks (idempotent). */
+/** Require an initialized engine and register this unit's hooks (idempotent). */
 static int attach(void) {
   return bleAudioEngineIsInitialized() ? bleAudioEngineRegisterUnit(&s_hooks) : ESP_ERR_INVALID_STATE;
 }
@@ -147,8 +147,7 @@ int bleAudioGmapRegister(uint8_t roles, const ble_audio_gmap_features_t *feature
   }
   err = esp_ble_audio_gmap_register((esp_ble_audio_gmap_role_t)roles, feat);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "GMAP: registering roles 0x%02x failed: %d (a role disabled in Kconfig, or features the ASE/stream counts cannot back)",
-             roles, err);
+    ESP_LOGE(TAG, "GMAP: registering roles 0x%02x failed: %d (a role disabled in Kconfig, or features the ASE/stream counts cannot back)", roles, err);
   }
   return err;
 }

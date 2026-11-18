@@ -55,18 +55,18 @@
 
 class BLEAudio;
 
-  /** @brief What a unicast server exposes, as discovered by the client (PACS + ASCS).
+/** @brief What a unicast server exposes, as discovered by the client (PACS + ASCS).
    *
    * Reported per peer through onDiscovered() after addPeer()/connectAndStart();
    * sinkPresets/sourcePresets accumulate one BLEAudioPresetBit() per remote LC3
    * PAC record as they arrive.
    */
 struct BLEAudioUnicastPeerInfo {
-  uint16_t connHandle = 0xFFFF;  ///< ACL connection of the server.
-  uint8_t sinkEndpoints = 0;     ///< Remote sink ASEs: streams this device can send.
-  uint8_t sourceEndpoints = 0;   ///< Remote source ASEs: streams this device can receive.
-  BLEAudioLocation sinkLocation = BLEAudioLocation::Mono;    ///< Locations the server renders.
-  BLEAudioLocation sourceLocation = BLEAudioLocation::Mono;  ///< Locations the server captures.
+  uint16_t connHandle = 0xFFFF;                                  ///< ACL connection of the server.
+  uint8_t sinkEndpoints = 0;                                     ///< Remote sink ASEs: streams this device can send.
+  uint8_t sourceEndpoints = 0;                                   ///< Remote source ASEs: streams this device can receive.
+  BLEAudioLocation sinkLocation = BLEAudioLocation::Mono;        ///< Locations the server renders.
+  BLEAudioLocation sourceLocation = BLEAudioLocation::Mono;      ///< Locations the server captures.
   BLEAudioContext sinkContexts = BLEAudioContext::Prohibited;    ///< Contexts available for sink streams now.
   BLEAudioContext sourceContexts = BLEAudioContext::Prohibited;  ///< Contexts available for source streams now.
   /** Presets the server's sink PAC records accept (BLEAudioPresetBit() mask): what this device can send. */

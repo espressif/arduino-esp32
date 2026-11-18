@@ -47,11 +47,11 @@ enum class BLEAudioMediaState : uint8_t {
 
 /** Media Control Point opcodes. */
 enum class BLEAudioMediaCommand : uint8_t {
-  Play = 0x01,          ///< Start playback.
-  Pause = 0x02,         ///< Pause playback.
-  FastRewind = 0x03,    ///< Fast rewind.
-  FastForward = 0x04,   ///< Fast forward.
-  Stop = 0x05,          ///< Stop playback.
+  Play = 0x01,           ///< Start playback.
+  Pause = 0x02,          ///< Pause playback.
+  FastRewind = 0x03,     ///< Fast rewind.
+  FastForward = 0x04,    ///< Fast forward.
+  Stop = 0x05,           ///< Stop playback.
   PreviousTrack = 0x30,  ///< Skip to the previous track.
   NextTrack = 0x31,      ///< Skip to the next track.
   FirstTrack = 0x32,     ///< Skip to the first track.

@@ -177,7 +177,9 @@ BLEAudioTmap BLEAudio::createTmap() {
   if (ensureActive() != BTStatus::OK) {
     return BLEAudioTmap();  // begin() already logged the cause
   }
-  return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(_impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) { return t.apply(); });
+  return BLEAudioImplCommon::createStagedRole<BLEAudioTmap>(_impl, "createTmap", BLE_AUDIO_GRP_TMAP, [](BLEAudioTmap::Impl &t) {
+    return t.apply();
+  });
 }
 #endif
 
@@ -207,7 +209,10 @@ struct BLEAudioGmap::Impl : DeferredProfileDiscovery {
       return BTStatus::InvalidParam;
     }
     const ble_audio_gmap_features_t f = {
-      localFeatures.unicastGateway, localFeatures.unicastTerminal, localFeatures.broadcastSender, localFeatures.broadcastReceiver,
+      localFeatures.unicastGateway,
+      localFeatures.unicastTerminal,
+      localFeatures.broadcastSender,
+      localFeatures.broadcastReceiver,
     };
     return bleAudioStatus(bleAudioGmapRegister(static_cast<uint8_t>(localRoles), &f));
   }
@@ -334,7 +339,9 @@ BLEAudioGmap BLEAudio::createGmap() {
   if (ensureActive() != BTStatus::OK) {
     return BLEAudioGmap();  // begin() already logged the cause
   }
-  return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(_impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) { return g.apply(); });
+  return BLEAudioImplCommon::createStagedRole<BLEAudioGmap>(_impl, "createGmap", BLE_AUDIO_GRP_GMAP, [](BLEAudioGmap::Impl &g) {
+    return g.apply();
+  });
 }
 #endif
 

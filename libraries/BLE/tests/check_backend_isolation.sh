@@ -37,7 +37,11 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BLE_SRC_DIR="$(cd "${SCRIPT_DIR}/../src" && pwd)"
-AUDIO_SRC_DIR="$(cd "${SCRIPT_DIR}/../../BLEAudio/src" 2>/dev/null && pwd || true)"
+if [ -d "${SCRIPT_DIR}/../../BLEAudio/src" ]; then
+    AUDIO_SRC_DIR="$(cd "${SCRIPT_DIR}/../../BLEAudio/src" && pwd)"
+else
+    AUDIO_SRC_DIR=""
+fi
 
 status=0
 
@@ -106,13 +110,15 @@ check_shared_units() {
     local file rel bad_leak
 
     while IFS= read -r -d '' file; do
-        rel="${file#${src_dir}/}"
+        rel="${file#"${src_dir}/"}"
         case "$rel" in
             *.nimble.h|*.nimble.cpp|*.nimble.c|*.bluedroid.h|*.bluedroid.cpp|*.bluedroid.c)
                 continue
                 ;;
             core/BLEGuards.h|core/BLEBackend.h|BLEAudioBackend.h)
                 continue
+                ;;
+            *)
                 ;;
         esac
 

@@ -75,10 +75,10 @@ constexpr int kMaxChan = BLE_ISO_MAX_CHAN;
 /** What a slot is used for; set by the operation that configured it. */
 enum class Kind : uint8_t {
   None = 0,
-  CisCentral,      /*!< connectCis(). */
-  CisPeripheral,   /*!< listenCis(). */
-  BisBroadcaster,  /*!< createBig(). */
-  BisReceiver,     /*!< syncBig(). */
+  CisCentral,     /*!< connectCis(). */
+  CisPeripheral,  /*!< listenCis(). */
+  BisBroadcaster, /*!< createBig(). */
+  BisReceiver,    /*!< syncBig(). */
 };
 
 }  // namespace
@@ -140,7 +140,7 @@ struct BLEIso::Impl {
     std::atomic<uint32_t> gen{0};       // Bumped on every bind; lets stale handles fail closed after slot reuse.
     Kind kind = Kind::None;
     std::atomic<bool> hasTx{false};  // Tx QoS configured (host to controller).
-    bool hasRx = false;               // Rx QoS configured (controller to host).
+    bool hasRx = false;              // Rx QoS configured (controller to host).
     esp_ble_iso_chan_t chan{};
     esp_ble_iso_chan_ops_t ops{};
     esp_ble_iso_chan_qos_t qos{};
@@ -152,8 +152,8 @@ struct BLEIso::Impl {
   Slot slots[kMaxChan];
   std::atomic<uint32_t> genCounter{1};
 
-  std::atomic<bool> active{false};      // begin() succeeded and end() has not run.
-  std::atomic<bool> endFailed{false};   // end() refused partway; begin() must retry end() first.
+  std::atomic<bool> active{false};     // begin() succeeded and end() has not run.
+  std::atomic<bool> endFailed{false};  // end() refused partway; begin() must retry end() first.
   // Host ownership lives at file scope (sOwnsHost / sSharedHost): it is global
   // to the boot, not to this transport, which need not exist yet.
 
@@ -166,7 +166,7 @@ struct BLEIso::Impl {
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
   std::atomic<esp_ble_iso_big_t *> bigTx{nullptr};  // Broadcaster BIG (host task clears it on disconnect).
-  int bigAdv = -1;           // Advertising set registered with the ISO layer, or -1.
+  int bigAdv = -1;                                  // Advertising set registered with the ISO layer, or -1.
 #endif
 
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
@@ -431,9 +431,8 @@ struct BLEIso::Impl {
    */
   void attachSharedDone() {
     for (int i = 0; i < kMaxChan; i++) {
-      if (slots[i].used.load(std::memory_order_acquire) &&
-          (slots[i].connected.load(std::memory_order_acquire) ||
-           slots[i].accepted.load(std::memory_order_acquire))) {
+      if (slots[i].used.load(std::memory_order_acquire)
+          && (slots[i].connected.load(std::memory_order_acquire) || slots[i].accepted.load(std::memory_order_acquire))) {
         dispatchDisconnected(i, 0x16);
       }
     }
@@ -447,8 +446,8 @@ struct BLEIso::Impl {
     // synced Receiver still holds periodic-sync resources, so it counts as busy.
     BLELockGuard lock(isoMtx());
     for (int i = 0; i < kMaxChan; i++) {
-      if (slots[i].used.load(std::memory_order_acquire) &&
-          (slots[i].connected.load(std::memory_order_acquire) || slots[i].accepted.load(std::memory_order_acquire))) {
+      if (slots[i].used.load(std::memory_order_acquire)
+          && (slots[i].connected.load(std::memory_order_acquire) || slots[i].accepted.load(std::memory_order_acquire))) {
         return false;
       }
     }
@@ -553,8 +552,7 @@ struct BLEIso::Impl {
     }
     BLELockGuard lock(isoMtx());
     for (int i = 0; i < kMaxChan; i++) {
-      if (self->slots[i].used.load(std::memory_order_acquire) && self->slots[i].kind == Kind::CisPeripheral &&
-          self->slots[i].chan.iso == nullptr) {
+      if (self->slots[i].used.load(std::memory_order_acquire) && self->slots[i].kind == Kind::CisPeripheral && self->slots[i].chan.iso == nullptr) {
         self->slots[i].accepted.store(true, std::memory_order_release);
         *chan = &self->slots[i].chan;
         return 0;
@@ -633,8 +631,7 @@ struct BLEIso::Impl {
     esp_ble_iso_big_t *big = nullptr;
     err = esp_ble_iso_big_create(advHandle, &param, &big);
     if (err != ESP_OK) {
-      log_e("BLEIso: BIG create on advertising set %u (%u us, %u octets) failed: %d", advHandle, (unsigned)p.sduIntervalUs,
-            p.sduSize, err);
+      log_e("BLEIso: BIG create on advertising set %u (%u us, %u octets) failed: %d", advHandle, (unsigned)p.sduIntervalUs, p.sduSize, err);
       bigTx = nullptr;
     } else {
       bigTx = big;
@@ -828,12 +825,11 @@ struct BLEIso::Impl {
     path.pid = ESP_BLE_ISO_DATA_PATH_HCI;
     path.format = ESP_BLE_ISO_CODING_FORMAT_TRANSPARENT;
     esp_err_t err;
-    if (self->slots[slot].hasTx.load(std::memory_order_relaxed) &&
-        (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT, &path)) != ESP_OK) {
+    if (self->slots[slot].hasTx.load(std::memory_order_relaxed)
+        && (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT, &path)) != ESP_OK) {
       log_e("BLEIso: channel %d: Tx (host to controller) data path setup failed: %d", slot, err);
     }
-    if (self->slots[slot].hasRx &&
-        (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT, &path)) != ESP_OK) {
+    if (self->slots[slot].hasRx && (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT, &path)) != ESP_OK) {
       log_e("BLEIso: channel %d: Rx (controller to host) data path setup failed: %d", slot, err);
     }
     self->slots[slot].connected.store(true, std::memory_order_release);
@@ -900,8 +896,7 @@ struct BLEIso::Impl {
     if (info) {
       sdu.timestampUs = info->ts;
       sdu.seqNum = info->seq_num;
-      sdu.valid = (info->flags & ESP_BLE_ISO_FLAGS_VALID) != 0 &&
-                  (info->flags & (ESP_BLE_ISO_FLAGS_ERROR | ESP_BLE_ISO_FLAGS_LOST)) == 0;
+      sdu.valid = (info->flags & ESP_BLE_ISO_FLAGS_VALID) != 0 && (info->flags & (ESP_BLE_ISO_FLAGS_ERROR | ESP_BLE_ISO_FLAGS_LOST)) == 0;
       sdu.timestampValid = (info->flags & ESP_BLE_ISO_FLAGS_TS) != 0;
     }
     self->dispatchReceive(slot, sdu, data, len);
@@ -1047,7 +1042,8 @@ BTStatus BLEIso::Channel::disconnect() {
   switch (sl.kind) {
 #if ISO_UNICAST
     case Kind::CisCentral: err = esp_ble_iso_chan_disconnect(&sl.chan); break;
-    case Kind::CisPeripheral: {
+    case Kind::CisPeripheral:
+    {
       bool neverAccepted = false;
       {
         // Probe under the lock, act outside it: the ISO contract forbids
@@ -1070,7 +1066,8 @@ BTStatus BLEIso::Channel::disconnect() {
     }
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-    case Kind::BisBroadcaster: {
+    case Kind::BisBroadcaster:
+    {
       esp_ble_iso_big_t *big = t->bigTx.load(std::memory_order_acquire);
       if (big) {
         err = esp_ble_iso_big_terminate(big);
@@ -1082,7 +1079,8 @@ BTStatus BLEIso::Channel::disconnect() {
     }
 #endif
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-    case Kind::BisReceiver: {
+    case Kind::BisReceiver:
+    {
       // Disarm first so the next BIGInfo does not sync again (and an in-flight
       // doBigSync() terminates its newly created BIG on completion).
       esp_ble_iso_big_t *toTerminate = nullptr;
@@ -1219,8 +1217,7 @@ BTStatus BLEIso::Impl::end() {
     // Atomics only: stack-owned chan.state/iso cannot be read safely from this
     // (user) task while the host task may mutate them; connected/accepted are
     // the cross-task liveness bits (see isIdle()).
-    if (!slots[i].used.load(std::memory_order_acquire)
-        || (slots[i].kind != Kind::CisCentral && slots[i].kind != Kind::CisPeripheral)
+    if (!slots[i].used.load(std::memory_order_acquire) || (slots[i].kind != Kind::CisCentral && slots[i].kind != Kind::CisPeripheral)
         || (!slots[i].connected.load(std::memory_order_acquire) && !slots[i].accepted.load(std::memory_order_acquire))) {
       continue;
     }
@@ -1375,8 +1372,7 @@ BLEIso::Channel BLEIso::syncBig(uint8_t bisIndex, const BigParams &p) {
   if (!c) {
     return Channel();
   }
-  return _impl->finish(c, _impl->bigSyncArm(c._impl->slot.load(std::memory_order_acquire), bisIndex, p, /*syncTimeout=*/100),
-                       "BIG sync arm");
+  return _impl->finish(c, _impl->bigSyncArm(c._impl->slot.load(std::memory_order_acquire), bisIndex, p, /*syncTimeout=*/100), "BIG sync arm");
 }
 #endif
 

@@ -62,12 +62,12 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
   };
 
   // Configuration (set before start()).
-  BLEAudioPCMSink sink;        // When set, PCM goes here instead of I2S.
-  uint8_t depthOverride = 0;   // Jitter depth in SDUs, 0 = from the presentation delay.
+  BLEAudioPCMSink sink;       // When set, PCM goes here instead of I2S.
+  uint8_t depthOverride = 0;  // Jitter depth in SDUs, 0 = from the presentation delay.
 
   // Jitter buffer, shared with the tap.
   Ring ring[2];
-  size_t stride = 0;            // Bytes per slot: header + largest SDU, 4-byte aligned.
+  size_t stride = 0;  // Bytes per slot: header + largest SDU, 4-byte aligned.
   uint8_t slots = 0;
   std::atomic<bool> ready{false};  // Rings valid; the tap drops SDUs while false.
 
@@ -187,8 +187,10 @@ struct BLEAudioPlayer::Impl : BLEAudioDataPath {
       depth = 2;
     }
     if (depth > kMaxDepth) {
-      log_w("Player: jitter depth %lu clamped to %u SDUs; %lu us of presentation delay do not fit and will underrun",
-            (unsigned long)reqDepth, kMaxDepth, (unsigned long)qos.presentationDelayUs);
+      log_w(
+        "Player: jitter depth %lu clamped to %u SDUs; %lu us of presentation delay do not fit and will underrun", (unsigned long)reqDepth, kMaxDepth,
+        (unsigned long)qos.presentationDelayUs
+      );
       depth = kMaxDepth;
     }
     uint8_t queueLen = (uint8_t)(depth * 2);

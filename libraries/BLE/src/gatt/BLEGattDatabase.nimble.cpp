@@ -92,9 +92,7 @@ void clearRegistration(BLEServer::Impl &impl, const std::vector<std::shared_ptr<
   }
 }
 
-BTStatus addServerServices(
-  BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services
-) {
+BTStatus addServerServices(BLEServer::Impl &impl, const std::vector<std::shared_ptr<BLEService::Impl>> &services) {
   if (services.empty()) {
     nimbleClearRetainedGattDefs();
     return BTStatus::OK;
@@ -236,7 +234,7 @@ void resetAudioStaging() {
 
 BTStatus commitServerStandalone(BLEServer::Impl &impl) {
   // Classic single-owner path (no LE Audio): full rebuild + commit. This is
-  // the behaviour the previous nimbleRebuildGattDatabase() provided.
+  // the behavior the previous nimbleRebuildGattDatabase() provided.
   auto services = snapshotServices(impl);
   if (!validateServices(impl, services)) {
     return BTStatus::InvalidState;

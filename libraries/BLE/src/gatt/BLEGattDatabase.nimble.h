@@ -31,7 +31,7 @@
  *
  *  - **Standalone** (no audio): the coordinator itself performs the classic
  *    `reset -> svc_gap_init -> svc_gatt_init -> add_svcs -> ble_gatts_start`
- *    sequence, exactly as the previous `BLEServer::start()` did. Behaviour for
+ *    sequence, exactly as the previous `BLEServer::start()` did. Behavior for
  *    non-audio sketches is unchanged.
  *
  *  - **Audio** (engine present): the LE Audio engine does `svc_gap_init` /
@@ -113,7 +113,7 @@ void resetAudioStaging();
  *
  * Runs the classic `reset -> svc_gap_init -> svc_gatt_init -> add_svcs ->
  * ble_gatts_start` sequence, sets the GAP device name, and marks the server
- * and its services started. This is the behaviour the previous
+ * and its services started. This is the behavior the previous
  * `nimbleRebuildGattDatabase()` provided.
  *
  * @param impl Server state to register.

@@ -178,11 +178,11 @@ private:
 
 /** @brief Set information read from one member. */
 struct BLEAudioCoordinatedSetInfo {
-  uint16_t connHandle = 0xFFFF;  ///< Member the information was read from.
-  uint8_t setCount = 0;          ///< CSIS instances on the member (0: not in a set).
-  uint8_t setSize = 0;           ///< Devices in the set.
-  uint8_t rank = 0;              ///< Position of this member in the set.
-  bool lockable = false;         ///< The set can be locked.
+  uint16_t connHandle = 0xFFFF;            ///< Member the information was read from.
+  uint8_t setCount = 0;                    ///< CSIS instances on the member (0: not in a set).
+  uint8_t setSize = 0;                     ///< Devices in the set.
+  uint8_t rank = 0;                        ///< Position of this member in the set.
+  bool lockable = false;                   ///< The set can be locked.
   uint8_t sirk[BLE_AUDIO_SIRK_SIZE] = {};  ///< SIRK read from the member.
 };
 

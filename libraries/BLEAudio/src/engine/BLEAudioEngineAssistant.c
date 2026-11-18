@@ -66,15 +66,15 @@ typedef struct {
 } ba_sync_t;
 
 static struct {
-  bool cb_registered;  /* this session */
-  bool scanning;       /* a remote scan is active: report sources */
-  uint8_t n_seen;      /* valid entries in seen[] */
-  uint8_t seen_next;   /* ring write index */
+  bool cb_registered; /* this session */
+  bool scanning;      /* a remote scan is active: report sources */
+  uint8_t n_seen;     /* valid entries in seen[] */
+  uint8_t seen_next;  /* ring write index */
   struct {
     uint32_t id;
     uint8_t addr[6];
     uint8_t sid;
-  } seen[MAX_SEEN]; /* sources reported since the last scan start */
+  } seen[MAX_SEEN];           /* sources reported since the last scan start */
   ba_sync_t syncs[MAX_SYNCS]; /* local PA syncs, PAST candidates */
 } s_ba;
 
@@ -86,11 +86,11 @@ static struct {
  * are few; beyond BA_PAST_IDS, requests are served without dedup. */
 #define BA_PAST_IDS 8
 typedef struct {
-  uint16_t conn;    /* CONN_NONE when free (handle 0 is a valid first ACL). */
-  uint8_t sent[32]; /* 256-bit Source_ID bitmap (byte = id >> 3, bit = 1u << (id & 7)). */
-  uint8_t ids[BA_PAST_IDS];     /* Source_IDs with a recorded Broadcast_ID. */
-  uint32_t bcast[BA_PAST_IDS];  /* Broadcast_ID served for ids[] (24 bit). */
-  uint8_t next;                 /* Round-robin eviction cursor. */
+  uint16_t conn;               /* CONN_NONE when free (handle 0 is a valid first ACL). */
+  uint8_t sent[32];            /* 256-bit Source_ID bitmap (byte = id >> 3, bit = 1u << (id & 7)). */
+  uint8_t ids[BA_PAST_IDS];    /* Source_IDs with a recorded Broadcast_ID. */
+  uint32_t bcast[BA_PAST_IDS]; /* Broadcast_ID served for ids[] (24 bit). */
+  uint8_t next;                /* Round-robin eviction cursor. */
 } past_row_t;
 static past_row_t s_ba_past[BA_PAST_CONNS];
 
@@ -262,8 +262,13 @@ static void ba_past(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator
     row->next = (uint8_t)((row->next + 1) % BA_PAST_IDS);
     slot[idx] |= bit;
   } else {
-    ESP_LOGW(TAG, "conn %u: SyncInfo request for source %u not served (%s): %d", conn->handle, id,
-             err == -ENOENT ? "no local PA sync to it" : err == -ENOTSUP ? "host built without PAST" : "PAST send failed", err);
+    ESP_LOGW(
+      TAG, "conn %u: SyncInfo request for source %u not served (%s): %d", conn->handle, id,
+      err == -ENOENT    ? "no local PA sync to it"
+      : err == -ENOTSUP ? "host built without PAST"
+                        : "PAST send failed",
+      err
+    );
   }
   emit_result(conn->handle, err, BLE_AUDIO_BA_OP_PAST, id);
 }
@@ -304,7 +309,7 @@ static void sync_remove(uint16_t handle) {
 /** AD parser state for one scan report. */
 typedef struct {
   ble_audio_ba_source_t *out;
-  bool has_id;  /* Broadcast Audio Announcement found: this is a broadcast source */
+  bool has_id; /* Broadcast Audio Announcement found: this is a broadcast source */
 } ba_parse_t;
 
 /** AD structure visitor: pick the name (Broadcast Name wins) and the Broadcast_ID. */
@@ -340,8 +345,7 @@ static void ba_on_scan(const esp_ble_audio_gap_app_event_t *ev) {
   uint8_t addr_lsb[6];
   bleAudioAddrFromGap(addr_lsb, ev->ext_scan_recv.addr.val);
   for (uint8_t i = 0; i < s_ba.n_seen; i++) {
-    if (s_ba.seen[i].id == src.broadcast_id && s_ba.seen[i].sid == ev->ext_scan_recv.sid &&
-        memcmp(s_ba.seen[i].addr, addr_lsb, 6) == 0) {
+    if (s_ba.seen[i].id == src.broadcast_id && s_ba.seen[i].sid == ev->ext_scan_recv.sid && memcmp(s_ba.seen[i].addr, addr_lsb, 6) == 0) {
       return;
     }
   }
@@ -378,9 +382,9 @@ static void ba_on_gap(const void *event) {
         sync_add(ev->pa_sync_past.sync_handle, ev->pa_sync_past.addr.val, ev->pa_sync_past.sid);
       }
       break;
-    case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC_LOST: sync_remove(ev->pa_sync_lost.sync_handle); break;
+    case ESP_BLE_AUDIO_GAP_EVENT_PA_SYNC_LOST:   sync_remove(ev->pa_sync_lost.sync_handle); break;
     case ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT: past_forget(ev->acl_disconnect.conn_handle); break;
-    default:                                   break;
+    default:                                     break;
   }
 }
 
@@ -434,7 +438,7 @@ static void ba_recv_state_removed_cb(esp_ble_conn_t *conn, uint8_t src_id) {
   if (conn) {
     uint8_t *slot = past_find(conn_of(conn));
     if (slot) {
-      slot[src_id >> 3] &= (uint8_t)~(1u << (src_id & 7));
+      slot[src_id >> 3] &= (uint8_t) ~(1u << (src_id & 7));
     }
   }
   const ble_audio_ba_result_t r = {.op = BLE_AUDIO_BA_OP_REMOVE_SOURCE, .src_id = src_id};
@@ -442,8 +446,8 @@ static void ba_recv_state_removed_cb(esp_ble_conn_t *conn, uint8_t src_id) {
 }
 
 /* Control point write completions: all map to BLE_AUDIO_EVT_BA_RESULT with their op. */
-#define BA_RESULT_CB(name, op)                            \
-  static void name(esp_ble_conn_t *conn, int err) {       \
+#define BA_RESULT_CB(name, op)                                     \
+  static void name(esp_ble_conn_t *conn, int err) {                \
     emit_result(conn_of(conn), err, op, BLE_AUDIO_BA_SRC_ID_NONE); \
   }
 BA_RESULT_CB(ba_scan_start_cb, BLE_AUDIO_BA_OP_SCAN_START)
@@ -486,7 +490,7 @@ int bleAudioBaInit(void) {
   return 0;
 }
 
-/* Every entry point initialises lazily, so the role works without an explicit bleAudioBaInit(). */
+/* Every entry point initializes lazily, so the role works without an explicit bleAudioBaInit(). */
 
 int bleAudioBaDiscover(uint16_t conn_handle) {
   int err = bleAudioBaInit();

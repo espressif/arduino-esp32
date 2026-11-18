@@ -48,14 +48,14 @@ enum class BLEAudioCallOperation : uint8_t {
 
 /** Telephone Bearer call states, plus Ended once a call is gone. */
 enum class BLEAudioCallState : uint8_t {
-  Incoming = 0,               ///< Incoming call ringing locally.
-  Dialing = 1,                ///< Outgoing call being dialed.
-  Alerting = 2,               ///< Far end is being alerted.
-  Active = 3,                 ///< Call is active.
-  LocallyHeld = 4,            ///< Call held locally.
-  RemotelyHeld = 5,           ///< Call held by the far end.
-  LocallyAndRemotelyHeld = 6, ///< Call held on both ends.
-  Ended = 0xFF,               ///< Call is gone; reported once via onCallState.
+  Incoming = 0,                ///< Incoming call ringing locally.
+  Dialing = 1,                 ///< Outgoing call being dialed.
+  Alerting = 2,                ///< Far end is being alerted.
+  Active = 3,                  ///< Call is active.
+  LocallyHeld = 4,             ///< Call held locally.
+  RemotelyHeld = 5,            ///< Call held by the far end.
+  LocallyAndRemotelyHeld = 6,  ///< Call held on both ends.
+  Ended = 0xFF,                ///< Call is gone; reported once via onCallState.
 };
 
 /**

@@ -167,7 +167,6 @@ public:
   /** @brief Current setAutoSecurityPolicy() value (default true). */
   bool autoSecurityPolicy() const;
 
-
   /**
    * @brief Release every audio profile, ISO resource and all engine state.
    *

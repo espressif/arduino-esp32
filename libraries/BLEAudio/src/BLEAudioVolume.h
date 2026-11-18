@@ -176,14 +176,14 @@ public:
   using InputCallback = std::function<void(int8_t gain, bool muted)>;
   /** @brief Queued control-point operation reported by onResult. */
   enum class Operation : uint8_t {
-    Unknown = 0,  ///< No operation in flight.
-    SetVolume,    ///< setVolume().
-    Mute,         ///< mute().
-    Unmute,       ///< unmute().
-    VolumeUp,     ///< volumeUp().
-    VolumeDown,   ///< volumeDown().
-    ReadState,    ///< readState().
-    SetOffset,    ///< setVolumeOffset().
+    Unknown = 0,   ///< No operation in flight.
+    SetVolume,     ///< setVolume().
+    Mute,          ///< mute().
+    Unmute,        ///< unmute().
+    VolumeUp,      ///< volumeUp().
+    VolumeDown,    ///< volumeDown().
+    ReadState,     ///< readState().
+    SetOffset,     ///< setVolumeOffset().
     SetInputGain,  ///< setInputGain().
   };
   /** @brief A queued operation was rejected; the state did not change. */

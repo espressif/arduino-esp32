@@ -21,8 +21,7 @@ async def main() -> int:
         print("iso_hci_ok", ok)
         if not ok:
             print(
-                "FAIL: ISO HCI data buffers are zero — unicast_audio / "
-                "broadcast_audio will skip",
+                "FAIL: ISO HCI data buffers are zero — unicast_audio / " "broadcast_audio will skip",
                 file=sys.stderr,
             )
             return 1

@@ -1549,9 +1549,7 @@ void setup() {
     // Let any trailing identity callbacks settle, then report the dedupe count
     // and the recorded event order for cross-stack parity assertions.
     delay(500);
-    Serial.printf(
-      "[CLIENT] Phase10 startSecurity live=%d enc=%d bogus=%d\n", (int)(bool)secLive, (int)secEncrypted, (int)(secBogus == BTStatus::NotConnected)
-    );
+    Serial.printf("[CLIENT] Phase10 startSecurity live=%d enc=%d bogus=%d\n", (int)(bool)secLive, (int)secEncrypted, (int)(secBogus == BTStatus::NotConnected));
     Serial.printf("[CLIENT] Phase10 onIdentity count=%d\n", clientIdentityCount);
     reportClientOrder("Phase10");
 
@@ -2250,7 +2248,7 @@ void setup() {
       BTStatus us = pc.updateConnParams(np);
       Serial.printf("[CLIENT] UpdateConnParams ok=%d\n", (int)(bool)us);
       // Allow the controller to apply the new params, then give the ATT MTU
-      // exchange time to complete: Bluedroid serialises it behind the automatic
+      // exchange time to complete: Bluedroid serializes it behind the automatic
       // service discovery, so CFG_MTU can land seconds after the link is up.
       delay(2500);
       unsigned long mtuWait = millis();
@@ -2271,9 +2269,7 @@ void setup() {
       BTStatus pastArm = pastScan.receivePeriodicSync(pc.getHandle());
       BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
       BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(pc.getHandle());
-      Serial.printf(
-        "[CLIENT] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
-      );
+      Serial.printf("[CLIENT] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel);
 #else
       Serial.println("[CLIENT] Phase16 past supported=0");
 #endif
@@ -2285,8 +2281,7 @@ void setup() {
       std::vector<uint16_t> byAddrHandles = BLE.getConnHandles(lookupPeer);
       BLEConnInfo byAddrInfo = BLE.getConnInfo(lookupPeer);
       bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == pc.getHandle();
-      bool lookupVolatileOk =
-        byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
+      bool lookupVolatileOk = byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
       std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(lookupPeer);
       bool connsOk = false;
       for (const auto &ci : byAddrConns) {
@@ -2295,9 +2290,8 @@ void setup() {
         }
       }
       BTAddress bogusPeer("00:00:00:00:00:01");
-      bool bogusOk =
-        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
-        !(bool)BLE.getConnInfo(bogusPeer);
+      bool bogusOk = BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty()
+                     && !(bool)BLE.getConnInfo(bogusPeer);
       Serial.printf(
         "[CLIENT] Phase16 lookup byAddr=%d handles=%u info=%d volatile=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == pc.getHandle()),
         (unsigned)byAddrHandles.size(), (int)lookupInfoOk, (int)lookupVolatileOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
@@ -2361,8 +2355,8 @@ void setup() {
         serviceOk = (bool)mc.getService(serviceUUID);
       }
       Serial.printf(
-        "[CLIENT] Phase16 peerMtuFirst mode=%s connect=%d service=%d mtu=%u seen=%d order=%d\n", pmMode, (int)(bool)ms, (int)serviceOk,
-        (unsigned)mc.getMTU(), (int)clientMtuChanged, (int)clientMtuAfterConnect
+        "[CLIENT] Phase16 peerMtuFirst mode=%s connect=%d service=%d mtu=%u seen=%d order=%d\n", pmMode, (int)(bool)ms, (int)serviceOk, (unsigned)mc.getMTU(),
+        (int)clientMtuChanged, (int)clientMtuAfterConnect
       );
       if (ms) {
         mc.disconnect();
@@ -4235,14 +4229,14 @@ void setup() {
       std::atomic<uint32_t> spuriousSyncs{0};
       BLEScan scan = BLE.getScan();
 
-      // HCI range validation (Core Spec Vol 4, Part E, §7.8.67) and cancelled-
-      // create callback suppression: failed/cancelled sync creation must never
+      // HCI range validation (Core Spec Vol 4, Part E, §7.8.67) and canceled-
+      // create callback suppression: failed/canceled sync creation must never
       // invoke onPeriodicSync.
       static const uint8_t kBogusRaw[6] = {0x06, 0x05, 0x04, 0x03, 0x02, 0xC1};
       BTAddress bogusAddr(kBogusRaw, BTAddress::Random);
-      bool invalidOk = scan.createPeriodicSync(bogusAddr, 0x10, 0, 1000) == BTStatus::InvalidParam &&
-                       scan.createPeriodicSync(bogusAddr, 1, 0x01F4, 1000) == BTStatus::InvalidParam &&
-                       scan.createPeriodicSync(bogusAddr, 1, 0, 50) == BTStatus::InvalidParam;
+      bool invalidOk = scan.createPeriodicSync(bogusAddr, 0x10, 0, 1000) == BTStatus::InvalidParam
+                       && scan.createPeriodicSync(bogusAddr, 1, 0x01F4, 1000) == BTStatus::InvalidParam
+                       && scan.createPeriodicSync(bogusAddr, 1, 0, 50) == BTStatus::InvalidParam;
       scan.onPeriodicSync([&spuriousSyncs](uint16_t, uint8_t, const BTAddress &, BLEPhy, uint16_t) {
         spuriousSyncs.fetch_add(1);
       });
@@ -4250,8 +4244,7 @@ void setup() {
       BTStatus bogusCancel = bogusCreate ? scan.cancelPeriodicSyncCreate() : BTStatus::Fail;
       delay(150);
       Serial.printf(
-        "[CLIENT] Phase34 precheck invalid=%d cancel=%d spurious=%lu\n", (int)invalidOk, (int)(bogusCreate && bogusCancel),
-        (unsigned long)spuriousSyncs.load()
+        "[CLIENT] Phase34 precheck invalid=%d cancel=%d spurious=%lu\n", (int)invalidOk, (int)(bogusCreate && bogusCancel), (unsigned long)spuriousSyncs.load()
       );
 
       scan.onResult([&](BLEAdvertisedDevice dev) {

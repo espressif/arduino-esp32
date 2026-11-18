@@ -49,8 +49,8 @@
  */
 struct BLEAudioStreamTap {
   void (*recv)(void *ctx, const ble_audio_recv_info_t *info, const uint8_t *data, uint16_t len) = nullptr;  ///< One SDU received.
-  void (*sent)(void *ctx) = nullptr;     ///< One SDU released by the controller.
-  void (*started)(void *ctx) = nullptr;  ///< Stream entered Streaming.
+  void (*sent)(void *ctx) = nullptr;                                                                        ///< One SDU released by the controller.
+  void (*started)(void *ctx) = nullptr;                                                                     ///< Stream entered Streaming.
   void (*stopped)(void *ctx) = nullptr;  ///< Stream left Streaming, or its endpoint was released.
   void *ctx = nullptr;                   ///< Owner of the tap (the data path).
 };

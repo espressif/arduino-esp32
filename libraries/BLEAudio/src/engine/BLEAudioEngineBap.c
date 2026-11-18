@@ -61,10 +61,10 @@
 
 static const char *TAG = "BLEAudioBap";
 
-#define CONN_NONE      BLE_AUDIO_CONN_NONE
-#define SYNC_NONE      0xFFFF
-#define CFG_DATA_MAX   BLE_AUDIO_CODEC_DATA_MAX /* Codec config LTVs, see the header. */
-#define META_CTX_LEN   4  /* One Streaming/Preferred Audio Contexts LTV. */
+#define CONN_NONE    BLE_AUDIO_CONN_NONE
+#define SYNC_NONE    0xFFFF
+#define CFG_DATA_MAX BLE_AUDIO_CODEC_DATA_MAX /* Codec config LTVs, see the header. */
+#define META_CTX_LEN 4                        /* One Streaming/Preferred Audio Contexts LTV. */
 
 /*
  * With CAP compiled in, streams register their ops through CAP so the same
@@ -218,7 +218,7 @@ static void qos_from_cfg(const esp_ble_audio_bap_qos_cfg_t *q, ble_audio_qos_t *
 #else
 #define POOL_BSNK 0
 #endif
-#define POOL_SIZE (POOL_US + POOL_UC + POOL_BSRC + POOL_BSNK)
+#define POOL_SIZE  (POOL_US + POOL_UC + POOL_BSRC + POOL_BSNK)
 #define POOL_ALLOC (POOL_SIZE > 0 ? POOL_SIZE : 1)
 
 /**
@@ -231,11 +231,11 @@ enum {
   UC_REQUESTED,      /* Listed by bleAudioUcStart(), nothing sent yet. */
   UC_CONFIG_PENDING, /* Config Codec sent. */
   UC_CONFIGURED,
-  UC_QOS_PENDING,    /* Config QoS sent (one per connection, covers all its streams). */
+  UC_QOS_PENDING, /* Config QoS sent (one per connection, covers all its streams). */
   UC_QOS_SET,
   UC_ENABLE_PENDING, /* Enable sent. */
   UC_ENABLED,
-  UC_CONNECTING,     /* CIS create requested. */
+  UC_CONNECTING, /* CIS create requested. */
   UC_STREAMING,
 };
 
@@ -248,30 +248,30 @@ struct ble_audio_slot {
   _Atomic bool bound;             /* Unicast: bound to a remote ASE (server) or endpoint (client). */
   _Atomic bool tx;                /* The local device sends on this stream. */
   _Atomic bool streaming;
-  _Atomic uint8_t uc_stage;       /* Unicast client: UC_* stage (caller task validates, host task advances). */
-  _Atomic uint16_t conn_handle;   /* Unicast ACL, CONN_NONE otherwise. */
-  _Atomic uint16_t seq;           /* Next Tx sequence number; advances only on accepted sends. */
+  _Atomic uint8_t uc_stage;                 /* Unicast client: UC_* stage (caller task validates, host task advances). */
+  _Atomic uint16_t conn_handle;             /* Unicast ACL, CONN_NONE otherwise. */
+  _Atomic uint16_t seq;                     /* Next Tx sequence number; advances only on accepted sends. */
   _Atomic(esp_ble_audio_bap_ep_t *) uc_ep;  /* Unicast client: remote endpoint. */
   _Atomic(struct ble_audio_slot *) partner; /* Opposite direction sharing the same CIS. */
-  esp_ble_audio_codec_cfg_t codec_cfg;  /* Slot-owned: the engine keeps pointers to these. */
+  esp_ble_audio_codec_cfg_t codec_cfg;      /* Slot-owned: the engine keeps pointers to these. */
   /* qos_cfg is written only by setup paths (SetCodec/SetQos at configure
    * time, slot reset at alloc/deinit) and read by Send only while streaming,
    * so no lock guards it: re-running SetQos on a streaming slot would race
    * the codec-task read. Snapshots (below) are the cross-task API. */
   esp_ble_audio_bap_qos_cfg_t qos_cfg;
-  ble_audio_codec_t snap_codec;         /* Decoded snapshot for cross-core codecConfig(). */
-  ble_audio_qos_t snap_qos;             /* Decoded snapshot for cross-core qos(). */
+  ble_audio_codec_t snap_codec; /* Decoded snapshot for cross-core codecConfig(). */
+  ble_audio_qos_t snap_qos;     /* Decoded snapshot for cross-core qos(). */
   bool has_codec;
   bool has_qos;
-  uint8_t cfg_data[CFG_DATA_MAX];       /* Backing store of codec_cfg.data. */
-  uint8_t cfg_meta[META_CTX_LEN];       /* Backing store of codec_cfg.meta. */
-  uint8_t bis_data[6];                  /* Broadcast source: per-BIS channel allocation LTV. */
+  uint8_t cfg_data[CFG_DATA_MAX]; /* Backing store of codec_cfg.data. */
+  uint8_t cfg_meta[META_CTX_LEN]; /* Backing store of codec_cfg.meta. */
+  uint8_t bis_data[6];            /* Broadcast source: per-BIS channel allocation LTV. */
 };
 
 static ble_audio_slot_t s_pool[POOL_ALLOC];
-static portMUX_TYPE s_slot_mux = portMUX_INITIALIZER_UNLOCKED; /* Guards snap_codec / snap_qos. */
+static portMUX_TYPE s_slot_mux = portMUX_INITIALIZER_UNLOCKED;                  /* Guards snap_codec / snap_qos. */
 static const uint8_t s_kind_limit[] = {POOL_US, POOL_UC, POOL_BSRC, POOL_BSNK}; /* Indexed by kind. */
-static ble_audio_stream_cbs_t s_cbs;  /* C++ stream callbacks (bleAudioStreamSetCallbacks). */
+static ble_audio_stream_cbs_t s_cbs;                                            /* C++ stream callbacks (bleAudioStreamSetCallbacks). */
 #if BLE_AUDIO_BROADCAST_SINK_SUPPORTED
 static _Atomic bool s_bsnk_joined; /* BSINK_STARTED already emitted for the current BIG. */
 #endif
@@ -816,16 +816,16 @@ void bleAudioStreamUnbind(ble_audio_slot_t *slot) {
  */
 typedef struct {
   bool used;
-  ble_audio_pac_t pac;         /* Union of the staged capabilities. */
-  uint32_t location;           /* Union of the staged Audio Locations. */
-  uint16_t contexts;           /* Union of the staged contexts (supported = initially available). */
-  uint8_t data[CFG_DATA_MAX];  /* Backing store of codec.data (the engine keeps the pointer). */
-  uint8_t meta[META_CTX_LEN];  /* Backing store of codec.meta. */
+  ble_audio_pac_t pac;        /* Union of the staged capabilities. */
+  uint32_t location;          /* Union of the staged Audio Locations. */
+  uint16_t contexts;          /* Union of the staged contexts (supported = initially available). */
+  uint8_t data[CFG_DATA_MAX]; /* Backing store of codec.data (the engine keeps the pointer). */
+  uint8_t meta[META_CTX_LEN]; /* Backing store of codec.meta. */
   esp_ble_audio_codec_cap_t codec;
   esp_ble_audio_pacs_cap_t cap;
 } pac_rec_t;
 
-static pac_rec_t s_pac[2]; /* [0] sink, [1] source */
+static pac_rec_t s_pac[2];           /* [0] sink, [1] source */
 static uint16_t s_pacs_supported[2]; /* First published supported contexts, per direction. */
 static bool s_pacs_committed;
 
@@ -835,14 +835,22 @@ static const struct {
   uint8_t dur_bit;
   uint8_t octets;
 } s_preset_caps[BLE_AUDIO_PRESET_COUNT] = {
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_8KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 26},  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_8KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 30},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_16KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 30}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_16KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 40},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_24KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 45}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_24KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 60},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_32KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 60}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_32KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 80},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_44KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 97}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_44KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 130},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 75}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 100},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 90}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 120},
-  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 117}, {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 155},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_8KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 26},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_8KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 30},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_16KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 30},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_16KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 40},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_24KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 45},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_24KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 60},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_32KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 60},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_32KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 80},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_44KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 97},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_44KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 130},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 75},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 100},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 90},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 120},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_7_5, 117},
+  {ESP_BLE_AUDIO_CODEC_CAP_FREQ_48KHZ, ESP_BLE_AUDIO_CODEC_CAP_DURATION_10, 155},
 };
 
 /*
@@ -894,8 +902,8 @@ uint32_t bleAudioPacPresets(const ble_audio_pac_t *pac) {
     return 0;
   }
   for (int i = 0; i < BLE_AUDIO_PRESET_COUNT; i++) {
-    if ((pac->freq_mask & s_preset_caps[i].freq_bit) && (pac->dur_mask & s_preset_caps[i].dur_bit)
-        && s_preset_caps[i].octets >= pac->min_octets && s_preset_caps[i].octets <= pac->max_octets) {
+    if ((pac->freq_mask & s_preset_caps[i].freq_bit) && (pac->dur_mask & s_preset_caps[i].dur_bit) && s_preset_caps[i].octets >= pac->min_octets
+        && s_preset_caps[i].octets <= pac->max_octets) {
       mask |= 1UL << i;
     }
   }
@@ -1014,8 +1022,7 @@ int bleAudioPacsCommit(void) {
          * first value, but say so loudly: re-begin() with different contexts
          * is a documented boot-pinned divergence (see DESIGN.md), and the
          * validation suite asserts the published value after re-begin. */
-        ESP_LOGW(TAG, "PACS %s supported contexts already published this boot, keeping it",
-                 i == 0 ? "sink" : "source");
+        ESP_LOGW(TAG, "PACS %s supported contexts already published this boot, keeping it", i == 0 ? "sink" : "source");
         err = ESP_OK;
         /* Available must stay a subset of the pinned supported value; clamp
          * newly staged bits that the stack will never publish as supported. */
@@ -1066,8 +1073,10 @@ static bool s_us_registered;
  * A source ASE (the client receives) becomes a Tx slot here. Rejected with
  * "insufficient resources" when every slot is bound.
  */
-static int us_config(esp_ble_conn_t *conn, const esp_ble_audio_bap_ep_t *ep, esp_ble_audio_dir_t dir, const esp_ble_audio_codec_cfg_t *codec_cfg,
-                     esp_ble_audio_bap_stream_t **stream, esp_ble_audio_bap_qos_cfg_pref_t *const pref, esp_ble_audio_bap_ascs_rsp_t *rsp) {
+static int us_config(
+  esp_ble_conn_t *conn, const esp_ble_audio_bap_ep_t *ep, esp_ble_audio_dir_t dir, const esp_ble_audio_codec_cfg_t *codec_cfg,
+  esp_ble_audio_bap_stream_t **stream, esp_ble_audio_bap_qos_cfg_pref_t *const pref, esp_ble_audio_bap_ascs_rsp_t *rsp
+) {
   (void)ep;
   (void)codec_cfg;
   for (int i = 0; i < POOL_SIZE; i++) {
@@ -1085,8 +1094,10 @@ static int us_config(esp_ble_conn_t *conn, const esp_ble_audio_bap_ep_t *ep, esp
 }
 
 /** @brief Config Codec on an already configured ASE: keep the binding, return the same preferences. */
-static int us_reconfig(esp_ble_audio_bap_stream_t *stream, esp_ble_audio_dir_t dir, const esp_ble_audio_codec_cfg_t *codec_cfg,
-                       esp_ble_audio_bap_qos_cfg_pref_t *const pref, esp_ble_audio_bap_ascs_rsp_t *rsp) {
+static int us_reconfig(
+  esp_ble_audio_bap_stream_t *stream, esp_ble_audio_dir_t dir, const esp_ble_audio_codec_cfg_t *codec_cfg, esp_ble_audio_bap_qos_cfg_pref_t *const pref,
+  esp_ble_audio_bap_ascs_rsp_t *rsp
+) {
   (void)stream;
   (void)dir;
   (void)codec_cfg;
@@ -1181,20 +1192,20 @@ int bleAudioUsInit(uint8_t snk_cnt, uint8_t src_cnt, const ble_audio_qos_pref_t 
 
 /** What discovery learned about one acceptor. */
 typedef struct {
-  uint16_t conn;  /* CONN_NONE when the entry is free. */
+  uint16_t conn; /* CONN_NONE when the entry is free. */
   uint8_t n_snk;
   uint8_t n_src;
-  esp_ble_audio_bap_ep_t *snk[CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SNK_COUNT];  /* Remote sink ASEs, in discovery order. */
-  esp_ble_audio_bap_ep_t *src[CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SRC_COUNT];  /* Remote source ASEs. */
-  ble_audio_uc_discovered_t info;  /* Accumulated locations/contexts, emitted with UC_DISCOVERED. */
-  int sink_err;                    /* Sink discovery result, reported if no ASE is found at all. */
+  esp_ble_audio_bap_ep_t *snk[CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SNK_COUNT]; /* Remote sink ASEs, in discovery order. */
+  esp_ble_audio_bap_ep_t *src[CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SRC_COUNT]; /* Remote source ASEs. */
+  ble_audio_uc_discovered_t info;                                          /* Accumulated locations/contexts, emitted with UC_DISCOVERED. */
+  int sink_err;                                                            /* Sink discovery result, reported if no ASE is found at all. */
 } uc_peer_t;
 
 static struct {
   bool registered;
-  _Atomic bool active;           /* A setup (or the streams it produced) is in progress. */
-  _Atomic bool stopping;         /* bleAudioUcStop() is releasing; ASCS errors are ignored. */
-  _Atomic bool started_emitted;  /* UC_STARTED already sent for this setup. */
+  _Atomic bool active;          /* A setup (or the streams it produced) is in progress. */
+  _Atomic bool stopping;        /* bleAudioUcStop() is releasing; ASCS errors are ignored. */
+  _Atomic bool started_emitted; /* UC_STARTED already sent for this setup. */
   esp_ble_audio_bap_unicast_group_t *group;
   uc_peer_t peers[UC_MAX_PEERS];
   /* Sequencer guard. Setup entry points run on the caller task while stream
@@ -1209,7 +1220,7 @@ static struct {
 
   _Atomic bool guard;
   _Atomic uint32_t gen;
-  _Atomic bool stop_requested;   /* uc_fail asked for a stop; serviced by the advance prologue. */
+  _Atomic bool stop_requested; /* uc_fail asked for a stop; serviced by the advance prologue. */
 } s_uc;
 
 /* Peer-table lock. s_uc.peers[] is written by host-task discovery callbacks
@@ -1990,10 +2001,10 @@ void bleAudioBroadcastSlotsDown(ble_audio_stream_kind_t kind) {
  */
 static struct {
   bool cb_registered;
-  bool adv_added;            /* The advertising set is registered with the BAP broadcast layer. */
-  _Atomic bool big_pending;  /* broadcast_source_start succeeded, BIG not yet STREAMING or stopped. */
+  bool adv_added;           /* The advertising set is registered with the BAP broadcast layer. */
+  _Atomic bool big_pending; /* broadcast_source_start succeeded, BIG not yet STREAMING or stopped. */
   uint8_t adv_handle;
-  _Atomic(esp_ble_audio_bap_broadcast_source_t *) source;  /* NULL when no source exists; set by the caller task, compared by the host task. */
+  _Atomic(esp_ble_audio_bap_broadcast_source_t *) source; /* NULL when no source exists; set by the caller task, compared by the host task. */
 } s_bsrc;
 
 /* BIG created / terminated; per-BIS state arrives through the stream ops. */
@@ -2027,8 +2038,10 @@ static void bsrc_report_started(void) {
   bleAudioEngineEmit(BLE_AUDIO_EVT_BSRC_STARTED, CONN_NONE, 0, NULL);
 }
 
-int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
-                       const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
+int bleAudioBsrcCreate(
+  ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec, const ble_audio_qos_t *qos, uint16_t context,
+  const uint8_t *code
+) {
   /*
    * The subgroup codec config and the QoS are stored in slots[0]; every BIS
    * shares them. With per-BIS locations the subgroup carries no channel
@@ -2284,9 +2297,9 @@ void *bleAudioBsrcHandle(void) {
 #define AD_TYPE_BROADCAST_NAME 0x30
 
 static struct {
-  bool enabled;        /* bleAudioBsinkInit() ran; GAP events are routed here. */
+  bool enabled; /* bleAudioBsinkInit() ran; GAP events are routed here. */
   bool cb_registered;
-  bool delegator;      /* Scan delegator (BASS) registered. */
+  bool delegator; /* Scan delegator (BASS) registered. */
   /* Cross-task state (caller-task API vs. host-task stack callbacks): plain
    * readers/writers on different cores are a data race, so the claim-path
    * flags, handles, IDs and BIS-selection inputs are _Atomic (same
@@ -2295,24 +2308,24 @@ static struct {
    * (base_received, failed_no_match, fail_mask, base_bis), and the slot/code
    * tables, which are staged at apply time strictly before any host event
    * can reference them and cleared by deinit while the host is down. */
-  _Atomic bool scanning;       /* Report Broadcast Audio announcements (BSINK_FOUND). */
-  _Atomic bool armed;          /* The next PA sync belongs to the sink. */
-  _Atomic bool hold;           /* Stopped on request: do not resync until re-armed. */
-  bool base_received;  /* BASE decoded for the current sink; later copies are ignored. */
-  _Atomic bool syncing;        /* BIG sync requested or established. */
+  _Atomic bool scanning; /* Report Broadcast Audio announcements (BSINK_FOUND). */
+  _Atomic bool armed;    /* The next PA sync belongs to the sink. */
+  _Atomic bool hold;     /* Stopped on request: do not resync until re-armed. */
+  bool base_received;    /* BASE decoded for the current sink; later copies are ignored. */
+  _Atomic bool syncing;  /* BIG sync requested or established. */
   _Atomic bool has_code;
-  bool failed_no_match;   /* BSINK_SYNC_FAILED(-ENOENT) latched for these inputs. */
-  uint32_t fail_mask;     /* BIS-selection inputs the latch was computed from. */
-  _Atomic bool failed_no_code; /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
-  _Atomic uint16_t sync_handle;   /* PA sync in use, SYNC_NONE when not synced. */
-  _Atomic uint32_t broadcast_id;  /* 24-bit Broadcast_ID of the target. */
-  uint32_t base_bis;      /* BIS indexes (bitmask, bit 0 = BIS 1) offered by the BASE. */
-  _Atomic uint32_t pref_mask;  /* Local BIS preference, 0 = any. */
-  _Atomic uint32_t requested;  /* Assistant BIS request, BIS_SYNC_NO_PREF = any. */
+  bool failed_no_match;          /* BSINK_SYNC_FAILED(-ENOENT) latched for these inputs. */
+  uint32_t fail_mask;            /* BIS-selection inputs the latch was computed from. */
+  _Atomic bool failed_no_code;   /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
+  _Atomic uint16_t sync_handle;  /* PA sync in use, SYNC_NONE when not synced. */
+  _Atomic uint32_t broadcast_id; /* 24-bit Broadcast_ID of the target. */
+  uint32_t base_bis;             /* BIS indexes (bitmask, bit 0 = BIS 1) offered by the BASE. */
+  _Atomic uint32_t pref_mask;    /* Local BIS preference, 0 = any. */
+  _Atomic uint32_t requested;    /* Assistant BIS request, BIS_SYNC_NO_PREF = any. */
   _Atomic uint8_t n_slots;
-  ble_audio_slot_t *slots[POOL_BSNK];  /* Streams the chosen BISes are bound to, in order. */
+  ble_audio_slot_t *slots[POOL_BSNK]; /* Streams the chosen BISes are bound to, in order. */
   uint8_t code[BLE_AUDIO_BCODE_SIZE];
-  _Atomic(esp_ble_audio_bap_broadcast_sink_t *) sink;  /* Claimed PA sync's sink; host task creates/deletes, C++ stops. */
+  _Atomic(esp_ble_audio_bap_broadcast_sink_t *) sink; /* Claimed PA sync's sink; host task creates/deletes, C++ stops. */
 } s_bsnk;
 
 /**
@@ -2334,14 +2347,17 @@ static void bsnk_create(void) {
   esp_err_t err = esp_ble_audio_bap_broadcast_sink_create(atomic_load(&s_bsnk.sync_handle), atomic_load(&s_bsnk.broadcast_id), &sink);
   atomic_store(&s_bsnk.sink, sink);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "broadcast sink: create on PA sync 0x%04x (broadcast 0x%06lx) failed: %d", atomic_load(&s_bsnk.sync_handle), (unsigned long)atomic_load(&s_bsnk.broadcast_id), err);
+    ESP_LOGE(
+      TAG, "broadcast sink: create on PA sync 0x%04x (broadcast 0x%06lx) failed: %d", atomic_load(&s_bsnk.sync_handle),
+      (unsigned long)atomic_load(&s_bsnk.broadcast_id), err
+    );
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, (int)err, NULL);
   }
 }
 
 typedef struct {
   ble_audio_bsink_found_t *out;
-  bool has_id;  /* A Broadcast Audio Announcement was present. */
+  bool has_id; /* A Broadcast Audio Announcement was present. */
 } scan_parse_t;
 
 /**
@@ -2605,8 +2621,8 @@ static int sd_pa_sync_term_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_sca
 }
 
 /* Assistant supplied the Broadcast Code; it is used from the next BIG sync attempt. */
-static void sd_broadcast_code(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs,
-                              const uint8_t code[ESP_BLE_ISO_BROADCAST_CODE_SIZE]) {
+static void
+  sd_broadcast_code(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs, const uint8_t code[ESP_BLE_ISO_BROADCAST_CODE_SIZE]) {
   (void)rs;
   memcpy(s_bsnk.code, code, BLE_AUDIO_BCODE_SIZE);
   atomic_store(&s_bsnk.has_code, true);
@@ -2620,8 +2636,9 @@ static void sd_broadcast_code(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan
  * request naming specific BISes in two subgroups is rejected. An all-zero
  * request means "leave the BIG": the sink stops and holds until re-armed.
  */
-static int sd_bis_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs,
-                           const uint32_t bis_sync_req[CONFIG_BT_BAP_BASS_MAX_SUBGROUPS]) {
+static int sd_bis_sync_req(
+  esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_delegator_recv_state_t *rs, const uint32_t bis_sync_req[CONFIG_BT_BAP_BASS_MAX_SUBGROUPS]
+) {
   (void)conn;
   uint32_t req = 0;
   for (uint8_t i = 0; i < rs->num_subgroups && i < CONFIG_BT_BAP_BASS_MAX_SUBGROUPS; i++) {
@@ -2902,8 +2919,10 @@ int bleAudioUcStop(void) {
 #endif /* !BLE_AUDIO_UNICAST_CLIENT_SUPPORTED */
 
 #if !BLE_AUDIO_BROADCAST_SOURCE_SUPPORTED
-int bleAudioBsrcCreate(ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec,
-                       const ble_audio_qos_t *qos, uint16_t context, const uint8_t *code) {
+int bleAudioBsrcCreate(
+  ble_audio_slot_t *const slots[], const uint32_t *locations, uint8_t count, const ble_audio_codec_t *codec, const ble_audio_qos_t *qos, uint16_t context,
+  const uint8_t *code
+) {
   (void)slots;
   (void)locations;
   (void)count;

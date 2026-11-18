@@ -28,7 +28,7 @@
 struct BLEAudioMicDevice::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLESharedMutex mtx;
-  std::atomic<uint8_t> muteState{BLE_AUDIO_MICP_UNMUTED}; ///< Raw MICS state (UNMUTED/MUTED/DISABLED).
+  std::atomic<uint8_t> muteState{BLE_AUDIO_MICP_UNMUTED};  ///< Raw MICS state (UNMUTED/MUTED/DISABLED).
   std::atomic<uint8_t> lastOp{(uint8_t)BLEAudioMicDevice::Operation::Unknown};
   MuteCallback onMuteChangedCb;
   ResultCallback onResultCb;
@@ -132,15 +132,13 @@ BLEAudioMicDevice BLEAudio::createMicDevice() {
   if (ensureActive() != BTStatus::OK) {
     return BLEAudioMicDevice();  // begin() already logged the cause
   }
-  return BLEAudioImplCommon::createStagedRole<BLEAudioMicDevice>(
-    _impl, "createMicDevice", BLE_AUDIO_GRP_MICP_DEVICE, [](BLEAudioMicDevice::Impl &s) {
-      BTStatus st = bleAudioStatus(bleAudioMicpDevInit(s.muteState.load() == BLE_AUDIO_MICP_MUTED));
-      if (st && s.muteState.load() == BLE_AUDIO_MICP_DISABLED) {
-        st = bleAudioStatus(bleAudioMicpDevSetMute(BLE_AUDIO_MICP_DISABLED));
-      }
-      return st;
+  return BLEAudioImplCommon::createStagedRole<BLEAudioMicDevice>(_impl, "createMicDevice", BLE_AUDIO_GRP_MICP_DEVICE, [](BLEAudioMicDevice::Impl &s) {
+    BTStatus st = bleAudioStatus(bleAudioMicpDevInit(s.muteState.load() == BLE_AUDIO_MICP_MUTED));
+    if (st && s.muteState.load() == BLE_AUDIO_MICP_DISABLED) {
+      st = bleAudioStatus(bleAudioMicpDevSetMute(BLE_AUDIO_MICP_DISABLED));
     }
-  );
+    return st;
+  });
 }
 #endif
 
@@ -152,7 +150,7 @@ struct BLEAudioMicController::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;
   BLESharedMutex mtx;
   BLEAudioControlLink link;
-  std::atomic<uint8_t> muteState{BLE_AUDIO_MICP_UNMUTED}; ///< Raw MICS state (UNMUTED/MUTED/DISABLED).
+  std::atomic<uint8_t> muteState{BLE_AUDIO_MICP_UNMUTED};  ///< Raw MICS state (UNMUTED/MUTED/DISABLED).
   std::atomic<uint8_t> lastOp{(uint8_t)BLEAudioMicController::Operation::Unknown};
   DiscoveredCallback onDiscoveredCb;
   MuteCallback onMuteChangedCb;
@@ -174,8 +172,7 @@ struct BLEAudioMicController::Impl {
         // application waiting for a notification that will never arrive. A
         // late stack error for the same op is dropped below (unknown link),
         // keeping exactly one terminal event per operation.
-        const auto pending = static_cast<BLEAudioMicController::Operation>(
-            lastOp.exchange((uint8_t)BLEAudioMicController::Operation::Unknown));
+        const auto pending = static_cast<BLEAudioMicController::Operation>(lastOp.exchange((uint8_t)BLEAudioMicController::Operation::Unknown));
         muteState.store(BLE_AUDIO_MICP_UNMUTED, std::memory_order_relaxed);
         if (pending != BLEAudioMicController::Operation::Unknown) {
           if (auto cb = bleAudioCopyCallback(*this, &Impl::onResultCb)) {
@@ -357,7 +354,8 @@ BLEAudioMicController BLEAudio::createMicController() {
     return BLEAudioMicController();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioMicController>(
-    _impl, "createMicController", BLE_AUDIO_GRP_MICP_CONTROLLER, [](BLEAudioMicController::Impl &) {
+    _impl, "createMicController", BLE_AUDIO_GRP_MICP_CONTROLLER,
+    [](BLEAudioMicController::Impl &) {
       return bleAudioStatus(bleAudioMicpCtlrInit());
     }
   );

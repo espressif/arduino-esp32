@@ -23,7 +23,6 @@ import math
 import os
 import socket
 import struct
-import subprocess
 import tempfile
 import time
 import wave
@@ -430,9 +429,7 @@ async def bumble_session(transport: str | None = None):
     t = transport or default_transport()
     # Raw USB skips AIC firmware load → HCI Reset hangs.
     if t.startswith("usb:"):
-        LOGGER.warning(
-            "transport %s skips btusb firmware on AIC8800; using hci-socket:0", t
-        )
+        LOGGER.warning("transport %s skips btusb firmware on AIC8800; using hci-socket:0", t)
         t = "hci-socket:0"
     hci_index = _hci_index_from_transport(t)
 
@@ -481,24 +478,19 @@ async def bumble_session(transport: str | None = None):
             config.le_enabled = True
             config.cis_enabled = True
             config.eatt_enabled = False
-            device = Device.from_config_with_hci(
-                config, hci_transport.source, hci_transport.sink
-            )
+            device = Device.from_config_with_hci(config, hci_transport.source, hci_transport.sink)
             device.pairing_config_factory = lambda _conn: PairingConfig(
                 sc=True,
                 mitm=False,
                 bonding=True,
-                delegate=PairingDelegate(
-                    io_capability=PairingDelegate.IoCapability.NO_OUTPUT_NO_INPUT
-                ),
+                delegate=PairingDelegate(io_capability=PairingDelegate.IoCapability.NO_OUTPUT_NO_INPUT),
             )
             LOGGER.info("bumble: power_on (addr=%s)", host_addr)
             try:
                 await asyncio.wait_for(device.power_on(), timeout=15.0)
             except asyncio.TimeoutError as e:
                 raise TimeoutError(
-                    f"HCI power_on timed out on {t} "
-                    "(controller not answering Reset — check firmware / transport)"
+                    f"HCI power_on timed out on {t} " "(controller not answering Reset — check firmware / transport)"
                 ) from e
             LOGGER.info("bumble: powered on (%s)", t)
             await ensure_iso_ready(device)
@@ -532,7 +524,7 @@ def _hci_reason_name(reason) -> str:
     return f"0x{code:02x}/{known.get(code, 'UNKNOWN')}"
 
 
-async def connect_and_pair(
+async def connect_and_pair(  # noqa: C901 - retry/backoff state machine kept together
     device,
     address,
     timeout: float = 20.0,
@@ -596,16 +588,14 @@ async def connect_and_pair(
             connection.on("disconnection", _on_disc)
 
             # Watch for early 0x3E / other drops before starting SMP. pair()
-            # registered after a silent drop will hang until cancelled.
+            # registered after a silent drop will hang until canceled.
             try:
                 await asyncio.wait_for(disc_event.wait(), timeout=0.8)
             except asyncio.TimeoutError:
                 pass
             else:
                 reason = disc_reason[-1] if disc_reason else None
-                last_err = ConnectionError(
-                    f"early disconnect after connect reason={_hci_reason_name(reason)}"
-                )
+                last_err = ConnectionError(f"early disconnect after connect reason={_hci_reason_name(reason)}")
                 LOGGER.warning(
                     "connect_and_pair attempt %d/%d: %s",
                     i + 1,
@@ -638,7 +628,7 @@ async def connect_and_pair(
             except asyncio.CancelledError as e:
                 reason = disc_reason[-1] if disc_reason else None
                 LOGGER.warning(
-                    "pair() cancelled attempt %d/%d disc=%s",
+                    "pair() canceled attempt %d/%d disc=%s",
                     i + 1,
                     attempts,
                     [_hci_reason_name(r) for r in disc_reason],
@@ -646,9 +636,9 @@ async def connect_and_pair(
                 if getattr(connection, "is_encrypted", False):
                     pass  # treat as success below
                 else:
-                    last_err = ConnectionError(
-                        f"pair cancelled reason={_hci_reason_name(reason)}"
-                    ) if reason is not None else e
+                    last_err = (
+                        ConnectionError(f"pair canceled reason={_hci_reason_name(reason)}") if reason is not None else e
+                    )
                     # Dead handle (typical after 0x3E): skip HCI Disconnect.
                     if not disc_event.is_set():
                         try:
@@ -687,15 +677,11 @@ async def connect_and_pair(
             return connection
         except asyncio.CancelledError as e:
             last_err = e
-            LOGGER.warning(
-                "connect_and_pair attempt %d/%d cancelled: %s", i + 1, attempts, e
-            )
+            LOGGER.warning("connect_and_pair attempt %d/%d canceled: %s", i + 1, attempts, e)
             await asyncio.sleep(0.5 + 0.5 * i)
         except Exception as e:  # noqa: BLE001
             last_err = e
-            LOGGER.warning(
-                "connect_and_pair attempt %d/%d failed: %s", i + 1, attempts, e
-            )
+            LOGGER.warning("connect_and_pair attempt %d/%d failed: %s", i + 1, attempts, e)
             if connection is not None:
                 try:
                     await asyncio.wait_for(connection.disconnect(), timeout=2.0)
@@ -777,8 +763,7 @@ async def ensure_iso_ready(device) -> None:
             iso_len = int(buf.iso_data_packet_length)
             iso_n = int(buf.total_num_iso_data_packets)
             LOGGER.info(
-                "bumble: LE Buffer Size V2 iso_len=%s iso_packets=%s "
-                "le_acl_len=%s le_acl_packets=%s",
+                "bumble: LE Buffer Size V2 iso_len=%s iso_packets=%s " "le_acl_len=%s le_acl_packets=%s",
                 iso_len,
                 iso_n,
                 buf.le_acl_data_packet_length,
@@ -854,9 +839,7 @@ async def scan_by_name(device, name: str, timeout: float = 15.0):
         ad = advertisement.data
         if ad is None:
             return
-        adv_name = ad.get(AdvertisingData.COMPLETE_LOCAL_NAME) or ad.get(
-            AdvertisingData.SHORTENED_LOCAL_NAME
-        )
+        adv_name = ad.get(AdvertisingData.COMPLETE_LOCAL_NAME) or ad.get(AdvertisingData.SHORTENED_LOCAL_NAME)
         if adv_name == name and advertisement.is_connectable:
             found.set_result(advertisement.address)
 
@@ -910,9 +893,7 @@ async def find_broadcast(device, broadcast_id: int, timeout: float = 20.0):
                 bid = ann.broadcast_id
             if bid != broadcast_id:
                 continue
-            name = ad.get(AdvertisingData.COMPLETE_LOCAL_NAME) or ad.get(
-                AdvertisingData.SHORTENED_LOCAL_NAME
-            )
+            name = ad.get(AdvertisingData.COMPLETE_LOCAL_NAME) or ad.get(AdvertisingData.SHORTENED_LOCAL_NAME)
             has_pba = any(
                 u == gatt.GATT_PUBLIC_BROADCAST_ANNOUNCEMENT_SERVICE
                 for u, _ in (ad.get_all(AdvertisingData.SERVICE_DATA_16_BIT_UUID) or [])
@@ -971,9 +952,7 @@ class Gatt:
         *,
         name: str | None = None,
     ):
-        connection = await connect_and_pair(
-            device, address, timeout=timeout, name=name
-        )
+        connection = await connect_and_pair(device, address, timeout=timeout, name=name)
         from bumble.device import Peer
 
         peer = Peer(connection)
@@ -1192,7 +1171,7 @@ def _lc3_codec_config():
     )
 
 
-async def unicast_client_stream(
+async def unicast_client_stream(  # noqa: C901 - full BAP setup/teardown flow
     device,
     address,
     *,
@@ -1244,9 +1223,7 @@ async def unicast_client_stream(
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             try:
-                data = await asyncio.wait_for(
-                    q.get(), timeout=min(0.5, deadline - time.monotonic())
-                )
+                data = await asyncio.wait_for(q.get(), timeout=min(0.5, deadline - time.monotonic()))
                 if len(data) >= 2 and data[0] == ase_id and data[1] == want:
                     return data
             except asyncio.TimeoutError:
@@ -1260,9 +1237,7 @@ async def unicast_client_stream(
                 if len(cur) >= 2 and cur[0] == ase_id and cur[1] == want:
                     return cur
         cur = bytes(await ase_char.read_value())
-        raise TimeoutError(
-            f"ASE {ase_id} did not reach state {want} (now {cur.hex()})"
-        )
+        raise TimeoutError(f"ASE {ase_id} did not reach state {want} (now {cur.hex()})")
 
     connection = await connect_and_pair(device, address, name=name)
     peer = Peer(connection)
@@ -1398,9 +1373,7 @@ async def unicast_client_stream(
     LOGGER.info("unicast: Enable sink ASE %s", sink_id)
     await ase_write(ASE_Enable(ase_id=[sink_id], metadata=[b""]))
     try:
-        await wait_state(
-            ascs.sink_ase[0], sink_id, AseStateMachine.State.ENABLING, timeout=8.0
-        )
+        await wait_state(ascs.sink_ase[0], sink_id, AseStateMachine.State.ENABLING, timeout=8.0)
     except TimeoutError:
         cur = bytes(await ascs.sink_ase[0].read_value())
         LOGGER.warning(
@@ -1460,9 +1433,7 @@ async def unicast_client_stream(
 
     sink_state = bytes(await ascs.sink_ase[0].read_value())
     if len(sink_state) < 2 or sink_state[1] != AseStateMachine.State.STREAMING:
-        await wait_state(
-            ascs.sink_ase[0], sink_id, AseStateMachine.State.STREAMING, timeout=8.0
-        )
+        await wait_state(ascs.sink_ase[0], sink_id, AseStateMachine.State.STREAMING, timeout=8.0)
     LOGGER.info("unicast: sink STREAMING")
 
     await cis_link.setup_data_path(direction=CisLink.Direction.HOST_TO_CONTROLLER)
@@ -1567,9 +1538,7 @@ async def broadcast_sink_capture(
         broadcast = await asyncio.wait_for(matched, timeout=sync_timeout)
     except asyncio.TimeoutError as e:
         await scanner.stop()
-        raise RuntimeError(
-            f"broadcast id 0x{broadcast_id:06x} not seen within {sync_timeout}s"
-        ) from e
+        raise RuntimeError(f"broadcast id 0x{broadcast_id:06x} not seen within {sync_timeout}s") from e
 
     ready = asyncio.Event()
 
@@ -1631,9 +1600,7 @@ async def broadcast_sink_capture(
         sample_rate_hz=sampling_frequency.hz,
         num_channels=num_bis,
     )
-    lc3_queues: list[collections.deque[bytes]] = [
-        collections.deque() for _ in range(num_bis)
-    ]
+    lc3_queues: list[collections.deque[bytes]] = [collections.deque() for _ in range(num_bis)]
     pcm_out = bytearray()
     done_at = time.monotonic() + capture_seconds
     finished = asyncio.Event()
@@ -1658,9 +1625,7 @@ async def broadcast_sink_capture(
     try:
         await asyncio.wait_for(finished.wait(), timeout=capture_seconds + 5.0)
     except asyncio.TimeoutError:
-        LOGGER.warning(
-            "broadcast: capture window ended with %d PCM bytes", len(pcm_out)
-        )
+        LOGGER.warning("broadcast: capture window ended with %d PCM bytes", len(pcm_out))
 
     try:
         await big_sync.terminate()

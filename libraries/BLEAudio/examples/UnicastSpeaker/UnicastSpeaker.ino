@@ -68,10 +68,14 @@ void setup() {
   }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
-  audio.onLinkReady([](uint16_t conn) { Serial.printf("Sender connected (link %u)\n", conn); });
+  audio.onLinkReady([](uint16_t conn) {
+    Serial.printf("Sender connected (link %u)\n", conn);
+  });
 
   // onDisconnected() fires when the link drops (or a connect() attempt fails).
-  audio.onDisconnected([](uint16_t conn) { Serial.printf("Sender disconnected (link %u)\n", conn); });
+  audio.onDisconnected([](uint16_t conn) {
+    Serial.printf("Sender disconnected (link %u)\n", conn);
+  });
 
   // A standalone speaker is a coordinated set of one. Publishing CAS (+ CSIS)
   // lets a phone's CAP initiator discover and drive it like any set member.
@@ -109,10 +113,14 @@ void setup() {
   unicastServer.stream(0).onConfigured(onSinkConfigured);
 
   // onStarted() fires when the CIS starts streaming. connHandle() is the ACL link it runs on.
-  unicastServer.stream(0).onStarted([](BLEAudioStream &s) { Serial.printf("Playing (link %u)\n", s.connHandle()); });
+  unicastServer.stream(0).onStarted([](BLEAudioStream &s) {
+    Serial.printf("Playing (link %u)\n", s.connHandle());
+  });
 
   // onStopped() fires when streaming ends. Reason is the HCI/ASCS code.
-  unicastServer.stream(0).onStopped([](BLEAudioStream &, uint8_t reason) { Serial.printf("Stopped (reason 0x%02X)\n", reason); });
+  unicastServer.stream(0).onStopped([](BLEAudioStream &, uint8_t reason) {
+    Serial.printf("Stopped (reason 0x%02X)\n", reason);
+  });
 
   // Let the sender change our volume over VCP.
   // createVolumeRenderer() publishes VCS: the volume service the peer drives.

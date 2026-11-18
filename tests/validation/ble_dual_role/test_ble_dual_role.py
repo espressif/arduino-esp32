@@ -58,7 +58,8 @@ def test_ble_dual_role(dut, ci_job_id):
     reverse_clients = 0
     for _ in range(3):
         m = dut1.expect(
-            r"\[DUT1\] (Reverse client ([12]) (connected|failed: [^\r\n]*)|Reverse phase skipped on NimBLE|Lookup stack=[^\r\n]*)\r?\n",
+            r"\[DUT1\] (Reverse client ([12]) (connected|failed: [^\r\n]*)|"
+            r"Reverse phase skipped on NimBLE|Lookup stack=[^\r\n]*)\r?\n",
             timeout=40,
         )
         line = m.group(0)

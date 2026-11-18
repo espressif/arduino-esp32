@@ -38,13 +38,13 @@ extern "C" {
 
 /** Volume state (VCS), local or remote. */
 typedef struct {
-  uint8_t volume;  /*!< 0-255. */
+  uint8_t volume; /*!< 0-255. */
   bool mute;
 } ble_audio_vcp_state_t;
 
 /** Audio Input Control state of the peer's first AICS instance. */
 typedef struct {
-  int8_t gain;     /*!< Gain setting, in the instance's gain units. */
+  int8_t gain; /*!< Gain setting, in the instance's gain units. */
   bool mute;
 } ble_audio_aics_state_t;
 
@@ -81,8 +81,8 @@ enum {
 
 /** Payload of BLE_AUDIO_EVT_VCP_CTLR_DISCOVERED. */
 typedef struct {
-  uint8_t vocs_count;  /*!< Volume Offset Control instances on the peer. */
-  uint8_t aics_count;  /*!< Audio Input Control instances on the peer. */
+  uint8_t vocs_count; /*!< Volume Offset Control instances on the peer. */
+  uint8_t aics_count; /*!< Audio Input Control instances on the peer. */
 } ble_audio_vcp_discovered_t;
 
 /** @brief Register the volume controller callbacks. */
@@ -139,7 +139,12 @@ int bleAudioMicpCtlrSetGain(uint16_t conn_handle, int8_t gain);
 /* ── MCP media player (local player behind MCS/GMCS) ────────────────────── */
 
 /** Media states, same values as `ESP_BLE_AUDIO_MEDIA_PROXY_STATE_*`. */
-enum { BLE_AUDIO_MCP_INACTIVE = 0, BLE_AUDIO_MCP_PLAYING, BLE_AUDIO_MCP_PAUSED, BLE_AUDIO_MCP_SEEKING };
+enum {
+  BLE_AUDIO_MCP_INACTIVE = 0,
+  BLE_AUDIO_MCP_PLAYING,
+  BLE_AUDIO_MCP_PAUSED,
+  BLE_AUDIO_MCP_SEEKING
+};
 
 /** Command result code meaning success, same as `ESP_BLE_AUDIO_MEDIA_PROXY_CMD_SUCCESS`. */
 #define BLE_AUDIO_MCP_CMD_SUCCESS 1
@@ -162,7 +167,7 @@ typedef struct {
 } ble_audio_mcp_result_t;
 
 /**
- * @brief Initialise the local media player. The player's state and every
+ * @brief Initialize the local media player. The player's state and every
  *        command result (local or remote) are reported only when
  *        CONFIG_BT_MCTL_LOCAL_PLAYER_LOCAL_CONTROL is enabled.
  */
@@ -183,7 +188,11 @@ enum {
 };
 
 /** Values for bleAudioMcpCliRead(). */
-enum { BLE_AUDIO_MCP_READ_STATE = 0, BLE_AUDIO_MCP_READ_PLAYER_NAME, BLE_AUDIO_MCP_READ_TRACK_TITLE };
+enum {
+  BLE_AUDIO_MCP_READ_STATE = 0,
+  BLE_AUDIO_MCP_READ_PLAYER_NAME,
+  BLE_AUDIO_MCP_READ_TRACK_TITLE
+};
 
 /** @brief Register the media controller callbacks. */
 int bleAudioMcpCliInit(void);
@@ -214,9 +223,9 @@ enum {
 
 /** A client asked to place an outgoing call (dispatched synchronously so the handler can reject). */
 typedef struct {
-  uint8_t call_index;  /*!< Index the stack assigned to the new call. */
-  const char *uri;     /*!< Target URI; valid during the handler only. */
-  bool *accept; /*!< Handler writes false to reject; defaults to true. */
+  uint8_t call_index; /*!< Index the stack assigned to the new call. */
+  const char *uri;    /*!< Target URI; valid during the handler only. */
+  bool *accept;       /*!< Handler writes false to reject; defaults to true. */
 } ble_audio_ccp_originate_t;
 
 /** A call operation, from a client (server side) or its result (client side). */
@@ -248,8 +257,8 @@ enum {
 
 /** Payload of BLE_AUDIO_EVT_CCP_CLI_DISCOVERED. */
 typedef struct {
-  uint8_t tbs_count;  /*!< TBS instances found, as reported by the stack. */
-  bool gtbs;          /*!< The peer exposes the Generic TBS (the one the client drives). */
+  uint8_t tbs_count; /*!< TBS instances found, as reported by the stack. */
+  bool gtbs;         /*!< The peer exposes the Generic TBS (the one the client drives). */
 } ble_audio_ccp_discovered_t;
 
 /** State of one call on the peer. */
@@ -283,16 +292,16 @@ enum {
 /** A client selected a preset. */
 typedef struct {
   uint8_t index;
-  bool sync;  /*!< The client asked to apply it to the whole binaural set. */
+  bool sync; /*!< The client asked to apply it to the whole binaural set. */
 } ble_audio_has_select_t;
 
 /** One preset record (server name change or client read/notification). */
 typedef struct {
   uint8_t index;
   bool available;
-  bool writable;   /*!< The name may be changed remotely. */
-  bool is_last;    /*!< Last record of a read. */
-  const char *name;  /*!< Valid during the handler only. */
+  bool writable;    /*!< The name may be changed remotely. */
+  bool is_last;     /*!< Last record of a read. */
+  const char *name; /*!< Valid during the handler only. */
 } ble_audio_has_preset_t;
 
 /**

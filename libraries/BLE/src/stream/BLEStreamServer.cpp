@@ -89,9 +89,8 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
     }
   }
 
-  static BTStatus cancelStart(
-    BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status
-  ) {
+  static BTStatus
+    cancelStart(BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status) {
     if (BLEStream::Impl::cancelRoleStart(impl, role)) {
       return status;
     }
@@ -99,9 +98,8 @@ struct BLEStreamServerRole final : BLEStream::Impl::Role {
     return BTStatus(BTStatus::Busy);
   }
 
-  static BTStatus abortRegisteredStart(
-    BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status
-  ) {
+  static BTStatus
+    abortRegisteredStart(BLEStream &stream, const std::shared_ptr<BLEStream::Impl> &impl, const std::shared_ptr<BLEStreamServerRole> &role, BTStatus status) {
     BTStatus removeStatus;
 #if BLE_VALIDATION_HOOKS
     if (BLEValidationHooks::consumeFailure(BLEHooks.stream.removeFailures)) {

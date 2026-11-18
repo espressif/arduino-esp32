@@ -389,8 +389,8 @@ public:
 
   /** @brief Broadcast receive state reported by an acceptor (BASS). */
   struct ReceiveState {
-    uint16_t connHandle;      ///< Acceptor that reported it.
-    uint8_t sourceId;         ///< Source_ID assigned by the acceptor.
+    uint16_t connHandle;  ///< Acceptor that reported it.
+    uint8_t sourceId;     ///< Source_ID assigned by the acceptor.
     uint32_t broadcastId;
     uint8_t paSyncState;      ///< 0 not synced, 1 SyncInfo request, 2 synced, 3 failed, 4 no PAST.
     uint8_t encryptionState;  ///< 0 unencrypted, 1 code requested, 2 decrypting, 3 bad code.
@@ -488,8 +488,7 @@ public:
    * @return BTStatus::OK when queued; InvalidState on an empty handle; another
    *         error (including NotSupported with no BASS client in the build) otherwise.
    */
-  BTStatus startBroadcastReception(const BTAddress &source, uint8_t sid, uint32_t broadcastId, uint32_t bisSync = 0,
-                                   uint16_t paInterval = 0xFFFF);
+  BTStatus startBroadcastReception(const BTAddress &source, uint8_t sid, uint32_t broadcastId, uint32_t bisSync = 0, uint16_t paInterval = 0xFFFF);
   /**
    * @brief Ask the acceptors to stop receiving the broadcast started above.
    * @return BTStatus::OK when queued; InvalidState on an empty handle; another error otherwise.

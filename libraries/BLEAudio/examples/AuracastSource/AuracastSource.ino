@@ -75,10 +75,14 @@ void setup() {
   }
 
   // onStarted() fires once the BIG is up and the BISes carry audio.
-  source.onStarted([] { Serial.printf("Broadcasting \"%s\"\n", BROADCAST_NAME); });
+  source.onStarted([] {
+    Serial.printf("Broadcasting \"%s\"\n", BROADCAST_NAME);
+  });
 
   // onStopped() fires when the BIG ends. Reason is the HCI code (0x16 after stop()).
-  source.onStopped([](uint8_t reason) { Serial.printf("Broadcast stopped (reason 0x%02X)\n", reason); });
+  source.onStopped([](uint8_t reason) {
+    Serial.printf("Broadcast stopped (reason 0x%02X)\n", reason);
+  });
 
   // 3. Commit the roles (starts no audio by itself).
 

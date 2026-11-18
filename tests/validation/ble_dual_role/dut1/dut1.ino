@@ -162,8 +162,7 @@ void setup() {
   bool lookupCentral = !conns.empty() && conns[0].isCentral();
   bool lookupPeripheral = !conns.empty() && conns[0].isPeripheral();
   Serial.printf(
-    "[DUT1] Lookup stack=%s conns=%u central=%d peripheral=%d\n", BLE.getStackName(), (unsigned)conns.size(), (int)lookupCentral,
-    (int)lookupPeripheral
+    "[DUT1] Lookup stack=%s conns=%u central=%d peripheral=%d\n", BLE.getStackName(), (unsigned)conns.size(), (int)lookupCentral, (int)lookupPeripheral
   );
 
   // Give DUT0 time to sample its table, then tear the reverse links down and

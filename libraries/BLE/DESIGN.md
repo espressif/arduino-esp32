@@ -433,7 +433,7 @@ support two independent GATT owners (a second `ble_gatts_start()` reallocates an
 service-init calls are non-idempotent). The coordinator has two modes:
 
 - **Standalone** (no LE Audio): the coordinator performs the full `reset -> svc init -> add_svcs -> start`
-  rebuild, exactly as before. Non-audio behaviour is unchanged.
+  rebuild, exactly as before. Non-audio behavior is unchanged.
 - **Audio** (engine present): the LE Audio engine performs the service inits (in `esp_ble_audio_common_init`)
   and the single `ble_gatts_start` (in `esp_ble_audio_common_start`, triggered by `BLEAudio::begin()`); the
   plain-GATT server only records itself as a contributor. Immediately before the audio commit, the coordinator
@@ -823,10 +823,10 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
   property on these targets (pick a matching lib variant), not something `btStartMode()` can do.
   **To reclaim the unused half in a BTDM build (when the S31 controller gains runtime mode
   selection), change these together — implementing the release stubs alone is not enough:**
-  1. **Controller:** make `esp_bt_controller_enable(mode)` honour the requested mode (and the
+  1. **Controller:** make `esp_bt_controller_enable(mode)` honor the requested mode (and the
      broker/OSAL/coexistence path support a single half), and implement
      `esp_bt_mem_release()` / `esp_bt_controller_mem_release()` with the idle-controller
-     precondition. Until the enable mode is honoured, the implementation must refuse to free a
+     precondition. Until the enable mode is honored, the implementation must refuse to free a
      half the build-time mode still needs; a direct IDF caller must not be able to strand the
      other half.
   2. **Core (`cores/esp32/esp32-hal-bt.c`):** remove or make capability-based the
@@ -837,7 +837,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
      narrows to the surviving half. Keep the ESP32 path (`BT_MODE_MEM_RELEASE_PHYSICAL = 1`)
      unchanged.
   3. **Validation:** in `tests/validation/bt_mem_wrap`, phase 8's
-     `CONFIG_BT_DUAL_MODE_ARCH` branch becomes the physical-rejection behaviour, phase 9's direct
+     `CONFIG_BT_DUAL_MODE_ARCH` branch becomes the physical-rejection behavior, phase 9's direct
      Classic release + `btStartMode(BLE)` becomes valid, and phase 10's BTDM branch must assert
      the unused half is freed and the surviving half still starts. Add a `bt_classic` scenario
      that boots with the unused half released, narrows the controller, and still runs SPP/BLE.

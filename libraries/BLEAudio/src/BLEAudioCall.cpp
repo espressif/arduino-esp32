@@ -146,8 +146,7 @@ BTStatus BLEAudioCallServer::setUriSchemes(const String &schemes) {
 
 BTStatus BLEAudioCallServer::incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  return bleAudioStatus(
-      bleAudioCcpSrvIncoming(from.c_str(), friendlyName.length() ? friendlyName.c_str() : nullptr, &callIndex));
+  return bleAudioStatus(bleAudioCcpSrvIncoming(from.c_str(), friendlyName.length() ? friendlyName.c_str() : nullptr, &callIndex));
 }
 
 BTStatus BLEAudioCallServer::accept(uint8_t callIndex) {
@@ -221,9 +220,9 @@ BLEAudioCallServer BLEAudio::createCallServer() {
   if (ensureActive() != BTStatus::OK) {
     return BLEAudioCallServer();  // begin() already logged the cause
   }
-  return BLEAudioImplCommon::createStagedRole<BLEAudioCallServer>(
-    _impl, "createCallServer", BLE_AUDIO_GRP_CCP_SERVER, [](BLEAudioCallServer::Impl &p) { return p.apply(); }
-  );
+  return BLEAudioImplCommon::createStagedRole<BLEAudioCallServer>(_impl, "createCallServer", BLE_AUDIO_GRP_CCP_SERVER, [](BLEAudioCallServer::Impl &p) {
+    return p.apply();
+  });
 }
 #endif
 
@@ -365,7 +364,10 @@ BLEAudioCallController BLEAudio::createCallController() {
     return BLEAudioCallController();  // begin() already logged the cause
   }
   return BLEAudioImplCommon::createStagedRole<BLEAudioCallController>(
-    _impl, "createCallController", BLE_AUDIO_GRP_CCP_CLIENT, [](BLEAudioCallController::Impl &) { return bleAudioStatus(bleAudioCcpCliInit()); }
+    _impl, "createCallController", BLE_AUDIO_GRP_CCP_CLIENT,
+    [](BLEAudioCallController::Impl &) {
+      return bleAudioStatus(bleAudioCcpCliInit());
+    }
   );
 }
 #endif

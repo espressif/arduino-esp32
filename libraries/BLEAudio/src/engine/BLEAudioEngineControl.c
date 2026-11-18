@@ -58,7 +58,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CONN_NONE  BLE_AUDIO_CONN_NONE
+#define CONN_NONE BLE_AUDIO_CONN_NONE
 /** Handle of a stack connection pointer; server callbacks pass NULL for local changes. */
 #define CONN_OF(c) ((c) ? (c)->handle : CONN_NONE)
 
@@ -83,10 +83,10 @@ _Static_assert(CONFIG_BT_AICS_CLIENT_MAX_INSTANCE_COUNT >= 2 * BLE_MAX_CONN, "AI
 #endif
 
 /* True when at least one role is compiled in; gates the shared state and hooks. */
-#define CTL_ANY                                                                                                                        \
-  (BLE_AUDIO_VCP_RENDERER_SUPPORTED || BLE_AUDIO_VCP_CONTROLLER_SUPPORTED || BLE_AUDIO_MICP_DEVICE_SUPPORTED                           \
-   || BLE_AUDIO_MICP_CONTROLLER_SUPPORTED || MCP_SRV || BLE_AUDIO_MCP_CLIENT_SUPPORTED || BLE_AUDIO_CCP_SERVER_SUPPORTED                \
-   || BLE_AUDIO_CCP_CLIENT_SUPPORTED || BLE_AUDIO_HAS_SUPPORTED || BLE_AUDIO_HAS_CLIENT_SUPPORTED)
+#define CTL_ANY                                                                                                                                                \
+  (BLE_AUDIO_VCP_RENDERER_SUPPORTED || BLE_AUDIO_VCP_CONTROLLER_SUPPORTED || BLE_AUDIO_MICP_DEVICE_SUPPORTED || BLE_AUDIO_MICP_CONTROLLER_SUPPORTED || MCP_SRV \
+   || BLE_AUDIO_MCP_CLIENT_SUPPORTED || BLE_AUDIO_CCP_SERVER_SUPPORTED || BLE_AUDIO_CCP_CLIENT_SUPPORTED || BLE_AUDIO_HAS_SUPPORTED                            \
+   || BLE_AUDIO_HAS_CLIENT_SUPPORTED)
 
 #if CTL_ANY
 
@@ -109,12 +109,12 @@ enum {
 /* Roles registered this session; common_deinit releases the stack side. */
 static uint16_t s_roles;
 
-/** Return ESP_ERR_INVALID_STATE from the calling function unless role @p r was initialised. */
-#define NEED_ROLE(r)                    \
-  do {                                  \
-    if (!(s_roles & (r))) {             \
-      return ESP_ERR_INVALID_STATE;     \
-    }                                   \
+/** Return ESP_ERR_INVALID_STATE from the calling function unless role @p r was initialized. */
+#define NEED_ROLE(r)                \
+  do {                              \
+    if (!(s_roles & (r))) {         \
+      return ESP_ERR_INVALID_STATE; \
+    }                               \
   } while (0)
 
 /* ── Per-peer client state (one peer per role) ──────────────────────────── */
@@ -122,13 +122,13 @@ static uint16_t s_roles;
 #if BLE_AUDIO_VCP_CONTROLLER_SUPPORTED
 /** Volume controller peer. */
 static struct {
-  uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
-  bool syncing; /* discovered, waiting for the first state read */
-  bool discovering;                     ///< Discover call in flight; its callback may run inline.
-  ble_audio_vcp_discovered_t disc;      ///< Held until the first state read completes.
-  esp_ble_audio_vcp_vol_ctlr_t *ctlr;   ///< Stack instance for the peer.
-  esp_ble_audio_vocs_t *vocs;           ///< Peer's first VOCS instance, NULL when absent.
-  esp_ble_audio_aics_t *aics;           ///< Peer's first AICS instance, NULL when absent.
+  uint16_t conn;                       ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool syncing;                        /* discovered, waiting for the first state read */
+  bool discovering;                    ///< Discover call in flight; its callback may run inline.
+  ble_audio_vcp_discovered_t disc;     ///< Held until the first state read completes.
+  esp_ble_audio_vcp_vol_ctlr_t *ctlr;  ///< Stack instance for the peer.
+  esp_ble_audio_vocs_t *vocs;          ///< Peer's first VOCS instance, NULL when absent.
+  esp_ble_audio_aics_t *aics;          ///< Peer's first AICS instance, NULL when absent.
 } s_vctl = {.conn = CONN_NONE};
 #endif
 
@@ -155,17 +155,17 @@ static struct {
 #if BLE_AUDIO_CCP_CLIENT_SUPPORTED
 /** Call controller peer (tracks initial GTBS call-state read so originate inside onDiscovered cannot collide on ATT). */
 static struct {
-  uint16_t conn;                  ///< Peer passed to the last Discover, CONN_NONE when idle.
-  bool syncing;                   ///< Discovered, waiting for the initial GTBS call-state read before releasing DISCOVERED.
-  ble_audio_ccp_discovered_t disc;///< Held until the initial call-state read completes.
+  uint16_t conn;                    ///< Peer passed to the last Discover, CONN_NONE when idle.
+  bool syncing;                     ///< Discovered, waiting for the initial GTBS call-state read before releasing DISCOVERED.
+  ble_audio_ccp_discovered_t disc;  ///< Held until the initial call-state read completes.
 } s_tbsc = {.conn = CONN_NONE};
 #endif
 
 #if BLE_AUDIO_HAS_CLIENT_SUPPORTED
 /** Hearing aid controller peer. */
 static struct {
-  uint16_t conn;                        ///< Peer passed to the last Discover, CONN_NONE when idle.
-  esp_ble_audio_has_t *has;             ///< Stack instance, set by the discover callback.
+  uint16_t conn;             ///< Peer passed to the last Discover, CONN_NONE when idle.
+  esp_ble_audio_has_t *has;  ///< Stack instance, set by the discover callback.
 } s_hasc = {.conn = CONN_NONE};
 #endif
 
@@ -189,10 +189,10 @@ static struct {
 #endif
 
 /** Forget a client peer: clear all instance pointers and mark it idle. */
-#define PEER_RESET(p)             \
-  do {                            \
-    memset(&(p), 0, sizeof(p));   \
-    (p).conn = CONN_NONE;         \
+#define PEER_RESET(p)           \
+  do {                          \
+    memset(&(p), 0, sizeof(p)); \
+    (p).conn = CONN_NONE;       \
   } while (0)
 
 /* ── Unit hooks ─────────────────────────────────────────────────────────── */
@@ -264,7 +264,7 @@ static void ctl_on_deinit(void) {
 static const ble_audio_unit_hooks_t s_hooks = {.on_gap = ctl_on_gap, .on_deinit = ctl_on_deinit};
 
 /**
- * First step of every Init: requires an initialised engine and registers
+ * First step of every Init: requires an initialized engine and registers
  * this unit's hooks (idempotent, so every role can call it).
  */
 static int role_attach(void) {
@@ -1425,9 +1425,8 @@ static uint16_t hasc_conn(const esp_ble_audio_has_t *has) {
  * Discovery finished. Unlike VCP/MICP the stack hands out the HAS instance
  * only here, so the peer is matched by connection handle instead.
  */
-static void hasc_discover(
-  esp_ble_conn_t *conn, int err, esp_ble_audio_has_t *has, esp_ble_audio_has_hearing_aid_type_t type, esp_ble_audio_has_capabilities_t caps
-) {
+static void
+  hasc_discover(esp_ble_conn_t *conn, int err, esp_ble_audio_has_t *has, esp_ble_audio_has_hearing_aid_type_t type, esp_ble_audio_has_capabilities_t caps) {
   (void)caps;
   const uint16_t h = CONN_OF(conn);
   if (h != s_hasc.conn) {

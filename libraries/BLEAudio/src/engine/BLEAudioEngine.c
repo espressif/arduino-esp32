@@ -42,7 +42,7 @@
 // State
 // --------------------------------------------------------------------------
 
-static ble_audio_evt_sink_fn s_sink;  /* BLEAudio::Impl::dispatch trampoline. */
+static ble_audio_evt_sink_fn s_sink; /* BLEAudio::Impl::dispatch trampoline. */
 static void *s_sink_ctx;
 static _Atomic bool s_initialized;
 static _Atomic bool s_started;
@@ -104,10 +104,10 @@ typedef struct {
  * Row order MUST match BLEAudioCodecPreset. 44.1 kHz rows are framed.
  */
 static const preset_row_t s_presets[BLE_AUDIO_PRESET_COUNT] = {
-  {80, 7500, 26, 2, 2, 8},     {80, 10000, 30, 2, 2, 10},   {160, 7500, 30, 2, 2, 8},    {160, 10000, 40, 2, 2, 10},
-  {240, 7500, 45, 2, 2, 8},    {240, 10000, 60, 2, 2, 10},  {320, 7500, 60, 2, 2, 8},    {320, 10000, 80, 2, 2, 10},
-  {441, 8163, 97, 5, 4, 24},   {441, 10884, 130, 5, 4, 31}, {480, 7500, 75, 5, 4, 15},   {480, 10000, 100, 5, 4, 20},
-  {480, 7500, 90, 5, 4, 15},   {480, 10000, 120, 5, 4, 20}, {480, 7500, 117, 5, 4, 15},  {480, 10000, 155, 5, 4, 20},
+  {80, 7500, 26, 2, 2, 8},   {80, 10000, 30, 2, 2, 10},   {160, 7500, 30, 2, 2, 8},   {160, 10000, 40, 2, 2, 10},
+  {240, 7500, 45, 2, 2, 8},  {240, 10000, 60, 2, 2, 10},  {320, 7500, 60, 2, 2, 8},   {320, 10000, 80, 2, 2, 10},
+  {441, 8163, 97, 5, 4, 24}, {441, 10884, 130, 5, 4, 31}, {480, 7500, 75, 5, 4, 15},  {480, 10000, 100, 5, 4, 20},
+  {480, 7500, 90, 5, 4, 15}, {480, 10000, 120, 5, 4, 20}, {480, 7500, 117, 5, 4, 15}, {480, 10000, 155, 5, 4, 20},
 };
 
 /* Presets are mono (chan_alloc 0) with one frame block; roles set the allocation per stream. */
@@ -145,7 +145,7 @@ uint8_t bleAudioChannelCount(uint32_t chan_alloc) {
 // Links opened by bleAudioEngineConnect()
 // --------------------------------------------------------------------------
 
-#define MAX_LINKS BLE_MAX_CONN
+#define MAX_LINKS        BLE_MAX_CONN
 #define HCI_ROLE_CENTRAL 0x00
 static bool s_connect_pending; /* bleAudioEngineConnect() armed; the next central ACL is ours. */
 static struct bt_le_addr s_connect_target;
@@ -291,7 +291,8 @@ static void gap_cb(esp_ble_audio_gap_app_event_t *event) {
       link_on_connect(event->acl_connect.conn_handle, event->acl_connect.status, event->acl_connect.role, &event->acl_connect.dst);
       bleAudioEngineEmit(BLE_AUDIO_EVT_ACL_CONNECTED, event->acl_connect.conn_handle, event->acl_connect.status, NULL);
       break;
-    case ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT: {
+    case ESP_BLE_AUDIO_GAP_EVENT_ACL_DISCONNECT:
+    {
       int idx = link_index(event->acl_disconnect.conn_handle);
       if (idx >= 0) {
         s_links[idx] = BLE_AUDIO_CONN_NONE;
@@ -332,8 +333,10 @@ static void gatt_cb(esp_ble_audio_gatt_app_event_t *event) {
           bleAudioEngineEmit(BLE_AUDIO_EVT_GATT_DISCOVERED, event->gatt_mtu_change.conn_handle, 0, NULL);
         }
       } else {
-        log_w("conn %u: MTU %u below the LE Audio minimum %u, not discovering", event->gatt_mtu_change.conn_handle,
-              event->gatt_mtu_change.mtu, ESP_BLE_AUDIO_ATT_MTU_MIN);
+        log_w(
+          "conn %u: MTU %u below the LE Audio minimum %u, not discovering", event->gatt_mtu_change.conn_handle, event->gatt_mtu_change.mtu,
+          ESP_BLE_AUDIO_ATT_MTU_MIN
+        );
       }
       break;
     case ESP_BLE_AUDIO_GATT_EVENT_GATTC_DISC_CMPL:

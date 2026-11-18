@@ -72,5 +72,4 @@ static_assert(std::is_base_of<BLEScanImplCommon, BLEScan::Impl>::value, "BLEScan
 static_assert(std::is_base_of<BLEAdvertisingImplCommon, BLEAdvertising::Impl>::value, "BLEAdvertising::Impl must inherit BLEAdvertisingImplCommon");
 static_assert(std::is_base_of<BLESecurityImplCommon, BLESecurity::Impl>::value, "BLESecurity::Impl must inherit BLESecurityImplCommon");
 
-
 #endif /* BLE_ENABLED */

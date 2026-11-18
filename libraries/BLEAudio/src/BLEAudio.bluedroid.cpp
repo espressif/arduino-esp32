@@ -191,9 +191,7 @@ extern "C" void bleAudioHostResetGatt(void) {}
 
 #if BLE_SCANNING_SUPPORTED
 
-extern "C" int bleAudioEngineReceivePeriodicSync(
-  uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms
-) {
+extern "C" int bleAudioEngineReceivePeriodicSync(uint16_t conn_handle, uint8_t peer_addr_type, const uint8_t peer_addr[6], uint16_t skip, uint16_t timeout_ms) {
   if (!peer_addr) {
     return static_cast<int>(BTStatus::InvalidParam);
   }

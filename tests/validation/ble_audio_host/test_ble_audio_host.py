@@ -177,7 +177,7 @@ def _require_bumble():
 # ---------------------------------------------------------------------------
 
 
-async def _control_gatt(dut, name, record, local_svcs):
+async def _control_gatt(dut, name, record, local_svcs):  # noqa: C901 - phase driver kept as one flow
     _require_bumble()
     LOGGER.info("control_gatt: opening Bumble session (%s)", le.default_transport())
     async with le.bumble_session() as device:
@@ -311,9 +311,9 @@ async def _control_gatt(dut, name, record, local_svcs):
                     await le.ccp_originate(gatt, "tel:5551212")
                     await asyncio.sleep(1.0)
                     assert results, "originate: no Call Control Point notification"
-                    assert results[0][2] == 0x06, (
-                        f"originate: expected Invalid Outgoing URI, got notif {results[0].hex()}"
-                    )
+                    assert (
+                        results[0][2] == 0x06
+                    ), f"originate: expected Invalid Outgoing URI, got notif {results[0].hex()}"
 
                     await cp("accept", le.ccp_accept(gatt, call_index), le.CCP_OP_ACCEPT)
                     await cp("terminate", le.ccp_terminate(gatt, call_index), le.CCP_OP_TERMINATE)
@@ -344,9 +344,12 @@ async def _control_gatt(dut, name, record, local_svcs):
                 # Supported (0x2BCE). The stack pins supported per boot and the
                 # engine clamps available to the pinned value on re-begin.
                 import struct
+
                 supp = await gatt.read(le.CHR["SUPP_CTX"])
                 avail = await gatt.read(le.CHR["AVAIL_CTX"])
-                assert len(supp) == 4 and len(avail) == 4, f"PACS contexts wrong length: supp={supp.hex()} avail={avail.hex()}"
+                assert (
+                    len(supp) == 4 and len(avail) == 4
+                ), f"PACS contexts wrong length: supp={supp.hex()} avail={avail.hex()}"
                 s_snk, s_src = struct.unpack("<HH", supp)
                 a_snk, a_src = struct.unpack("<HH", avail)
                 assert (a_snk & ~s_snk) == 0, f"available sink {a_snk:#06x} not subset of supported {s_snk:#06x}"
@@ -374,9 +377,9 @@ async def _control_gatt(dut, name, record, local_svcs):
                 assert cas_rc == 0, f"CAS not in the DUT's GATT table (rc={cas_rc})"
                 csis_rc, csis_handle = local_svcs["CSIS"]
                 assert csis_rc == 0, f"CSIS not in the DUT's GATT table (rc={csis_rc})"
-                assert cas_handle > csis_handle, (
-                    f"CAS at {cas_handle} precedes CSIS at {csis_handle}; the include cannot resolve"
-                )
+                assert (
+                    cas_handle > csis_handle
+                ), f"CAS at {cas_handle} precedes CSIS at {csis_handle}; the include cannot resolve"
                 assert gatt.has_service(le.SVC["CSIS"]), "CAS includes CSIS but the host cannot see CSIS"
 
             check("cap", _cap)
@@ -499,9 +502,7 @@ async def _unicast_audio(name: str) -> dict:
         LOGGER.info("unicast: connecting to %s", address)
         # Allow connect retries (HCI 0x3E) + ASCS/CIS/LC3 within the budget.
         return await asyncio.wait_for(
-            le.unicast_client_stream(
-                device, address, name=name, tone_seconds=5.0, collect_source=True
-            ),
+            le.unicast_client_stream(device, address, name=name, tone_seconds=5.0, collect_source=True),
             timeout=120.0,
         )
 
@@ -558,9 +559,7 @@ async def _broadcast_audio() -> dict:
             le.require_iso_hci(device, "broadcast_audio")
         except RuntimeError as e:
             raise PhaseSkip(str(e)) from e
-        return await le.broadcast_sink_capture(
-            device, BROADCAST_ID, capture_seconds=5.0, sync_timeout=25.0
-        )
+        return await le.broadcast_sink_capture(device, BROADCAST_ID, capture_seconds=5.0, sync_timeout=25.0)
 
 
 def _phase_broadcast_audio(dut, name, record):
@@ -600,10 +599,7 @@ def _phase_broadcast_audio(dut, name, record):
         "  Compatible Galaxy Buds work; some One UI builds also play on the phone."
     )
     if not _wait_phone_ok(prompt):
-        raise PhaseSkip(
-            f"phone did not confirm hearing '{name}' within timeout "
-            f"(Bumble: {bumble_err})"
-        )
+        raise PhaseSkip(f"phone did not confirm hearing '{name}' within timeout " f"(Bumble: {bumble_err})")
     record("broadcast_audio.path", "phone_sink")
     record("broadcast_audio.phone_heard", "PASS")
 

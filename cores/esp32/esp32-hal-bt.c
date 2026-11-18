@@ -49,7 +49,7 @@ static bool _classicMemReleased = true;  // No Classic BT on this chip
 // if memory were gone — narrowing a BTDM request to one half hands the host a
 // controller that lacks the other half (see btStartMode for the failure modes).
 //
-// Future (S31 runtime mode selection): once the controller honours the enable
+// Future (S31 runtime mode selection): once the controller honors the enable
 // mode and implements the release APIs, remove this gate, the
 // CONFIG_BT_DUAL_MODE_ARCH clamp in btStartMode(), and the BTDM early return in
 // btMemRelease() together. Implementing the release stubs alone is not enough.
@@ -148,12 +148,10 @@ bool btBluedroidHostAcquire(void) {
     if (!_btHostExternal) {
       if (!btStart()) {
         ok = false;
-      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED &&
-                 esp_bluedroid_init() != ESP_OK) {
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_UNINITIALIZED && esp_bluedroid_init() != ESP_OK) {
         btStop();
         ok = false;
-      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED &&
-                 esp_bluedroid_enable() != ESP_OK) {
+      } else if (esp_bluedroid_get_status() == ESP_BLUEDROID_STATUS_INITIALIZED && esp_bluedroid_enable() != ESP_OK) {
         esp_bluedroid_deinit();
         btStop();
         ok = false;
@@ -278,8 +276,7 @@ bool btStartMode(bt_mode mode) {
   // ESP32's monolithic controller there is no per-mode runtime narrowing, so
   // clamp the request to the built-in mode and say so.
   if (esp_bt_mode != BT_MODE) {
-    log_w("btStartMode(%s) not available on this controller; running %s",
-          btModeStr(esp_bt_mode), btModeStr(BT_MODE));
+    log_w("btStartMode(%s) not available on this controller; running %s", btModeStr(esp_bt_mode), btModeStr(BT_MODE));
     esp_bt_mode = BT_MODE;
     cfg_bt_mode = esp_bt_mode;
   }

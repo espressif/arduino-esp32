@@ -99,9 +99,7 @@ void setup() {
   esp_bluedroid_disable();
   esp_bluedroid_deinit();
   btStop();
-  Serial.printf(
-    "[SERVER] ExtHost ble=%d bleKeep=%d spp=%d sppKeep=%d\n", (int)(bool)extBle, (int)extBleKeep, (int)(bool)extSpp, (int)extSppKeep
-  );
+  Serial.printf("[SERVER] ExtHost ble=%d bleKeep=%d spp=%d sppKeep=%d\n", (int)(bool)extBle, (int)extBleKeep, (int)(bool)extSpp, (int)extSppKeep);
 
   // Start BLE before Classic: BLE owns the shared Bluedroid host and
   // BluetoothSerial adopts it below. The reverse order (Classic owns, BLE
@@ -240,7 +238,9 @@ void setup() {
     BLEServer srv = BLE.createServer();
     static volatile bool coexBleSeen = false;
     coexBleSeen = false;
-    srv.onConnect([](BLEServer, const BLEConnInfo &) { coexBleSeen = true; });
+    srv.onConnect([](BLEServer, const BLEConnInfo &) {
+      coexBleSeen = true;
+    });
     BLEAdvertising adv = BLE.getAdvertising();
     adv.setType(BLEAdvType::ConnectableScannable);
     adv.setName(serverName + "_ble");
@@ -251,9 +251,7 @@ void setup() {
       delay(20);
     }
     bool bleConn = coexBleSeen || srv.getConnectedCount() > 0;
-    Serial.printf(
-      "[SERVER] Coex ble=%d adv=%d connected=%d spp=%d\n", (int)(bool)bs, (int)(bool)as, (int)bleConn, (int)SerialBT.hasClient()
-    );
+    Serial.printf("[SERVER] Coex ble=%d adv=%d connected=%d spp=%d\n", (int)(bool)bs, (int)(bool)as, (int)bleConn, (int)SerialBT.hasClient());
     SerialBT.print("COEX_BLE_SEEN");
     BLE.end(false);
     Serial.printf("[SERVER] Coex teardown spp=%d\n", (int)SerialBT.hasClient());
@@ -270,9 +268,7 @@ void setup() {
     BLE.end(true);
     bool endTrueKeep = SerialBT.hasClient();
     BTStatus endTrueAgain = BLE.begin(serverName + "_ble_endtrue2");
-    Serial.printf(
-      "[SERVER] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain
-    );
+    Serial.printf("[SERVER] Coex endtrue begin=%d keep=%d again=%d\n", (int)(bool)bs, (int)endTrueKeep, (int)(bool)endTrueAgain);
   }
 
   // Server-initiated per-peer disconnect

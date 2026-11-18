@@ -1749,7 +1749,7 @@ void loop() {
         delay(50);
       }
       // The ATT MTU exchange is not ordered against the conn-params update:
-      // Bluedroid serialises it behind the automatic service discovery, so it
+      // Bluedroid serializes it behind the automatic service discovery, so it
       // can complete after the param update. Sample only once both landed (or
       // the bound expires) so this measures the events, not the race.
       unsigned long mtuWait = millis();
@@ -1787,9 +1787,7 @@ void loop() {
       BTStatus pastArm = pastScan.receivePeriodicSync(c.getHandle());
       BTStatus pastBogus = pastScan.receivePeriodicSync(0xFFFF);
       BTStatus pastCancel = pastScan.stopPeriodicSyncReceive(c.getHandle());
-      Serial.printf(
-        "[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel
-      );
+      Serial.printf("[SERVER] Phase16 past supported=1 arm=%d bogus=%d cancel=%d\n", (int)(bool)pastArm, (int)(bool)pastBogus, (int)(bool)pastCancel);
 #else
       Serial.println("[SERVER] Phase16 past supported=0");
 #endif
@@ -1806,8 +1804,7 @@ void loop() {
       }
       BLEConnInfo byAddrInfo = BLE.getConnInfo(c.getAddress());
       bool lookupInfoOk = (bool)byAddrInfo && byAddrInfo.getHandle() == c.getHandle();
-      bool lookupVolatileOk =
-        byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
+      bool lookupVolatileOk = byAddrInfo.getRSSI() == 0 && byAddrInfo.getTxPhy() == BLEPhy::PHY_1M && byAddrInfo.getRxPhy() == BLEPhy::PHY_1M;
       std::vector<BLEConnInfo> byAddrConns = BLE.getConnections(c.getAddress());
       bool connsOk = false;
       for (const auto &ci : byAddrConns) {
@@ -1816,9 +1813,8 @@ void loop() {
         }
       }
       BTAddress bogusPeer("00:00:00:00:00:01");
-      bool bogusOk =
-        BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty() &&
-        !(bool)BLE.getConnInfo(bogusPeer);
+      bool bogusOk = BLE.getConnHandle(bogusPeer) == 0xFFFF && BLE.getConnHandles(bogusPeer).empty() && BLE.getConnections(bogusPeer).empty()
+                     && !(bool)BLE.getConnInfo(bogusPeer);
       Serial.printf(
         "[SERVER] Phase16 lookup byAddr=%d handles=%u hasSelf=%d info=%d volatile=%d conns=%u connsOk=%d bogus=%d\n", (int)(byAddr == c.getHandle()),
         (unsigned)byAddrHandles.size(), (int)hasSelf, (int)lookupInfoOk, (int)lookupVolatileOk, (unsigned)byAddrConns.size(), (int)connsOk, (int)bogusOk
@@ -2240,8 +2236,8 @@ void loop() {
     utfBoundary += "\xC3\xA9\xC3\xA9";
     BLEAdvertisementData bnBoundary(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
     bnBoundary.setBroadcastName(utfBoundary);
-    bool bnBoundaryOk = bnBoundary.length() == 130 && bnBoundary.data()[0] == 129 && bnBoundary.data()[1] == 0x30 &&
-                        bnBoundary.data()[128] == 0xC3 && bnBoundary.data()[129] == 0xA9;
+    bool bnBoundaryOk = bnBoundary.length() == 130 && bnBoundary.data()[0] == 129 && bnBoundary.data()[1] == 0x30 && bnBoundary.data()[128] == 0xC3
+                        && bnBoundary.data()[129] == 0xA9;
 
     String utfStraddle;
     utfStraddle.reserve(129);
@@ -2251,16 +2247,13 @@ void loop() {
     utfStraddle += "\xC3\xA9\xC3\xA9";
     BLEAdvertisementData bnStraddle(BLEAdvertisementData::EXTENDED_MAX_PAYLOAD);
     bnStraddle.setBroadcastName(utfStraddle);
-    bool bnStraddleOk = bnStraddle.length() == 129 && bnStraddle.data()[0] == 128 && bnStraddle.data()[1] == 0x30 &&
-                        bnStraddle.data()[127] == 0xC3 && bnStraddle.data()[128] == 0xA9;
+    bool bnStraddleOk = bnStraddle.length() == 129 && bnStraddle.data()[0] == 128 && bnStraddle.data()[1] == 0x30 && bnStraddle.data()[127] == 0xC3
+                        && bnStraddle.data()[128] == 0xA9;
 
     BLEAdvertisementData bnPad;
     bnPad.setBroadcastName("Hi");
-    bool bnPadOk = bnPad.length() == 6 && bnPad.data()[0] == 5 && bnPad.data()[1] == 0x30 &&
-                   memcmp(bnPad.data() + 2, "Hi  ", 4) == 0;
-    Serial.printf(
-      "[SERVER] Phase20 bcastName boundary=%d straddle=%d pad=%d\n", (int)bnBoundaryOk, (int)bnStraddleOk, (int)bnPadOk
-    );
+    bool bnPadOk = bnPad.length() == 6 && bnPad.data()[0] == 5 && bnPad.data()[1] == 0x30 && memcmp(bnPad.data() + 2, "Hi  ", 4) == 0;
+    Serial.printf("[SERVER] Phase20 bcastName boundary=%d straddle=%d pad=%d\n", (int)bnBoundaryOk, (int)bnStraddleOk, (int)bnPadOk);
 
     // Slave Connection Interval Range AD (0x12) encoding guard (no peer needed):
     // setPreferredParams must emit exactly [04 12 <min_lo min_hi> <max_lo max_hi>]

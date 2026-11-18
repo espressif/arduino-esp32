@@ -768,8 +768,7 @@ BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
     if (derr != ESP_OK) {
       log_e("esp_spp_deinit: %s", esp_err_to_name(derr));
     } else {
-      EventBits_t stopBits =
-        xEventGroupWaitBits(_impl->sppEventGroup, SPP_STOPPED, pdFALSE, pdTRUE, pdMS_TO_TICKS(2000));
+      EventBits_t stopBits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_STOPPED, pdFALSE, pdTRUE, pdMS_TO_TICKS(2000));
       if (!(stopBits & SPP_STOPPED)) {
         log_e("SPP deinit timed out; continuing teardown");
       }
@@ -801,8 +800,7 @@ void BluetoothSerial::end(bool releaseMemory) {
   if (derr != ESP_OK) {
     log_e("esp_spp_deinit: %s", esp_err_to_name(derr));
   } else {
-    EventBits_t stopBits =
-      xEventGroupWaitBits(_impl->sppEventGroup, SPP_STOPPED, pdFALSE, pdTRUE, pdMS_TO_TICKS(2000));
+    EventBits_t stopBits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_STOPPED, pdFALSE, pdTRUE, pdMS_TO_TICKS(2000));
     if (!(stopBits & SPP_STOPPED)) {
       log_e("SPP deinit timed out; a later begin() may fail until the stack settles");
     }

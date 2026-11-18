@@ -220,26 +220,26 @@ public:
    * Peripheral only uses the two SDU sizes to size its directions.
    */
   struct CisParams {
-    uint32_t sduIntervalUs = 10000;  /*!< SDU interval, microseconds (both directions). */
-    uint16_t latencyMs = 10;         /*!< Max transport latency, milliseconds (both directions). */
-    uint16_t sduSize = 120;          /*!< Max SDU size Central to Peripheral, octets (0: no data this way). */
-    uint16_t returnSduSize = 0;      /*!< Max SDU size Peripheral to Central, octets (0: no data this way). */
+    uint32_t sduIntervalUs = 10000; /*!< SDU interval, microseconds (both directions). */
+    uint16_t latencyMs = 10;        /*!< Max transport latency, milliseconds (both directions). */
+    uint16_t sduSize = 120;         /*!< Max SDU size Central to Peripheral, octets (0: no data this way). */
+    uint16_t returnSduSize = 0;     /*!< Max SDU size Peripheral to Central, octets (0: no data this way). */
     Phy phy = Phy::Phy2M;
-    uint8_t rtn = 2;                 /*!< Retransmission number. */
-    uint8_t packing = 0;             /*!< 0 sequential, 1 interleaved. */
-    uint8_t framing = 0;             /*!< 0 unframed, 1 framed. */
+    uint8_t rtn = 2;     /*!< Retransmission number. */
+    uint8_t packing = 0; /*!< 0 sequential, 1 interleaved. */
+    uint8_t framing = 0; /*!< 0 unframed, 1 framed. */
   };
 
   /** Broadcast Isochronous Group (BIG) QoS; one BIS per group. */
   struct BigParams {
-    uint32_t sduIntervalUs = 10000;  /*!< SDU interval, microseconds. */
-    uint16_t latencyMs = 10;         /*!< Max transport latency, milliseconds. */
-    uint16_t sduSize = 120;          /*!< Max SDU size, octets. */
+    uint32_t sduIntervalUs = 10000; /*!< SDU interval, microseconds. */
+    uint16_t latencyMs = 10;        /*!< Max transport latency, milliseconds. */
+    uint16_t sduSize = 120;         /*!< Max SDU size, octets. */
     Phy phy = Phy::Phy2M;
-    uint8_t rtn = 2;                 /*!< Retransmission number. */
-    uint8_t packing = 0;             /*!< 0 sequential, 1 interleaved. */
-    uint8_t framing = 0;             /*!< 0 unframed, 1 framed. */
-    String broadcastCode;            /*!< Up to 16 characters; empty for an unencrypted BIG. */
+    uint8_t rtn = 2;      /*!< Retransmission number. */
+    uint8_t packing = 0;  /*!< 0 sequential, 1 interleaved. */
+    uint8_t framing = 0;  /*!< 0 unframed, 1 framed. */
+    String broadcastCode; /*!< Up to 16 characters; empty for an unencrypted BIG. */
   };
 
   BLEIso() = default;
@@ -333,7 +333,9 @@ public:
 
 private:
   explicit BLEIso(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
-  Impl *impl() const { return _impl.get(); }
+  Impl *impl() const {
+    return _impl.get();
+  }
   std::shared_ptr<Impl> _impl;
   friend class BLEClass;
 };

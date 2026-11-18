@@ -720,7 +720,9 @@ def _phase_conninfo_and_params(server, client):
         assert int(m_past.group(3)) == 0, "client PAST receive accepted an unknown connection handle"
         assert int(m_past.group(4)) == 1, "client PAST receive cancellation failed"
     m_lookup = client.expect(
-        r"\[CLIENT\] Phase16 lookup byAddr=([01]) handles=(\d+) info=([01]) volatile=([01]) conns=(\d+) connsOk=([01]) bogus=([01])", timeout=10
+        r"\[CLIENT\] Phase16 lookup byAddr=([01]) handles=(\d+) info=([01]) "
+        r"volatile=([01]) conns=(\d+) connsOk=([01]) bogus=([01])",
+        timeout=10,
     )
     assert int(m_lookup.group(1)) == 1, "client getConnHandle(address) did not return the live client handle"
     assert int(m_lookup.group(2)) >= 1, "client getConnHandles(address) returned no handles"
@@ -731,7 +733,9 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_lookup.group(7)) == 1, "client lookup accepted an unknown peer address"
     if client_past_supported == 1:
         m_past_info = client.expect(r"\[CLIENT\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
-        assert int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1, "client role-aware PAST overload failed"
+        assert (
+            int(m_past_info.group(1)) == 1 and int(m_past_info.group(2)) == 1
+        ), "client role-aware PAST overload failed"
     else:
         client.expect_exact("[CLIENT] Phase16 pastInfo supported=0", timeout=10)
     m_stale = client.expect(r"\[CLIENT\] Phase16 lookup staleGone=([01])", timeout=10)
@@ -743,7 +747,8 @@ def _phase_conninfo_and_params(server, client):
     # forces the connect-time MTU request to fail instead: connect() must still
     # succeed (no onMtuChanged follows because no exchange is started).
     m_pmtu = client.expect(
-        r"\[CLIENT\] Phase16 peerMtuFirst mode=(\S+) connect=([01]) service=([01]) mtu=(\d+) seen=([01]) order=([01])", timeout=15
+        r"\[CLIENT\] Phase16 peerMtuFirst mode=(\S+) connect=([01]) service=([01]) mtu=(\d+) seen=([01]) order=([01])",
+        timeout=15,
     )
     pm_mode = m_pmtu.group(1).decode()
     assert pm_mode in ("nimble", "bluedroid-mtu-fail"), f"unexpected peer-first MTU mode: {pm_mode}"
@@ -788,7 +793,8 @@ def _phase_conninfo_and_params(server, client):
         assert int(m_past_s.group(3)) == 0, "server PAST receive accepted an unknown connection handle"
         assert int(m_past_s.group(4)) == 1, "server PAST receive cancellation failed"
     m_lookup_s = server.expect(
-        r"\[SERVER\] Phase16 lookup byAddr=([01]) handles=(\d+) hasSelf=([01]) info=([01]) volatile=([01]) conns=(\d+) connsOk=([01]) bogus=([01])",
+        r"\[SERVER\] Phase16 lookup byAddr=([01]) handles=(\d+) hasSelf=([01]) info=([01]) "
+        r"volatile=([01]) conns=(\d+) connsOk=([01]) bogus=([01])",
         timeout=10,
     )
     assert int(m_lookup_s.group(1)) == 1, "server getConnHandle(address) did not return the live server handle"
@@ -801,7 +807,9 @@ def _phase_conninfo_and_params(server, client):
     assert int(m_lookup_s.group(8)) == 1, "server lookup accepted an unknown peer address"
     if server_past_supported == 1:
         m_past_info_s = server.expect(r"\[SERVER\] Phase16 pastInfo arm=([01]) stop=([01])", timeout=10)
-        assert int(m_past_info_s.group(1)) == 1 and int(m_past_info_s.group(2)) == 1, "server role-aware PAST overload failed"
+        assert (
+            int(m_past_info_s.group(1)) == 1 and int(m_past_info_s.group(2)) == 1
+        ), "server role-aware PAST overload failed"
     else:
         server.expect_exact("[SERVER] Phase16 pastInfo supported=0", timeout=10)
     server.expect_exact("[SERVER] Phase16 done", timeout=10)
@@ -1708,9 +1716,11 @@ def _phase_periodic_adv_lifecycle(server, client):
         client.expect_exact("[CLIENT] Phase34 done", timeout=15)
         server.expect_exact("[SERVER] Phase34 done", timeout=45)
         return False
-    assert int(m_pre.group(2)) == 1, "createPeriodicSync did not reject out-of-range sid/skip/timeoutMs with InvalidParam"
+    assert (
+        int(m_pre.group(2)) == 1
+    ), "createPeriodicSync did not reject out-of-range sid/skip/timeoutMs with InvalidParam"
     assert int(m_pre.group(3)) == 1, "createPeriodicSync + cancelPeriodicSyncCreate failed"
-    assert int(m_pre.group(4)) == 0, "cancelled createPeriodicSync erroneously fired onPeriodicSync"
+    assert int(m_pre.group(4)) == 0, "canceled createPeriodicSync erroneously fired onPeriodicSync"
 
     m_c = client.expect(
         r"\[CLIENT\] Phase34 (synced=([01]) dataRx=([01]) addrMatch=([01])|BLE5 not supported, skipping)",
