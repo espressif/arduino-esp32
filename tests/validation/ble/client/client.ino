@@ -172,6 +172,7 @@ volatile bool clientRejectPairing = false;
 volatile bool clientAuthCompleteFired = false;
 volatile bool clientLastAuthSuccess = false;
 volatile bool phase23ReAdvGo = false;
+volatile bool phase10MitmClientGo = false;
 volatile bool phase23ReAdvDisc = false;
 volatile bool phase36ConnectGo = false;
 volatile bool phase36OobGo = false;
@@ -247,6 +248,8 @@ void checkSerial() {
         phase23ReAdvGo = true;
       } else if (buf == "PHASE23_READV_DISC") {
         phase23ReAdvDisc = true;
+      } else if (buf == "PHASE10_MITM_CLIENT_GO") {
+        phase10MitmClientGo = true;
       } else if (buf == "PHASE36_CONNECT_GO") {
         phase36ConnectGo = true;
       } else if (buf == "PHASE36_OOB_GO") {
@@ -1551,6 +1554,59 @@ void setup() {
     );
     Serial.printf("[CLIENT] Phase10 onIdentity count=%d\n", clientIdentityCount);
     reportClientOrder("Phase10");
+
+    // Leg 2 (no-MITM regression for startSecurity): drop to mitm=false with
+    // MITM-capable IO on both peers (the server switched on PHASE10_MITM_GO
+    // below), re-pair explicitly, and report the negotiated key. Just Works
+    // must yield an unauthenticated key; a startSecurity() that forces MITM
+    // pairs authenticated here and fails the pytest assertion.
+    waitForHostGo(phase10MitmClientGo, 30000);
+    {
+      BLESecurity secNoMitm = BLE.getSecurity();
+      secNoMitm.setAuthenticationMode(true, false, true);
+      (void)secNoMitm.deleteAllBonds();
+      client.disconnect();
+      delay(500);
+      clientMtuChanged = false;
+      client = BLE.createClient();
+      installClientCallbacks(client);
+      BTStatus rs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6 && !rs; attempt++) {
+        rs = client.connect(targetAddr);
+        if (!rs) {
+          delay(500);
+        }
+      }
+      bool noMitmEnc = false;
+      bool noMitmAuth = true;
+      if (rs) {
+        unsigned long mtuWait2 = millis() + 5000;
+        while (!clientMtuChanged && millis() < mtuWait2) {
+          checkSerial();
+          delay(20);
+        }
+        (void)secNoMitm.startSecurity(client.getConnInfo());
+        unsigned long encWait2 = millis() + 15000;
+        while (!client.getConnInfo().isEncrypted() && millis() < encWait2) {
+          checkSerial();
+          delay(50);
+        }
+        BLEConnInfo ci2 = client.getConnInfo();
+        noMitmEnc = ci2.isEncrypted();
+        noMitmAuth = ci2.isAuthenticated();
+      }
+      Serial.printf("[CLIENT] Phase10 noMitm enc=%d auth=%d\n", (int)noMitmEnc, (int)noMitmAuth);
+      // Restore the authenticated default and a live link for phase 11.
+      secNoMitm.setAuthenticationMode(true, true, true);
+      (void)secNoMitm.deleteAllBonds();
+      client.disconnect();
+      delay(500);
+      client = BLE.createClient();
+      installClientCallbacks(client);
+      if (!client.connect(targetAddr)) {
+        Serial.println("[CLIENT] Phase10 post-mitM reconnect FAILED");
+      }
+    }
   }
 
   // ===== Phase 11: BLE5 PHY + DLE =====

@@ -128,6 +128,9 @@ int notifyStep = 0;
 volatile int currentPhase = 0;
 bool serverDisconnectDone = false;
 bool phase10BondsCleared = false;
+bool phase10MitmGo = false;
+bool phase10MitmDone = false;
+bool phase10MitmRestored = false;
 bool descPermValidationDone = false;
 
 // Phase 16-28 completion flags (each phase fires once)
@@ -367,6 +370,8 @@ void checkSerial() {
         }
       } else if (buf == "PHASE13_CONTINUE") {
         phase13Continue = true;
+      } else if (buf == "PHASE10_MITM_GO") {
+        phase10MitmGo = true;
       } else if (buf == "PHASE33_CONTINUE") {
         phase33Continue = true;
       } else if (buf == "PHASE35_CCCD_GO") {
@@ -1036,6 +1041,29 @@ void setup() {
 void loop() {
   checkSerial();
 
+  // Phase 10 leg 2 (no-MITM regression, client-driven): drop to mitm=false so
+  // the client's re-pairing must negotiate Just Works. Restored to the
+  // authenticated default once the phase moves on.
+  if (phase10MitmGo && !phase10MitmDone) {
+    phase10MitmDone = true;
+    BLESecurity secMitm = BLE.getSecurity();
+    (void)secMitm.deleteAllBonds();
+    secMitm.setAuthenticationMode(true, false, true);
+    {
+      BLEServer srv = BLE.createServer();
+      for (const auto &c : srv.getConnections()) {
+        (void)srv.disconnect(c.getHandle());
+      }
+    }
+    delay(300);
+    Serial.println("[SERVER] Phase10 mitm off");
+  }
+  if (currentPhase > 10 && phase10MitmDone && !phase10MitmRestored) {
+    phase10MitmRestored = true;
+    BLESecurity secMitm = BLE.getSecurity();
+    secMitm.setAuthenticationMode(true, true, true);
+    Serial.println("[SERVER] Phase10 mitm restored");
+  }
   // Phase 10: clear bond store so encrypted read forces a fresh pairing (passkey
   // lines). Runs once on the first loop after START_PHASE_10; disconnect first
   // so the stack can drop the old link before ble_store is cleared.

@@ -439,6 +439,17 @@ def _phase_security(server, client):
     # "CONNE" before "CT,MTU,IDENTITY" arrives. An exact full-line payload cannot.
     client.expect_exact("[CLIENT] Phase10 ORDER=CONNECT,MTU,IDENTITY", timeout=10)
 
+    # No-MITM regression for startSecurity (Bluedroid forced ENCRYPT_MITM):
+    # with mitm=false on both peers, the re-paired link must be encrypted but
+    # NOT MITM-authenticated. A forced-MITM stack pairs authenticated here
+    # (numeric comparison auto-confirms) and fails the auth==0 assertion.
+    server.write("PHASE10_MITM_GO\n")
+    server.expect_exact("[SERVER] Phase10 mitm off", timeout=20)
+    client.write("PHASE10_MITM_CLIENT_GO\n")
+    m_mitm = client.expect(r"\[CLIENT\] Phase10 noMitm enc=([01]) auth=([01])\r?\n", timeout=90)
+    assert int(m_mitm.group(1)) == 1, "no-MITM re-pairing did not encrypt the link"
+    assert int(m_mitm.group(2)) == 0, "no-MITM link is MITM-authenticated: startSecurity forced MITM"
+
 
 def _phase_ble5_phy_dle(client):
     """Returns True if BLE5 PHY/DLE ran, False if skipped."""

@@ -469,7 +469,13 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
 
   esp_bd_addr_t bda;
   BLEAddressUtil::toNative(peerAddress, bda);
-  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  // Honor the configured association model: ESP_BLE_SEC_ENCRYPT pairs with
+  // the authreq installed by applySecurityParams() (MITM only when the
+  // sketch asked for it), matching NimBLE's ble_gap_security_initiate().
+  // Hardcoding ENCRYPT_MITM here would force MITM pairing on NoInputNoOutput
+  // Just Works links (including the LE Audio default policy) and fail.
+  esp_ble_sec_act_t secAct = impl.mitm ? ESP_BLE_SEC_ENCRYPT_MITM : ESP_BLE_SEC_ENCRYPT;
+  esp_err_t err = esp_ble_set_encryption(bda, secAct);
   if (err != ESP_OK) {
     log_e("Security: esp_ble_set_encryption handle=%u: %s", (unsigned)connHandle, esp_err_to_name(err));
     return BTStatus::Fail;
@@ -490,7 +496,9 @@ BTStatus BLESecurity::startSecurity(const BLEConnInfo &peer) {
   }
   esp_bd_addr_t bda;
   BLEAddressUtil::toNative(peerAddress, bda);
-  esp_err_t err = esp_ble_set_encryption(bda, ESP_BLE_SEC_ENCRYPT_MITM);
+  // Same association-model contract as above: no forced MITM.
+  esp_ble_sec_act_t secAct = impl.mitm ? ESP_BLE_SEC_ENCRYPT_MITM : ESP_BLE_SEC_ENCRYPT;
+  esp_err_t err = esp_ble_set_encryption(bda, secAct);
   if (err != ESP_OK) {
     log_e("Security: esp_ble_set_encryption address=%s: %s", peerAddress.toString().c_str(), esp_err_to_name(err));
     return BTStatus::Fail;
