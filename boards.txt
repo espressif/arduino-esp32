@@ -46745,6 +46745,124 @@ waveshare_p4_poe_eth.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+waveshare_esp32_p4_wifi6_db_poe_eth.name=Waveshare ESP32-P4-WIFI6-DB-POE-ETH
+
+waveshare_esp32_p4_wifi6_db_poe_eth.bootloader.tool=esptool_py
+waveshare_esp32_p4_wifi6_db_poe_eth.bootloader.tool.default=esptool_py
+
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.tool=esptool_py
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.tool.default=esptool_py
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.tool.network=esp_ota
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.maximum_size=13107200
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.maximum_data_size=327680
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.flags=
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.erase_cmd=
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.extra_flags=
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.use_1200bps_touch=false
+waveshare_esp32_p4_wifi6_db_poe_eth.upload.wait_for_upload_port=false
+
+waveshare_esp32_p4_wifi6_db_poe_eth.serial.disableDTR=false
+waveshare_esp32_p4_wifi6_db_poe_eth.serial.disableRTS=false
+
+waveshare_esp32_p4_wifi6_db_poe_eth.build.tarch=riscv32
+waveshare_esp32_p4_wifi6_db_poe_eth.build.target=esp
+waveshare_esp32_p4_wifi6_db_poe_eth.build.mcu=esp32p4
+waveshare_esp32_p4_wifi6_db_poe_eth.build.core=esp32
+waveshare_esp32_p4_wifi6_db_poe_eth.build.variant=waveshare_esp32_p4_wifi6_db_poe_eth
+waveshare_esp32_p4_wifi6_db_poe_eth.build.chip_variant=esp32p4
+waveshare_esp32_p4_wifi6_db_poe_eth.build.board=WAVESHARE_ESP32P4_WIFI6_DB_POE_ETH
+waveshare_esp32_p4_wifi6_db_poe_eth.build.bootloader_addr=0x2000
+waveshare_esp32_p4_wifi6_db_poe_eth.build.usb_mode=0
+waveshare_esp32_p4_wifi6_db_poe_eth.build.cdc_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.build.msc_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.build.dfu_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.build.f_cpu=400000000L
+waveshare_esp32_p4_wifi6_db_poe_eth.build.flash_size=32MB
+waveshare_esp32_p4_wifi6_db_poe_eth.build.flash_freq=80m
+waveshare_esp32_p4_wifi6_db_poe_eth.build.img_freq=80m
+waveshare_esp32_p4_wifi6_db_poe_eth.build.flash_mode=dio
+waveshare_esp32_p4_wifi6_db_poe_eth.build.boot=qio
+waveshare_esp32_p4_wifi6_db_poe_eth.build.partitions=default_32MB
+waveshare_esp32_p4_wifi6_db_poe_eth.build.defines=-DBOARD_HAS_PSRAM
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.USBMode.default.build.usb_mode=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.USBMode.hwcdc.build.usb_mode=1
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.default=32M Flash (13MB APP/6.75MB SPIFFS)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.default.build.partitions=default_32MB
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.default.upload.maximum_size=13107200
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.fat=32M Flash (4.8MB APP/22MB FATFS)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.fat.build.partitions=large_fat_32MB
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.fat.upload.maximum_size=4718592
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.littlefs=32M Flash (4.8MB APP/22MB LittleFS)
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.littlefs.build.partitions=large_littlefs_32MB
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.littlefs.upload.maximum_size=4718592
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.custom=Custom
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.PartitionScheme.custom.upload.maximum_size=33554432
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.921600=921600
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.460800=460800
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.115200=115200
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.UploadSpeed.115200.upload.speed=115200
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.none=None
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.error=Error
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.warn=Warn
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.info=Info
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.debug=Debug
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.EraseFlash.none=Disabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.EraseFlash.all=Enabled
+waveshare_esp32_p4_wifi6_db_poe_eth.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 waveshare_esp32_s3_zero.name=Waveshare ESP32-S3-Zero
 waveshare_esp32_s3_zero.vid.0=0x303a
 waveshare_esp32_s3_zero.pid.0=0x822B
