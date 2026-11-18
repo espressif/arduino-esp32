@@ -98,24 +98,42 @@ public:
   /** @brief Whether this handle references a member (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (read at audio.begin(); SIRK, size, rank and name also update a running set) ---
+  // --- Configuration (staged before audio.begin(); Sirk/size/rank/name also update a running set) ---
 
-  /** @brief Set Identity Resolving Key shared by every member. Default: a fixed demo SIRK; products must set their own. */
-  BLEAudioCoordinatedSetMember &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
-  /** @brief Number of devices in the set. Default 2. */
-  BLEAudioCoordinatedSetMember &setSetSize(uint8_t size);
+  /**
+   * @brief Set Identity Resolving Key shared by every member. Default: a fixed demo SIRK; products must set their own.
+   * @param sirk 16-octet SIRK; null is rejected.
+   * @return BTStatus::OK when staged (or live-updated when running); InvalidState on an empty handle;
+   *         InvalidParam for a null @p sirk.
+   */
+  BTStatus setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
+  /**
+   * @brief Number of devices in the set. Default 2.
+   * @param size Devices in the set; must be non-zero.
+   * @return BTStatus::OK when staged (or live-updated when running); InvalidState on an empty handle;
+   *         InvalidParam for a zero @p size.
+   */
+  BTStatus setSetSize(uint8_t size);
   /**
    * @brief Position of this device in the set, 1..size (lock order). Default 1.
-   * @note On a running set the stack only accepts a new rank together with a
-   *       different set size: call setRank() first, then setSetSize() with a
-   *       value different from the current size. Otherwise the rank is used at
-   *       the next audio.begin().
+   * @param rank 1-based rank; zero is rejected.
+   * @return BTStatus::OK when staged (or live-updated when running); InvalidState on an empty handle;
+   *         InvalidParam for a zero @p rank.
    */
-  BLEAudioCoordinatedSetMember &setRank(uint8_t rank);
-  /** @brief Whether clients may lock the set. Default true. Only read at audio.begin(). */
-  BLEAudioCoordinatedSetMember &setLockable(bool lockable);
-  /** @brief Optional set name exposed to clients. */
-  BLEAudioCoordinatedSetMember &setName(const String &name);
+  BTStatus setRank(uint8_t rank);
+  /**
+   * @brief Whether clients may lock the set. Default true. Only read at audio.begin().
+   * @param lockable True to allow locking.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
+   */
+  BTStatus setLockable(bool lockable);
+  /**
+   * @brief Optional set name exposed to clients.
+   * @param name New name (empty = none).
+   * @return BTStatus::OK when staged (before start) or applied (once running);
+   *         InvalidState on an empty handle; another error when the stack refused the live update.
+   */
+  BTStatus setName(const String &name);
 
   // --- Runtime (after audio.begin()) ---
 
@@ -139,10 +157,12 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
-  /** @brief Lock changes, local or remote. */
-  BLEAudioCoordinatedSetMember &onLockChanged(LockCallback cb);
-  /** @brief Without a callback every read is accepted. */
-  BLEAudioCoordinatedSetMember &onSirkRead(SirkReadCallback cb);
+  /** @brief Lock changes, local or remote.
+   *  @param cb Callback receiving the locked state and the client @p connHandle. */
+  void onLockChanged(LockCallback cb);
+  /** @brief Without a callback every read is accepted.
+   *  @param cb Callback answering a SIRK read. */
+  void onSirkRead(SirkReadCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 
@@ -236,12 +256,15 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
-  /** @brief Result of each discover(). */
-  BLEAudioCoordinatedSetCoordinator &onDiscovered(DiscoveredCallback cb);
-  /** @brief lock() / unlock() finished. */
-  BLEAudioCoordinatedSetCoordinator &onLock(LockCallback cb);
-  /** @brief A member's lock changed outside this coordinator. */
-  BLEAudioCoordinatedSetCoordinator &onLockChanged(LockChangedCallback cb);
+  /** @brief Result of each discover().
+   *  @param cb Callback receiving the discovery @p status and @p info. */
+  void onDiscovered(DiscoveredCallback cb);
+  /** @brief lock() / unlock() finished.
+   *  @param cb Callback receiving the procedure @p status and @p locked state. */
+  void onLock(LockCallback cb);
+  /** @brief A member's lock changed outside this coordinator.
+   *  @param cb Callback receiving the @p locked state and the member @p connHandle. */
+  void onLockChanged(LockChangedCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 

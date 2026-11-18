@@ -91,49 +91,60 @@ BLEAudioHearingAidDevice::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setType(BLEHearingAidType type) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioHearingAidDevice::setType(BLEHearingAidType type) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (static_cast<uint8_t>(type) > static_cast<uint8_t>(BLEHearingAidType::Banded)) {
+    log_e("HearingAidDevice::setType(): invalid type %u", static_cast<unsigned>(type));
+    return BTStatus::InvalidParam;
+  }
   if (impl.audio->started) {
     log_w("HearingAidDevice::setType() ignored after audio.begin() (the service is registered at start)");
-    return *this;
+    return BTStatus::InvalidState;
   }
   impl.type = type;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::setPresetSync(bool enabled) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioHearingAidDevice::setPresetSync(bool enabled) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (impl.audio->started) {
     log_w("HearingAidDevice::setPresetSync() ignored after audio.begin() (the service is registered at start)");
-    return *this;
+    return BTStatus::InvalidState;
   }
   impl.presetSync = enabled;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::addPreset(uint8_t index, const String &name, bool available, bool writable) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioHearingAidDevice::addPreset(uint8_t index, const String &name, bool available, bool writable) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (index == 0) {
     log_e("HearingAid: preset index 0 is invalid (indexes start at 1)");
-    return *this;
+    return BTStatus::InvalidParam;
+  }
+  if (name.length() == 0) {
+    log_e("HearingAid: preset name must not be empty");
+    return BTStatus::InvalidParam;
   }
   for (const Impl::Preset &q : impl.presets) {
     if (q.index == index) {
       log_e("HearingAid: preset index %u already staged", index);
-      return *this;
+      return BTStatus::InvalidParam;
     }
   }
   if (impl.presets.size() >= (size_t)CONFIG_BT_HAS_PRESET_COUNT) {
     log_e("HearingAid: preset table full (%d entries)", CONFIG_BT_HAS_PRESET_COUNT);
-    return *this;
+    return BTStatus::NoMemory;
   }
   Impl::Preset p{index, available, writable, name};
   if (!impl.audio->started) {
     impl.presets.push_back(std::move(p));
-  } else if (Impl::add(p) != 0) {
-    log_e("HearingAid: registering preset %u (\"%s\") after start failed", index, p.name.c_str());
+    return BTStatus::OK;
   }
-  return *this;
+  if (Impl::add(p) != 0) {
+    log_e("HearingAid: registering preset %u (\"%s\") after start failed", index, p.name.c_str());
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioHearingAidDevice::removePreset(uint8_t index) {
@@ -161,18 +172,16 @@ uint8_t BLEAudioHearingAidDevice::getActivePreset() const {
   return bleAudioHasSrvGetActive();
 }
 
-BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetSelected(SelectCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioHearingAidDevice::onPresetSelected(SelectCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onPresetSelectedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioHearingAidDevice &BLEAudioHearingAidDevice::onPresetRenamed(RenameCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioHearingAidDevice::onPresetRenamed(RenameCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onPresetRenamedCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioHearingAidDevice::resetCallbacks() {
@@ -303,25 +312,22 @@ uint8_t BLEAudioHearingAidController::getActivePreset() const {
   return impl.active.load(std::memory_order_relaxed);
 }
 
-BLEAudioHearingAidController &BLEAudioHearingAidController::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioHearingAidController::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioHearingAidController &BLEAudioHearingAidController::onPreset(PresetCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioHearingAidController::onPreset(PresetCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onPresetCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioHearingAidController &BLEAudioHearingAidController::onPresetSwitch(SwitchCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioHearingAidController::onPresetSwitch(SwitchCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onPresetSwitchCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioHearingAidController::resetCallbacks() {

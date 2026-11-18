@@ -84,8 +84,9 @@ public:
    */
   void end();
 
-  /** @brief Take PCM from @p source instead of I2S (before begin()). */
-  BLEAudioRecorder &setPCMSource(BLEAudioPCMSource source);
+  /** @brief Take PCM from @p source instead of I2S (before begin(); InvalidState once begun/running).
+   * @return BTStatus::OK when stored; InvalidState when begun or running. */
+  BTStatus setPCMSource(BLEAudioPCMSource source);
 
   /**
    * @brief Feed one Tx stream (mono or interleaved stereo).

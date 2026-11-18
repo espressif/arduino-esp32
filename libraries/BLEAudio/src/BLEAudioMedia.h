@@ -130,9 +130,9 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Player state changes, whoever caused them. */
-  BLEAudioMediaPlayer &onStateChanged(StateCallback cb);
+  void onStateChanged(StateCallback cb);
   /** @brief Result of every command, local or from a remote controller. */
-  BLEAudioMediaPlayer &onCommandResult(CommandCallback cb);
+  void onCommandResult(CommandCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -246,15 +246,15 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
-  BLEAudioMediaController &onDiscovered(DiscoveredCallback cb);
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief State reads and notifications. */
-  BLEAudioMediaController &onStateChanged(StateCallback cb);
+  void onStateChanged(StateCallback cb);
   /** @brief Media Control Point results. */
-  BLEAudioMediaController &onCommandResult(CommandCallback cb);
+  void onCommandResult(CommandCallback cb);
   /** @brief Player name reads. */
-  BLEAudioMediaController &onPlayerName(TextCallback cb);
+  void onPlayerName(TextCallback cb);
   /** @brief Track title reads and notifications. */
-  BLEAudioMediaController &onTrackTitle(TextCallback cb);
+  void onTrackTitle(TextCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

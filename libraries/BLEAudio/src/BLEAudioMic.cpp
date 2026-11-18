@@ -59,10 +59,13 @@ BLEAudioMicDevice::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioMicDevice &BLEAudioMicDevice::setInitialMute(bool muted) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioMicDevice::setInitialMute(bool muted) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
   impl.muteState.store(muted ? BLE_AUDIO_MICP_MUTED : BLE_AUDIO_MICP_UNMUTED, std::memory_order_relaxed);
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioMicDevice::mute() {
@@ -105,18 +108,16 @@ bool BLEAudioMicDevice::isMuteDisabled() const {
   return impl.muteState.load(std::memory_order_relaxed) == BLE_AUDIO_MICP_DISABLED;
 }
 
-BLEAudioMicDevice &BLEAudioMicDevice::onMuteChanged(MuteCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicDevice::onMuteChanged(MuteCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onMuteChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMicDevice &BLEAudioMicDevice::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicDevice::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onResultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioMicDevice::resetCallbacks() {
@@ -317,32 +318,28 @@ BTStatus BLEAudioMicController::setInputGain(int8_t gain) {
   return st;
 }
 
-BLEAudioMicController &BLEAudioMicController::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicController::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMicController &BLEAudioMicController::onMuteChanged(MuteCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicController::onMuteChanged(MuteCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onMuteChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMicController &BLEAudioMicController::onInputChanged(InputCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicController::onInputChanged(InputCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onInputChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMicController &BLEAudioMicController::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMicController::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onResultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioMicController::resetCallbacks() {

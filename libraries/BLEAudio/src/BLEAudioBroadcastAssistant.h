@@ -222,21 +222,17 @@ public:
   BTStatus setBroadcastCode(uint8_t sourceId, const String &code);
 
   /** @brief BASS discovery finished.
-   *  @param cb Callback receiving the discovery @p status and @p receiveStates count.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastAssistant &onDiscovered(DiscoverCallback cb);
+   *  @param cb Callback receiving the discovery @p status and @p receiveStates count. */
+  void onDiscovered(DiscoverCallback cb);
   /** @brief A broadcast was found during the remote scan.
-   *  @param cb Callback receiving each matching @p source.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastAssistant &onSourceFound(SourceFoundCallback cb);
+   *  @param cb Callback receiving each matching @p source. */
+  void onSourceFound(SourceFoundCallback cb);
   /** @brief The sink's receive state for a source changed (or was read at discovery).
-   *  @param cb Callback receiving each @p state.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastAssistant &onReceiveState(ReceiveStateCallback cb);
+   *  @param cb Callback receiving each @p state. */
+  void onReceiveState(ReceiveStateCallback cb);
   /** @brief Outcome of each control point operation.
-   *  @param cb Callback receiving the finished @p op and its @p status.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastAssistant &onResult(ResultCallback cb);
+   *  @param cb Callback receiving the finished @p op and its @p status. */
+  void onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

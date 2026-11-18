@@ -142,8 +142,10 @@ public:
   /** @return true when the handle was created by BLEAudio::createTmap(). */
   explicit operator bool() const;
 
-  /** @brief Roles published by TMAS (before `audio.begin()`). */
-  BLEAudioTmap &setRoles(BLEAudioTmapRole roles);
+  /** @brief Roles published by TMAS (before `audio.begin()`).
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or after audio.begin();
+   *         InvalidParam for unknown role bits. */
+  BTStatus setRoles(BLEAudioTmapRole roles);
   /** @return The local roles set with setRoles(). */
   BLEAudioTmapRole getRoles() const;
 
@@ -157,7 +159,7 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Result of each discover(). */
-  BLEAudioTmap &onDiscovered(DiscoverCallback cb);
+  void onDiscovered(DiscoverCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -193,12 +195,17 @@ public:
   /** @return true when the handle was created by BLEAudio::createGmap(). */
   explicit operator bool() const;
 
-  /** @brief Roles published by GMAS (before `audio.begin()`). */
-  BLEAudioGmap &setRoles(BLEAudioGmapRole roles);
-  /** @brief Features of the published roles (before `audio.begin()`). */
-  BLEAudioGmap &setFeatures(const BLEAudioGmapFeatures &features);
-  /** @brief Same as setFeatures(const BLEAudioGmapFeatures &), one bitfield per role. */
-  BLEAudioGmap &setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal, uint8_t broadcastSender, uint8_t broadcastReceiver);
+  /** @brief Roles published by GMAS (before `audio.begin()`).
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or after audio.begin();
+   *         InvalidParam for unknown role bits. */
+  BTStatus setRoles(BLEAudioGmapRole roles);
+  /** @brief Features of the published roles (before `audio.begin()`).
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or after audio.begin();
+   *         InvalidParam for unknown feature bits. */
+  BTStatus setFeatures(const BLEAudioGmapFeatures &features);
+  /** @brief Same as setFeatures(const BLEAudioGmapFeatures &), one bitfield per role.
+   * @return As setFeatures(const BLEAudioGmapFeatures &). */
+  BTStatus setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal, uint8_t broadcastSender, uint8_t broadcastReceiver);
   /** @return The local roles set with setRoles(). */
   BLEAudioGmapRole getRoles() const;
 
@@ -212,7 +219,7 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Result of each discover(). */
-  BLEAudioGmap &onDiscovered(DiscoverCallback cb);
+  void onDiscovered(DiscoverCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

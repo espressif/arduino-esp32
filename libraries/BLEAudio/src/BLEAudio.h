@@ -161,9 +161,9 @@ public:
    *
    * On by default (existing sketches keep working); turn off before begin()
    * and configure `BLESecurity` explicitly for an opt-in policy.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when stored; InvalidState on a null handle.
    */
-  BLEAudio &setAutoSecurityPolicy(bool enable);
+  BTStatus setAutoSecurityPolicy(bool enable);
   /** @brief Current setAutoSecurityPolicy() value (default true). */
   bool autoSecurityPolicy() const;
 
@@ -232,16 +232,14 @@ public:
    * after the MTU exchange, without discovering the central's database.
    * @param cb Callback receiving the ready link's @p connHandle. Runs on the
    *           Bluetooth host task; keep it short.
-   * @return This handle, for chaining.
    */
-  BLEAudio &onLinkReady(LinkCallback cb);
+  void onLinkReady(LinkCallback cb);
   /**
    * @brief An ACL link used by LE Audio went down, or connect() failed.
    * @param cb Callback receiving the lost link's @p connHandle. Runs on the
    *           Bluetooth host task; keep it short.
-   * @return This handle, for chaining.
    */
-  BLEAudio &onDisconnected(LinkCallback cb);
+  void onDisconnected(LinkCallback cb);
   /**
    * @brief Clear the onLinkReady() and onDisconnected() callbacks.
    *
@@ -256,9 +254,9 @@ public:
    * @param delayUs Delay in microseconds (default 40000; BAP presets use 40 ms).
    *                Stored as-is (no range check); applied to the preset QoS of
    *                roles started afterwards.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when stored; InvalidState on a null handle.
    */
-  BLEAudio &setPresentationDelay(uint32_t delayUs);
+  BTStatus setPresentationDelay(uint32_t delayUs);
   /**
    * @brief Current default presentation delay in microseconds.
    * @return The setPresentationDelay() value (default 40000; also 40000 on a null handle).

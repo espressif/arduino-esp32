@@ -35,7 +35,8 @@
  *
  * @code
  * BLEAudioBroadcastSink sink = audio.createBroadcastSink();
- * sink.setStreams(2).setTargetName("Living room");
+ * sink.setStreams(2);
+ * sink.setTargetName("Living room");
  * sink.stream(0).onReceive(onLeft);
  * sink.stream(1).onReceive(onRight);
  * audio.begin();
@@ -101,55 +102,59 @@ public:
   /** @brief Whether this handle references a sink (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.begin(); every setter returns this handle) ---
+  // --- Configuration (before audio.begin(); every setter returns BTStatus) ---
   //
-  // Setters are no-op chain links on an empty handle. Only setStreams() is
-  // gated on start() (ignored with a warning afterwards); the other staged
-  // values have no effect once registered — use the live source-selection
-  // setters below for changes after the commit.
+  // Setters return InvalidState on an empty handle, or when the sink was already
+  // registered by audio.begin(). Only setStreams() was previously gated on
+  // start(); the other staged values likewise have no effect once registered.
 
   /**
    * @brief Number of BISes to join: 1 = mono (default), 2 = stereo.
    *
-   * Clamped to 1..2 and capped by the packaged Kconfig BIS count. Streams
-   * are (re)allocated immediately, so attach stream callbacks after calling it.
+   * Streams are (re)allocated immediately, so attach stream callbacks after calling it.
    * @param count 1 = mono (one BIS), 2 = stereo (two BISes).
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam unless @p count is 1 or 2.
    */
-  BLEAudioBroadcastSink &setStreams(uint8_t count);
+  BTStatus setStreams(uint8_t count);
   /**
    * @brief LC3 presets advertised in the sink PAC (BLEAudioPresetBit() mask).
    *
    * Only BISes whose codec fits this PAC can be joined. Default: 16 and
-   * 24 kHz (10 ms) plus every 48 kHz preset. A zero mask is ignored.
-   * @param presetMask OR of BLEAudioPresetBit() values; 0 keeps the current mask.
-   * @return This handle, for chaining.
+   * 24 kHz (10 ms) plus every 48 kHz preset.
+   * @param presetMask OR of BLEAudioPresetBit() values.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam for a zero mask.
    */
-  BLEAudioBroadcastSink &setSupportedPresets(uint32_t presetMask);
+  BTStatus setSupportedPresets(uint32_t presetMask);
   /**
-   * @brief Channels one BIS may carry in the sink PAC: 1 or 2 (default 2); clamped to that range.
+   * @brief Channels one BIS may carry in the sink PAC: 1 or 2 (default 2).
    * @param channels 1 = mono, 2 = mono or stereo per BIS.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam unless @p channels is 1 or 2.
    */
-  BLEAudioBroadcastSink &setMaxChannelsPerStream(uint8_t channels);
+  BTStatus setMaxChannelsPerStream(uint8_t channels);
   /**
    * @brief Sink Audio Locations published in PACS (default Mono).
    * @param location Union of the speaker positions the sink renders.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioBroadcastSink &setLocation(BLEAudioLocation location);
+  BTStatus setLocation(BLEAudioLocation location);
   /**
    * @brief Sink contexts published in PACS (default Unspecified | Media).
    * @param contexts Bitfield of BLEAudioContext values the sink renders.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioBroadcastSink &setContexts(BLEAudioContext contexts);
+  BTStatus setContexts(BLEAudioContext contexts);
   /**
    * @brief Publish BASS so Broadcast Assistants can control the sink. Default on when compiled in.
    * @param enable True to publish the Scan Delegator (BASS) role.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioBroadcastSink &setScanDelegator(bool enable);
+  BTStatus setScanDelegator(bool enable);
 
   // --- Source selection (any time) ---
 
@@ -158,61 +163,64 @@ public:
    *
    * Empty (default): only unencrypted broadcasts can be joined, unless an
    * assistant provides the code. Takes effect immediately after audio.begin().
-   * @param code Longer codes are truncated with a warning and zero-padded per spec.
-   * @return This handle, for chaining.
+   * @param code Broadcast Code, empty (open) or up to 16 characters.
+   * @return BTStatus::OK when applied; InvalidState on an empty handle;
+   *         InvalidParam when @p code is longer than 16 characters.
    */
-  BLEAudioBroadcastSink &setBroadcastCode(const String &code);
+  BTStatus setBroadcastCode(const String &code);
   /**
    * @brief Only auto-sync to sources with this Broadcast Name (empty = any).
    * @param name Name filter; empty disables the name filter.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when applied; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSink &setTargetName(const String &name);
+  BTStatus setTargetName(const String &name);
   /**
    * @brief Only auto-sync to this 24-bit Broadcast ID (0 = any).
    * @param broadcastId Only the low 24 bits are kept.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when applied; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSink &setTargetBroadcastId(uint32_t broadcastId);
+  BTStatus setTargetBroadcastId(uint32_t broadcastId);
   /**
    * @brief Preferred BIS indexes as BIT(index - 1).
    * @param mask 0 (default) joins the lowest indexes in the BASE.
    *
-   * Takes effect at the next BIG sync; safe to call any time (including on an
-   * empty handle, where it is a no-op).
-   * @return This handle, for chaining.
+   * Takes effect at the next BIG sync; safe to call any time.
+   * @return BTStatus::OK when applied; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSink &setBisMask(uint32_t mask);
+  BTStatus setBisMask(uint32_t mask);
   /**
    * @brief Sync to the first matching source automatically. Default on.
    * @param enable False to pick sources manually with syncTo().
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when applied; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSink &setAutoSync(bool enable);
+  BTStatus setAutoSync(bool enable);
 
   /**
    * @brief Configure a ready-to-start Auracast receiver.
    *
    * Shorthand for:
    * @code
-   * setStreams(streams)
-   *   .setLocation(streams == 2 ? FrontLeft | FrontRight : Mono)
-   *   .setContexts(Media)
-   *   .setTargetName(targetName)
-   *   .setAutoSync(true);
+   * setStreams(streams);
+   * setLocation(streams == 2 ? FrontLeft | FrontRight : Mono);
+   * setContexts(Media);
+   * setTargetName(targetName);
+   * setAutoSync(true);
    * @endcode
    *
    * @param targetName Only sync to this Broadcast Name; empty (default) syncs
    *                   to the first source found. With a name set, the sink
    *                   ignores other broadcasts in range.
    * @param streams    1 = mono (one BIS), 2 = stereo (two BISes). Default 2.
+   * @return BTStatus::OK when every setter was applied; the first error
+   *         otherwise (InvalidState on an empty handle or after audio.begin();
+   *         InvalidParam for a bad @p streams count).
    *
    * Call it after createBroadcastSink() and before audio.begin(), then
    * start() to begin scanning. The Scan Delegator stays enabled when
    * compiled in, so a phone or Broadcast Assistant can also select a source.
    * Encryption stays opt-in: call setBroadcastCode() separately.
    */
-  BLEAudioBroadcastSink &configureAuracast(const String &targetName = "", uint8_t streams = 2);
+  BTStatus configureAuracast(const String &targetName = "", uint8_t streams = 2);
 
   // --- Control (after audio.begin()) ---
 
@@ -264,60 +272,51 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
   //
-  // Every setter below takes the callback in @p cb and returns this handle for
-  // chaining; a no-op chain link on an empty handle.
+  // Every setter below takes the callback in @p cb; a no-op on an empty handle.
 
   /** @brief A broadcast source was seen while scanning (repeats per advertising report).
-   *  @param cb Callback receiving each matching source @p report.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastSink &onSourceFound(SourceFoundCallback cb);
+   *  @param cb Callback receiving each matching source @p report. */
+  void onSourceFound(SourceFoundCallback cb);
   /** @brief Periodic advertising sync established; the BASE and BIG sync follow.
-   *  @param cb Callback fired once the PA sync is established.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastSink &onSynced(Callback cb);
+   *  @param cb Callback fired once the PA sync is established. */
+  void onSynced(Callback cb);
   /**
    * @brief The BASE of the synced source was received (once per PA sync).
    *
    * Fires before the BIG sync, so setBisMask() may still pick the BISes to join.
    * @param cb Callback receiving the BASE @p summary.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onBaseReceived(BaseCallback cb);
+  void onBaseReceived(BaseCallback cb);
   /**
    * @brief A Broadcast Assistant provided the Broadcast Code (Scan Delegator).
    *
    * The code replaces the one from setBroadcastCode() from the next BIG sync attempt.
    * @param cb Callback fired once the code arrives.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onBroadcastCodeReceived(Callback cb);
+  void onBroadcastCodeReceived(Callback cb);
   /**
    * @brief Periodic advertising sync lost; scanning resumes while started.
    * @param cb Callback receiving the HCI loss @p reason.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onSyncLost(ReasonCallback cb);
+  void onSyncLost(ReasonCallback cb);
   /**
    * @brief Joining the BIG failed.
    *
    * NotFound: no BIS matches the sink PAC; PermissionDenied: the broadcast is
    * encrypted and no (or a wrong) Broadcast Code is set.
    * @param cb Callback receiving the failure @p status.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onSyncFailed(ErrorCallback cb);
+  void onSyncFailed(ErrorCallback cb);
   /**
    * @brief The BIG is joined: every stream is streaming.
    * @param cb Callback fired once the BIG streams.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onStarted(Callback cb);
+  void onStarted(Callback cb);
   /**
    * @brief The BIG was left (stop(), source stopped, or sync lost).
    * @param cb Callback receiving the HCI leave @p reason.
-   * @return This handle, for chaining.
    */
-  BLEAudioBroadcastSink &onStopped(ReasonCallback cb);
+  void onStopped(ReasonCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 

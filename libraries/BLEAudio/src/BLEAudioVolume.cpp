@@ -85,29 +85,38 @@ BLEAudioVolumeRenderer::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setInitialVolume(uint8_t volume) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioVolumeRenderer::setInitialVolume(uint8_t volume) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
   impl.volume = volume;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setInitialMute(bool muted) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioVolumeRenderer::setInitialMute(bool muted) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
   impl.muted = muted;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::setVolumeStep(uint8_t step) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioVolumeRenderer::setVolumeStep(uint8_t step) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!step) {
     log_e("VolumeRenderer: invalid step 0");
-    return *this;
+    return BTStatus::InvalidParam;
   }
-  if (impl.audio->started && !impl.op(BLE_AUDIO_VCP_OP_SET_STEP, step)) {
-    return *this; /* Stack refused: keep the previous step. */
+  if (impl.audio->started) {
+    const BTStatus st = impl.op(BLE_AUDIO_VCP_OP_SET_STEP, step);
+    if (!st) {
+      return st; /* Stack refused: keep the previous step. */
+    }
   }
   impl.step = step;
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioVolumeRenderer::setVolume(uint8_t volume) {
@@ -145,18 +154,16 @@ bool BLEAudioVolumeRenderer::isMuted() const {
   return impl.muted.load(std::memory_order_relaxed);
 }
 
-BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::onStateChanged(StateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeRenderer::onStateChanged(StateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onStateChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioVolumeRenderer &BLEAudioVolumeRenderer::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeRenderer::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onResultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioVolumeRenderer::resetCallbacks() {
@@ -398,39 +405,34 @@ BTStatus BLEAudioVolumeController::setInputGain(int8_t gain) {
   return st;
 }
 
-BLEAudioVolumeController &BLEAudioVolumeController::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeController::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioVolumeController &BLEAudioVolumeController::onStateChanged(StateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeController::onStateChanged(StateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onStateChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioVolumeController &BLEAudioVolumeController::onOffsetChanged(OffsetCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeController::onOffsetChanged(OffsetCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onOffsetChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioVolumeController &BLEAudioVolumeController::onInputChanged(InputCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeController::onInputChanged(InputCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onInputChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioVolumeController &BLEAudioVolumeController::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioVolumeController::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onResultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioVolumeController::resetCallbacks() {

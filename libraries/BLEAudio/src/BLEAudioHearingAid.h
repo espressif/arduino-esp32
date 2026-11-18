@@ -76,10 +76,12 @@ public:
 
   // --- Configuration (before audio.begin()) ---
 
-  /** @brief Default Monaural. */
-  BLEAudioHearingAidDevice &setType(BLEHearingAidType type);
-  /** @brief Keep presets in sync across a binaural pair. Default off. */
-  BLEAudioHearingAidDevice &setPresetSync(bool enabled);
+  /** @brief Default Monaural.
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or after audio.begin(). */
+  BTStatus setType(BLEHearingAidType type);
+  /** @brief Keep presets in sync across a binaural pair. Default off.
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or after audio.begin(). */
+  BTStatus setPresetSync(bool enabled);
 
   /**
    * @brief Add a preset (index >= 1, unique).
@@ -91,8 +93,10 @@ public:
    * @param name Preset name shown to controllers.
    * @param available Whether controllers may select the preset.
    * @param writable Whether controllers may rename the preset.
+   * @return BTStatus::OK when staged or registered; InvalidState when the handle is empty;
+   *         InvalidParam for index 0 or an empty/duplicate name; another status when registration failed.
    */
-  BLEAudioHearingAidDevice &addPreset(uint8_t index, const String &name, bool available = true, bool writable = false);
+  BTStatus addPreset(uint8_t index, const String &name, bool available = true, bool writable = false);
 
   // --- Runtime (after audio.begin()); connected controllers are notified ---
 
@@ -128,9 +132,9 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief A controller selected a preset. */
-  BLEAudioHearingAidDevice &onPresetSelected(SelectCallback cb);
+  void onPresetSelected(SelectCallback cb);
   /** @brief A controller renamed a writable preset. */
-  BLEAudioHearingAidDevice &onPresetRenamed(RenameCallback cb);
+  void onPresetRenamed(RenameCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -242,11 +246,11 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
-  BLEAudioHearingAidController &onDiscovered(DiscoveredCallback cb);
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief Preset records (reads and change notifications). */
-  BLEAudioHearingAidController &onPreset(PresetCallback cb);
+  void onPreset(PresetCallback cb);
   /** @brief The peer's active preset changed. */
-  BLEAudioHearingAidController &onPresetSwitch(SwitchCallback cb);
+  void onPresetSwitch(SwitchCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

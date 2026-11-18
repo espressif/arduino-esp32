@@ -35,8 +35,9 @@
  *
  * @code
  * BLEAudioUnicastServer server = audio.createUnicastServer();
- * server.setSinkStreams(1).setSourceStreams(1)
- *       .setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1));
+ * server.setSinkStreams(1);
+ * server.setSourceStreams(1);
+ * server.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1));
  * for (size_t i = 0; i < server.streamCount(); i++) {
  *   server.stream(i).onReceive(onAudio);
  * }
@@ -60,7 +61,7 @@ public:
    * @brief Create an empty server handle.
    *
    * Get a live one from BLEAudio::createUnicastServer() while the engine is active and
- * before audio.begin(); the empty handle ignores every setter and reports an
+ * before audio.begin(); the empty handle reports InvalidState from every setter and
    * empty stream from every stream().
    */
   BLEAudioUnicastServer();
@@ -77,114 +78,130 @@ public:
   /** @brief Whether this handle references a server (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (before audio.begin(); later calls are ignored) ---
+  // --- Configuration (before audio.begin(); later calls return InvalidState) ---
   //
-  // Every setter below returns this handle for chaining; on an empty handle it
-  // is a no-op. Calls after audio.begin() have no effect on the registered
-  // services (the ASE counts additionally log a warning).
+  // Every setter below returns BTStatus::OK on success, InvalidState on an
+  // empty handle or after audio.begin(), and InvalidParam for an invalid value
+  // (the stored value is left unchanged).
 
   /**
    * @brief Number of sink ASEs to publish (streams the client sends to).
    * @param count 0 disables the sink direction. Default 1; capped by the
    *              packaged Kconfig ASE count (the stream pool logs when full).
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSinkStreams(uint8_t count);
+  BTStatus setSinkStreams(uint8_t count);
   /**
    * @brief Number of source ASEs to publish (streams the client receives).
    * @param count 0 disables the source direction. Default 1; same cap as setSinkStreams().
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSourceStreams(uint8_t count);
+  BTStatus setSourceStreams(uint8_t count);
   /**
    * @brief LC3 presets advertised in PACS, as a mask of BLEAudioPresetBit().
    *
    * The server publishes one PAC record covering the union of the presets
    * (rates, durations, octet range), so a client may pick any combination
    * inside it. Default: every 10 ms preset at 16, 24, 32 and 48 kHz. A zero
-   * mask is ignored.
+   * mask keeps the current value.
    * @param presetMask OR of BLEAudioPresetBit() values; 0 keeps the current mask.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam for a zero mask.
    */
-  BLEAudioUnicastServer &setSupportedPresets(uint32_t presetMask);
+  BTStatus setSupportedPresets(uint32_t presetMask);
   /**
-   * @brief Channels one ASE may carry: 1 (default) or 2; clamped to that range.
+   * @brief Channels one ASE may carry: 1 (default) or 2.
    * @param channels 1 = mono, 2 = mono or stereo per ASE.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam for a value other than 1 or 2.
    */
-  BLEAudioUnicastServer &setMaxChannelsPerStream(uint8_t channels);
+  BTStatus setMaxChannelsPerStream(uint8_t channels);
   /**
    * @brief Contexts the sink supports (PACS "Supported Audio Contexts"); also the initial available set.
    * @param contexts Bitfield of BLEAudioContext values the sink renders.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSinkContexts(BLEAudioContext contexts);
+  BTStatus setSinkContexts(BLEAudioContext contexts);
   /**
    * @brief Contexts the source supports; also the initial available set.
    * @param contexts Bitfield of BLEAudioContext values the source captures.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSourceContexts(BLEAudioContext contexts);
+  BTStatus setSourceContexts(BLEAudioContext contexts);
   /**
    * @brief Sink Audio Locations published in PACS (default Mono).
    * @param location Union of the speaker positions the sink renders.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSinkLocation(BLEAudioLocation location);
+  BTStatus setSinkLocation(BLEAudioLocation location);
   /**
    * @brief Source Audio Locations published in PACS (default Mono).
    * @param location Union of the positions the source captures.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin().
    */
-  BLEAudioUnicastServer &setSourceLocation(BLEAudioLocation location);
+  BTStatus setSourceLocation(BLEAudioLocation location);
   /**
    * @brief Presentation delay range the server supports (ASCS QoS preferences).
-   * @param minUs Minimum delay (default 20000 us); clamped to @p maxUs.
+   * @param minUs Minimum delay (default 20000 us).
    * @param maxUs Maximum delay; 0 (default) uses the controller's
    *              BLEAudio::setPresentationDelay() value.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK on success; InvalidState on an empty handle or after
+   *         audio.begin(); InvalidParam when @p maxUs is nonzero and @p minUs
+   *         exceeds it.
    */
-  BLEAudioUnicastServer &setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
+  BTStatus setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
 
   /**
    * @brief Configure the usual speaker shape: one stereo-capable sink ASE.
    *
    * Shorthand for:
    * @code
-   * setSinkStreams(1).setSourceStreams(0)
-   *   .setMaxChannelsPerStream(2)
-   *   .setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1)
-   *   .setSinkContexts(Media | Conversational)
-   *   .setSinkLocation(FrontLeft | FrontRight);
+   * setSinkStreams(1);
+   * setSourceStreams(0);
+   * setMaxChannelsPerStream(2);
+   * setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1);
+   * setSinkContexts(Media | Conversational);
+   * setSinkLocation(FrontLeft | FrontRight);
    * @endcode
    *
    * The single ASE accepts mono or stereo, so a phone can send one
    * interleaved stream instead of one stream per speaker. Call it after
    * createUnicastServer() and before audio.begin(); individual setters can
    * still override any field afterwards.
+   * @return BTStatus::OK on success; the first failing setter's status
+   *         otherwise (InvalidState on an empty handle or after audio.begin()).
    */
-  BLEAudioUnicastServer &configureMediaSink();
+  BTStatus configureMediaSink();
 
   /**
    * @brief Configure the usual headset shape: one sink ASE and one source ASE.
    *
    * Shorthand for:
    * @code
-   * setSinkStreams(1).setSourceStreams(1)
-   *   .setMaxChannelsPerStream(2)
-   *   .setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1)
-   *   .setSinkContexts(Media | Conversational)
-   *   .setSourceContexts(Conversational | Media)
-   *   .setSinkLocation(FrontLeft | FrontRight)
-   *   .setSourceLocation(Mono);
+   * setSinkStreams(1);
+   * setSourceStreams(1);
+   * setMaxChannelsPerStream(2);
+   * setSupportedPresets(LC3_16_2_1 | LC3_24_2_1 | LC3_48_2_1);
+   * setSinkContexts(Media | Conversational);
+   * setSourceContexts(Conversational | Media);
+   * setSinkLocation(FrontLeft | FrontRight);
+   * setSourceLocation(Mono);
    * @endcode
    *
    * The sink ASE renders phone media and call audio; the source ASE carries
    * the headset microphone back to the phone. Call it after
    * createUnicastServer() and before audio.begin(); individual setters can
    * still override any field afterwards.
+   * @return BTStatus::OK on success; the first failing setter's status
+   *         otherwise (InvalidState on an empty handle or after audio.begin()).
    */
-  BLEAudioUnicastServer &configureHeadset();
+  BTStatus configureHeadset();
 
   // --- Runtime (after audio.begin()) ---
 

@@ -81,35 +81,37 @@ public:
 
   // --- Coordinated set (same rules as BLEAudioCoordinatedSetMember) ---
   //
-  // Every setter returns this handle for chaining; values are read when a
-  // session starts (the context is also re-sent by updateUnicast()). On an
-  // empty handle each setter is a no-op.
+  // Every setter below returns BTStatus::OK when staged (InvalidState on an
+  // empty handle or after audio.begin()); values are read when a session
+  // starts. Stage the configuration before audio.begin().
 
   /**
    * @brief See BLEAudioCoordinatedSetMember::setSirk().
-   * @param sirk 16-octet Set Identity Resolving Key shared by the set; null is ignored.
-   * @return This handle, for chaining.
+   * @param sirk 16-octet Set Identity Resolving Key shared by the set; null is rejected.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin();
+   *         InvalidParam for a null @p sirk.
    */
-  BLEAudioCapAcceptor &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
+  BTStatus setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
   /**
    * @brief See BLEAudioCoordinatedSetMember::setSetSize().
-   * @param size Total devices in the set. Only a changed size re-registers a running set.
-   * @return This handle, for chaining.
+   * @param size Total devices in the set; must be non-zero.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin();
+   *         InvalidParam for a zero @p size.
    */
-  BLEAudioCapAcceptor &setSetSize(uint8_t size);
+  BTStatus setSetSize(uint8_t size);
   /**
    * @brief See BLEAudioCoordinatedSetMember::setRank().
-   * @param rank 1-based rank of this device. A running set only takes it with a new
-   *             set size (setSetSize()) or at the next start().
-   * @return This handle, for chaining.
+   * @param rank 1-based rank of this device; zero is rejected.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin();
+   *         InvalidParam for a zero @p rank.
    */
-  BLEAudioCapAcceptor &setRank(uint8_t rank);
+  BTStatus setRank(uint8_t rank);
   /**
    * @brief See BLEAudioCoordinatedSetMember::setLockable().
    * @param lockable Whether a coordinator may lock this device for ordered access.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapAcceptor &setLockable(bool lockable);
+  BTStatus setLockable(bool lockable);
   /** @brief The CAS-included CSIS instance: RSI, lock state and callbacks. */
   BLEAudioCoordinatedSetMember coordinatedSet() const;
 
@@ -158,44 +160,45 @@ public:
   /** @brief Whether this handle references an initiator (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (read when a session starts; every setter returns this handle) ---
+  // --- Configuration (read when a session starts; every setter returns BTStatus) ---
 
   /**
    * @brief Codec and QoS of every stream, from a BAP preset. Default LC3_16_2_1.
-   * @param preset Preset to use; an unknown preset is logged and ignored.
-   * @return This handle, for chaining.
+   * @param preset Preset to use; an unknown preset is rejected.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin();
+   *         InvalidParam for an unknown @p preset.
    */
-  BLEAudioCapInitiator &setPreset(BLEAudioCodecPreset preset);
+  BTStatus setPreset(BLEAudioCodecPreset preset);
   /**
    * @brief Replace the preset QoS; `maxSdu` is recomputed per stream.
    * @param qos Custom QoS applied instead of the preset one from the next session.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setQos(const BLEAudioQos &qos);
+  BTStatus setQos(const BLEAudioQos &qos);
   /**
    * @brief Streaming context of unicast and broadcast streams. Default Media.
    * @param context Context sent with Enable and in the BASE metadata.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setContext(BLEAudioContext context);
+  BTStatus setContext(BLEAudioContext context);
   /**
    * @brief Unicast streams this device sends, per acceptor. Default 1.
    * @param perPeer Requested sink ASEs per acceptor, capped by what the acceptor has.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setSinkStreams(uint8_t perPeer);
+  BTStatus setSinkStreams(uint8_t perPeer);
   /**
    * @brief Unicast streams this device receives, per acceptor. Default 0.
    * @param perPeer Requested source ASEs per acceptor, capped by what the acceptor has.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setSourceStreams(uint8_t perPeer);
+  BTStatus setSourceStreams(uint8_t perPeer);
   /**
    * @brief 24-bit Broadcast ID. Default random.
    * @param broadcastId Only the low 24 bits are kept.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setBroadcastId(uint32_t broadcastId);
+  BTStatus setBroadcastId(uint32_t broadcastId);
   /**
    * @brief The Broadcast ID used by startBroadcast() and handovers.
    * @return The staged ID (masked to 24 bits); 0 on an empty handle.
@@ -204,15 +207,15 @@ public:
   /**
    * @brief Broadcast Code (up to 16 characters); empty = unencrypted.
    * @param code Longer codes are truncated with a warning and zero-padded per spec.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setBroadcastCode(const String &code);
+  BTStatus setBroadcastCode(const String &code);
   /**
    * @brief Broadcast Name; empty = device name.
    * @param name Name advertised in the extended advertising.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or after audio.begin().
    */
-  BLEAudioCapInitiator &setBroadcastName(const String &name);
+  BTStatus setBroadcastName(const String &name);
 
   // --- Discovery (after audio.begin()) ---
 
@@ -317,37 +320,29 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
   //
-  // Every setter below takes the callback in @p cb and returns this handle for
-  // chaining; a no-op chain link on an empty handle.
+  // Every setter below takes the callback in @p cb; a no-op on an empty handle.
 
   /** @brief CAP discovery of an acceptor finished.
-   *  @param cb Callback receiving the discovery @p status and the acceptor @p peer.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onDiscovered(DiscoveredCallback cb);
+   *  @param cb Callback receiving the discovery @p status and the acceptor @p peer. */
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief startUnicast() finished; the streams carry audio on success.
-   *  @param cb Callback receiving the procedure @p status.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onUnicastStarted(StatusCallback cb);
+   *  @param cb Callback receiving the procedure @p status. */
+  void onUnicastStarted(StatusCallback cb);
   /** @brief updateUnicast() finished.
-   *  @param cb Callback receiving the procedure @p status.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onUnicastUpdated(StatusCallback cb);
+   *  @param cb Callback receiving the procedure @p status. */
+  void onUnicastUpdated(StatusCallback cb);
   /** @brief The unicast streams were released.
-   *  @param cb Callback fired after the release.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onUnicastStopped(Callback cb);
+   *  @param cb Callback fired after the release. */
+  void onUnicastStopped(Callback cb);
   /** @brief The broadcast source is streaming.
-   *  @param cb Callback fired once the broadcast streams.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onBroadcastStarted(Callback cb);
+   *  @param cb Callback fired once the broadcast streams. */
+  void onBroadcastStarted(Callback cb);
   /** @brief The broadcast stopped.
-   *  @param cb Callback receiving the HCI @p reason (0 after stopBroadcast()).
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onBroadcastStopped(StoppedCallback cb);
+   *  @param cb Callback receiving the HCI @p reason (0 after stopBroadcast()). */
+  void onBroadcastStopped(StoppedCallback cb);
   /** @brief A handover procedure finished.
-   *  @param cb Callback receiving the @p status and the @p toBroadcast direction.
-   *  @return This handle, for chaining. */
-  BLEAudioCapInitiator &onHandover(HandoverCallback cb);
+   *  @param cb Callback receiving the @p status and the @p toBroadcast direction. */
+  void onHandover(HandoverCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 
@@ -503,22 +498,18 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
   //
-  // Every setter below takes the callback in @p cb and returns this handle for
-  // chaining; a no-op chain link on an empty handle.
+  // Every setter below takes the callback in @p cb; a no-op on an empty handle.
 
   /** @brief Commander discovery of an acceptor finished.
    *  @param cb Callback receiving the @p status, the acceptor @p connHandle, and
-   *            whether it is @p coordinatedSet / @p broadcastReception capable.
-   *  @return This handle, for chaining. */
-  BLEAudioCapCommander &onDiscovered(DiscoveredCallback cb);
+   *            whether it is @p coordinatedSet / @p broadcastReception capable. */
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief A procedure finished.
-   *  @param cb Callback receiving the finished @p op and its @p status.
-   *  @return This handle, for chaining. */
-  BLEAudioCapCommander &onResult(ResultCallback cb);
+   *  @param cb Callback receiving the finished @p op and its @p status. */
+  void onResult(ResultCallback cb);
   /** @brief Acceptor receive states.
-   *  @param cb Callback receiving each read/notified receive @p state.
-   *  @return This handle, for chaining. */
-  BLEAudioCapCommander &onReceiveState(ReceiveStateCallback cb);
+   *  @param cb Callback receiving each read/notified receive @p state. */
+  void onReceiveState(ReceiveStateCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 

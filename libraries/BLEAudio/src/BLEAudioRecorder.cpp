@@ -394,14 +394,14 @@ void BLEAudioRecorder::end() {
   BLEAudioDataPath::endHandle(_impl, "Recorder");
 }
 
-BLEAudioRecorder &BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
+BTStatus BLEAudioRecorder::setPCMSource(BLEAudioPCMSource source) {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    log_w("Recorder: setPCMSource() ignored while running; stopCapture() first (applies to the next run)");
-    return *this;
+  if (d.begun || d.running()) {
+    log_w("Recorder: setPCMSource() ignored after begin(); end() first (applies to the next begin)");
+    return BTStatus::InvalidState;
   }
   d.source = std::move(source);
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioRecorder::attach(BLEAudioStream stream) {

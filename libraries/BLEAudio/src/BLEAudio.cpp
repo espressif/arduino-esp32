@@ -424,18 +424,16 @@ BTStatus BLEAudio::disconnect(uint16_t connHandle) {
   return st;
 }
 
-BLEAudio &BLEAudio::onLinkReady(LinkCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudio::onLinkReady(LinkCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onLinkReadyCb = std::move(cb);
-  return *this;
 }
 
-BLEAudio &BLEAudio::onDisconnected(LinkCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudio::onDisconnected(LinkCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDisconnectedCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudio::resetCallbacks() {
@@ -449,10 +447,10 @@ void BLEAudio::resetCallbacks() {
 // Defaults
 // --------------------------------------------------------------------------
 
-BLEAudio &BLEAudio::setPresentationDelay(uint32_t delayUs) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudio::setPresentationDelay(uint32_t delayUs) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.presentationDelayUs = delayUs;
-  return *this;
+  return BTStatus::OK;
 }
 
 uint32_t BLEAudio::getPresentationDelay() const {
@@ -460,10 +458,10 @@ uint32_t BLEAudio::getPresentationDelay() const {
   return impl.presentationDelayUs.load();
 }
 
-BLEAudio &BLEAudio::setAutoSecurityPolicy(bool enable) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudio::setAutoSecurityPolicy(bool enable) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   impl.autoSecurity.store(enable);
-  return *this;
+  return BTStatus::OK;
 }
 
 bool BLEAudio::autoSecurityPolicy() const {

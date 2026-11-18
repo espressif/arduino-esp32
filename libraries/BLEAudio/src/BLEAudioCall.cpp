@@ -94,25 +94,54 @@ BLEAudioCallServer::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::setProviderName(const String &name) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCallServer::setProviderName(const String &name) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
+  if (name.length() == 0) {
+    log_e("CallServer: provider name must not be empty");
+    return BTStatus::InvalidParam;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.providerName = name;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::setUci(const String &uci) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCallServer::setUci(const String &uci) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
+  if (uci.length() == 0) {
+    log_e("CallServer: UCI must not be empty");
+    return BTStatus::InvalidParam;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.uci = uci;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::setUriSchemes(const String &schemes) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCallServer::setUriSchemes(const String &schemes) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio->started) {
+    return BTStatus::InvalidState;
+  }
+  bool usable = false;
+  for (size_t i = 0; i < schemes.length(); i++) {
+    const char c = schemes.charAt(i);
+    if (c != ',' && c != ' ' && c != '\t') {
+      usable = true;
+      break;
+    }
+  }
+  if (!usable) {
+    log_e("CallServer: URI scheme list must contain at least one scheme");
+    return BTStatus::InvalidParam;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.uriSchemes = schemes;
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioCallServer::incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName) {
@@ -161,25 +190,22 @@ BTStatus BLEAudioCallServer::updateProviderName(const String &name) {
   return st;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::onOriginate(OriginateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallServer::onOriginate(OriginateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onOriginateCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::onTerminated(TerminatedCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallServer::onTerminated(TerminatedCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onTerminatedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCallServer &BLEAudioCallServer::onCallControl(CallControlCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallServer::onCallControl(CallControlCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onCallControlCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCallServer::resetCallbacks() {
@@ -307,25 +333,22 @@ BTStatus BLEAudioCallController::readCalls() {
   return c != BLE_AUDIO_CONN_NONE ? bleAudioStatus(bleAudioCcpCliReadCalls(c)) : BTStatus::InvalidState;
 }
 
-BLEAudioCallController &BLEAudioCallController::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallController::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCallController &BLEAudioCallController::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallController::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onResultCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCallController &BLEAudioCallController::onCallState(CallStateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCallController::onCallState(CallStateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onCallStateCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCallController::resetCallbacks() {

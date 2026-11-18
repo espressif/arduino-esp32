@@ -38,7 +38,9 @@
  *
  * @code
  * BLEAudioBroadcastSource source = audio.createBroadcastSource();
- * source.setPreset(BLEAudioCodecPreset::LC3_48_4_1).setChannels(2).setName("Living room");
+ * source.setPreset(BLEAudioCodecPreset::LC3_48_4_1);
+ * source.setChannels(2);
+ * source.setName("Living room");
  * audio.begin();
  * source.start();
  * @endcode
@@ -77,94 +79,105 @@ public:
   /** @brief Whether this handle references a source (false when the factory failed). */
   explicit operator bool() const;
 
-  // --- Configuration (applied by the next start(); every setter returns this handle) ---
+  // --- Configuration (applied by the next start(); every setter returns BTStatus) ---
   //
-  // Setters are no-op chain links on an empty handle. Codec, QoS, channels,
+  // Setters return InvalidState on an empty handle. Codec, QoS, channels,
   // code and context mark the engine source dirty so start() re-creates it;
   // the Broadcast ID, name and PBP flag only change the advertising.
 
   /**
    * @brief Codec and QoS from a BAP preset (broadcast table). Default LC3_16_2_1.
-   * @param preset Preset to use; an unknown preset is logged and ignored.
-   * @return This handle, for chaining.
+   * @param preset Preset to use.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or while
+   *         starting or streaming; InvalidParam for an unknown preset.
    */
-  BLEAudioBroadcastSource &setPreset(BLEAudioCodecPreset preset);
+  BTStatus setPreset(BLEAudioCodecPreset preset);
   /**
    * @brief Replace the preset's QoS with a custom one.
    *
    * Without it, the preset QoS is used with the controller's presentation delay.
    * @param qos Custom QoS applied instead of the preset one from the next start().
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or while
+   *         starting or streaming.
    */
-  BLEAudioBroadcastSource &setQos(const BLEAudioQos &qos);
+  BTStatus setQos(const BLEAudioQos &qos);
   /**
    * @brief Number of channels, one BIS each: 1 = mono (default), 2 = stereo (FL + FR).
    *
-   * Clamped to 1..2 and capped by the packaged Kconfig BIS count. Ignored
-   * while starting or streaming. A stopped engine source is deleted before
-   * the stream vector is resized, so the engine never points at freed slots.
-   * Streams are (re)allocated immediately; attach callbacks afterwards.
+   * A stopped engine source is deleted before the stream vector is resized, so
+   * the engine never points at freed slots. Streams are (re)allocated
+   * immediately; attach callbacks afterwards.
    * @param channels 1 = mono (one BIS), 2 = stereo (two BISes).
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle or while
+   *         starting or streaming; InvalidParam unless @p channels is 1 or 2.
    */
-  BLEAudioBroadcastSource &setChannels(uint8_t channels);
+  BTStatus setChannels(uint8_t channels);
   /**
    * @brief 24-bit Broadcast ID receivers use to recognise the source. Default: random.
    * @param broadcastId Only the low 24 bits are kept; advertised, not baked into the source.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSource &setBroadcastId(uint32_t broadcastId);
+  BTStatus setBroadcastId(uint32_t broadcastId);
   /**
    * @brief Broadcast Code (up to 16 characters) that encrypts the BIG.
    *
    * Empty (default) = unencrypted. Receivers need the same code to decode.
-   * @param code Longer codes are truncated with a warning and zero-padded per spec.
-   * @return This handle, for chaining.
+   * @param code Broadcast Code, empty (open) or up to 16 characters.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle;
+   *         InvalidParam when @p code is longer than 16 characters.
    */
-  BLEAudioBroadcastSource &setBroadcastCode(const String &code);
+  BTStatus setBroadcastCode(const String &code);
   /**
-   * @brief Broadcast Name shown by scanners (truncated to 32 characters). Default: the device name.
-   * @param name Name advertised in the extended advertising.
-   * @return This handle, for chaining.
+   * @brief Broadcast Name shown by scanners (up to 32 characters). Default: the device name.
+   * @param name Name advertised in the extended advertising; empty falls back to the device name.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle;
+   *         InvalidParam when @p name is longer than 32 characters.
    */
-  BLEAudioBroadcastSource &setName(const String &name);
+  BTStatus setName(const String &name);
   /**
    * @brief Streaming context in the BASE metadata. Default Media.
    * @param context Context announced in the BASE.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSource &setContext(BLEAudioContext context);
+  BTStatus setContext(BLEAudioContext context);
   /**
    * @brief Advertise a Public Broadcast Announcement (Auracast, PBP builds only).
    *
    * Lets phones list the broadcast with its quality and encryption flags.
    * Default on; ignored when PBP is not compiled in.
    * @param enable True to advertise the PBA alongside the announcement.
-   * @return This handle, for chaining.
+   * @return BTStatus::OK when staged; InvalidState on an empty handle.
    */
-  BLEAudioBroadcastSource &setPublicBroadcast(bool enable);
+  BTStatus setPublicBroadcast(bool enable);
 
   /**
    * @brief Configure a ready-to-start Auracast transmitter.
    *
    * Shorthand for:
    * @code
-   * setPreset(preset).setChannels(channels).setName(name)
-   *   .setContext(Media).setPublicBroadcast(true);
+   * setPreset(preset);
+   * setChannels(channels);
+   * setName(name);
+   * setContext(Media);
+   * setPublicBroadcast(true);
    * @endcode
    *
    * @param name     Broadcast Name shown by receivers and phone Auracast UIs
-   *                 (truncated to 32 characters).
+   *                 (up to 32 characters, must not be empty).
    * @param channels 1 = mono (one BIS), 2 = stereo (front-left + front-right
    *                 BISes). Default 2.
    * @param preset   Codec/QoS preset. Default LC3_48_2_1: 48 kHz music, the
    *                 usual Auracast quality.
+   * @return BTStatus::OK when every setter was applied; the first error
+   *         otherwise (InvalidState on an empty handle or while starting or
+   *         streaming; InvalidParam for an empty or overlong @p name, a bad
+   *         @p channels count or an unknown @p preset).
    *
    * Call it before the commit (audio.begin()). Encryption stays opt-in: call
    * setBroadcastCode() separately. Individual setters can still override any
    * field afterwards.
    */
-  BLEAudioBroadcastSource &configureAuracast(const String &name, uint8_t channels = 2,
+  BTStatus configureAuracast(const String &name, uint8_t channels = 2,
                                              BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
 
   // --- Control (after audio.begin()) ---
@@ -228,17 +241,14 @@ public:
 
   // --- Callbacks (Bluetooth host task; keep them short) ---
   //
-  // Every setter below takes the callback in @p cb and returns this handle for
-  // chaining; a no-op chain link on an empty handle.
+  // Every setter below takes the callback in @p cb; a no-op on an empty handle.
 
   /** @brief The BIG is up: every stream is streaming.
-   *  @param cb Callback fired once the BIG streams.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastSource &onStarted(Callback cb);
+   *  @param cb Callback fired once the BIG streams. */
+  void onStarted(Callback cb);
   /** @brief The BIG was terminated.
-   *  @param cb Callback receiving the HCI termination @p reason.
-   *  @return This handle, for chaining. */
-  BLEAudioBroadcastSource &onStopped(StoppedCallback cb);
+   *  @param cb Callback receiving the HCI termination @p reason. */
+  void onStopped(StoppedCallback cb);
   /** @brief Clear every callback of this role. */
   void resetCallbacks();
 

@@ -65,8 +65,11 @@ public:
   /** @return true when the handle refers to a created device. */
   explicit operator bool() const;
 
-  /** @brief Default unmuted. Before audio.begin(). */
-  BLEAudioMicDevice &setInitialMute(bool muted);
+  /**
+   * @brief Default unmuted. Before audio.begin().
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setInitialMute(bool muted);
 
   /**
    * @brief Mute locally (after audio.begin()); connected controllers are notified.
@@ -97,9 +100,9 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Every mute change, local or remote (disabled reports unmuted/false: see isMuteDisabled()). */
-  BLEAudioMicDevice &onMuteChanged(MuteCallback cb);
+  void onMuteChanged(MuteCallback cb);
   /** @brief A queued local operation failed; the state did not change. */
-  BLEAudioMicDevice &onResult(ResultCallback cb);
+  void onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -207,11 +210,11 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
-  BLEAudioMicController &onDiscovered(DiscoveredCallback cb);
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief The device's mute state was read or changed. */
-  BLEAudioMicController &onMuteChanged(MuteCallback cb);
+  void onMuteChanged(MuteCallback cb);
   /** @brief The device's microphone input gain or mute changed. */
-  BLEAudioMicController &onInputChanged(InputCallback cb);
+  void onInputChanged(InputCallback cb);
   /**
    * @brief A queued operation failed; the state did not change.
    *
@@ -220,7 +223,7 @@ public:
    * may be a sibling). Unknown when no operation was queued.
    * NotConnected when the link dropped while an operation was in flight.
    */
-  BLEAudioMicController &onResult(ResultCallback cb);
+  void onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

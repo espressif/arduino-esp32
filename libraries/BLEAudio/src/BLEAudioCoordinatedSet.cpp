@@ -86,11 +86,12 @@ struct BLEAudioCoordinatedSetMember::Impl {
     return bleAudioStatus(err);
   }
 
-  /** @brief Log a failed live update; the new value is still used at the next start. */
-  void checkLive(int err, const char *what) {
+  /** @brief Log a failed live update; @return the stack status. */
+  BTStatus checkLive(int err, const char *what) {
     if (err != 0) {
       log_w("CoordinatedSet: %s update failed (err=%d)", what, err);
     }
+    return bleAudioStatus(err);
   }
 
   /**
@@ -149,52 +150,71 @@ BLEAudioCoordinatedSetMember::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]) {
-  if (_impl && sirk) {
-    memcpy(_impl->sirk, sirk, BLE_AUDIO_SIRK_SIZE);
-    _impl->sirkCustom = true;
-    if (_impl->registered) {
-      _impl->checkLive(bleAudioCsisSetSirk(_impl->cas, sirk), "SIRK");
-    }
+BTStatus BLEAudioCoordinatedSetMember::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!sirk) {
+    log_e("CoordinatedSet: setSirk() needs a 16-octet SIRK");
+    return BTStatus::InvalidParam;
   }
-  return *this;
+  if (impl.registered) {
+    log_e("CoordinatedSet: setSirk() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
+  memcpy(impl.sirk, sirk, BLE_AUDIO_SIRK_SIZE);
+  impl.sirkCustom = true;
+  if (impl.registered) {
+    return impl.checkLive(bleAudioCsisSetSirk(impl.cas, impl.sirk), "SIRK");
+  }
+  return BTStatus::OK;
 }
 
-// The stack takes size and rank together and rejects the update unless the size changes.
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setSetSize(uint8_t size) {
-  if (_impl && size != _impl->setSize) {
-    _impl->setSize = size;
-    if (_impl->registered) {
-      _impl->checkLive(bleAudioCsisSetSizeRank(_impl->cas, size, _impl->rank), "size");
-    }
+// Size and rank are registered together at audio.begin().
+BTStatus BLEAudioCoordinatedSetMember::setSetSize(uint8_t size) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (size == 0) {
+    log_e("CoordinatedSet: invalid set size 0");
+    return BTStatus::InvalidParam;
   }
-  return *this;
+  impl.setSize = size;
+  if (impl.registered) {
+    return impl.checkLive(bleAudioCsisSetSizeRank(impl.cas, impl.setSize, impl.rank), "size");
+  }
+  return BTStatus::OK;
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setRank(uint8_t rank) {
-  if (_impl && rank != _impl->rank) {
-    _impl->rank = rank;
-    if (_impl->registered) {
-      log_w("CoordinatedSet: rank %u staged; a running set only takes it with a new set size (setSetSize()) or at the next start", rank);
-    }
+BTStatus BLEAudioCoordinatedSetMember::setRank(uint8_t rank) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (rank == 0) {
+    log_e("CoordinatedSet: invalid rank 0");
+    return BTStatus::InvalidParam;
   }
-  return *this;
+  impl.rank = rank;
+  if (impl.registered) {
+    return impl.checkLive(bleAudioCsisSetSizeRank(impl.cas, impl.setSize, impl.rank), "rank");
+  }
+  return BTStatus::OK;
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setLockable(bool lockable) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCoordinatedSetMember::setLockable(bool lockable) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.registered) {
+    log_e("CoordinatedSet: setLockable() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.lockable = lockable;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::setName(const String &name) {
-  if (_impl && name != _impl->name) {
-    _impl->name = name;
-    if (_impl->registered) {
-      _impl->checkLive(bleAudioCsisSetName(_impl->cas, reinterpret_cast<const uint8_t *>(name.c_str()), (uint8_t)name.length()), "name");
-    }
+BTStatus BLEAudioCoordinatedSetMember::setName(const String &name) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (name == impl.name) {
+    return BTStatus::OK;
   }
-  return *this;
+  impl.name = name;
+  if (impl.registered) {
+    return impl.checkLive(bleAudioCsisSetName(impl.cas, reinterpret_cast<const uint8_t *>(name.c_str()), (uint8_t)name.length()), "name");
+  }
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioCoordinatedSetMember::generateRsi(uint8_t rsi[BLE_AUDIO_RSI_SIZE]) const {
@@ -216,18 +236,16 @@ bool BLEAudioCoordinatedSetMember::isLocked() const {
   return _impl && _impl->registered && bleAudioCsisIsLocked(_impl->cas);
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onLockChanged(LockCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCoordinatedSetMember::onLockChanged(LockCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.lockCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCoordinatedSetMember &BLEAudioCoordinatedSetMember::onSirkRead(SirkReadCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCoordinatedSetMember::onSirkRead(SirkReadCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.sirkCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCoordinatedSetMember::resetCallbacks() {
@@ -397,25 +415,22 @@ BLEAudioCoordinatedSetInfo BLEAudioCoordinatedSetCoordinator::setInfo() const {
   return _impl->set;
 }
 
-BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCoordinatedSetCoordinator::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.discoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLock(LockCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCoordinatedSetCoordinator::onLock(LockCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.lockCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCoordinatedSetCoordinator &BLEAudioCoordinatedSetCoordinator::onLockChanged(LockChangedCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCoordinatedSetCoordinator::onLockChanged(LockChangedCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.lockChangedCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCoordinatedSetCoordinator::resetCallbacks() {

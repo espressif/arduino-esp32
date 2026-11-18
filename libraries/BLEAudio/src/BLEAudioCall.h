@@ -101,12 +101,24 @@ public:
 
   // --- Configuration (before audio.begin()) ---
 
-  /** @brief Default "ESP Phone". */
-  BLEAudioCallServer &setProviderName(const String &name);
-  /** @brief Uniform Caller Identifier. Default "un000". */
-  BLEAudioCallServer &setUci(const String &uci);
-  /** @brief Comma-separated URI schemes, e.g. "tel,skype". Default "tel". */
-  BLEAudioCallServer &setUriSchemes(const String &schemes);
+  /**
+   * @brief Default "ESP Phone".
+   * @return BTStatus::OK when staged; InvalidParam when @p name is empty;
+   *         InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setProviderName(const String &name);
+  /**
+   * @brief Uniform Caller Identifier. Default "un000".
+   * @return BTStatus::OK when staged; InvalidParam when @p uci is empty;
+   *         InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setUci(const String &uci);
+  /**
+   * @brief Comma-separated URI schemes, e.g. "tel,skype". Default "tel".
+   * @return BTStatus::OK when staged; InvalidParam when @p schemes has no usable scheme;
+   *         InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setUriSchemes(const String &schemes);
 
   // --- Calls (after audio.begin()) ---
 
@@ -164,11 +176,11 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief A controller asked to place a call. Default: accept. */
-  BLEAudioCallServer &onOriginate(OriginateCallback cb);
+  void onOriginate(OriginateCallback cb);
   /** @brief A controller ended a call. */
-  BLEAudioCallServer &onTerminated(TerminatedCallback cb);
+  void onTerminated(TerminatedCallback cb);
   /** @brief A controller accepted, held or retrieved a call. */
-  BLEAudioCallServer &onCallControl(CallControlCallback cb);
+  void onCallControl(CallControlCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -283,11 +295,11 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
-  BLEAudioCallController &onDiscovered(DiscoveredCallback cb);
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief Completion of each call operation. */
-  BLEAudioCallController &onResult(ResultCallback cb);
+  void onResult(ResultCallback cb);
   /** @brief Call state reads and notifications; Ended once a call is gone. */
-  BLEAudioCallController &onCallState(CallStateCallback cb);
+  void onCallState(CallStateCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

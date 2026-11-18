@@ -94,24 +94,20 @@ BLEAudioCoordinatedSetMember BLEAudioCapAcceptor::coordinatedSet() const {
   return BLEAudioCoordinatedSetMember(_impl);
 }
 
-BLEAudioCapAcceptor &BLEAudioCapAcceptor::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]) {
-  coordinatedSet().setSirk(sirk);
-  return *this;
+BTStatus BLEAudioCapAcceptor::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]) {
+  return coordinatedSet().setSirk(sirk);
 }
 
-BLEAudioCapAcceptor &BLEAudioCapAcceptor::setSetSize(uint8_t size) {
-  coordinatedSet().setSetSize(size);
-  return *this;
+BTStatus BLEAudioCapAcceptor::setSetSize(uint8_t size) {
+  return coordinatedSet().setSetSize(size);
 }
 
-BLEAudioCapAcceptor &BLEAudioCapAcceptor::setRank(uint8_t rank) {
-  coordinatedSet().setRank(rank);
-  return *this;
+BTStatus BLEAudioCapAcceptor::setRank(uint8_t rank) {
+  return coordinatedSet().setRank(rank);
 }
 
-BLEAudioCapAcceptor &BLEAudioCapAcceptor::setLockable(bool lockable) {
-  coordinatedSet().setLockable(lockable);
-  return *this;
+BTStatus BLEAudioCapAcceptor::setLockable(bool lockable) {
+  return coordinatedSet().setLockable(lockable);
 }
 
 // --------------------------------------------------------------------------
@@ -636,53 +632,77 @@ BLEAudioCapInitiator::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset) {
+BTStatus BLEAudioCapInitiator::setPreset(BLEAudioCodecPreset preset) {
   ble_audio_codec_t c;
   ble_audio_qos_t q;
-  BLE_CHECK_IMPL(*this);
-  if (bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
-    BLELockGuard lock(impl.mtx.get());
-    impl.preset = preset;
-  } else {
-    log_e("CapInitiator: invalid preset %u", (unsigned)preset);
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setPreset() before audio.begin()");
+    return BTStatus::InvalidState;
   }
-  return *this;
+  if (!bleAudioPresetGet(static_cast<uint8_t>(preset), false, &c, &q)) {
+    log_e("CapInitiator: invalid preset %u", (unsigned)preset);
+    return BTStatus::InvalidParam;
+  }
+  BLELockGuard lock(impl.mtx.get());
+  impl.preset = preset;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setQos(const BLEAudioQos &qos) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setQos(const BLEAudioQos &qos) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setQos() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.qos = qos;
   impl.customQos = true;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setContext(BLEAudioContext context) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setContext(BLEAudioContext context) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setContext() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.context = context;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setSinkStreams(uint8_t perPeer) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setSinkStreams(uint8_t perPeer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setSinkStreams() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.sinkPerPeer = perPeer;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setSourceStreams(uint8_t perPeer) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setSourceStreams(uint8_t perPeer) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setSourceStreams() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.sourcePerPeer = perPeer;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastId(uint32_t broadcastId) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setBroadcastId(uint32_t broadcastId) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setBroadcastId() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.broadcastId = broadcastId & 0xFFFFFF;
-  return *this;
+  return BTStatus::OK;
 }
 
 uint32_t BLEAudioCapInitiator::getBroadcastId() const {
@@ -693,21 +713,29 @@ uint32_t BLEAudioCapInitiator::getBroadcastId() const {
   return _impl->broadcastId;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastCode(const String &code) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setBroadcastCode(const String &code) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setBroadcastCode() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   if (code.length() > BLE_AUDIO_BCODE_SIZE) {
     log_w("CapInitiator: Broadcast Code truncated to %u characters", BLE_AUDIO_BCODE_SIZE);
   }
   impl.code = code;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::setBroadcastName(const String &name) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioCapInitiator::setBroadcastName(const String &name) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.audio && impl.audio->started.load()) {
+    log_e("CapInitiator: setBroadcastName() before audio.begin()");
+    return BTStatus::InvalidState;
+  }
   BLELockGuard lock(impl.mtx.get());
   impl.name = name;
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioCapInitiator::discover(uint16_t connHandle) {
@@ -1059,53 +1087,46 @@ BLEAudioStream BLEAudioCapInitiator::stream(BLEAudioStream::Direction dir, uint8
   return BLEAudioStream();
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.discoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastStarted(StatusCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onUnicastStarted(StatusCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.ucStartedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastUpdated(StatusCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onUnicastUpdated(StatusCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.ucUpdatedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onUnicastStopped(Callback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onUnicastStopped(Callback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.ucStoppedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onBroadcastStarted(Callback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onBroadcastStarted(Callback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.bcStartedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onBroadcastStopped(StoppedCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onBroadcastStopped(StoppedCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.bcStoppedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapInitiator &BLEAudioCapInitiator::onHandover(HandoverCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapInitiator::onHandover(HandoverCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.handoverCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCapInitiator::resetCallbacks() {
@@ -1278,25 +1299,22 @@ BTStatus BLEAudioCapCommander::distributeBroadcastCode(const String &code) {
   return bleAudioStatus(bleAudioCapCommanderDistributeCode(bcode));
 }
 
-BLEAudioCapCommander &BLEAudioCapCommander::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapCommander::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.discoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapCommander &BLEAudioCapCommander::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapCommander::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.resultCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioCapCommander &BLEAudioCapCommander::onReceiveState(ReceiveStateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioCapCommander::onReceiveState(ReceiveStateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.recvStateCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioCapCommander::resetCallbacks() {

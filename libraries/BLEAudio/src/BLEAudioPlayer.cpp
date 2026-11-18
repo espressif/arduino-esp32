@@ -435,24 +435,24 @@ void BLEAudioPlayer::end() {
   BLEAudioDataPath::endHandle(_impl, "Player");
 }
 
-BLEAudioPlayer &BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {
+BTStatus BLEAudioPlayer::setPCMSink(BLEAudioPCMSink sink) {
   Impl &d = ensure(_impl);
-  if (d.running()) {
-    log_w("Player: setPCMSink() ignored while running; stopPlayback() first (applies to the next run)");
-    return *this;
+  if (d.begun || d.running()) {
+    log_w("Player: setPCMSink() ignored after begin(); end() first (applies to the next begin)");
+    return BTStatus::InvalidState;
   }
   d.sink = std::move(sink);
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioPlayer &BLEAudioPlayer::setJitterDepth(uint8_t sdus) {
+BTStatus BLEAudioPlayer::setJitterDepth(uint8_t sdus) {
   Impl &d = ensure(_impl);
   if (d.running()) {
     log_w("Player: setJitterDepth() ignored while running; stopPlayback() first (applies to the next run)");
-    return *this;
+    return BTStatus::InvalidState;
   }
   d.depthOverride = sdus;
-  return *this;
+  return BTStatus::OK;
 }
 
 BTStatus BLEAudioPlayer::attach(BLEAudioStream stream) {

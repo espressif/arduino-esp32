@@ -146,18 +146,16 @@ BLEAudioMediaState BLEAudioMediaPlayer::getState() const {
   return impl.state.load(std::memory_order_relaxed);
 }
 
-BLEAudioMediaPlayer &BLEAudioMediaPlayer::onStateChanged(StateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaPlayer::onStateChanged(StateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onStateChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMediaPlayer &BLEAudioMediaPlayer::onCommandResult(CommandCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaPlayer::onCommandResult(CommandCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onCommandResultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioMediaPlayer::resetCallbacks() {
@@ -318,39 +316,34 @@ BLEAudioMediaState BLEAudioMediaController::getState() const {
   return impl.state.load(std::memory_order_relaxed);
 }
 
-BLEAudioMediaController &BLEAudioMediaController::onDiscovered(DiscoveredCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaController::onDiscovered(DiscoveredCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMediaController &BLEAudioMediaController::onStateChanged(StateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaController::onStateChanged(StateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onStateChangedCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMediaController &BLEAudioMediaController::onCommandResult(CommandCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaController::onCommandResult(CommandCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onCommandResultCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMediaController &BLEAudioMediaController::onPlayerName(TextCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaController::onPlayerName(TextCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onPlayerNameCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioMediaController &BLEAudioMediaController::onTrackTitle(TextCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioMediaController::onTrackTitle(TextCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onTrackTitleCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioMediaController::resetCallbacks() {

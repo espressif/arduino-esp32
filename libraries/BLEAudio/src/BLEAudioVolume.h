@@ -71,12 +71,23 @@ public:
 
   // --- Configuration (before audio.begin()) ---
 
-  /** @brief Default 100. */
-  BLEAudioVolumeRenderer &setInitialVolume(uint8_t volume);
-  /** @brief Default unmuted. */
-  BLEAudioVolumeRenderer &setInitialMute(bool muted);
-  /** @brief Step used by volumeUp()/volumeDown() and remote relative writes; 1..255, default 1. Also at runtime. */
-  BLEAudioVolumeRenderer &setVolumeStep(uint8_t step);
+  /**
+   * @brief Default 100.
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setInitialVolume(uint8_t volume);
+  /**
+   * @brief Default unmuted.
+   * @return BTStatus::OK when staged; InvalidState when the handle is empty or audio is already started.
+   */
+  BTStatus setInitialMute(bool muted);
+  /**
+   * @brief Step used by volumeUp()/volumeDown() and remote relative writes; 1..255, default 1. Also at runtime.
+   * @return BTStatus::OK when staged (before start) or applied (once running);
+   *         InvalidParam when @p step is 0; InvalidState when the handle is empty;
+   *         another error when the stack refused the runtime update (the previous step is kept).
+   */
+  BTStatus setVolumeStep(uint8_t step);
 
   // --- Local control (after audio.begin()); connected controllers are notified ---
 
@@ -124,9 +135,9 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Every volume/mute change, local or remote. */
-  BLEAudioVolumeRenderer &onStateChanged(StateCallback cb);
+  void onStateChanged(StateCallback cb);
   /** @brief A queued local operation failed; the state did not change. */
-  BLEAudioVolumeRenderer &onResult(ResultCallback cb);
+  void onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 
@@ -273,13 +284,13 @@ public:
   // --- Callbacks (Bluetooth host task; keep them short) ---
 
   /** @brief Discovery finished; also fires with an error when a deferred discovery could not start. */
-  BLEAudioVolumeController &onDiscovered(DiscoveredCallback cb);
+  void onDiscovered(DiscoveredCallback cb);
   /** @brief The renderer's volume or mute changed. */
-  BLEAudioVolumeController &onStateChanged(StateCallback cb);
+  void onStateChanged(StateCallback cb);
   /** @brief The renderer's volume offset changed. */
-  BLEAudioVolumeController &onOffsetChanged(OffsetCallback cb);
+  void onOffsetChanged(OffsetCallback cb);
   /** @brief The renderer's audio input gain or mute changed. */
-  BLEAudioVolumeController &onInputChanged(InputCallback cb);
+  void onInputChanged(InputCallback cb);
   /**
    * @brief A queued operation failed; the state did not change.
    *
@@ -288,7 +299,7 @@ public:
    * may be a sibling). Unknown when no operation was queued.
    * NotConnected when the link dropped while an operation was in flight.
    */
-  BLEAudioVolumeController &onResult(ResultCallback cb);
+  void onResult(ResultCallback cb);
   /** @brief Drop every registered callback. */
   void resetCallbacks();
 

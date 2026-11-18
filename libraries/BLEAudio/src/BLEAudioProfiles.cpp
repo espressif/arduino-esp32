@@ -135,17 +135,18 @@ BLEAudioTmap::operator bool() const {
   return _impl != nullptr;
 }
 
-BLEAudioTmap &BLEAudioTmap::setRoles(BLEAudioTmapRole roles) {
-  BLE_CHECK_IMPL(*this);
-  if (!startedWarn(impl.audio, "BLEAudioTmap::setRoles")) {
-    if (static_cast<uint16_t>(roles) & ~0x003Fu) {
-      log_e("BLEAudioTmap::setRoles(): unknown role bits 0x%04x (valid: 0x0001-0x0020)", static_cast<unsigned>(roles) & ~0x3Fu);
-      return *this;
-    }
-    BLELockGuard lock(impl.mtx.get());
-    impl.roles = roles;
+BTStatus BLEAudioTmap::setRoles(BLEAudioTmapRole roles) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (startedWarn(impl.audio, "BLEAudioTmap::setRoles")) {
+    return BTStatus::InvalidState;
   }
-  return *this;
+  if (static_cast<uint16_t>(roles) & ~0x003Fu) {
+    log_e("BLEAudioTmap::setRoles(): unknown role bits 0x%04x (valid: 0x0001-0x0020)", static_cast<unsigned>(roles) & ~0x3Fu);
+    return BTStatus::InvalidParam;
+  }
+  BLELockGuard lock(impl.mtx.get());
+  impl.roles = roles;
+  return BTStatus::OK;
 }
 
 BLEAudioTmapRole BLEAudioTmap::getRoles() const {
@@ -159,11 +160,10 @@ BTStatus BLEAudioTmap::discover(uint16_t connHandle) {
   return impl.queueOrRun(connHandle, "TMAP", bleAudioTmapDiscover);
 }
 
-BLEAudioTmap &BLEAudioTmap::onDiscovered(DiscoverCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioTmap::onDiscovered(DiscoverCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioTmap::resetCallbacks() {
@@ -270,25 +270,34 @@ bool gmapFeaturesOk(const BLEAudioGmapFeatures &f, const char *what) {
 
 }  // namespace
 
-BLEAudioGmap &BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
-  BLE_CHECK_IMPL(*this);
-  if (!startedWarn(impl.audio, "BLEAudioGmap::setRoles") && gmapRolesOk(roles, "BLEAudioGmap::setRoles")) {
-    BLELockGuard lock(impl.mtx.get());
-    impl.roles = roles;
+BTStatus BLEAudioGmap::setRoles(BLEAudioGmapRole roles) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (startedWarn(impl.audio, "BLEAudioGmap::setRoles")) {
+    return BTStatus::InvalidState;
   }
-  return *this;
+  if (!gmapRolesOk(roles, "BLEAudioGmap::setRoles")) {
+    return BTStatus::InvalidParam;
+  }
+  BLELockGuard lock(impl.mtx.get());
+  impl.roles = roles;
+  return BTStatus::OK;
 }
 
-BLEAudioGmap &BLEAudioGmap::setFeatures(const BLEAudioGmapFeatures &features) {
-  BLE_CHECK_IMPL(*this);
-  if (!startedWarn(impl.audio, "BLEAudioGmap::setFeatures") && gmapFeaturesOk(features, "BLEAudioGmap::setFeatures")) {
-    BLELockGuard lock(impl.mtx.get());
-    impl.features = features;
+BTStatus BLEAudioGmap::setFeatures(const BLEAudioGmapFeatures &features) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (startedWarn(impl.audio, "BLEAudioGmap::setFeatures")) {
+    return BTStatus::InvalidState;
   }
-  return *this;
+  if (!gmapFeaturesOk(features, "BLEAudioGmap::setFeatures")) {
+    return BTStatus::InvalidParam;
+  }
+  BLELockGuard lock(impl.mtx.get());
+  impl.features = features;
+  return BTStatus::OK;
 }
 
-BLEAudioGmap &BLEAudioGmap::setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal, uint8_t broadcastSender, uint8_t broadcastReceiver) {
+BTStatus BLEAudioGmap::setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal, uint8_t broadcastSender, uint8_t broadcastReceiver) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLEAudioGmapFeatures f;
   f.unicastGateway = unicastGateway;
   f.unicastTerminal = unicastTerminal;
@@ -308,11 +317,10 @@ BTStatus BLEAudioGmap::discover(uint16_t connHandle) {
   return impl.queueOrRun(connHandle, "GMAP", bleAudioGmapDiscover);
 }
 
-BLEAudioGmap &BLEAudioGmap::onDiscovered(DiscoverCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioGmap::onDiscovered(DiscoverCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.onDiscoveredCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioGmap::resetCallbacks() {

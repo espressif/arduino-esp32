@@ -84,17 +84,19 @@ public:
    */
   void end();
 
-  /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin(); ignored while running).
+  /** @brief Deliver decoded PCM to @p sink instead of I2S (before begin(); InvalidState once begun/running).
    *
    * A set sink wins over I2S: begin(pins) then only logs and keeps the sink.
+   * @return BTStatus::OK when stored; InvalidState when begun or running.
    */
-  BLEAudioPlayer &setPCMSink(BLEAudioPCMSink sink);
+  BTStatus setPCMSink(BLEAudioPCMSink sink);
   /** @brief Jitter-buffer depth in SDUs (min 2, max 16); 0 = from the stream QoS (default).
    *
    * Larger requests are clamped to 16 with a warning when the session builds;
    * a presentation delay that needs more than 16 SDUs underruns by design.
+   * @return BTStatus::OK when stored; InvalidState while running.
    */
-  BLEAudioPlayer &setJitterDepth(uint8_t sdus);
+  BTStatus setJitterDepth(uint8_t sdus);
 
   /**
    * @brief Play one Rx stream (mono or interleaved stereo).

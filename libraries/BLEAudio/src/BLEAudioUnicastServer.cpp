@@ -146,91 +146,176 @@ BLEAudioUnicastServer::operator bool() const {
   return _impl != nullptr;
 }
 
-/** The ASE count is registered with ASCS, so it can only change before start(). */
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
-  BLE_CHECK_IMPL(*this);
-  if (!impl.applied) {
-    impl.sinkStreams = count;
-    impl.resizeStreams();
-  } else {
-    log_w("UnicastServer: setSinkStreams() ignored after audio.begin()");
+/** The ASE counts are registered with ASCS, so they can only change before start(). */
+BTStatus BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSinkStreams() after audio.begin()");
+    return BTStatus::InvalidState;
   }
-  return *this;
+  impl.sinkStreams = count;
+  impl.resizeStreams();
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
-  BLE_CHECK_IMPL(*this);
-  if (!impl.applied) {
-    impl.sourceStreams = count;
-    impl.resizeStreams();
-  } else {
-    log_w("UnicastServer: setSourceStreams() ignored after audio.begin()");
+BTStatus BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSourceStreams() after audio.begin()");
+    return BTStatus::InvalidState;
   }
-  return *this;
+  impl.sourceStreams = count;
+  impl.resizeStreams();
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSupportedPresets(uint32_t presetMask) {
-  if (_impl && presetMask) {
-    _impl->presets = presetMask;
+BTStatus BLEAudioUnicastServer::setSupportedPresets(uint32_t presetMask) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (presetMask == 0) {
+    log_e("UnicastServer: setSupportedPresets() with zero mask; keeping current mask");
+    return BTStatus::InvalidParam;
   }
-  return *this;
+  if (impl.applied) {
+    log_e("UnicastServer: setSupportedPresets() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
+  impl.presets = presetMask;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setMaxChannelsPerStream(uint8_t channels) {
-  BLE_CHECK_IMPL(*this);
-  impl.maxChannels = channels < 1 ? 1 : (channels > 2 ? 2 : channels);
-  return *this;
+BTStatus BLEAudioUnicastServer::setMaxChannelsPerStream(uint8_t channels) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (channels < 1 || channels > 2) {
+    log_e("UnicastServer: invalid channels %u (want 1 or 2)", channels);
+    return BTStatus::InvalidParam;
+  }
+  if (impl.applied) {
+    log_e("UnicastServer: setMaxChannelsPerStream() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
+  impl.maxChannels = channels;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkContexts(BLEAudioContext contexts) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioUnicastServer::setSinkContexts(BLEAudioContext contexts) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSinkContexts() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.sinkContexts = contexts;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceContexts(BLEAudioContext contexts) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioUnicastServer::setSourceContexts(BLEAudioContext contexts) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSourceContexts() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.sourceContexts = contexts;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSinkLocation(BLEAudioLocation location) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioUnicastServer::setSinkLocation(BLEAudioLocation location) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSinkLocation() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.sinkLocation = location;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setSourceLocation(BLEAudioLocation location) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioUnicastServer::setSourceLocation(BLEAudioLocation location) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (impl.applied) {
+    log_e("UnicastServer: setSourceLocation() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.sourceLocation = location;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::setPresentationDelayRange(uint32_t minUs, uint32_t maxUs) {
-  BLE_CHECK_IMPL(*this);
+BTStatus BLEAudioUnicastServer::setPresentationDelayRange(uint32_t minUs, uint32_t maxUs) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (maxUs != 0 && minUs > maxUs) {
+    log_e("UnicastServer: invalid presentation delay range %lu-%lu us", (unsigned long)minUs, (unsigned long)maxUs);
+    return BTStatus::InvalidParam;
+  }
+  if (impl.applied) {
+    log_e("UnicastServer: setPresentationDelayRange() after audio.begin()");
+    return BTStatus::InvalidState;
+  }
   impl.pdMinUs = minUs;
   impl.pdMaxUs = maxUs;
-  return *this;
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::configureMediaSink() {
-  return setSinkStreams(1)
-    .setSourceStreams(0)
-    .setMaxChannelsPerStream(2)
-    .setSupportedPresets(kMediaPresets)
-    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
-    .setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
+BTStatus BLEAudioUnicastServer::configureMediaSink() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BTStatus st = setSinkStreams(1);
+  if (!st) {
+    return st;
+  }
+  st = setSourceStreams(0);
+  if (!st) {
+    return st;
+  }
+  st = setMaxChannelsPerStream(2);
+  if (!st) {
+    return st;
+  }
+  st = setSupportedPresets(kMediaPresets);
+  if (!st) {
+    return st;
+  }
+  st = setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+  if (!st) {
+    return st;
+  }
+  st = setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
+  if (!st) {
+    return st;
+  }
+  return BTStatus::OK;
 }
 
-BLEAudioUnicastServer &BLEAudioUnicastServer::configureHeadset() {
-  return setSinkStreams(1)
-    .setSourceStreams(1)
-    .setMaxChannelsPerStream(2)
-    .setSupportedPresets(kMediaPresets)
-    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
-    .setSourceContexts(BLEAudioContext::Conversational | BLEAudioContext::Media)
-    .setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight)
-    .setSourceLocation(BLEAudioLocation::Mono);
+BTStatus BLEAudioUnicastServer::configureHeadset() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BTStatus st = setSinkStreams(1);
+  if (!st) {
+    return st;
+  }
+  st = setSourceStreams(1);
+  if (!st) {
+    return st;
+  }
+  st = setMaxChannelsPerStream(2);
+  if (!st) {
+    return st;
+  }
+  st = setSupportedPresets(kMediaPresets);
+  if (!st) {
+    return st;
+  }
+  st = setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+  if (!st) {
+    return st;
+  }
+  st = setSourceContexts(BLEAudioContext::Conversational | BLEAudioContext::Media);
+  if (!st) {
+    return st;
+  }
+  st = setSinkLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
+  if (!st) {
+    return st;
+  }
+  st = setSourceLocation(BLEAudioLocation::Mono);
+  if (!st) {
+    return st;
+  }
+  return BTStatus::OK;
 }
 
 // --------------------------------------------------------------------------

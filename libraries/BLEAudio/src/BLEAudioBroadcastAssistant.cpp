@@ -414,32 +414,28 @@ BTStatus BLEAudioBroadcastAssistant::setBroadcastCode(uint8_t sourceId, const St
   return bleAudioStatus(bleAudioBaSetBroadcastCode(conn, sourceId, buf));
 }
 
-BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onDiscovered(DiscoverCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioBroadcastAssistant::onDiscovered(DiscoverCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.discoverCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onSourceFound(SourceFoundCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioBroadcastAssistant::onSourceFound(SourceFoundCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.sourceFoundCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onReceiveState(ReceiveStateCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioBroadcastAssistant::onReceiveState(ReceiveStateCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.receiveStateCb = std::move(cb);
-  return *this;
 }
 
-BLEAudioBroadcastAssistant &BLEAudioBroadcastAssistant::onResult(ResultCallback cb) {
-  BLE_CHECK_IMPL(*this);
+void BLEAudioBroadcastAssistant::onResult(ResultCallback cb) {
+  BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx.get());
   impl.resultCb = std::move(cb);
-  return *this;
 }
 
 void BLEAudioBroadcastAssistant::resetCallbacks() {
