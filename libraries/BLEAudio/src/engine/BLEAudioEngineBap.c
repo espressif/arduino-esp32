@@ -2216,12 +2216,14 @@ static struct {
   bool enabled;        /* bleAudioBsinkInit() ran; GAP events are routed here. */
   bool cb_registered;
   bool delegator;      /* Scan delegator (BASS) registered. */
-  /* Cross-task state (caller task API vs. host-task stack callbacks): plain
-   * readers/writers on different cores are a data race, so every flag,
-   * handle and ID below is _Atomic (same convention as the stream slots and
-   * s_uc.group). n_slots/slots[]/code[] are causally ordered instead:
-   * SetStreams/SetCode run at apply time, strictly before any host event can
-   * reference them, and deinit clears them while the host is down. */
+  /* Cross-task state (caller-task API vs. host-task stack callbacks): plain
+   * readers/writers on different cores are a data race, so the claim-path
+   * flags, handles, IDs and BIS-selection inputs are _Atomic (same
+   * convention as the stream slots and s_uc.group). Still plain: init-once
+   * publishes (enabled, cb_registered, delegator), host-confined latches
+   * (base_received, failed_no_match, fail_mask, base_bis), and the slot/code
+   * tables, which are staged at apply time strictly before any host event
+   * can reference them and cleared by deinit while the host is down. */
   _Atomic bool scanning;       /* Report Broadcast Audio announcements (BSINK_FOUND). */
   _Atomic bool armed;          /* The next PA sync belongs to the sink. */
   _Atomic bool hold;           /* Stopped on request: do not resync until re-armed. */
@@ -2230,13 +2232,13 @@ static struct {
   _Atomic bool has_code;
   bool failed_no_match;   /* BSINK_SYNC_FAILED(-ENOENT) latched for these inputs. */
   uint32_t fail_mask;     /* BIS-selection inputs the latch was computed from. */
-  bool failed_no_code;    /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
+  _Atomic bool failed_no_code; /* BSINK_SYNC_FAILED(-EACCES) latched until a code arrives. */
   _Atomic uint16_t sync_handle;   /* PA sync in use, SYNC_NONE when not synced. */
   _Atomic uint32_t broadcast_id;  /* 24-bit Broadcast_ID of the target. */
   uint32_t base_bis;      /* BIS indexes (bitmask, bit 0 = BIS 1) offered by the BASE. */
-  uint32_t pref_mask;     /* Local BIS preference, 0 = any. */
-  uint32_t requested;     /* Assistant BIS request, BIS_SYNC_NO_PREF = any. */
-  uint8_t n_slots;
+  _Atomic uint32_t pref_mask;  /* Local BIS preference, 0 = any. */
+  _Atomic uint32_t requested;  /* Assistant BIS request, BIS_SYNC_NO_PREF = any. */
+  _Atomic uint8_t n_slots;
   ble_audio_slot_t *slots[POOL_BSNK];  /* Streams the chosen BISes are bound to, in order. */
   uint8_t code[BLE_AUDIO_BCODE_SIZE];
   _Atomic(esp_ble_audio_bap_broadcast_sink_t *) sink;  /* Claimed PA sync's sink; host task creates/deletes, C++ stops. */
@@ -2256,7 +2258,7 @@ static void bsnk_create(void) {
   s_bsnk.base_received = false;
   atomic_store(&s_bsnk.syncing, false);
   s_bsnk.failed_no_match = false;
-  s_bsnk.failed_no_code = false;
+  atomic_store(&s_bsnk.failed_no_code, false);
   esp_ble_audio_bap_broadcast_sink_t *sink = NULL;
   esp_err_t err = esp_ble_audio_bap_broadcast_sink_create(atomic_load(&s_bsnk.sync_handle), atomic_load(&s_bsnk.broadcast_id), &sink);
   atomic_store(&s_bsnk.sink, sink);
@@ -2388,15 +2390,15 @@ static uint32_t lowest_bits(uint32_t mask, uint8_t n) {
  * on the next one once the cause is fixed.
  */
 static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_ble_iso_biginfo_t *biginfo) {
-  if (atomic_load(&s_bsnk.syncing) || atomic_load(&s_bsnk.hold) || !s_bsnk.base_received || s_bsnk.n_slots == 0) {
+  if (atomic_load(&s_bsnk.syncing) || atomic_load(&s_bsnk.hold) || !s_bsnk.base_received || atomic_load(&s_bsnk.n_slots) == 0) {
     return;
   }
-  uint32_t mask = s_bsnk.base_bis & s_bsnk.requested;
-  if (s_bsnk.pref_mask) {
-    mask &= s_bsnk.pref_mask;
+  uint32_t mask = s_bsnk.base_bis & atomic_load(&s_bsnk.requested);
+  if (atomic_load(&s_bsnk.pref_mask)) {
+    mask &= atomic_load(&s_bsnk.pref_mask);
   }
   uint32_t inputs = mask; /* The selector inputs, before the slot-count trim. */
-  mask = lowest_bits(mask, s_bsnk.n_slots);
+  mask = lowest_bits(mask, atomic_load(&s_bsnk.n_slots));
   if (mask == 0) {
     /* BIGInfo repeats periodically: only report an empty intersection again
      * when the inputs changed (assistant request, BASE or local preference),
@@ -2405,25 +2407,25 @@ static void bsnk_syncable(esp_ble_audio_bap_broadcast_sink_t *sink, const esp_bl
       return;
     }
     s_bsnk.failed_no_match = true;
-    s_bsnk.failed_no_code = false;
+    atomic_store(&s_bsnk.failed_no_code, false);
     s_bsnk.fail_mask = inputs;
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, -ENOENT, NULL);
     return;
   }
   s_bsnk.failed_no_match = false;
   if (biginfo && biginfo->encryption && !atomic_load(&s_bsnk.has_code)) {
-    if (s_bsnk.failed_no_code) {
+    if (atomic_load(&s_bsnk.failed_no_code)) {
       return; /* Cleared by bleAudioBsinkSetCode(). */
     }
-    s_bsnk.failed_no_code = true;
+    atomic_store(&s_bsnk.failed_no_code, true);
     bleAudioEngineEmit(BLE_AUDIO_EVT_BSINK_SYNC_FAILED, CONN_NONE, -EACCES, NULL);
     return;
   }
-  s_bsnk.failed_no_code = false;
+  atomic_store(&s_bsnk.failed_no_code, false);
   /* mask holds at most n_slots bits (trimmed above); the stack consumes one
    * stream per set bit, so entries past popcount(mask) are never read. */
   esp_ble_audio_bap_stream_t *streams[POOL_BSNK];
-  for (uint8_t i = 0; i < s_bsnk.n_slots; i++) {
+  for (uint8_t i = 0; i < atomic_load(&s_bsnk.n_slots); i++) {
     streams[i] = BAP(s_bsnk.slots[i]);
   }
   esp_err_t err = esp_ble_audio_bap_broadcast_sink_sync(sink, mask, streams, s_bsnk.code);
@@ -2566,7 +2568,7 @@ static int sd_bis_sync_req(esp_ble_conn_t *conn, const esp_ble_audio_bap_scan_de
       (void)esp_ble_audio_bap_broadcast_sink_stop(atomic_load(&s_bsnk.sink));
     }
   } else {
-    s_bsnk.requested = req;
+    atomic_store(&s_bsnk.requested, req);
     atomic_store(&s_bsnk.hold, false);
   }
   return 0;
@@ -2632,7 +2634,7 @@ int bleAudioBsinkInit(bool delegator) {
 #endif
   s_bsnk.enabled = true;
   atomic_store(&s_bsnk.sync_handle, SYNC_NONE);
-  s_bsnk.requested = ESP_BLE_AUDIO_BAP_BIS_SYNC_NO_PREF;
+  atomic_store(&s_bsnk.requested, ESP_BLE_AUDIO_BAP_BIS_SYNC_NO_PREF);
   return 0;
 }
 
@@ -2650,7 +2652,7 @@ int bleAudioBsinkSetStreams(ble_audio_slot_t *const slots[], uint8_t count) {
      * whose C++ handle is gone (reclaimed on BIG teardown / deinit). */
     atomic_store(&slots[i]->bound, true);
   }
-  s_bsnk.n_slots = count;
+  atomic_store(&s_bsnk.n_slots, count);
   return 0;
 }
 
@@ -2679,11 +2681,11 @@ void bleAudioBsinkSetCode(const uint8_t *code) {
   }
   atomic_store(&s_bsnk.has_code, code != NULL);
   /* A new Broadcast Code unblocks the -EACCES latch in bsnk_syncable(). */
-  s_bsnk.failed_no_code = false;
+  atomic_store(&s_bsnk.failed_no_code, false);
 }
 
 void bleAudioBsinkSetBisMask(uint32_t mask) {
-  s_bsnk.pref_mask = mask;
+  atomic_store(&s_bsnk.pref_mask, mask);
 }
 
 /* Leaves the BIG but keeps the PA sync; hold blocks the automatic resync on the next BIGInfo. */
@@ -2768,13 +2770,13 @@ static void bap_on_deinit(void) {
   atomic_store(&s_bsnk.has_code, false);
   s_bsnk.failed_no_match = false;
   s_bsnk.fail_mask = 0;
-  s_bsnk.failed_no_code = false;
+  atomic_store(&s_bsnk.failed_no_code, false);
   atomic_store(&s_bsnk.sync_handle, SYNC_NONE);
   atomic_store(&s_bsnk.broadcast_id, 0);
   s_bsnk.base_bis = 0;
-  s_bsnk.pref_mask = 0;
-  s_bsnk.requested = 0;
-  s_bsnk.n_slots = 0;
+  atomic_store(&s_bsnk.pref_mask, 0);
+  atomic_store(&s_bsnk.requested, 0);
+  atomic_store(&s_bsnk.n_slots, 0);
   memset(s_bsnk.slots, 0, sizeof(s_bsnk.slots));
   memset(s_bsnk.code, 0, sizeof(s_bsnk.code));
   atomic_store(&s_bsnk.sink, NULL);
