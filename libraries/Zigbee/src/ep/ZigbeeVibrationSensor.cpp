@@ -17,7 +17,6 @@
 #include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/ias_zone.h"
 
-
 ZigbeeVibrationSensor::ZigbeeVibrationSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_IAS_ZONE_ID;
   _ias_zone_cfg = {
@@ -55,8 +54,7 @@ bool ZigbeeVibrationSensor::setVibration(bool sensed) {
   log_v("Setting Vibration sensor to %s", sensed ? "sensed" : "not sensed");
   // Keep RESTORE_NOTIFY set so the server emits the restore notification on alarm clear (sensed -> not sensed).
   uint16_t vibration = EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY | (sensed ? EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 : 0);
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &vibration, false);
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &vibration, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set vibration status: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

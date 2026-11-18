@@ -106,9 +106,7 @@ uint8_t ZigbeeColorDimmableLight::getCurrentColorSaturation() {
 
 uint16_t ZigbeeColorDimmableLight::getCurrentColorTemperature() {
   uint16_t value = 0;
-  getClusterAttribute(
-    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID, &value, sizeof(value)
-  );
+  getClusterAttribute(EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID, &value, sizeof(value));
   return value;
 }
 
@@ -278,7 +276,8 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_messa
       _current_hsv.v = _current_level;  // Use level as value
       lightChangedHsv();
       return;
-    } else if (message->in.attribute.id == EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_UINT16) {
+    } else if (message->in.attribute.id == EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID
+               && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_UINT16) {
       // Validate Color Temperature capability
       if (!(_color_capabilities & ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP)) {
         log_w("Color temperature capability not enabled, but Temperature attribute received. Current capabilities: 0x%04x", _color_capabilities);
@@ -557,7 +556,9 @@ bool ZigbeeColorDimmableLight::setLightColorCapabilities(uint16_t capabilities) 
   }
 
   _color_capabilities = capabilities;
-  if (!setEpClusterAttrValue(EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_CAPABILITIES_ID, &_color_capabilities)) {
+  if (!setEpClusterAttrValue(
+        EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_CAPABILITIES_ID, &_color_capabilities
+      )) {
     log_e("Failed to set color capabilities on endpoint descriptor");
     return false;
   }

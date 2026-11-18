@@ -29,16 +29,16 @@ ZigbeeBinary::ZigbeeBinary(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // Endpoint descriptor: Basic + Identify server clusters.
   // Binary Input/Output clusters are attached later by addBinaryInput()/addBinaryOutput().
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
-    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-    if (_ep_desc == nullptr) {
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
     log_e("Failed to create binary endpoint descriptor");
-    }
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
-
-
 
 bool ZigbeeBinary::addBinaryInput() {
   if (!requireBeforeAddEndpoint("addBinaryInput")) {
@@ -113,8 +113,8 @@ bool ZigbeeBinary::setBinaryInputApplication(uint32_t application_type) {
 
   _bi_application_type = (ZB_BINARY_INPUT_GROUP_ID << 24) | application_type;
   return configureEpClusterAttr(
-    "setBinaryInputApplication", EZB_ZCL_CLUSTER_ID_BINARY_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID,
-    &_bi_application_type, ezb_zcl_binary_input_cluster_desc_add_attr
+    "setBinaryInputApplication", EZB_ZCL_CLUSTER_ID_BINARY_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, &_bi_application_type,
+    ezb_zcl_binary_input_cluster_desc_add_attr
   );
 }
 

@@ -23,16 +23,16 @@ ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) 
   _on_light_change = nullptr;
 
   // ZHA template: Basic, Identify, Groups, Scenes, On/Off, Level.
-  _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
 
   // set default values
   _current_state = false;
   _current_level = 255;
-    ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
-    _ep_desc = ezb_zha_create_dimmable_light(_endpoint, &light_cfg);
+  ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
+  _ep_desc = ezb_zha_create_dimmable_light(_endpoint, &light_cfg);
 }
-
-
 
 // set attribute method -> method overridden in child class
 void ZigbeeDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {

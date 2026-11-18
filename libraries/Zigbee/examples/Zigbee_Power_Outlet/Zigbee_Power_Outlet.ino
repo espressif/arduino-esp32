@@ -69,7 +69,7 @@ void setup() {
     delay(1000);
     ESP.restart();
   }
-  
+
   //Optional: set Zigbee device name and model
   zbOutlet.setManufacturerAndModel("Espressif", "ZBPowerOutlet");
 

@@ -17,7 +17,6 @@
 #include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/ias_zone.h"
 
-
 ZigbeeDoorWindowHandle::ZigbeeDoorWindowHandle(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_IAS_ZONE_ID;
   _ias_zone_cfg = {
@@ -55,8 +54,7 @@ bool ZigbeeDoorWindowHandle::setClosed() {
   log_v("Setting Door/Window handle to closed");
   // Keep RESTORE_NOTIFY set so the server emits the restore notification when alarm bits clear.
   uint16_t closed = EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;  // ALARM1 = 0, ALARM2 = 0
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &closed, false);
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &closed, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -67,10 +65,8 @@ bool ZigbeeDoorWindowHandle::setClosed() {
 
 bool ZigbeeDoorWindowHandle::setOpen() {
   log_v("Setting Door/Window handle to open");
-  uint16_t open =
-    EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &open, false);
+  uint16_t open = EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &open, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -82,8 +78,7 @@ bool ZigbeeDoorWindowHandle::setOpen() {
 bool ZigbeeDoorWindowHandle::setTilted() {
   log_v("Setting Door/Window handle to tilted");
   uint16_t tilted = EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;  // ALARM1 = 1, ALARM2 = 0
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &tilted, false);
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &tilted, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set door/window handle to tilted: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

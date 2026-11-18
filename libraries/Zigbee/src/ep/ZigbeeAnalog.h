@@ -28,7 +28,6 @@ enum zigbee_analog_clusters {
   ANALOG_OUTPUT = 2
 };
 
-
 class ZigbeeAnalog : public ZigbeeEP {
 public:
   ZigbeeAnalog(uint8_t endpoint);

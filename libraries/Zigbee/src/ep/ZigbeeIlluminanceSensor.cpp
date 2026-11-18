@@ -16,7 +16,6 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
 ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_LIGHT_SENSOR_DEVICE_ID;
   _illuminance_meas_cfg = {
@@ -26,7 +25,9 @@ ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(en
   };
   _tolerance = 0;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create illuminance sensor endpoint descriptor");
@@ -71,7 +72,8 @@ bool ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {
 bool ZigbeeIlluminanceSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
   // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
-    _endpoint, EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, EZB_ZCL_STD_MANUF_CODE
+    _endpoint, EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID,
+    EZB_ZCL_STD_MANUF_CODE
   );
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     log_e("Failed to find reporting info for illuminance measurement");

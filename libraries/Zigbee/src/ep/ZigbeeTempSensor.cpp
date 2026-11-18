@@ -17,7 +17,6 @@
 #include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/rel_humidity_measurement_desc.h"
 
-
 static int16_t zb_float_to_s16(float temp) {
   return (int16_t)(temp * 100);
 }
@@ -78,7 +77,8 @@ bool ZigbeeTempSensor::setTolerance(float tolerance) {
 
 bool ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
   ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
-    _endpoint, EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID, EZB_ZCL_STD_MANUF_CODE
+    _endpoint, EZB_ZCL_CLUSTER_ID_TEMPERATURE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_TEMPERATURE_MEASUREMENT_MEASURED_VALUE_ID,
+    EZB_ZCL_STD_MANUF_CODE
   );
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     log_e("Failed to find reporting info for temperature measurement");
@@ -140,9 +140,7 @@ void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance, 
     .max_measured_value = zb_max,
   };
   ezb_zcl_cluster_desc_t humidity_cluster = ezb_zcl_rel_humidity_measurement_create_cluster_desc(&hum_cfg, EZB_ZCL_CLUSTER_SERVER);
-  ezb_zcl_rel_humidity_measurement_cluster_desc_add_attr(
-    humidity_cluster, EZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance
-  );
+  ezb_zcl_rel_humidity_measurement_cluster_desc_add_attr(humidity_cluster, EZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
   if (ezb_af_endpoint_add_cluster_desc(_ep_desc, humidity_cluster) != EZB_ERR_NONE) {
     log_e("Failed to add humidity cluster");
     return;

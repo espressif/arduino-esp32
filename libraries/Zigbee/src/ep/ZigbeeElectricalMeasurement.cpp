@@ -16,14 +16,15 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
 ZigbeeElectricalMeasurement::ZigbeeElectricalMeasurement(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _electrical_measurement_cfg = {
     .measurement_type = 0,
   };
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_METER_INTERFACE_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_METER_INTERFACE_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create electrical measurement endpoint descriptor");
@@ -39,9 +40,9 @@ ZigbeeElectricalMeasurement::ZigbeeElectricalMeasurement(uint8_t endpoint) : Zig
 bool ZigbeeElectricalMeasurement::addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type) {
   _electrical_measurement_cfg.measurement_type |= EZB_ZCL_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_DC_MEASUREMENT;
   if (!configureEpClusterAttr(
-    "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_ID,
-    &_electrical_measurement_cfg.measurement_type, ezb_zcl_electrical_measurement_cluster_desc_add_attr
-  )) {
+        "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_ID,
+        &_electrical_measurement_cfg.measurement_type, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
 
@@ -71,19 +72,34 @@ bool ZigbeeElectricalMeasurement::addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE me
     attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DC_POWER_DIVISOR_ID;
   }
 
-  if (!configureEpClusterAttr("addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_dc_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_dc_measurement,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  if (!configureEpClusterAttr("addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min, (void *)&_dc_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min, (void *)&_dc_min,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  if (!configureEpClusterAttr("addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max, (void *)&_dc_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max, (void *)&_dc_max,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  if (!configureEpClusterAttr("addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_dc_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_dc_multiplier,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return configureEpClusterAttr("addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_dc_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "addDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_dc_divisor,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, int16_t min, int16_t max) {
@@ -100,10 +116,16 @@ bool ZigbeeElectricalMeasurement::setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE me
     attr_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DC_POWER_MAX_VALUE_ID;
   }
 
-  if (!configureEpClusterAttr("setDCMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min, (void *)&_dc_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "setDCMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min, (void *)&_dc_min,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return configureEpClusterAttr("setDCMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max, (void *)&_dc_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setDCMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max, (void *)&_dc_max,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor) {
@@ -121,10 +143,16 @@ bool ZigbeeElectricalMeasurement::setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_T
     attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_DC_POWER_DIVISOR_ID;
   }
 
-  if (!configureEpClusterAttr("setDCMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_dc_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "setDCMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_dc_multiplier,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return configureEpClusterAttr("setDCMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_dc_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setDCMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_dc_divisor,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, uint16_t min_interval, uint16_t max_interval, int16_t delta) {
@@ -136,9 +164,8 @@ bool ZigbeeElectricalMeasurement::setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE meas
   }
 
   // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
-  ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
-    _endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE
-  );
+  ezb_zcl_reporting_info_t reporting_info =
+    ezb_zcl_reporting_info_find(_endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE);
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     log_e("Failed to find reporting info for DC measurement");
     return false;
@@ -161,7 +188,10 @@ bool ZigbeeElectricalMeasurement::setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE me
   _dc_measurement = measurement;
   log_v("Updating DC measurement value...");
   log_d("Setting DC measurement to %d", _dc_measurement);
-  return configureEpClusterAttr("setDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_dc_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setDCMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_dc_measurement,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::reportDC(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type) {
@@ -195,8 +225,8 @@ bool ZigbeeElectricalMeasurement::reportDC(ZIGBEE_DC_MEASUREMENT_TYPE measuremen
 bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type) {
   switch (phase_type) {
     case ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC:
-    // Non phase specific dont need any bit set
-    break;
+      // Non phase specific dont need any bit set
+      break;
     case ZIGBEE_AC_PHASE_TYPE_A: _electrical_measurement_cfg.measurement_type |= EZB_ZCL_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_PHASE_A_MEASUREMENT; break;
     case ZIGBEE_AC_PHASE_TYPE_B: _electrical_measurement_cfg.measurement_type |= EZB_ZCL_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_PHASE_B_MEASUREMENT; break;
     case ZIGBEE_AC_PHASE_TYPE_C: _electrical_measurement_cfg.measurement_type |= EZB_ZCL_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_PHASE_C_MEASUREMENT; break;
@@ -206,7 +236,10 @@ bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
   if (measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_POWER || measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR) {
     _electrical_measurement_cfg.measurement_type |= EZB_ZCL_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_ACTIVE_MEASUREMENT_AC;  // Active power is used
   }
-  if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_ID, &_electrical_measurement_cfg.measurement_type, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_MEASUREMENT_TYPE_ID,
+        &_electrical_measurement_cfg.measurement_type, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
 
@@ -222,19 +255,34 @@ bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
 
   // AC Frequency
   if (measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY) {  // No phase specific
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_ID, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_ID,
+          (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MIN_VALUE_ID, (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MIN_VALUE_ID,
+          (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MAX_VALUE_ID, (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MAX_VALUE_ID,
+          (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MULTIPLIER_ID, (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MULTIPLIER_ID,
+          (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    return configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_DIVISOR_ID, (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+    return configureEpClusterAttr(
+      "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_DIVISOR_ID,
+      (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+    );
   }
   // Add the AC Voltage attributes
   else if (measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE) {
@@ -242,41 +290,53 @@ bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
     uint16_t attr_voltage_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_VALUE_ID;
     uint16_t attr_voltage_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_VALUE_ID;
     switch (phase_type) {
-    case ZIGBEE_AC_PHASE_TYPE_A:
-      // already set
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_B:
-      attr_voltage = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_PH_B_ID;
-      attr_voltage_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_B_ID;
-      attr_voltage_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_B_ID;
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_C:
-      attr_voltage = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_PH_C_ID;
-      attr_voltage_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_C_ID;
-      attr_voltage_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_C_ID;
-      break;
-    default: log_e("Invalid phase type"); return false;
+      case ZIGBEE_AC_PHASE_TYPE_A:
+        // already set
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_B:
+        attr_voltage = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_PH_B_ID;
+        attr_voltage_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_B_ID;
+        attr_voltage_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_B_ID;
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_C:
+        attr_voltage = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_PH_C_ID;
+        attr_voltage_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_C_ID;
+        attr_voltage_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_C_ID;
+        break;
+      default: log_e("Invalid phase type"); return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage_min, (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage_max, (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!ac_volt_mult_div_set) {
     if (!configureEpClusterAttr(
-          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_MULTIPLIER_ID,
-          (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage, (void *)&_ac_u16_measurement,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
         )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_DIVISOR_ID, (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage_min, (void *)&_ac_u16_min,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    ac_volt_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_voltage_max, (void *)&_ac_u16_max,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
+      return false;
+    }
+    if (!ac_volt_mult_div_set) {
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_MULTIPLIER_ID,
+            (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_DIVISOR_ID,
+            (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      ac_volt_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
     }
   }
   // Add the AC Current attributes
@@ -285,41 +345,53 @@ bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
     uint16_t attr_current_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_VALUE_ID;
     uint16_t attr_current_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_VALUE_ID;
     switch (phase_type) {
-    case ZIGBEE_AC_PHASE_TYPE_A:
-      // already set
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_B:
-      attr_current = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_PH_B_ID;
-      attr_current_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_B_ID;
-      attr_current_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_B_ID;
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_C:
-      attr_current = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_PH_C_ID;
-      attr_current_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_C_ID;
-      attr_current_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_C_ID;
-      break;
-    default: log_e("Invalid phase type"); return false;
+      case ZIGBEE_AC_PHASE_TYPE_A:
+        // already set
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_B:
+        attr_current = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_PH_B_ID;
+        attr_current_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_B_ID;
+        attr_current_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_B_ID;
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_C:
+        attr_current = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_PH_C_ID;
+        attr_current_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_C_ID;
+        attr_current_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_C_ID;
+        break;
+      default: log_e("Invalid phase type"); return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current_min, (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current_max, (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!ac_current_mult_div_set) {
     if (!configureEpClusterAttr(
-          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_MULTIPLIER_ID,
-          (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current, (void *)&_ac_u16_measurement,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
         )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_DIVISOR_ID, (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current_min, (void *)&_ac_u16_min,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    ac_current_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_current_max, (void *)&_ac_u16_max,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
+      return false;
+    }
+    if (!ac_current_mult_div_set) {
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_MULTIPLIER_ID,
+            (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_DIVISOR_ID,
+            (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      ac_current_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
     }
   }
   // Add the AC Power attributes
@@ -329,51 +401,69 @@ bool ZigbeeElectricalMeasurement::addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
     uint16_t attr_power_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_VALUE_ID;
 
     switch (phase_type) {
-    case ZIGBEE_AC_PHASE_TYPE_A:
-      // already set
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_B:
-      attr_power = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_PH_B_ID;
-      attr_power_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_B_ID;
-      attr_power_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_B_ID;
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_C:
-      attr_power = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_PH_C_ID;
-      attr_power_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_C_ID;
-      attr_power_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_C_ID;
-      break;
-    default: log_e("Invalid phase type"); return false;
+      case ZIGBEE_AC_PHASE_TYPE_A:
+        // already set
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_B:
+        attr_power = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_PH_B_ID;
+        attr_power_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_B_ID;
+        attr_power_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_B_ID;
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_C:
+        attr_power = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_PH_C_ID;
+        attr_power_min = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_C_ID;
+        attr_power_max = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_C_ID;
+        break;
+      default: log_e("Invalid phase type"); return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power, (void *)&_ac_u16_measurement,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_min, (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_min, (void *)&_ac_u16_min,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_max, (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_max, (void *)&_ac_u16_max,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
     if (!ac_power_mult_div_set) {
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_MULTIPLIER_ID, (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_DIVISOR_ID, (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
-      return false;
-    }
-    ac_power_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_MULTIPLIER_ID,
+            (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      if (!configureEpClusterAttr(
+            "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_DIVISOR_ID,
+            (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr
+          )) {
+        return false;
+      }
+      ac_power_mult_div_set = true;  // Set flag to true, so we dont add the attributes again
     }
   } else {  //(measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR)
     uint16_t attr_power_factor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_POWER_FACTOR_ID;
 
     switch (phase_type) {
-    case ZIGBEE_AC_PHASE_TYPE_A:
-      // already set
-      break;
-    case ZIGBEE_AC_PHASE_TYPE_B: attr_power_factor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_POWER_FACTOR_PH_B_ID; break;
-    case ZIGBEE_AC_PHASE_TYPE_C: attr_power_factor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_POWER_FACTOR_PH_C_ID; break;
-    default:                     log_e("Invalid phase type"); return false;
+      case ZIGBEE_AC_PHASE_TYPE_A:
+        // already set
+        break;
+      case ZIGBEE_AC_PHASE_TYPE_B: attr_power_factor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_POWER_FACTOR_PH_B_ID; break;
+      case ZIGBEE_AC_PHASE_TYPE_C: attr_power_factor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_POWER_FACTOR_PH_C_ID; break;
+      default:                     log_e("Invalid phase type"); return false;
     }
-    if (!configureEpClusterAttr("addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_factor, (void *)&_ac_power_factor, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "addACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_power_factor, (void *)&_ac_power_factor,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
   }
@@ -391,76 +481,76 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
     case ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE:
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
     case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
-    if (min_value < 0 || min_value > UINT16_MAX || max_value < 0 || max_value > UINT16_MAX) {
-      log_e("AC measurement min/max values must be between 0 and %u (got min=%u, max=%u)", UINT16_MAX, min_value, max_value);
-      return false;
-    }
-    break;
+      if (min_value < 0 || min_value > UINT16_MAX || max_value < 0 || max_value > UINT16_MAX) {
+        log_e("AC measurement min/max values must be between 0 and %u (got min=%u, max=%u)", UINT16_MAX, min_value, max_value);
+        return false;
+      }
+      break;
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER:
-    if (min_value < INT16_MIN || min_value > INT16_MAX || max_value < INT16_MIN || max_value > INT16_MAX) {
-      log_e("AC power min/max values must be between %d and %d (got min=%d, max=%d)", INT16_MIN, INT16_MAX, min_value, max_value);
-      return false;
-    }
-    break;
+      if (min_value < INT16_MIN || min_value > INT16_MAX || max_value < INT16_MIN || max_value > INT16_MAX) {
+        log_e("AC power min/max values must be between %d and %d (got min=%d, max=%d)", INT16_MIN, INT16_MAX, min_value, max_value);
+        return false;
+      }
+      break;
 
     default: log_e("Invalid measurement type"); return false;
   }
 
   switch (measurement_type) {
     case ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE:
-    switch (phase_type) {
-      case ZIGBEE_AC_PHASE_TYPE_A:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_VALUE_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_VALUE_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_B:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_B_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_B_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_C:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_C_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_C_ID;
-        break;
-      default: log_e("Invalid phase type"); return false;
-    }
-    break;
+      switch (phase_type) {
+        case ZIGBEE_AC_PHASE_TYPE_A:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_VALUE_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_VALUE_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_B:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_B_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_B_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_C:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MIN_PH_C_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE_MAX_PH_C_ID;
+          break;
+        default: log_e("Invalid phase type"); return false;
+      }
+      break;
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
-    switch (phase_type) {
-      case ZIGBEE_AC_PHASE_TYPE_A:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_VALUE_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_VALUE_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_B:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_B_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_B_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_C:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_C_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_C_ID;
-        break;
-      default: log_e("Invalid phase type"); return false;
-    }
-    break;
+      switch (phase_type) {
+        case ZIGBEE_AC_PHASE_TYPE_A:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_VALUE_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_VALUE_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_B:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_B_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_B_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_C:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MIN_PH_C_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_RMS_CURRENT_MAX_PH_C_ID;
+          break;
+        default: log_e("Invalid phase type"); return false;
+      }
+      break;
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER:
-    switch (phase_type) {
-      case ZIGBEE_AC_PHASE_TYPE_A:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_VALUE_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_VALUE_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_B:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_B_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_B_ID;
-        break;
-      case ZIGBEE_AC_PHASE_TYPE_C:
-        attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_C_ID;
-        attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_C_ID;
-        break;
-      default: log_e("Invalid phase type"); return false;
-    }
-    break;
+      switch (phase_type) {
+        case ZIGBEE_AC_PHASE_TYPE_A:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_VALUE_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_VALUE_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_B:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_B_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_B_ID;
+          break;
+        case ZIGBEE_AC_PHASE_TYPE_C:
+          attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MIN_PH_C_ID;
+          attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_ACTIVE_POWER_MAX_PH_C_ID;
+          break;
+        default: log_e("Invalid phase type"); return false;
+      }
+      break;
 
     default: log_e("Invalid measurement type"); return false;
   }
@@ -468,18 +558,30 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
   if (measurement_type == ZIGBEE_AC_MEASUREMENT_TYPE_POWER) {
     _ac_s16_min = (int16_t)min_value;
     _ac_s16_max = (int16_t)max_value;
-    if (!configureEpClusterAttr("setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min_id, (void *)&_ac_s16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+    if (!configureEpClusterAttr(
+          "setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min_id, (void *)&_ac_s16_min,
+          ezb_zcl_electrical_measurement_cluster_desc_add_attr
+        )) {
       return false;
     }
-    return configureEpClusterAttr("setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max_id, (void *)&_ac_s16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+    return configureEpClusterAttr(
+      "setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max_id, (void *)&_ac_s16_max,
+      ezb_zcl_electrical_measurement_cluster_desc_add_attr
+    );
   }
 
   _ac_u16_min = (uint16_t)min_value;
   _ac_u16_max = (uint16_t)max_value;
-  if (!configureEpClusterAttr("setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min_id, (void *)&_ac_u16_min, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_min_id, (void *)&_ac_u16_min,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return configureEpClusterAttr("setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max_id, (void *)&_ac_u16_max, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setACMinMaxValue", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_max_id, (void *)&_ac_u16_max,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor) {
@@ -491,28 +593,34 @@ bool ZigbeeElectricalMeasurement::setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_T
 
   switch (measurement_type) {
     case ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE:
-    attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_MULTIPLIER_ID;
-    attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_DIVISOR_ID;
-    break;
+      attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_MULTIPLIER_ID;
+      attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_VOLTAGE_DIVISOR_ID;
+      break;
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
-    attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_MULTIPLIER_ID;
-    attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_DIVISOR_ID;
-    break;
+      attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_MULTIPLIER_ID;
+      attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_CURRENT_DIVISOR_ID;
+      break;
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER:
-    attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_MULTIPLIER_ID;
-    attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_DIVISOR_ID;
-    break;
+      attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_MULTIPLIER_ID;
+      attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_POWER_DIVISOR_ID;
+      break;
     case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
-    attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MULTIPLIER_ID;
-    attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_DIVISOR_ID;
-    break;
+      attr_multiplier = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MULTIPLIER_ID;
+      attr_divisor = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_DIVISOR_ID;
+      break;
     default: log_e("Invalid measurement type"); return false;
   }
 
-  if (!configureEpClusterAttr("setACMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_ac_multiplier, ezb_zcl_electrical_measurement_cluster_desc_add_attr)) {
+  if (!configureEpClusterAttr(
+        "setACMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_multiplier, (void *)&_ac_multiplier,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return configureEpClusterAttr("setACMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_ac_divisor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setACMultiplierDivisor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_divisor, (void *)&_ac_divisor,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setACPowerFactor(ZIGBEE_AC_PHASE_TYPE phase_type, int8_t power_factor) {
@@ -527,7 +635,10 @@ bool ZigbeeElectricalMeasurement::setACPowerFactor(ZIGBEE_AC_PHASE_TYPE phase_ty
   }
 
   _ac_power_factor = power_factor;
-  return configureEpClusterAttr("setACPowerFactor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_power_factor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+  return configureEpClusterAttr(
+    "setACPowerFactor", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_power_factor,
+    ezb_zcl_electrical_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, int32_t value) {
@@ -573,7 +684,10 @@ bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
       _ac_u16_measurement = (uint16_t)value;
       log_v("Updating AC voltage measurement value...");
       log_d("Setting AC voltage to %u", _ac_u16_measurement);
-      return configureEpClusterAttr("setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+      return configureEpClusterAttr(
+        "setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      );
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
       switch (phase_type) {
@@ -586,7 +700,10 @@ bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
       _ac_u16_measurement = (uint16_t)value;
       log_v("Updating AC current measurement value...");
       log_d("Setting AC current to %u", _ac_u16_measurement);
-      return configureEpClusterAttr("setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+      return configureEpClusterAttr(
+        "setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      );
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER:
       switch (phase_type) {
@@ -599,14 +716,20 @@ bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
       _ac_s16_measurement = (int16_t)value;
       log_v("Updating AC power measurement value...");
       log_d("Setting AC power to %d", _ac_s16_measurement);
-      return configureEpClusterAttr("setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_s16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+      return configureEpClusterAttr(
+        "setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_s16_measurement,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      );
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
       attr_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_ID;
       _ac_u16_measurement = (uint16_t)value;
       log_v("Updating AC frequency measurement value...");
       log_d("Setting AC frequency to %u", _ac_u16_measurement);
-      return configureEpClusterAttr("setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+      return configureEpClusterAttr(
+        "setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_u16_measurement,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      );
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR:
       switch (phase_type) {
@@ -619,7 +742,10 @@ bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
       _ac_power_factor = (int8_t)value;
       log_v("Updating AC power factor measurement value...");
       log_d("Setting AC power factor to %d", _ac_power_factor);
-      return configureEpClusterAttr("setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_power_factor, ezb_zcl_electrical_measurement_cluster_desc_add_attr);
+      return configureEpClusterAttr(
+        "setACMeasurement", EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, (void *)&_ac_power_factor,
+        ezb_zcl_electrical_measurement_cluster_desc_add_attr
+      );
 
     default: log_e("Invalid measurement type"); return false;
   }
@@ -668,9 +794,8 @@ bool ZigbeeElectricalMeasurement::setACReporting(
   }
 
   // Must be called after Zigbee.begin(). Look up the reporting handle, set intervals / delta, then start it.
-  ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
-    _endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE
-  );
+  ezb_zcl_reporting_info_t reporting_info =
+    ezb_zcl_reporting_info_find(_endpoint, EZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, attr_id, EZB_ZCL_STD_MANUF_CODE);
   if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
     log_e("Failed to find reporting info for AC measurement");
     return false;

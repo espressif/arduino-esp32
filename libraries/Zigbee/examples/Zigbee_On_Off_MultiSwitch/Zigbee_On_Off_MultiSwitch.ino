@@ -91,8 +91,8 @@ void setup() {
     delay(1000);
     ESP.restart();
   }
-  
-  // Set Zigbee device name and model  
+
+  // Set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZBMultiSwitch");
 
   // Set binding settings depending on the role

@@ -29,16 +29,14 @@ ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
   _ep_config = ep_config;
-    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-    if (_ep_desc == nullptr) {
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
     log_e("Failed to create fan control endpoint descriptor");
-    }
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_fan_control_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_fan_control_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
-
-
 
 bool ZigbeeFanControl::setFanModeSequence(ZigbeeFanModeSequence sequence) {
   _current_fan_mode_sequence = sequence;

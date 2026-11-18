@@ -67,7 +67,6 @@ enum zigbee_binary_clusters {
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ACCESS_CONTROL     0x01000003  // Type 0x01, Index 0x0003
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_OTHER              0x0100FFFF  // Type 0x01, Index 0xFFFF
 
-
 class ZigbeeBinary : public ZigbeeEP {
 public:
   ZigbeeBinary(uint8_t endpoint);

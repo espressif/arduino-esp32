@@ -16,7 +16,6 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
 ZigbeePressureSensor::ZigbeePressureSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _pressure_meas_cfg = {
@@ -26,7 +25,9 @@ ZigbeePressureSensor::ZigbeePressureSensor(uint8_t endpoint) : ZigbeeEP(endpoint
   };
   _tolerance = 0;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create pressure sensor endpoint descriptor");
@@ -86,9 +87,8 @@ bool ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
 bool ZigbeePressureSensor::setPressure(int16_t pressure) {
   log_v("Updating pressure sensor value...");
   log_d("Setting pressure to %d hPa", pressure);
-  ezb_zcl_status_t ret = setClusterAttribute(
-    EZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MEASURED_VALUE_ID, &pressure, false
-  );
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MEASURED_VALUE_ID, &pressure, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set pressure: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

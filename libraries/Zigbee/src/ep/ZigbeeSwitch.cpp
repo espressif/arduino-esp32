@@ -62,12 +62,12 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_light_state_change = nullptr;
   _on_light_state_change_with_source = nullptr;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_SWITCH_DEVICE_ID, .app_device_version = 0, .reserved = 0};
-    ezb_zha_on_off_switch_config_t switch_cfg = EZB_ZHA_ON_OFF_SWITCH_CONFIG();
-    _ep_desc = ezb_zha_create_on_off_switch(_endpoint, &switch_cfg);
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_SWITCH_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
+  ezb_zha_on_off_switch_config_t switch_cfg = EZB_ZHA_ON_OFF_SWITCH_CONFIG();
+  _ep_desc = ezb_zha_create_on_off_switch(_endpoint, &switch_cfg);
 }
-
-
 
 void ZigbeeSwitch::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);

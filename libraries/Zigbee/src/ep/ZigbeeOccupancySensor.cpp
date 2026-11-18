@@ -16,7 +16,6 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
 ZigbeeOccupancySensor::ZigbeeOccupancySensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _occupancy_meas_cfg = {
@@ -25,7 +24,9 @@ ZigbeeOccupancySensor::ZigbeeOccupancySensor(uint8_t endpoint) : ZigbeeEP(endpoi
     .occupancy_sensor_type_bitmap = (1 << EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR),
   };
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create occupancy sensor endpoint descriptor");

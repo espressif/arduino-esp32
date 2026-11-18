@@ -28,7 +28,9 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // Endpoint descriptor: Basic + Identify server clusters.
   // Multistate Input/Output clusters are attached later by addMultistateInput()/addMultistateOutput().
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
 
   // Initialize member variables
   _multistate_clusters = 0;
@@ -39,14 +41,13 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // _input_state_names = nullptr;
   // _output_state_names = nullptr;
   _on_multistate_output_change = nullptr;
-    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-    if (_ep_desc == nullptr) {
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
     log_e("Failed to create multistate endpoint descriptor");
-    }
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
-
 
 bool ZigbeeMultistate::addMultistateInput() {
   if (!requireBeforeAddEndpoint("addMultistateInput")) {
@@ -64,7 +65,8 @@ bool ZigbeeMultistate::addMultistateInput() {
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_INPUT_GROUP_ID << 24);  // Application type
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
-  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)default_description);
+  ezb_err_t ret =
+    ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add description attribute: 0x%x", ret);
     return false;
@@ -108,13 +110,15 @@ bool ZigbeeMultistate::addMultistateOutput() {
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_OUTPUT_GROUP_ID << 24);
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
-  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)default_description);
+  ezb_err_t ret =
+    ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add description attribute: 0x%x", ret);
     return false;
   }
 
-  ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ret =
+    ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
@@ -179,8 +183,8 @@ bool ZigbeeMultistate::setMultistateInputDescription(const char *description) {
   _mi_description[description_length + 1] = '\0';
 
   return configureEpClusterAttr(
-    "setMultistateInputDescription", EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID,
-    _mi_description, ezb_zcl_multistate_input_cluster_desc_add_attr
+    "setMultistateInputDescription", EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, _mi_description,
+    ezb_zcl_multistate_input_cluster_desc_add_attr
   );
 }
 

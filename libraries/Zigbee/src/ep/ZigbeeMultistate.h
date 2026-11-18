@@ -120,7 +120,6 @@ enum zigbee_multistate_clusters {
   MULTISTATE_OUTPUT = 2
 };
 
-
 class ZigbeeMultistate : public ZigbeeEP {
 public:
   ZigbeeMultistate(uint8_t endpoint);

@@ -30,16 +30,16 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // Endpoint descriptor: Basic + Identify server clusters.
   // Analog Input/Output clusters are attached later by addAnalogInput()/addAnalogOutput().
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
-    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-    if (_ep_desc == nullptr) {
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
     log_e("Failed to create analog endpoint descriptor");
-    }
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
-
-
 
 bool ZigbeeAnalog::addAnalogInput() {
   if (!requireBeforeAddEndpoint("addAnalogInput")) {
@@ -104,8 +104,8 @@ bool ZigbeeAnalog::setAnalogInputApplication(uint32_t application_type) {
 
   _ai_application_type = (ZB_ANALOG_INPUT_GROUP_ID << 24) | application_type;
   return configureEpClusterAttr(
-    "setAnalogInputApplication", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID,
-    &_ai_application_type, ezb_zcl_analog_input_cluster_desc_add_attr
+    "setAnalogInputApplication", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, &_ai_application_type,
+    ezb_zcl_analog_input_cluster_desc_add_attr
   );
 }
 

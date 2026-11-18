@@ -17,7 +17,6 @@
 #include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/ias_zone.h"
 
-
 ZigbeeContactSwitch::ZigbeeContactSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_IAS_ZONE_ID;
   _ias_zone_cfg = {
@@ -55,8 +54,7 @@ bool ZigbeeContactSwitch::setClosed() {
   log_v("Setting Contact switch to closed");
   // Keep RESTORE_NOTIFY set so the server emits the restore notification on alarm clear (open -> closed).
   uint16_t closed = EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &closed, false);
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &closed, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -68,10 +66,8 @@ bool ZigbeeContactSwitch::setClosed() {
 bool ZigbeeContactSwitch::setOpen() {
   log_v("Setting Contact switch to open");
   // Keep RESTORE_NOTIFY set so the server can later emit the restore notification on open -> closed.
-  uint16_t open =
-    EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &open, false);
+  uint16_t open = EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY;
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &open, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

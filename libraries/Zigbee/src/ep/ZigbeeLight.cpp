@@ -21,14 +21,14 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_light_change = nullptr;
 
   // ZHA template: Basic, Identify, Groups, Scenes, On/Off.
-  _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_LIGHT_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   log_v("Light endpoint created %u", _endpoint);
 
   ezb_zha_on_off_light_config_t light_cfg = EZB_ZHA_ON_OFF_LIGHT_CONFIG();
   _ep_desc = ezb_zha_create_on_off_light(_endpoint, &light_cfg);
 }
-
-
 
 //set attribute method -> method overridden in child class
 void ZigbeeLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {
@@ -59,8 +59,7 @@ bool ZigbeeLight::setLight(bool state) {
 
   log_v("Updating on/off light state to %u", state);
   /* Update on/off light state */
-  ezb_zcl_status_t ret =
-    setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
 
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));

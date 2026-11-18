@@ -16,7 +16,6 @@
 #if CONFIG_ZB_ENABLED
 #include "ezbee/zha.h"
 
-
 // There is no device_id for wind speed sensor, we use a generic one
 ZigbeeWindSpeedSensor::ZigbeeWindSpeedSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
@@ -27,7 +26,9 @@ ZigbeeWindSpeedSensor::ZigbeeWindSpeedSensor(uint8_t endpoint) : ZigbeeEP(endpoi
   };
   _tolerance = 0;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0};
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
   _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
   if (_ep_desc == nullptr) {
     log_e("Failed to create wind speed sensor endpoint descriptor");

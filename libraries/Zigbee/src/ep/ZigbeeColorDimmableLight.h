@@ -112,7 +112,6 @@ public:
     return _color_capabilities;
   }
 
-
 private:
   void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
   bool setLightColorMode(uint8_t color_mode);

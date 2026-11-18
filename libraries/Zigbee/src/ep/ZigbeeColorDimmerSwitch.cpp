@@ -75,11 +75,9 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(en
   _ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMER_SWITCH_DEVICE_ID, .app_device_version = 0, .reserved = 0
   };
-    ezb_zha_color_dimmer_switch_config_t switch_cfg = EZB_ZHA_COLOR_DIMMER_SWITCH_CONFIG();
-    _ep_desc = ezb_zha_create_color_dimmer_switch(_endpoint, &switch_cfg);
+  ezb_zha_color_dimmer_switch_config_t switch_cfg = EZB_ZHA_COLOR_DIMMER_SWITCH_CONFIG();
+  _ep_desc = ezb_zha_create_color_dimmer_switch(_endpoint, &switch_cfg);
 }
-
-
 
 void ZigbeeColorDimmerSwitch::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
@@ -171,8 +169,8 @@ void ZigbeeColorDimmerSwitch::findCb(const ezb_zdo_match_desc_req_result_t *resu
 // find color dimmable light endpoint
 void ZigbeeColorDimmerSwitch::findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) {
   // First num_in_clusters entries are server (input) clusters, then num_out_clusters client (output) clusters.
-  static uint16_t cluster_list[] = {EZB_ZCL_CLUSTER_ID_ON_OFF,    EZB_ZCL_CLUSTER_ID_LEVEL,  EZB_ZCL_CLUSTER_ID_COLOR_CONTROL,
-                                    EZB_ZCL_CLUSTER_ID_ON_OFF,    EZB_ZCL_CLUSTER_ID_LEVEL,  EZB_ZCL_CLUSTER_ID_COLOR_CONTROL};
+  static uint16_t cluster_list[] = {EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_ID_LEVEL, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL,
+                                    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_ID_LEVEL, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL};
   cmd_req->field.profile_id = EZB_AF_HA_PROFILE_ID;
   cmd_req->field.num_in_clusters = 3;
   cmd_req->field.num_out_clusters = 3;
@@ -595,17 +593,23 @@ void ZigbeeColorDimmerSwitch::getLightColorHS() {
 
 void ZigbeeColorDimmerSwitch::getLightColorHS(uint16_t group_addr) {
   uint16_t attr_id[] = {EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
-  sendReadAttributes(make_read_addr_group(group_addr), 0, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command");
+  sendReadAttributes(
+    make_read_addr_group(group_addr), 0, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command"
+  );
 }
 
 void ZigbeeColorDimmerSwitch::getLightColorHS(uint8_t endpoint, uint16_t short_addr) {
   uint16_t attr_id[] = {EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
-  sendReadAttributes(make_read_addr_short(short_addr), endpoint, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command");
+  sendReadAttributes(
+    make_read_addr_short(short_addr), endpoint, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command"
+  );
 }
 
 void ZigbeeColorDimmerSwitch::getLightColorHS(uint8_t endpoint, const uint8_t *ieee_addr) {
   uint16_t attr_id[] = {EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID};
-  sendReadAttributes(make_read_addr_ieee(ieee_addr), endpoint, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command");
+  sendReadAttributes(
+    make_read_addr_ieee(ieee_addr), endpoint, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, attr_id, 2, "Failed to send read light color (hue/saturation) command"
+  );
 }
 
 void ZigbeeColorDimmerSwitch::zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) {

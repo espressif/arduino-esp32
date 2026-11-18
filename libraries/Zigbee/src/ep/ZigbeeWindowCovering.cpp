@@ -106,13 +106,12 @@ bool ZigbeeWindowCovering::setConfigStatus(
   bool operational, bool online, bool commands_reversed, bool lift_closed_loop, bool tilt_closed_loop, bool lift_encoder_controlled,
   bool tilt_encoder_controlled
 ) {
-  _config_status =
-    (operational ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPERATIONAL : 0) | (online ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_ONLINE : 0)
-    | (commands_reversed ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPEN_AND_UP_COMMANDS_REVERSED : 0)
-    | (lift_closed_loop ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_CLOSED_LOOP : 0)
-    | (tilt_closed_loop ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_TILT_CLOSED_LOOP : 0)
-    | (lift_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_ENCODER_CONTROLLED : 0)
-    | (tilt_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_TILT_ENCODER_CONTROLLED : 0);
+  _config_status = (operational ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPERATIONAL : 0) | (online ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_ONLINE : 0)
+                   | (commands_reversed ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPEN_AND_UP_COMMANDS_REVERSED : 0)
+                   | (lift_closed_loop ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_CLOSED_LOOP : 0)
+                   | (tilt_closed_loop ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_TILT_CLOSED_LOOP : 0)
+                   | (lift_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_ENCODER_CONTROLLED : 0)
+                   | (tilt_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_TILT_ENCODER_CONTROLLED : 0);
 
   log_v("Updating window covering config status to %u", _config_status);
 
@@ -123,9 +122,8 @@ bool ZigbeeWindowCovering::setConfigStatus(
 }
 
 bool ZigbeeWindowCovering::setMode(bool motor_reversed, bool calibration_mode, bool maintenance_mode, bool leds_on) {
-  _mode = (motor_reversed ? EZB_ZCL_WINDOW_COVERING_MODE_MOTOR_DIRECTION_REVERSED : 0)
-        | (calibration_mode ? EZB_ZCL_WINDOW_COVERING_MODE_CALIBRATION_MODE : 0)
-        | (maintenance_mode ? EZB_ZCL_WINDOW_COVERING_MODE_MAINTENANCE_MODE : 0) | (leds_on ? EZB_ZCL_WINDOW_COVERING_MODE_LED_FEEDBACK : 0);
+  _mode = (motor_reversed ? EZB_ZCL_WINDOW_COVERING_MODE_MOTOR_DIRECTION_REVERSED : 0) | (calibration_mode ? EZB_ZCL_WINDOW_COVERING_MODE_CALIBRATION_MODE : 0)
+          | (maintenance_mode ? EZB_ZCL_WINDOW_COVERING_MODE_MAINTENANCE_MODE : 0) | (leds_on ? EZB_ZCL_WINDOW_COVERING_MODE_LED_FEEDBACK : 0);
 
   log_v("Updating window covering mode to %u", _mode);
 
@@ -200,8 +198,9 @@ void ZigbeeWindowCovering::zbAttributeSet(const ezb_zcl_set_attr_value_message_t
       // Update configuration status with motor reversed status (stack callback: no Zigbee lock).
       // Read/write the opaque attribute descriptor without taking the Zigbee lock (stack callback).
       uint8_t config_status = 0;
-      ezb_zcl_attr_desc_t config_status_attr =
-        ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, EZB_ZCL_STD_MANUF_CODE);
+      ezb_zcl_attr_desc_t config_status_attr = ezb_zcl_get_attr_desc(
+        _endpoint, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, EZB_ZCL_STD_MANUF_CODE
+      );
       if (config_status_attr != nullptr) {
         ezb_zcl_attr_desc_get_value(config_status_attr, &config_status);
       }

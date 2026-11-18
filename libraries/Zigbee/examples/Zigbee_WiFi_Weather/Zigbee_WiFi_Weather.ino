@@ -58,8 +58,7 @@ const char *password = "your-password";
  * Open-Meteo forecast API (no API key). Change latitude/longitude as needed.
  * Default: Brno, Czech Republic
  */
-const char *weatherUrl =
-  "http://api.open-meteo.com/v1/forecast?latitude=49.1952&longitude=16.608&current=temperature_2m,relative_humidity_2m,pressure_msl";
+const char *weatherUrl = "http://api.open-meteo.com/v1/forecast?latitude=49.1952&longitude=16.608&current=temperature_2m,relative_humidity_2m,pressure_msl";
 
 uint8_t button = BOOT_PIN;
 
@@ -170,9 +169,7 @@ void reportWeather() {
   delay(50);
   zbPressureSensor.report();
 
-  Serial.printf(
-    "Reported temperature: %.2f°C, Humidity: %.2f%%, Pressure: %.0f hPa\r\n", lastTemperature, lastHumidity, lastPressure
-  );
+  Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%, Pressure: %.0f hPa\r\n", lastTemperature, lastHumidity, lastPressure);
 }
 
 /********************* Arduino functions **************************/

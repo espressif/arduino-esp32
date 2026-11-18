@@ -63,7 +63,7 @@ void setup() {
     ESP.restart();
   }
 
-    // Optional: set Zigbee device name and model
+  // Optional: set Zigbee device name and model
   zbElectricalMeasurement.setManufacturerAndModel("Espressif", "ZigbeeElectricalMeasurementAC");
 
   // Add analog clusters to Zigbee Analog according your needs

@@ -24,16 +24,16 @@
 
 // Window covering types supported by Zigbee Window Covering cluster
 enum ZigbeeWindowCoveringType {
-  ROLLERSHADE = 0x00,                          // LIFT support
+  ROLLERSHADE = 0x00,                   // LIFT support
   ROLLERSHADE_2_MOTOR = 0x01,           // LIFT support
-  ROLLERSHADE_EXTERIOR = 0x02,        // LIFT support
+  ROLLERSHADE_EXTERIOR = 0x02,          // LIFT support
   ROLLERSHADE_EXTERIOR_2_MOTOR = 0x03,  // LIFT support
-  DRAPERY = 0x04,                                  // LIFT support
-  AWNING = 0x05,                                    // LIFT support
-  SHUTTER = 0x06,                                  // TILT support
-  BLIND_TILT_ONLY = 0x07,             // TILT support
-  BLIND_LIFT_AND_TILT = 0x08,     // LIFT and TILT support
-  PROJECTOR_SCREEN = 0x09,                // LIFT support
+  DRAPERY = 0x04,                       // LIFT support
+  AWNING = 0x05,                        // LIFT support
+  SHUTTER = 0x06,                       // TILT support
+  BLIND_TILT_ONLY = 0x07,               // TILT support
+  BLIND_LIFT_AND_TILT = 0x08,           // LIFT and TILT support
+  PROJECTOR_SCREEN = 0x09,              // LIFT support
 };
 
 class ZigbeeWindowCovering : public ZigbeeEP {

@@ -67,22 +67,22 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_humidity_receive_with_source = nullptr;
   _on_humidity_config_receive = nullptr;
 
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0, .reserved = 0};
-    ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
-    _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
+  _ep_config = {
+    .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0, .reserved = 0
+  };
+  ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
+  _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
 
-    // ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
-    // Add Temperature and RelHumidity measurement client clusters so the thermostat can bind
-    // to a remote sensor and accept its reports.
-    if (_ep_desc != nullptr) {
+  // ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
+  // Add Temperature and RelHumidity measurement client clusters so the thermostat can bind
+  // to a remote sensor and accept its reports.
+  if (_ep_desc != nullptr) {
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_temperature_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_rel_humidity_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
-    } else {
+  } else {
     log_e("Failed to create thermostat _endpoint descriptor");
-    }
+  }
 }
-
-
 
 void ZigbeeThermostat::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
@@ -220,7 +220,9 @@ bool ZigbeeThermostat::sendReadAttributes(uint16_t cluster_id, uint16_t *attribu
   return true;
 }
 
-void ZigbeeThermostat::sendConfigReport(uint16_t cluster_id, ezb_zcl_config_report_record_t *records, uint16_t record_number, ezb_address_t dst_addr, uint8_t dst_ep) {
+void ZigbeeThermostat::sendConfigReport(
+  uint16_t cluster_id, ezb_zcl_config_report_record_t *records, uint16_t record_number, ezb_address_t dst_addr, uint8_t dst_ep
+) {
   ezb_zcl_config_report_cmd_t report_cmd;
   memset(&report_cmd, 0, sizeof(report_cmd));
   report_cmd.cmd_ctrl.dst_addr = dst_addr;
