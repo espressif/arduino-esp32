@@ -1206,12 +1206,27 @@ static struct {
    * (via stop_requested) instead of stopping inline, so the guard never nests
    * across tasks. gen is bumped before every uc_advance() call made without
    * the guard held. */
+
   _Atomic bool guard;
   _Atomic uint32_t gen;
   _Atomic bool stop_requested;   /* uc_fail asked for a stop; serviced by the advance prologue. */
 } s_uc;
 
-/** @brief Find the peer entry for @p conn, optionally claiming (and clearing) a free one. */
+/* Peer-table lock. s_uc.peers[] is written by host-task discovery callbacks
+ * and read by caller-task setup paths (and cleared on disconnect from either
+ * side), so every lookup, claim, clear and field access runs under this
+ * spinlock (same convention as s_slot_mux). It is a LEAF lock: never held
+ * across esp_ble_audio_* calls (they can complete inline on the caller task
+ * and re-enter through callbacks) and never across bleAudioEngineEmit (the
+ * C++ dispatch runs synchronously and may call back into the engine).
+ * Sections only scan the two entries, claim/clear them, or copy fields out. */
+static portMUX_TYPE s_uc_peer_mux = portMUX_INITIALIZER_UNLOCKED;
+
+/**
+ * @brief Find the peer entry for @p conn, optionally claiming (and clearing) a free one.
+ * @note Caller holds s_uc_peer_mux (see above): the returned pointer is only
+ * valid while the lock is held. Copy what is needed, then release.
+ */
 static uc_peer_t *uc_peer(uint16_t conn, bool create) {
   uc_peer_t *free_peer = NULL;
   for (int i = 0; i < UC_MAX_PEERS; i++) {
@@ -1625,18 +1640,20 @@ static void uc_pac_record(esp_ble_conn_t *conn, esp_ble_audio_dir_t dir, const e
 
 /** @brief Record a remote ASE; ASEs beyond the packaged Kconfig count are ignored. */
 static void uc_endpoint(esp_ble_conn_t *conn, esp_ble_audio_dir_t dir, esp_ble_audio_bap_ep_t *ep) {
+  portENTER_CRITICAL(&s_uc_peer_mux);
   uc_peer_t *p = uc_peer(conn->handle, false);
-  if (p == NULL) {
-    return;
+  if (p != NULL) {
+    if (dir == ESP_BLE_AUDIO_DIR_SINK && p->n_snk < CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SNK_COUNT) {
+      p->snk[p->n_snk++] = ep;
+    } else if (dir == ESP_BLE_AUDIO_DIR_SOURCE && p->n_src < CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SRC_COUNT) {
+      p->src[p->n_src++] = ep;
+    }
   }
-  if (dir == ESP_BLE_AUDIO_DIR_SINK && p->n_snk < CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SNK_COUNT) {
-    p->snk[p->n_snk++] = ep;
-  } else if (dir == ESP_BLE_AUDIO_DIR_SOURCE && p->n_src < CONFIG_BT_BAP_UNICAST_CLIENT_ASE_SRC_COUNT) {
-    p->src[p->n_src++] = ep;
-  }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
 }
 
 static void uc_location(esp_ble_conn_t *conn, esp_ble_audio_dir_t dir, esp_ble_audio_location_t loc) {
+  portENTER_CRITICAL(&s_uc_peer_mux);
   uc_peer_t *p = uc_peer(conn->handle, false);
   if (p) {
     if (dir == ESP_BLE_AUDIO_DIR_SINK) {
@@ -1645,14 +1662,17 @@ static void uc_location(esp_ble_conn_t *conn, esp_ble_audio_dir_t dir, esp_ble_a
       p->info.source_loc = (uint32_t)loc;
     }
   }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
 }
 
 static void uc_available_contexts(esp_ble_conn_t *conn, esp_ble_audio_context_t snk, esp_ble_audio_context_t src) {
+  portENTER_CRITICAL(&s_uc_peer_mux);
   uc_peer_t *p = uc_peer(conn->handle, false);
   if (p) {
     p->info.sink_ctx = (uint16_t)snk;
     p->info.source_ctx = (uint16_t)src;
   }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
 }
 
 /**
@@ -1661,24 +1681,47 @@ static void uc_available_contexts(esp_ble_conn_t *conn, esp_ble_audio_context_t 
  * The result is 0 when at least one ASE was found in either direction.
  */
 static void uc_discover(esp_ble_conn_t *conn, int err, esp_ble_audio_dir_t dir) {
-  uc_peer_t *p = uc_peer(conn->handle, false);
+  const uint16_t handle = conn->handle;
+  bool discover_source = false;
+  portENTER_CRITICAL(&s_uc_peer_mux);
+  uc_peer_t *p = uc_peer(handle, false);
   if (p == NULL) {
+    portEXIT_CRITICAL(&s_uc_peer_mux);
     return;
   }
   if (dir == ESP_BLE_AUDIO_DIR_SINK) {
     /* A peer without sink ASEs reports an error here; still look for sources. */
     p->sink_err = err;
-    if (esp_ble_audio_bap_unicast_client_discover(p->conn, ESP_BLE_AUDIO_DIR_SOURCE) == ESP_OK) {
-      return;
-    }
+    discover_source = true;
+  }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
+  /* Engine call outside the peer lock: it can complete inline and re-enter
+   * through callbacks (see s_uc_peer_mux). */
+  if (discover_source && esp_ble_audio_bap_unicast_client_discover(handle, ESP_BLE_AUDIO_DIR_SOURCE) == ESP_OK) {
+    return;
+  }
+  /* Re-acquire: a disconnect may have released the entry while unlocked. */
+  ble_audio_uc_discovered_t info = {0};
+  int result = 0;
+  int sink_err = 0;
+  portENTER_CRITICAL(&s_uc_peer_mux);
+  p = uc_peer(handle, false);
+  if (p == NULL) {
+    portEXIT_CRITICAL(&s_uc_peer_mux);
+    return;
   }
   p->info.sink_eps = p->n_snk;
   p->info.source_eps = p->n_src;
-  int result = (p->n_snk + p->n_src) ? 0 : (err ? err : p->sink_err);
+  result = (p->n_snk + p->n_src) ? 0 : (err ? err : p->sink_err);
+  sink_err = p->sink_err;
+  info = p->info;
+  portEXIT_CRITICAL(&s_uc_peer_mux);
   if (result != 0) {
-    ESP_LOGE(TAG, "unicast client: discovery of conn %u found no ASE (err %d sink_err %d)", p->conn, err, p->sink_err);
+    ESP_LOGE(TAG, "unicast client: discovery of conn %u found no ASE (err %d sink_err %d)", handle, err, sink_err);
   }
-  bleAudioEngineEmit(BLE_AUDIO_EVT_UC_DISCOVERED, p->conn, result, &p->info);
+  /* Emit outside the lock: the C++ dispatch runs synchronously and may call
+   * back into the engine. */
+  bleAudioEngineEmit(BLE_AUDIO_EVT_UC_DISCOVERED, handle, result, &info);
 }
 
 static esp_ble_audio_bap_unicast_client_cb_t s_uc_cb = {
@@ -1714,18 +1757,22 @@ static void uc_reset(void) {
   atomic_store(&s_uc.guard, false);
   atomic_store(&s_uc.gen, 0);
   atomic_store(&s_uc.stop_requested, false);
+  portENTER_CRITICAL(&s_uc_peer_mux);
   for (int i = 0; i < UC_MAX_PEERS; i++) {
     memset(&s_uc.peers[i], 0, sizeof(s_uc.peers[i]));
     s_uc.peers[i].conn = CONN_NONE;
   }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
 }
 
 /* Forget the peer's ASEs; its streams go idle through op_released. */
 static void uc_on_disconnect(uint16_t conn) {
+  portENTER_CRITICAL(&s_uc_peer_mux);
   uc_peer_t *p = uc_peer(conn, false);
   if (p) {
     p->conn = CONN_NONE;
   }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
 }
 
 int bleAudioUcInit(void) {
@@ -1748,13 +1795,19 @@ int bleAudioUcDiscover(uint16_t conn_handle) {
     ESP_LOGE(TAG, "unicast client: discover conn %u before init", conn_handle);
     return ESP_ERR_INVALID_STATE;
   }
+  portENTER_CRITICAL(&s_uc_peer_mux);
   uc_peer_t *p = uc_peer(conn_handle, true);
+  if (p != NULL) {
+    memset(p, 0, sizeof(*p));
+    p->conn = conn_handle;
+  }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
   if (p == NULL) {
     ESP_LOGE(TAG, "unicast client: no peer slot for conn %u", conn_handle);
     return ESP_ERR_NO_MEM;
   }
-  memset(p, 0, sizeof(*p));
-  p->conn = conn_handle;
+  /* Engine call outside the peer lock (see s_uc_peer_mux): discovery events
+   * land through callbacks, some of them inline. */
   int err = (int)esp_ble_audio_bap_unicast_client_discover(conn_handle, ESP_BLE_AUDIO_DIR_SINK);
   if (err != 0) {
     ESP_LOGE(TAG, "unicast client: PACS/ASCS discover conn %u failed: %d", conn_handle, err);
@@ -1763,7 +1816,7 @@ int bleAudioUcDiscover(uint16_t conn_handle) {
 }
 
 int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
-  if (!s_uc.registered || reqs == NULL || count == 0) {
+  if (!s_uc.registered || reqs == NULL || count == 0 || count > POOL_UC) {
     return ESP_ERR_INVALID_ARG;
   }
   if (s_uc.active) {
@@ -1775,28 +1828,47 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
     return -EBUSY;
   }
   int rc = 0;
+  /* Snapshot every request's endpoint under the peer lock so validation and
+   * binding below see one consistent instant: a disconnect landing between
+   * the two loops must fail closed, not re-look-up a released entry (the old
+   * bind loop dereferenced the re-lookup unchecked). The lock is not held
+   * across slot setup or logs (see s_uc_peer_mux). */
+  struct {
+    bool peer_found;
+    esp_ble_audio_bap_ep_t *ep;
+  } snap[POOL_UC];
+  portENTER_CRITICAL(&s_uc_peer_mux);
+  for (uint8_t i = 0; i < count; i++) {
+    const ble_audio_uc_stream_req_t *r = &reqs[i];
+    snap[i].peer_found = false;
+    snap[i].ep = NULL;
+    uc_peer_t *p = uc_peer(r->conn_handle, false);
+    if (p == NULL) {
+      continue;
+    }
+    snap[i].peer_found = true;
+    if (r->dir == BLE_AUDIO_DIR_SINK && r->ep_index < p->n_snk) {
+      snap[i].ep = p->snk[r->ep_index];
+    } else if (r->dir == BLE_AUDIO_DIR_SOURCE && r->ep_index < p->n_src) {
+      snap[i].ep = p->src[r->ep_index];
+    }
+  }
+  portEXIT_CRITICAL(&s_uc_peer_mux);
   /* Validate every request before touching any slot, so a bad entry leaves nothing half set up. */
   for (uint8_t i = 0; i < count; i++) {
     const ble_audio_uc_stream_req_t *r = &reqs[i];
     ble_audio_slot_t *s = r->slot;
-    uc_peer_t *p = uc_peer(r->conn_handle, false);
     if (s == NULL || !s->in_use || s->kind != BLE_AUDIO_STREAM_UNICAST_CLIENT) {
       ESP_LOGE(TAG, "unicast client: request %u has no client stream", i);
       rc = ESP_ERR_INVALID_ARG;
       break;
     }
-    if (p == NULL) {
+    if (!snap[i].peer_found) {
       ESP_LOGE(TAG, "unicast client: request %u targets conn %u, which was not discovered", i, r->conn_handle);
       rc = ESP_ERR_INVALID_ARG;
       break;
     }
-    esp_ble_audio_bap_ep_t *ep = NULL;
-    if (r->dir == BLE_AUDIO_DIR_SINK && r->ep_index < p->n_snk) {
-      ep = p->snk[r->ep_index];
-    } else if (r->dir == BLE_AUDIO_DIR_SOURCE && r->ep_index < p->n_src) {
-      ep = p->src[r->ep_index];
-    }
-    if (ep == NULL) {
+    if (snap[i].ep == NULL) {
       ESP_LOGE(TAG, "unicast client: request %u: conn %u has no %s ASE %u", i, r->conn_handle, r->dir == BLE_AUDIO_DIR_SINK ? "sink" : "source", r->ep_index);
       rc = ESP_ERR_INVALID_ARG;
       break;
@@ -1810,8 +1882,7 @@ int bleAudioUcStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count) {
   if (rc == 0) {
     for (uint8_t i = 0; i < count; i++) {
       ble_audio_slot_t *s = reqs[i].slot;
-      uc_peer_t *p = uc_peer(reqs[i].conn_handle, false);
-      s->uc_ep = (reqs[i].dir == BLE_AUDIO_DIR_SINK) ? p->snk[reqs[i].ep_index] : p->src[reqs[i].ep_index];
+      s->uc_ep = snap[i].ep;
       s->partner = NULL;
       /* We send to a remote sink ASE. */
       bleAudioStreamBind(s, reqs[i].conn_handle, reqs[i].dir == BLE_AUDIO_DIR_SINK);

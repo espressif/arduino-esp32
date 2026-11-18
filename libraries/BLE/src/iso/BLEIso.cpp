@@ -18,15 +18,18 @@
 #if BLE_ISO_SUPPORTED
 
 #include "BLE.h"
+#include "BLEImpl.h"
 #include "iso/BLEIso.h"
 #include "iso/BLEIsoHost.h"
 #include "esp32-hal-log.h"
 
 #include "esp_ble_iso_common_api.h"
+#include "core/BLEBackend.h"
 #include "core/BLEMutex.h"
 #include "core/BLESync.h"
 #include "core/BLETask.h"
 
+#include <atomic>
 #include <cstring>
 
 /**
@@ -34,7 +37,7 @@
  * @brief Audio-agnostic ISO transport over the ESP-BLE-ISO engine.
  *
  * Owns a fixed pool of channels, maps the vendor channel ops and GAP callback
- * onto `Channel` objects and `BTStatus`, and implements the host hand-over of
+ * onto `Channel` handles and `BTStatus`, and implements the host hand-over of
  * `BLEIsoHost.h`. This is the only unit that names `esp_ble_iso_*` types, so
  * the public header stays stack-free.
  *
@@ -43,20 +46,15 @@
  * role's code is behind its BLE_ISO_*_SUPPORTED guard.
  *
  * Vendor callbacks run on the ISO host task; everything else runs from the
- * application with the host idle. The few fields both tasks touch (_nextSeq,
- * sBigTx) are atomic; callbacks must be registered before a channel connects.
+ * application with the host idle. The few fields both tasks touch
+ * (_nextSeq, bigTx) are atomic; callbacks must be registered before a
+ * channel connects.
  *
  * API contract is documented on the declarations in `BLEIso.h`; the
  * definitions below carry implementation notes only.
  */
 
 #define ISO_UNICAST (BLE_ISO_CIS_CENTRAL_SUPPORTED || BLE_ISO_CIS_PERIPHERAL_SUPPORTED)
-
-namespace BLEIso {
-
-// --------------------------------------------------------------------------
-// Channel internals
-// --------------------------------------------------------------------------
 
 namespace {
 
@@ -71,74 +69,6 @@ SemaphoreHandle_t isoMtx() {
   return sHandle;
 }
 
-}  // namespace
-
-/** Private access to Channel for the dispatch below, without public setters. */
-struct ChannelAccess {
-  /** @brief Attach a fresh channel to @p slot (callbacks from a previous use are dropped). */
-  static void bind(Channel &c, int slot) {
-    BLELockGuard lock(isoMtx());
-    c._onConnected = nullptr;
-    c._onDisconnected = nullptr;
-    c._onReceive = nullptr;
-    c._onSent = nullptr;
-    c._slot.store(slot, std::memory_order_release);
-    c._nextSeq.store(0, std::memory_order_relaxed);
-  }
-  static void unbind(Channel &c) {
-    BLELockGuard lock(isoMtx());
-    c._slot.store(-1, std::memory_order_release);
-    c._onConnected = nullptr;
-    c._onDisconnected = nullptr;
-    c._onReceive = nullptr;
-    c._onSent = nullptr;
-  }
-  // Every connection numbers its SDUs from 0.
-  static void connected(Channel &c) {
-    c._nextSeq.store(0, std::memory_order_relaxed);
-    Channel::ConnectedCb cb;
-    {
-      BLELockGuard lock(isoMtx());
-      cb = c._onConnected;
-    }
-    if (cb) {
-      cb(c);
-    }
-  }
-  static void disconnected(Channel &c, uint8_t reason) {
-    Channel::DisconnectedCb cb;
-    {
-      BLELockGuard lock(isoMtx());
-      cb = c._onDisconnected;
-    }
-    if (cb) {
-      cb(c, reason);
-    }
-  }
-  static void receive(Channel &c, const SduInfo &info, const uint8_t *sdu, uint16_t len) {
-    Channel::ReceiveCb cb;
-    {
-      BLELockGuard lock(isoMtx());
-      cb = c._onReceive;
-    }
-    if (cb) {
-      cb(c, info, sdu, len);
-    }
-  }
-  static void sent(Channel &c) {
-    Channel::SentCb cb;
-    {
-      BLELockGuard lock(isoMtx());
-      cb = c._onSent;
-    }
-    if (cb) {
-      cb(c);
-    }
-  }
-};
-
-namespace {
-
 /** Concurrent ISO channels in the pool; matches the host's own channel limit. */
 constexpr int kMaxChan = BLE_ISO_MAX_CHAN;
 
@@ -151,398 +81,863 @@ enum class Kind : uint8_t {
   BisReceiver,     /*!< syncBig(). */
 };
 
-/** Vendor state of one pool entry; `chan.ops` / `chan.qos` point into the same entry. */
-struct Slot {
-  std::atomic<bool> used{false};
-  std::atomic<bool> connected{false};
-  std::atomic<bool> accepted{false};  // A CIS was handed out to this slot (it may re-listen, but never be released while live).
-  Kind kind = Kind::None;
-  std::atomic<bool> hasTx{false};  // Tx QoS configured (host to controller).
-  bool hasRx = false;               // Rx QoS configured (controller to host).
-  esp_ble_iso_chan_t chan{};
-  esp_ble_iso_chan_ops_t ops{};
-  esp_ble_iso_chan_qos_t qos{};
-  esp_ble_iso_chan_io_qos_t txQos{};
-  esp_ble_iso_chan_io_qos_t rxQos{};
-};
+}  // namespace
 
-void clearSlot(Slot &s) {
-  s.used.store(false, std::memory_order_release);
-  s.connected.store(false, std::memory_order_release);
-  s.accepted.store(false, std::memory_order_release);
-  s.kind = Kind::None;
-  s.hasTx.store(false, std::memory_order_relaxed);
-  s.hasRx = false;
-  s.chan = {};
-  s.ops = {};
-  s.qos = {};
-  s.txQos = {};
-  s.rxQos = {};
-}
+// File-scope forward declarations (defined below, after the Impl structs).
+// These must NOT live in the anonymous namespace: that would give them
+// internal linkage, diverging from the definitions.
+uint8_t vendorPhy(BLEIso::Phy phy);
+uint8_t packBroadcastCode(const String &code, uint8_t *out);
 
-/** Pool entry i backs sChannels[i]; i is the Channel's slot(). */
-Slot sSlots[kMaxChan];
-Channel sChannels[kMaxChan];
+// The retained transport Impl, set once when the first controller is minted.
+// Callbacks and C-linkage helpers use it; null before any controller exists.
+std::atomic<BLEIso::Impl *> &transportSingleton();
 
-std::atomic<bool> sActive{false};      // begin() succeeded and end() has not run.
-std::atomic<bool> sEndFailed{false};   // end() refused partway; begin() must retry end() first.
+/**
+ * Host ownership is process-global, not per-transport: there is exactly one IDF
+ * host and one GAP app callback per boot, and the LE Audio engine can claim
+ * that host before any `BLEIso` controller is minted (`audio.begin()` with no
+ * `BLE.getIsoController()` call yet). Keeping this state inside `Impl` would
+ * make the hand-over silently vanish whenever no controller exists, and the
+ * GAP forwarder would then drop every ACL event.
+ */
+namespace {
 std::atomic<bool> sOwnsHost{false};    // This transport called esp_ble_iso_common_init.
 std::atomic<bool> sSharedHost{false};  // The LE Audio engine owns the host and ISO.
+}  // namespace
+
+// --------------------------------------------------------------------------
+// Channel::Impl (per-handle state; callbacks + slot binding)
+// --------------------------------------------------------------------------
+
+struct BLEIso::Channel::Impl {
+  /**
+   * Owning transport; raw because the transport Impl is process-lifetime
+   * (retained by the static controller slot, never released), so it always
+   * outlives every channel handle. A shared_ptr here would cycle: slots
+   * retain channel handles while bound.
+   */
+  BLEIso::Impl *transport = nullptr;
+  std::atomic<int> slot{-1};  ///< Bound pool slot, or -1 once detached.
+  uint32_t gen = 0;           ///< Slot generation at bind; immutable, checked lock-free.
+  BLEIso::Channel::ConnectedCb onConnected;
+  BLEIso::Channel::DisconnectedCb onDisconnected;
+  BLEIso::Channel::ReceiveCb onReceive;
+  BLEIso::Channel::SentCb onSent;
+  std::atomic<uint16_t> _nextSeq{0};  // Atomic: reset on connect (host task), advanced on send (app task).
+};
+
+// --------------------------------------------------------------------------
+// BLEIso::Impl (transport state; was file-static before the shared-handle API)
+// --------------------------------------------------------------------------
+
+struct BLEIso::Impl {
+  /** Vendor state of one pool entry; `chan.ops` / `chan.qos` point into the same entry. */
+  struct Slot {
+    std::atomic<bool> used{false};
+    std::atomic<bool> connected{false};
+    std::atomic<bool> accepted{false};  // A CIS was handed out to this slot (it may re-listen, but never be released while live).
+    std::atomic<uint32_t> gen{0};       // Bumped on every bind; lets stale handles fail closed after slot reuse.
+    Kind kind = Kind::None;
+    std::atomic<bool> hasTx{false};  // Tx QoS configured (host to controller).
+    bool hasRx = false;               // Rx QoS configured (controller to host).
+    esp_ble_iso_chan_t chan{};
+    esp_ble_iso_chan_ops_t ops{};
+    esp_ble_iso_chan_qos_t qos{};
+    esp_ble_iso_chan_io_qos_t txQos{};
+    esp_ble_iso_chan_io_qos_t rxQos{};
+    std::shared_ptr<Channel::Impl> handle;  // Retained while bound; user copies share it.
+  };
+
+  Slot slots[kMaxChan];
+  std::atomic<uint32_t> genCounter{1};
+
+  std::atomic<bool> active{false};      // begin() succeeded and end() has not run.
+  std::atomic<bool> endFailed{false};   // end() refused partway; begin() must retry end() first.
+  // Host ownership lives at file scope (sOwnsHost / sSharedHost): it is global
+  // to the boot, not to this transport, which need not exist yet.
 
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
-esp_ble_iso_cig_t *sCig;  // Single-CIS CIG of the Central slot.
+  esp_ble_iso_cig_t *cig = nullptr;  // Single-CIS CIG of the Central slot.
 #endif
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-esp_ble_iso_server_t sServer;  // Accepts incoming CIS into listenCis() slots.
-bool sServerRegistered;
+  esp_ble_iso_server_t server{};  // Accepts incoming CIS into listenCis() slots.
+  bool serverRegistered = false;
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-std::atomic<esp_ble_iso_big_t *> sBigTx{nullptr};  // Broadcaster BIG (host task clears it on disconnect).
-int sBigAdv = -1;           // Advertising set registered with the ISO layer, or -1.
+  std::atomic<esp_ble_iso_big_t *> bigTx{nullptr};  // Broadcaster BIG (host task clears it on disconnect).
+  int bigAdv = -1;           // Advertising set registered with the ISO layer, or -1.
 #endif
 
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-/** BIG sync arm state: the sync itself is issued when a BIGInfo report arrives. */
-struct SyncArm {
-  bool armed = false;
-  bool syncing = false;  // doBigSync() call in flight on iso_task.
-  bool synced = false;   // Sync issued; cleared on PA sync loss or disconnect.
-  int slot = -1;
-  uint32_t bitfield = 0;  // ESP_BLE_ISO_BIS_INDEX_BIT of the armed BIS.
-  uint16_t timeout = 0;   // N * 10 ms.
-  uint8_t bcode[ESP_BLE_ISO_BROADCAST_CODE_SIZE] = {};
-  esp_ble_iso_big_t *big = nullptr;  // Synced Receiver BIG.
-};
-SyncArm sSync;
+  /** BIG sync arm state: the sync itself is issued when a BIGInfo report arrives. */
+  struct SyncArm {
+    bool armed = false;
+    bool syncing = false;  // doBigSync() call in flight on iso_task.
+    bool synced = false;   // Sync issued; cleared on PA sync loss or disconnect.
+    int slot = -1;
+    uint32_t bitfield = 0;  // ESP_BLE_ISO_BIS_INDEX_BIT of the armed BIS.
+    uint16_t timeout = 0;   // N * 10 ms.
+    uint8_t bcode[ESP_BLE_ISO_BROADCAST_CODE_SIZE] = {};
+    esp_ble_iso_big_t *big = nullptr;  // Synced Receiver BIG.
+  };
+  SyncArm sync;
 #endif
 
-constexpr uint32_t kIdleTimeoutMs = 5000;
-BLESync sIdleSync{"iso-idle"};
+  static constexpr uint32_t kIdleTimeoutMs = 5000;
+  BLESync idleSync{"iso-idle"};
 
-bool allDisconnected() {
-  // Runs on waitDisconnected()'s waiter and on notifyIsoIdle() from the host
-  // task; isoMtx() serializes both against slot teardown. An armed-but-never-
-  // synced Receiver still holds periodic-sync resources, so it counts as busy.
-  BLELockGuard lock(isoMtx());
-  for (int i = 0; i < kMaxChan; i++) {
-    if (sSlots[i].used.load(std::memory_order_acquire) &&
-        (sSlots[i].connected.load(std::memory_order_acquire) || sSlots[i].accepted.load(std::memory_order_acquire))) {
+  // -- Slot helpers ---------------------------------------------------------
+
+  bool slotOk(int slot) const {
+    return slot >= 0 && slot < kMaxChan && slots[slot].used.load(std::memory_order_acquire);
+  }
+
+  /**
+   * @brief Whether @p hi still names the live binding of its slot.
+   *
+   * Lock-free: `used` and `gen` are atomic, and `gen` is never reset (it only
+   * grows), so a reused slot always mismatches a stale handle. The vendor
+   * `chan` itself is stable while bound.
+   */
+  bool linkLive(int slot, uint32_t gen) const {
+    return slotOk(slot) && slots[slot].gen.load(std::memory_order_acquire) == gen;
+  }
+
+  /** @brief Slot owning @p chan, -1 if it is not one of ours. */
+  int slotOf(const esp_ble_iso_chan_t *chan) {
+    for (int i = 0; i < kMaxChan; i++) {
+      if (slots[i].used.load(std::memory_order_acquire) && &slots[i].chan == chan) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** @brief First used slot of @p kind, -1 when there is none. */
+  int findSlot(Kind kind) {
+    for (int i = 0; i < kMaxChan; i++) {
+      if (slots[i].used.load(std::memory_order_acquire) && slots[i].kind == kind) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * @brief Whether the host holds no live reference to the channel in @p slot.
+   *
+   * An idle slot may be configured again by the operation of its kind. A
+   * Central CIS stays a CIG member after it disconnects; that is still idle,
+   * because cisConnect() terminates the old CIG first. Only atomic slot state
+   * is read here: the stack-owned chan.state/iso cannot be read safely from
+   * this task (see allDisconnected()).
+   */
+  bool isIdle(int slot) {
+    if (!slotOk(slot)) {
       return false;
     }
-  }
-#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-  if (sSync.armed || sSync.syncing || sSync.synced) {
-    return false;
-  }
-#endif
-  return true;
-}
-
-void notifyIsoIdle() {
-  if (allDisconnected()) {
-    sIdleSync.give(BTStatus::OK);
-  }
-}
-
-bool waitDisconnected() {
-  if (allDisconnected()) {
+    const Slot &s = slots[slot];
+    if (s.connected.load(std::memory_order_acquire) || s.accepted.load(std::memory_order_acquire)) {
+      return false;
+    }
     return true;
   }
-  if (bleInStackCallbackTask()) {
-    log_e("BLEIso: cannot wait for ISO disconnect from a stack callback");
-    return false;
-  }
-  sIdleSync.take();
-  if (allDisconnected()) {
-    sIdleSync.give(BTStatus::OK);
-  }
-  BTStatus st = sIdleSync.wait(kIdleTimeoutMs);
-  if (st != BTStatus::OK || !allDisconnected()) {
-    log_e("BLEIso: timed out waiting for ISO channels to disconnect");
-    return false;
-  }
-  return true;
-}
 
-bool slotOk(int slot) {
-  return slot >= 0 && slot < kMaxChan && sSlots[slot].used.load(std::memory_order_acquire);
-}
-
-/** @brief Slot owning @p chan, -1 if it is not one of ours. */
-int slotOf(const esp_ble_iso_chan_t *chan) {
-  for (int i = 0; i < kMaxChan; i++) {
-    if (sSlots[i].used.load(std::memory_order_acquire) && &sSlots[i].chan == chan) {
-      return i;
+  /** @brief Detach the handle bound to @p s (its user copies become shells). */
+  static void detach(Slot &s) {
+    if (s.handle) {
+      s.handle->slot.store(-1, std::memory_order_release);
+      s.handle.reset();
     }
   }
-  return -1;
-}
 
-#if BLE_ISO_CIS_CENTRAL_SUPPORTED || BLE_ISO_BROADCASTER_SUPPORTED
-uint8_t vendorPhy(Phy phy) {
-  switch (phy) {
-    case Phy::Phy1M:    return ESP_BLE_ISO_PHY_1M;
-    case Phy::PhyCoded: return ESP_BLE_ISO_PHY_CODED;
-    default:            return ESP_BLE_ISO_PHY_2M;
+  /** @brief Reset vendor structs and direction flags, keeping the binding. */
+  static void resetVendorState(Slot &s) {
+    s.kind = Kind::None;
+    s.hasTx.store(false, std::memory_order_relaxed);
+    s.hasRx = false;
+    s.chan = {};
+    s.ops = {};
+    s.qos = {};
+    s.txQos = {};
+    s.rxQos = {};
   }
-}
-#endif
 
-// --------------------------------------------------------------------------
-// Channel ops (ISO host task): pool slot -> Channel -> std::function
-// --------------------------------------------------------------------------
+  void clearSlot(Slot &s) {
+    detach(s);
+    resetVendorState(s);
+    s.used.store(false, std::memory_order_release);
+    s.connected.store(false, std::memory_order_release);
+    s.accepted.store(false, std::memory_order_release);
+  }
 
-void onChanConnected(esp_ble_iso_chan_t *chan) {
-  int slot = slotOf(chan);
-  if (slot < 0) {
-    return;
-  }
-  // Set up the HCI data path here, as every esp_ble_iso example does, so the
-  // application only deals in connected/receive/sent events. A failure still
-  // reports the channel as connected: it is up, only its SDUs will not flow.
-  esp_ble_iso_chan_path_t path = {};
-  path.pid = ESP_BLE_ISO_DATA_PATH_HCI;
-  path.format = ESP_BLE_ISO_CODING_FORMAT_TRANSPARENT;
-  esp_err_t err;
-  if (sSlots[slot].hasTx.load(std::memory_order_relaxed) && (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT, &path)) != ESP_OK) {
-    log_e("BLEIso: channel %d: Tx (host to controller) data path setup failed: %d", slot, err);
-  }
-  if (sSlots[slot].hasRx && (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT, &path)) != ESP_OK) {
-    log_e("BLEIso: channel %d: Rx (controller to host) data path setup failed: %d", slot, err);
-  }
-  sSlots[slot].connected.store(true, std::memory_order_release);
-  ChannelAccess::connected(sChannels[slot]);
-}
-
-void onChanDisconnected(esp_ble_iso_chan_t *chan, uint8_t reason) {
-  int slot = slotOf(chan);
-  if (slot < 0) {
-    return;
-  }
-  Slot &s = sSlots[slot];
-  s.connected.store(false, std::memory_order_release);
-  // Clear the accept flag alongside connected: otherwise end() would keep
-  // treating a disconnected-but-accepted Peripheral slot as live and wedge
-  // waiting for a release that never comes.
-  s.accepted.store(false, std::memory_order_release);
-  // A Central CIS keeps its handle and data path across disconnection (Core
-  // 6.0 Vol 4 Part E 7.7.5); remove it or the next setup returns Command
-  // Disallowed. Peripheral CIS and BIS paths are torn down by the controller.
-  if (s.kind == Kind::CisCentral) {
-    if (s.hasTx.load(std::memory_order_relaxed)) {
-      esp_ble_iso_remove_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT);
+  /** @brief Reserve a free slot, -1 if the pool is full. */
+  int allocSlot() {
+    for (int i = 0; i < kMaxChan; i++) {
+      if (!slots[i].used.load(std::memory_order_acquire)) {
+        clearSlot(slots[i]);
+        slots[i].used.store(true, std::memory_order_release);
+        return i;
+      }
     }
-    if (s.hasRx) {
-      esp_ble_iso_remove_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT);
-    }
+    return -1;
   }
-#if BLE_ISO_BROADCASTER_SUPPORTED
-  // Single-BIS BIG: its only BIS going down (terminate, or a failed create) ends the BIG.
-  if (s.kind == Kind::BisBroadcaster) {
-    sBigTx.store(nullptr, std::memory_order_release);
-  }
-#endif
-#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-  // A lost or failed BIG sync is re-issued on the next BIGInfo while armed.
-  {
+
+  /** @brief Return a slot to the pool and detach its Channel. */
+  void releaseSlot(int slot) {
     BLELockGuard lock(isoMtx());
-    if (slot == sSync.slot) {
-      sSync.synced = false;
-      sSync.big = nullptr;
+    if (slot >= 0 && slot < kMaxChan) {
+      clearSlot(slots[slot]);
     }
   }
-#endif
-  ChannelAccess::disconnected(sChannels[slot], reason);
-  notifyIsoIdle();
-}
 
-// Hot path (once per SDU interval): decode the flags and forward, no logging.
-void onChanRecv(esp_ble_iso_chan_t *chan, const esp_ble_iso_recv_info_t *info, const uint8_t *data, uint16_t len) {
-  int slot = slotOf(chan);
-  if (slot < 0) {
-    return;
+  /**
+   * @brief (Re)configure @p slot for @p kind with fresh vendor structs.
+   *
+   * The host must hold no reference to the slot's channel (see isIdle()).
+   * The slot must already be cleared (allocSlot) or detached (takeChannel
+   * reuse): the binding made by takeChannel is kept.
+   */
+  Slot &prepSlot(int slot, Kind kind) {
+    BLELockGuard lock(isoMtx());
+    Slot &s = slots[slot];
+    resetVendorState(s);
+    s.kind = kind;
+    s.chan.ops = &s.ops;
+    s.chan.qos = &s.qos;
+    s.ops.connected = onChanConnected;
+    s.ops.disconnected = onChanDisconnected;
+    s.ops.recv = onChanRecv;
+    s.ops.sent = onChanSent;
+    s.used.store(true, std::memory_order_release);
+    return s;
   }
-  SduInfo sdu;
-  if (info) {
-    sdu.timestampUs = info->ts;
-    sdu.seqNum = info->seq_num;
-    sdu.valid = (info->flags & ESP_BLE_ISO_FLAGS_VALID) != 0 &&
-                (info->flags & (ESP_BLE_ISO_FLAGS_ERROR | ESP_BLE_ISO_FLAGS_LOST)) == 0;
-    sdu.timestampValid = (info->flags & ESP_BLE_ISO_FLAGS_TS) != 0;
+
+  /**
+   * @brief Configure the slot's directions; an SDU size of 0 leaves that direction out.
+   *
+   * PHY (a vendor ESP_BLE_ISO_PHY_* value) and RTN apply to both directions; for
+   * a Peripheral CIS and a BIS Receiver the controller reports the values chosen
+   * by the other side.
+   */
+  void setQos(Slot &s, uint16_t txSdu, uint16_t rxSdu, uint8_t phy, uint8_t rtn) {
+    BLELockGuard lock(isoMtx());
+    s.hasTx.store(txSdu > 0, std::memory_order_relaxed);
+    s.hasRx = rxSdu > 0;
+    s.txQos.sdu = txSdu;
+    s.txQos.phy = phy;
+    s.txQos.rtn = rtn;
+    s.rxQos.sdu = rxSdu;
+    s.rxQos.phy = phy;
+    s.rxQos.rtn = rtn;
+    s.qos.tx = txSdu > 0 ? &s.txQos : nullptr;
+    s.qos.rx = s.hasRx ? &s.rxQos : nullptr;
   }
-  ChannelAccess::receive(sChannels[slot], sdu, data, len);
-}
 
-void onChanSent(esp_ble_iso_chan_t *chan, void *userData) {
-  (void)userData;
-  int slot = slotOf(chan);
-  if (slot >= 0) {
-    ChannelAccess::sent(sChannels[slot]);
-  }
-}
-
-// --------------------------------------------------------------------------
-// Pool
-// --------------------------------------------------------------------------
-
-/** @brief First used slot of @p kind, -1 when there is none. */
-int findSlot(Kind kind) {
-  for (int i = 0; i < kMaxChan; i++) {
-    if (sSlots[i].used.load(std::memory_order_acquire) && sSlots[i].kind == kind) {
-      return i;
+  /** @brief Drop every slot, group handle and Channel binding; the host side must already be gone. */
+  void resetState() {
+    BLELockGuard lock(isoMtx());
+    for (int i = 0; i < kMaxChan; i++) {
+      clearSlot(slots[i]);
     }
-  }
-  return -1;
-}
 
-/**
- * @brief Whether the host holds no live reference to the channel in @p slot.
- *
- * An idle slot may be configured again by the operation of its kind. A
- * Central CIS stays a CIG member after it disconnects; that is still idle,
- * because cisConnect() terminates the old CIG first. Only atomic slot state
- * is read here: the stack-owned chan.state/iso cannot be read safely from
- * this task (see allDisconnected()).
- */
-bool isIdle(int slot) {
-  if (!slotOk(slot)) {
-    return false;
-  }
-  const Slot &s = sSlots[slot];
-  if (s.connected.load(std::memory_order_acquire) || s.accepted.load(std::memory_order_acquire)) {
-    return false;
-  }
-  return true;
-}
-
-/** @brief Reserve a free slot, -1 if the pool is full. */
-int allocSlot() {
-  for (int i = 0; i < kMaxChan; i++) {
-    if (!sSlots[i].used.load(std::memory_order_acquire)) {
-      clearSlot(sSlots[i]);
-      sSlots[i].used.store(true, std::memory_order_release);
-      return i;
-    }
-  }
-  return -1;
-}
-
-/** @brief Return a slot to the pool and unbind its Channel. */
-void releaseSlot(int slot) {
-  BLELockGuard lock(isoMtx());
-  if (slot >= 0 && slot < kMaxChan) {
-    clearSlot(sSlots[slot]);
-    ChannelAccess::unbind(sChannels[slot]);
-  }
-}
-
-/**
- * @brief (Re)configure @p slot for @p kind with fresh vendor structs.
- *
- * The host must hold no reference to the slot's channel (see isIdle()).
- */
-Slot &prepSlot(int slot, Kind kind) {
-  BLELockGuard lock(isoMtx());
-  Slot &s = sSlots[slot];
-  clearSlot(s);
-  s.kind = kind;
-  s.chan.ops = &s.ops;
-  s.chan.qos = &s.qos;
-  s.ops.connected = onChanConnected;
-  s.ops.disconnected = onChanDisconnected;
-  s.ops.recv = onChanRecv;
-  s.ops.sent = onChanSent;
-  s.used.store(true, std::memory_order_release);
-  return s;
-}
-
-/**
- * @brief Configure the slot's directions; an SDU size of 0 leaves that direction out.
- *
- * PHY (a vendor ESP_BLE_ISO_PHY_* value) and RTN apply to both directions; for
- * a Peripheral CIS and a BIS Receiver the controller reports the values chosen
- * by the other side.
- */
-void setQos(Slot &s, uint16_t txSdu, uint16_t rxSdu, uint8_t phy, uint8_t rtn) {
-  BLELockGuard lock(isoMtx());
-  s.hasTx.store(txSdu > 0, std::memory_order_relaxed);
-  s.hasRx = rxSdu > 0;
-  s.txQos.sdu = txSdu;
-  s.txQos.phy = phy;
-  s.txQos.rtn = rtn;
-  s.rxQos.sdu = rxSdu;
-  s.rxQos.phy = phy;
-  s.rxQos.rtn = rtn;
-  s.qos.tx = txSdu > 0 ? &s.txQos : nullptr;
-  s.qos.rx = s.hasRx ? &s.rxQos : nullptr;
-}
-
-/** @brief Drop every slot, group handle and Channel binding; the host side must already be gone. */
-void resetState() {
-  BLELockGuard lock(isoMtx());
-  for (int i = 0; i < kMaxChan; i++) {
-    clearSlot(sSlots[i]);
-    ChannelAccess::unbind(sChannels[i]);
-  }
-#if BLE_ISO_CIS_CENTRAL_SUPPORTED
-  sCig = nullptr;
-#endif
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-  sServerRegistered = false;
+    serverRegistered = false;
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-  sBigTx.store(nullptr, std::memory_order_release);
-  sBigAdv = -1;
+    bigTx.store(nullptr, std::memory_order_release);
+    bigAdv = -1;
 #endif
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-  sSync = SyncArm{};
+    sync = SyncArm{};
 #endif
-}
+  }
 
-/**
- * @brief Common factory prologue: check the transport, take a slot, bind its Channel.
- *
- * Single-instance roles (CIS Central, BIS Broadcaster, BIS Receiver) reuse
- * their existing slot once the host released it, so going down and up again
- * never exhausts the pool.
- *
- * @param op    Factory name, for the log.
- * @param reuse Kind whose existing slot is reused, or Kind::None for a new slot.
- */
-Channel *takeChannel(const char *op, Kind reuse) {
-  if (!sActive.load(std::memory_order_acquire) || !BLE.isInitialized() || BLE.isEnding()) {
-    log_e("BLEIso: %s() called before BLEIso::begin()", op);
-    return nullptr;
-  }
-  BLELockGuard lock(isoMtx());
-  int slot = reuse != Kind::None ? findSlot(reuse) : -1;
-  if (slot >= 0 && !isIdle(slot)) {
-    log_e("BLEIso: %s(): its channel is still up; disconnect() it and wait for onDisconnected", op);
-    return nullptr;
-  }
-  if (slot < 0) {
-    slot = allocSlot();
-  }
-  if (slot < 0) {
-    log_w("BLEIso: %s(): all %u ISO channels in use (BLE_ISO_MAX_CHAN)", op, (unsigned)kMaxChan);
-    if (reuse == Kind::None) {
-      log_w("BLEIso: a listenCis() channel re-listens on its own after a disconnect; "
-            "calling listenCis() again reserves an *additional* concurrent channel");
+  BTStatus begin();
+  BTStatus end();
+
+  /**
+   * @brief Common factory prologue: check the transport, detach any idle
+   * previous binding, and mint a fresh handle.
+   *
+   * Single-instance roles (CIS Central, BIS Broadcaster, BIS Receiver) reuse
+   * their existing slot once the host released it, so going down and up again
+   * never exhausts the pool. The previous handle, if any, is detached: its
+   * user copies become shells instead of aliasing the new channel.
+   *
+   * @param op    Factory name, for the log.
+   * @param reuse Kind whose existing slot is reused, or Kind::None for a new slot.
+   */
+  Channel takeChannel(const char *op, Kind reuse) {
+    if (!active.load(std::memory_order_acquire) || !BLE.isInitialized() || BLE.isEnding()) {
+      log_e("BLEIso: %s() called before begin()", op);
+      return Channel();
     }
-    return nullptr;
+    BLELockGuard lock(isoMtx());
+    int slot = reuse != Kind::None ? findSlot(reuse) : -1;
+    if (slot >= 0 && !isIdle(slot)) {
+      log_e("BLEIso: %s(): its channel is still up; disconnect() it and wait for onDisconnected", op);
+      return Channel();
+    }
+    if (slot < 0) {
+      slot = allocSlot();
+    }
+    if (slot < 0) {
+      log_w("BLEIso: %s(): all %u ISO channels in use (BLE_ISO_MAX_CHAN)", op, (unsigned)kMaxChan);
+      if (reuse == Kind::None) {
+        log_w("BLEIso: a listenCis() channel re-listens on its own after a disconnect; "
+              "calling listenCis() again reserves an *additional* concurrent channel");
+      }
+      return Channel();
+    }
+    // The slot is idle: drop any previous binding, then mint a fresh handle
+    // so stale copies fail closed instead of aliasing the new channel.
+    detach(slots[slot]);
+    auto hi = std::make_shared<Channel::Impl>();
+    hi->transport = this;
+    hi->gen = genCounter.fetch_add(1, std::memory_order_relaxed);
+    hi->slot.store(slot, std::memory_order_release);
+    slots[slot].gen.store(hi->gen, std::memory_order_release);
+    slots[slot].handle = hi;
+    slots[slot].used.store(true, std::memory_order_release);
+    return Channel(hi);
   }
-  ChannelAccess::bind(sChannels[slot], slot);
-  return &sChannels[slot];
-}
 
-/** @brief Common factory epilogue: on error, log and give the slot back. */
-Channel *finish(Channel *c, esp_err_t err, const char *op) {
-  if (err == ESP_OK) {
-    return c;
+  /** @brief Common factory epilogue: on error, log and give the slot back. */
+  Channel finish(Channel ch, esp_err_t err, const char *op) {
+    if (err == ESP_OK) {
+      return ch;
+    }
+    log_e("BLEIso: %s failed (err=%d)", op, err);
+    if (ch) {
+      releaseSlot(ch._impl->slot.load(std::memory_order_acquire));
+    }
+    return Channel();
   }
-  log_e("BLEIso: %s failed (err=%d)", op, err);
-  releaseSlot(c->slot());
-  return nullptr;
+
+  /**
+   * @brief Drop every live-completing channel when audio releases the host.
+   *
+   * Only completes slots that actually held a CIS/BIS; idle never-accepted
+   * listen slots are dropped silently (disconnect() on them is also silent).
+   */
+  void attachSharedDone() {
+    for (int i = 0; i < kMaxChan; i++) {
+      if (slots[i].used.load(std::memory_order_acquire) &&
+          (slots[i].connected.load(std::memory_order_acquire) ||
+           slots[i].accepted.load(std::memory_order_acquire))) {
+        dispatchDisconnected(i, 0x16);
+      }
+    }
+    resetState();
+    active.store(false, std::memory_order_release);
+  }
+
+  bool allDisconnected() {
+    // Runs on waitDisconnected()'s waiter and on notifyIsoIdle() from the host
+    // task; isoMtx() serializes both against slot teardown. An armed-but-never-
+    // synced Receiver still holds periodic-sync resources, so it counts as busy.
+    BLELockGuard lock(isoMtx());
+    for (int i = 0; i < kMaxChan; i++) {
+      if (slots[i].used.load(std::memory_order_acquire) &&
+          (slots[i].connected.load(std::memory_order_acquire) || slots[i].accepted.load(std::memory_order_acquire))) {
+        return false;
+      }
+    }
+#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+    if (sync.armed || sync.syncing || sync.synced) {
+      return false;
+    }
+#endif
+    return true;
+  }
+
+  void notifyIsoIdle() {
+    if (allDisconnected()) {
+      idleSync.give(BTStatus::OK);
+    }
+  }
+
+  bool waitDisconnected() {
+    if (allDisconnected()) {
+      return true;
+    }
+    if (BLETask::inStackCallbackTask()) {
+      log_e("BLEIso: cannot wait for ISO disconnect from a stack callback");
+      return false;
+    }
+    idleSync.take();
+    if (allDisconnected()) {
+      idleSync.give(BTStatus::OK);
+    }
+    BTStatus st = idleSync.wait(kIdleTimeoutMs);
+    if (st != BTStatus::OK || !allDisconnected()) {
+      log_e("BLEIso: timed out waiting for ISO channels to disconnect");
+      return false;
+    }
+    return true;
+  }
+
+#if BLE_ISO_CIS_CENTRAL_SUPPORTED
+  /**
+   * @brief Create a single-CIS CIG with this QoS and connect its CIS on @p connHandle.
+   *
+   * A CIG left by a previous CIS is terminated first, so an idle Central slot
+   * can reconnect with new QoS. Completion arrives via onChanConnected().
+   */
+  esp_err_t cisConnect(int slot, uint16_t connHandle, const BLEIso::CisParams &p) {
+    // The CIG holds this slot's channel from a previous CIS: free it before the slot is reset.
+    if (cig) {
+      esp_err_t err = esp_ble_iso_cig_terminate(cig);
+      if (err != ESP_OK) {
+        log_e("BLEIso: terminating the previous CIG failed: %d (is its CIS still up?)", err);
+        return err;
+      }
+      cig = nullptr;
+    }
+    Slot &s = prepSlot(slot, Kind::CisCentral);
+    setQos(s, p.sduSize, p.returnSduSize, vendorPhy(p.phy), p.rtn);
+
+    esp_ble_iso_chan_t *channels[1] = {&s.chan};
+    esp_ble_iso_cig_param_t cigParam = {};
+    cigParam.cis_channels = channels;
+    cigParam.num_cis = 1;
+    cigParam.sca = ESP_BLE_ISO_SCA_UNKNOWN;
+    cigParam.packing = p.packing;
+    cigParam.framing = p.framing;
+    cigParam.c_to_p_latency = p.latencyMs;
+    cigParam.p_to_c_latency = p.latencyMs;
+    cigParam.c_to_p_interval = p.sduIntervalUs;
+    cigParam.p_to_c_interval = p.sduIntervalUs;
+    esp_err_t err = esp_ble_iso_cig_create(&cigParam, &cig);
+    if (err != ESP_OK) {
+      log_e("BLEIso: CIG create (%u us, %u/%u octets) failed: %d", (unsigned)p.sduIntervalUs, p.sduSize, p.returnSduSize, err);
+      cig = nullptr;
+      return err;
+    }
+
+    esp_ble_iso_connect_param_t connectParam = {};
+    connectParam.iso_chan = &s.chan;
+    connHandle = BLEIsoInternal::resolveAclHandle(connHandle);
+    /* Mark busy before the async connect so allDisconnected() cannot report idle
+     * in the window before onChanConnected (chan.state is stack-owned and cannot
+     * be read safely from this task). Cleared on failure here and on disconnect. */
+    s.connected.store(true, std::memory_order_release);
+    err = esp_ble_iso_chan_connect(&connectParam, connHandle, 1);
+    if (err != ESP_OK) {
+      // Drop the CIG too: the caller releases the slot, whose channel it references.
+      log_e("BLEIso: CIS connect on ACL 0x%04x failed: %d", connHandle, err);
+      s.connected.store(false, std::memory_order_release);
+      esp_ble_iso_cig_terminate(cig);
+      cig = nullptr;
+    }
+    return err;
+  }
+#endif /* BLE_ISO_CIS_CENTRAL_SUPPORTED */
+
+#if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
+  // Incoming CIS request: hand out the first listening slot not yet connected, or reject.
+  static int onCisAccept(const esp_ble_iso_accept_info_t *info, esp_ble_iso_chan_t **chan) {
+    (void)info;
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (self == nullptr) {
+      return -1;
+    }
+    BLELockGuard lock(isoMtx());
+    for (int i = 0; i < kMaxChan; i++) {
+      if (self->slots[i].used.load(std::memory_order_acquire) && self->slots[i].kind == Kind::CisPeripheral &&
+          self->slots[i].chan.iso == nullptr) {
+        self->slots[i].accepted.store(true, std::memory_order_release);
+        *chan = &self->slots[i].chan;
+        return 0;
+      }
+    }
+    log_w("BLEIso: incoming CIS rejected: no listenCis() channel free");
+    return -1;
+  }
+
+  /**
+   * @brief Accept the next incoming CIS on @p slot, registering the ISO server on first use.
+   *
+   * Each incoming CIS takes the first listening slot that is not connected
+   * yet; the slot keeps listening after its CIS disconnects.
+   */
+  esp_err_t cisListen(int slot, const BLEIso::CisParams &p) {
+    Slot &s = prepSlot(slot, Kind::CisPeripheral);
+    setQos(s, p.returnSduSize, p.sduSize, ESP_BLE_ISO_PHY_2M, 0);
+    if (!serverRegistered) {
+      server = esp_ble_iso_server_t{};
+      server.accept = onCisAccept;
+      esp_err_t err = esp_ble_iso_server_register(&server);
+      if (err != ESP_OK) {
+        log_e("BLEIso: ISO server registration failed: %d", err);
+        return err;
+      }
+      serverRegistered = true;
+    }
+    return ESP_OK;
+  }
+#endif /* BLE_ISO_CIS_PERIPHERAL_SUPPORTED */
+
+#if BLE_ISO_BROADCASTER_SUPPORTED
+  /**
+   * @brief Create a single-BIS BIG on @p advHandle, whose extended + periodic advertising already runs.
+   *
+   * Registers the advertising set with the ISO layer (kept across BIGs) and
+   * issues the create; completion arrives via onChanConnected().
+   */
+  esp_err_t bigCreate(int slot, uint8_t advHandle, const BLEIso::BigParams &p) {
+    if (bigTx) {
+      log_e("BLEIso: a BIG is already broadcasting; disconnect() it first");
+      return ESP_ERR_INVALID_STATE;
+    }
+    // The ISO layer refuses a second registration of the same set: keep it across BIGs.
+    esp_err_t err;
+    if (bigAdv != advHandle) {
+      esp_ble_iso_ext_adv_info_t advInfo = {};
+      if (bigAdv >= 0) {
+        advInfo.adv_handle = (uint8_t)bigAdv;
+        esp_ble_iso_big_ext_adv_delete(&advInfo);
+        bigAdv = -1;
+      }
+      advInfo.adv_handle = advHandle;
+      err = esp_ble_iso_big_ext_adv_add(&advInfo);
+      if (err != ESP_OK) {
+        log_e("BLEIso: registering advertising set %u for the BIG failed: %d", advHandle, err);
+        return err;
+      }
+      bigAdv = advHandle;
+    }
+
+    Slot &s = prepSlot(slot, Kind::BisBroadcaster);
+    setQos(s, p.sduSize, 0, vendorPhy(p.phy), p.rtn);
+
+    esp_ble_iso_chan_t *bis[1] = {&s.chan};
+    esp_ble_iso_big_create_param_t param = {};
+    param.bis_channels = bis;
+    param.num_bis = 1;
+    param.interval = p.sduIntervalUs;
+    param.latency = p.latencyMs;
+    param.packing = p.packing;
+    param.framing = p.framing;
+    param.encryption = packBroadcastCode(p.broadcastCode, param.bcode) > 0;
+    bigTx = nullptr;
+    esp_ble_iso_big_t *big = nullptr;
+    err = esp_ble_iso_big_create(advHandle, &param, &big);
+    if (err != ESP_OK) {
+      log_e("BLEIso: BIG create on advertising set %u (%u us, %u octets) failed: %d", advHandle, (unsigned)p.sduIntervalUs,
+            p.sduSize, err);
+      bigTx = nullptr;
+    } else {
+      bigTx = big;
+      // Mark busy before any async completion runs: until onDisconnected clears
+      // it, end()/allDisconnected() treat the BIG as live. Cleared on failure
+      // (no BIG) and on disconnect, mirroring the CIS connect window.
+      s.connected.store(true, std::memory_order_release);
+    }
+    return err;
+  }
+#endif /* BLE_ISO_BROADCASTER_SUPPORTED */
+
+#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+  /**
+   * @brief Arm a BIG sync for BIS @p bisIndex; no host call here.
+   *
+   * doBigSync() issues the sync on the next BIGInfo report. Only one sync can
+   * be armed; arming again replaces it.
+   *
+   * @param syncTimeout BIG sync timeout (N * 10 ms).
+   */
+  esp_err_t bigSyncArm(int slot, uint8_t bisIndex, const BLEIso::BigParams &p, uint16_t syncTimeout) {
+    setQos(prepSlot(slot, Kind::BisReceiver), 0, p.sduSize, ESP_BLE_ISO_PHY_2M, 0);
+    BLELockGuard lock(isoMtx());
+    sync = SyncArm{};
+    sync.slot = slot;
+    sync.bitfield = ESP_BLE_ISO_BIS_INDEX_BIT(bisIndex);
+    sync.timeout = syncTimeout;
+    packBroadcastCode(p.broadcastCode, sync.bcode);
+    sync.armed = true;
+    return ESP_OK;
+  }
+
+  /**
+   * @brief Issue the armed BIG sync from a BIGInfo report (once per arm).
+   *
+   * @param nse        Subevents per BIS event, used as the max subevents to receive.
+   * @param encryption From the BIG's BIGInfo; the armed code is applied only when set.
+   */
+  void doBigSync(uint16_t syncHandle, uint8_t nse, bool encryption) {
+    int slot = -1;
+    uint32_t bitfield = 0;
+    uint16_t timeout = 0;
+    uint8_t bcode[ESP_BLE_ISO_BROADCAST_CODE_SIZE] = {};
+    {
+      BLELockGuard lock(isoMtx());
+      if (!sync.armed || sync.syncing || sync.synced || !slotOk(sync.slot)) {
+        return;
+      }
+      slot = sync.slot;
+      bitfield = sync.bitfield;
+      timeout = sync.timeout;
+      memcpy(bcode, sync.bcode, sizeof(bcode));
+      sync.syncing = true;
+    }
+
+    esp_ble_iso_chan_t *bis[1] = {&slots[slot].chan};
+    esp_ble_iso_big_sync_param_t param = {};
+    param.bis_channels = bis;
+    param.num_bis = 1;
+    param.bis_bitfield = bitfield;
+    param.mse = nse;
+    param.sync_timeout = timeout;
+    // The BIG's advertised encryption flag is authoritative; the armed
+    // Broadcast Code is only applied when the group is actually encrypted.
+    param.encryption = encryption;
+    if (encryption) {
+      memcpy(param.bcode, bcode, ESP_BLE_ISO_BROADCAST_CODE_SIZE);
+    }
+    esp_ble_iso_big_t *big = nullptr;
+    esp_err_t err = esp_ble_iso_big_sync(syncHandle, &param, &big);
+    esp_ble_iso_big_t *orphan = nullptr;
+    {
+      BLELockGuard lock(isoMtx());
+      sync.syncing = false;
+      if (err != ESP_OK) {
+        // Left armed: the next BIGInfo report retries.
+        log_e("BLEIso: BIG sync to BIS bitfield 0x%08lx on PA sync 0x%04x failed: %d", (unsigned long)bitfield, syncHandle, err);
+        return;
+      }
+      if (!sync.armed || sync.slot != slot) {
+        // Concurrent disconnect()/end() disarmed while esp_ble_iso_big_sync was in flight.
+        orphan = big;
+      } else {
+        sync.big = big;
+        sync.synced = true;
+      }
+    }
+    if (orphan) {
+      (void)esp_ble_iso_big_terminate(orphan);
+    }
+  }
+#endif /* BLE_ISO_SYNC_RECEIVER_SUPPORTED */
+
+  // -- Vendor dispatch (ISO host task): slot -> retained handle -> user callback --
+
+  void dispatchConnected(int slot) {
+    Channel::ConnectedCb cb;
+    std::shared_ptr<Channel::Impl> hi;
+    {
+      BLELockGuard lock(isoMtx());
+      if (!slotOk(slot)) {
+        return;
+      }
+      hi = slots[slot].handle;
+      if (!hi) {
+        return;
+      }
+      hi->_nextSeq.store(0, std::memory_order_relaxed);
+      cb = hi->onConnected;
+    }
+    if (cb) {
+      Channel ch(hi);
+      cb(ch);
+    }
+  }
+
+  void dispatchDisconnected(int slot, uint8_t reason) {
+    Channel::DisconnectedCb cb;
+    std::shared_ptr<Channel::Impl> hi;
+    {
+      BLELockGuard lock(isoMtx());
+      if (!slotOk(slot)) {
+        return;
+      }
+      hi = slots[slot].handle;
+      if (!hi) {
+        return;
+      }
+      cb = hi->onDisconnected;
+    }
+    if (cb) {
+      Channel ch(hi);
+      cb(ch, reason);
+    }
+  }
+
+  void dispatchReceive(int slot, const BLEIso::SduInfo &info, const uint8_t *sdu, uint16_t len) {
+    Channel::ReceiveCb cb;
+    std::shared_ptr<Channel::Impl> hi;
+    {
+      BLELockGuard lock(isoMtx());
+      if (!slotOk(slot)) {
+        return;
+      }
+      hi = slots[slot].handle;
+      if (!hi) {
+        return;
+      }
+      cb = hi->onReceive;
+    }
+    if (cb) {
+      Channel ch(hi);
+      cb(ch, info, sdu, len);
+    }
+  }
+
+  void dispatchSent(int slot) {
+    Channel::SentCb cb;
+    std::shared_ptr<Channel::Impl> hi;
+    {
+      BLELockGuard lock(isoMtx());
+      if (!slotOk(slot)) {
+        return;
+      }
+      hi = slots[slot].handle;
+      if (!hi) {
+        return;
+      }
+      cb = hi->onSent;
+    }
+    if (cb) {
+      Channel ch(hi);
+      cb(ch);
+    }
+  }
+
+  static void onChanConnected(esp_ble_iso_chan_t *chan) {
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (self == nullptr) {
+      return;
+    }
+    int slot = self->slotOf(chan);
+    if (slot < 0) {
+      return;
+    }
+    // Set up the HCI data path here, as every esp_ble_iso example does, so the
+    // application only deals in connected/receive/sent events. A failure still
+    // reports the channel as connected: it is up, only its SDUs will not flow.
+    esp_ble_iso_chan_path_t path = {};
+    path.pid = ESP_BLE_ISO_DATA_PATH_HCI;
+    path.format = ESP_BLE_ISO_CODING_FORMAT_TRANSPARENT;
+    esp_err_t err;
+    if (self->slots[slot].hasTx.load(std::memory_order_relaxed) &&
+        (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT, &path)) != ESP_OK) {
+      log_e("BLEIso: channel %d: Tx (host to controller) data path setup failed: %d", slot, err);
+    }
+    if (self->slots[slot].hasRx &&
+        (err = esp_ble_iso_setup_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT, &path)) != ESP_OK) {
+      log_e("BLEIso: channel %d: Rx (controller to host) data path setup failed: %d", slot, err);
+    }
+    self->slots[slot].connected.store(true, std::memory_order_release);
+    self->dispatchConnected(slot);
+  }
+
+  static void onChanDisconnected(esp_ble_iso_chan_t *chan, uint8_t reason) {
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (self == nullptr) {
+      return;
+    }
+    int slot = self->slotOf(chan);
+    if (slot < 0) {
+      return;
+    }
+    Slot &s = self->slots[slot];
+    s.connected.store(false, std::memory_order_release);
+    // Clear the accept flag alongside connected: otherwise end() would keep
+    // treating a disconnected-but-accepted Peripheral slot as live and wedge
+    // waiting for a release that never comes.
+    s.accepted.store(false, std::memory_order_release);
+    // A Central CIS keeps its handle and data path across disconnection (Core
+    // 6.0 Vol 4 Part E 7.7.5); remove it or the next setup returns Command
+    // Disallowed. Peripheral CIS and BIS paths are torn down by the controller.
+    if (s.kind == Kind::CisCentral) {
+      if (s.hasTx.load(std::memory_order_relaxed)) {
+        esp_ble_iso_remove_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_INPUT);
+      }
+      if (s.hasRx) {
+        esp_ble_iso_remove_data_path(chan, ESP_BLE_ISO_DATA_PATH_DIR_OUTPUT);
+      }
+    }
+#if BLE_ISO_BROADCASTER_SUPPORTED
+    // Single-BIS BIG: its only BIS going down (terminate, or a failed create) ends the BIG.
+    if (s.kind == Kind::BisBroadcaster) {
+      self->bigTx.store(nullptr, std::memory_order_release);
+    }
+#endif
+#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+    // A lost or failed BIG sync is re-issued on the next BIGInfo while armed.
+    {
+      BLELockGuard lock(isoMtx());
+      if (slot == self->sync.slot) {
+        self->sync.synced = false;
+        self->sync.big = nullptr;
+      }
+    }
+#endif
+    self->dispatchDisconnected(slot, reason);
+    self->notifyIsoIdle();
+  }
+
+  // Hot path (once per SDU interval): decode the flags and forward, no logging.
+  static void onChanRecv(esp_ble_iso_chan_t *chan, const esp_ble_iso_recv_info_t *info, const uint8_t *data, uint16_t len) {
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (self == nullptr) {
+      return;
+    }
+    int slot = self->slotOf(chan);
+    if (slot < 0) {
+      return;
+    }
+    BLEIso::SduInfo sdu;
+    if (info) {
+      sdu.timestampUs = info->ts;
+      sdu.seqNum = info->seq_num;
+      sdu.valid = (info->flags & ESP_BLE_ISO_FLAGS_VALID) != 0 &&
+                  (info->flags & (ESP_BLE_ISO_FLAGS_ERROR | ESP_BLE_ISO_FLAGS_LOST)) == 0;
+      sdu.timestampValid = (info->flags & ESP_BLE_ISO_FLAGS_TS) != 0;
+    }
+    self->dispatchReceive(slot, sdu, data, len);
+  }
+
+  static void onChanSent(esp_ble_iso_chan_t *chan, void *userData) {
+    (void)userData;
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (self == nullptr) {
+      return;
+    }
+    int slot = self->slotOf(chan);
+    if (slot >= 0) {
+      self->dispatchSent(slot);
+    }
+  }
+
+  /*
+   * GAP app callback: installed with esp_ble_iso_common_init when this transport
+   * owns the host, or fed by bleIsoOnGapEvent() when audio owns it. Only the
+   * Receiver needs it: the armed sync is issued on the first BIGInfo report.
+   * A lost BIG sync clears `synced` (onChanDisconnected), so it is issued again
+   * on the next BIGInfo once the host is synced to the train again.
+   */
+  static void onGapEvent(esp_ble_iso_gap_app_event_t *event) {
+    Impl *self = transportSingleton().load(std::memory_order_acquire);
+    if (event == nullptr || self == nullptr || !self->active.load(std::memory_order_acquire)) {
+      return;
+    }
+#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
+    if (event->type == ESP_BLE_ISO_GAP_EVENT_BIGINFO_RECV) {
+      self->doBigSync(event->biginfo_recv.sync_handle, event->biginfo_recv.nse, event->biginfo_recv.encryption != 0);
+    }
+#endif
+  }
+};  // struct BLEIso::Impl
+
+uint8_t vendorPhy(BLEIso::Phy phy) {
+  switch (phy) {
+    case BLEIso::Phy::Phy1M:    return ESP_BLE_ISO_PHY_1M;
+    case BLEIso::Phy::PhyCoded: return ESP_BLE_ISO_PHY_CODED;
+    default:                    return ESP_BLE_ISO_PHY_2M;
+  }
 }
 
 #if BLE_ISO_BROADCASTER_SUPPORTED || BLE_ISO_SYNC_RECEIVER_SUPPORTED
@@ -564,292 +959,57 @@ uint8_t packBroadcastCode(const String &code, uint8_t *out) {
 #endif
 
 // --------------------------------------------------------------------------
-// Roles
+// Channel (shared handle; thin wrapper over Channel::Impl)
 // --------------------------------------------------------------------------
 
-#if BLE_ISO_CIS_CENTRAL_SUPPORTED
-/**
- * @brief Create a single-CIS CIG with this QoS and connect its CIS on @p connHandle.
- *
- * A CIG left by a previous CIS is terminated first, so an idle Central slot
- * can reconnect with new QoS. Completion arrives via onChanConnected().
- */
-esp_err_t cisConnect(int slot, uint16_t connHandle, const CisParams &p) {
-  // The CIG holds this slot's channel from a previous CIS: free it before the slot is reset.
-  if (sCig) {
-    esp_err_t err = esp_ble_iso_cig_terminate(sCig);
-    if (err != ESP_OK) {
-      log_e("BLEIso: terminating the previous CIG failed: %d (is its CIS still up?)", err);
-      return err;
-    }
-    sCig = nullptr;
-  }
-  Slot &s = prepSlot(slot, Kind::CisCentral);
-  setQos(s, p.sduSize, p.returnSduSize, vendorPhy(p.phy), p.rtn);
-
-  esp_ble_iso_chan_t *channels[1] = {&s.chan};
-  esp_ble_iso_cig_param_t cig = {};
-  cig.cis_channels = channels;
-  cig.num_cis = 1;
-  cig.sca = ESP_BLE_ISO_SCA_UNKNOWN;
-  cig.packing = p.packing;
-  cig.framing = p.framing;
-  cig.c_to_p_latency = p.latencyMs;
-  cig.p_to_c_latency = p.latencyMs;
-  cig.c_to_p_interval = p.sduIntervalUs;
-  cig.p_to_c_interval = p.sduIntervalUs;
-  esp_err_t err = esp_ble_iso_cig_create(&cig, &sCig);
-  if (err != ESP_OK) {
-    log_e("BLEIso: CIG create (%u us, %u/%u octets) failed: %d", (unsigned)p.sduIntervalUs, p.sduSize, p.returnSduSize, err);
-    sCig = nullptr;
-    return err;
-  }
-
-  esp_ble_iso_connect_param_t connectParam = {};
-  connectParam.iso_chan = &s.chan;
-  connHandle = bleIsoResolveAclHandle(connHandle);
-  /* Mark busy before the async connect so allDisconnected() cannot report idle
-   * in the window before onChanConnected (chan.state is stack-owned and cannot
-   * be read safely from this task). Cleared on failure here and on disconnect. */
-  s.connected.store(true, std::memory_order_release);
-  err = esp_ble_iso_chan_connect(&connectParam, connHandle, 1);
-  if (err != ESP_OK) {
-    // Drop the CIG too: the caller releases the slot, whose channel it references.
-    log_e("BLEIso: CIS connect on ACL 0x%04x failed: %d", connHandle, err);
-    s.connected.store(false, std::memory_order_release);
-    esp_ble_iso_cig_terminate(sCig);
-    sCig = nullptr;
-  }
-  return err;
-}
-#endif /* BLE_ISO_CIS_CENTRAL_SUPPORTED */
-
-#if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-// Incoming CIS request: hand out the first listening slot not yet connected, or reject.
-int onCisAccept(const esp_ble_iso_accept_info_t *info, esp_ble_iso_chan_t **chan) {
-  (void)info;
-  BLELockGuard lock(isoMtx());
-  for (int i = 0; i < kMaxChan; i++) {
-    if (sSlots[i].used.load(std::memory_order_acquire) && sSlots[i].kind == Kind::CisPeripheral && sSlots[i].chan.iso == nullptr) {
-      sSlots[i].accepted.store(true, std::memory_order_release);
-      *chan = &sSlots[i].chan;
-      return 0;
-    }
-  }
-  log_w("BLEIso: incoming CIS rejected: no listenCis() channel free");
-  return -1;
+BLEIso::Channel::operator bool() const {
+  return _impl && _impl->slot.load(std::memory_order_acquire) >= 0;
 }
 
-/**
- * @brief Accept the next incoming CIS on @p slot, registering the ISO server on first use.
- *
- * Each incoming CIS takes the first listening slot that is not connected
- * yet; the slot keeps listening after its CIS disconnects.
- */
-esp_err_t cisListen(int slot, const CisParams &p) {
-  Slot &s = prepSlot(slot, Kind::CisPeripheral);
-  setQos(s, p.returnSduSize, p.sduSize, ESP_BLE_ISO_PHY_2M, 0);
-  if (!sServerRegistered) {
-    sServer = esp_ble_iso_server_t{};
-    sServer.accept = onCisAccept;
-    esp_err_t err = esp_ble_iso_server_register(&sServer);
-    if (err != ESP_OK) {
-      log_e("BLEIso: ISO server registration failed: %d", err);
-      return err;
-    }
-    sServerRegistered = true;
+int BLEIso::Channel::slot() const {
+  if (!_impl) {
+    return -1;
   }
-  return ESP_OK;
-}
-#endif /* BLE_ISO_CIS_PERIPHERAL_SUPPORTED */
-
-#if BLE_ISO_BROADCASTER_SUPPORTED
-/**
- * @brief Create a single-BIS BIG on @p advHandle, whose extended + periodic advertising already runs.
- *
- * Registers the advertising set with the ISO layer (kept across BIGs) and
- * issues the create; completion arrives via onChanConnected().
- */
-esp_err_t bigCreate(int slot, uint8_t advHandle, const BigParams &p) {
-  if (sBigTx) {
-    log_e("BLEIso: a BIG is already broadcasting; disconnect() it first");
-    return ESP_ERR_INVALID_STATE;
-  }
-  // The ISO layer refuses a second registration of the same set: keep it across BIGs.
-  esp_err_t err;
-  if (sBigAdv != advHandle) {
-    esp_ble_iso_ext_adv_info_t advInfo = {};
-    if (sBigAdv >= 0) {
-      advInfo.adv_handle = (uint8_t)sBigAdv;
-      esp_ble_iso_big_ext_adv_delete(&advInfo);
-      sBigAdv = -1;
-    }
-    advInfo.adv_handle = advHandle;
-    err = esp_ble_iso_big_ext_adv_add(&advInfo);
-    if (err != ESP_OK) {
-      log_e("BLEIso: registering advertising set %u for the BIG failed: %d", advHandle, err);
-      return err;
-    }
-    sBigAdv = advHandle;
-  }
-
-  Slot &s = prepSlot(slot, Kind::BisBroadcaster);
-  setQos(s, p.sduSize, 0, vendorPhy(p.phy), p.rtn);
-
-  esp_ble_iso_chan_t *bis[1] = {&s.chan};
-  esp_ble_iso_big_create_param_t param = {};
-  param.bis_channels = bis;
-  param.num_bis = 1;
-  param.interval = p.sduIntervalUs;
-  param.latency = p.latencyMs;
-  param.packing = p.packing;
-  param.framing = p.framing;
-  param.encryption = packBroadcastCode(p.broadcastCode, param.bcode) > 0;
-  sBigTx = nullptr;
-  esp_ble_iso_big_t *big = nullptr;
-  err = esp_ble_iso_big_create(advHandle, &param, &big);
-  if (err != ESP_OK) {
-    log_e("BLEIso: BIG create on advertising set %u (%u us, %u octets) failed: %d", advHandle, (unsigned)p.sduIntervalUs, p.sduSize, err);
-    sBigTx = nullptr;
-  } else {
-    sBigTx = big;
-    // Mark busy before any async completion runs: until onDisconnected clears
-    // it, end()/allDisconnected() treat the BIG as live. Cleared on failure
-    // (no BIG) and on disconnect, mirroring the CIS connect window.
-    s.connected.store(true, std::memory_order_release);
-  }
-  return err;
-}
-#endif /* BLE_ISO_BROADCASTER_SUPPORTED */
-
-#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-/**
- * @brief Arm a BIG sync for BIS @p bisIndex; no host call here.
- *
- * doBigSync() issues the sync on the next BIGInfo report. Only one sync can
- * be armed; arming again replaces it.
- *
- * @param syncTimeout BIG sync timeout (N * 10 ms).
- */
-esp_err_t bigSyncArm(int slot, uint8_t bisIndex, const BigParams &p, uint16_t syncTimeout) {
-  setQos(prepSlot(slot, Kind::BisReceiver), 0, p.sduSize, ESP_BLE_ISO_PHY_2M, 0);
-  BLELockGuard lock(isoMtx());
-  sSync = SyncArm{};
-  sSync.slot = slot;
-  sSync.bitfield = ESP_BLE_ISO_BIS_INDEX_BIT(bisIndex);
-  sSync.timeout = syncTimeout;
-  packBroadcastCode(p.broadcastCode, sSync.bcode);
-  sSync.armed = true;
-  return ESP_OK;
+  return _impl->slot.load(std::memory_order_acquire);
 }
 
-/**
- * @brief Issue the armed BIG sync from a BIGInfo report (once per arm).
- *
- * @param nse        Subevents per BIS event, used as the max subevents to receive.
- * @param encryption From the BIGInfo; the armed code is applied only when set.
- */
-void doBigSync(uint16_t syncHandle, uint8_t nse, bool encryption) {
-  int slot = -1;
-  uint32_t bitfield = 0;
-  uint16_t timeout = 0;
-  uint8_t bcode[ESP_BLE_ISO_BROADCAST_CODE_SIZE] = {};
-  {
-    BLELockGuard lock(isoMtx());
-    if (!sSync.armed || sSync.syncing || sSync.synced || !slotOk(sSync.slot)) {
-      return;
-    }
-    slot = sSync.slot;
-    bitfield = sSync.bitfield;
-    timeout = sSync.timeout;
-    memcpy(bcode, sSync.bcode, sizeof(bcode));
-    sSync.syncing = true;
+bool BLEIso::Channel::isConnected() const {
+  if (!_impl) {
+    return false;
   }
-
-  esp_ble_iso_chan_t *bis[1] = {&sSlots[slot].chan};
-  esp_ble_iso_big_sync_param_t param = {};
-  param.bis_channels = bis;
-  param.num_bis = 1;
-  param.bis_bitfield = bitfield;
-  param.mse = nse;
-  param.sync_timeout = timeout;
-  // The BIG's advertised encryption flag is authoritative; the armed
-  // Broadcast Code is only applied when the group is actually encrypted.
-  param.encryption = encryption;
-  if (encryption) {
-    memcpy(param.bcode, bcode, ESP_BLE_ISO_BROADCAST_CODE_SIZE);
-  }
-  esp_ble_iso_big_t *big = nullptr;
-  esp_err_t err = esp_ble_iso_big_sync(syncHandle, &param, &big);
-  esp_ble_iso_big_t *orphan = nullptr;
-  {
-    BLELockGuard lock(isoMtx());
-    sSync.syncing = false;
-    if (err != ESP_OK) {
-      // Left armed: the next BIGInfo report retries.
-      log_e("BLEIso: BIG sync to BIS bitfield 0x%08lx on PA sync 0x%04x failed: %d", (unsigned long)bitfield, syncHandle, err);
-      return;
-    }
-    if (!sSync.armed || sSync.slot != slot) {
-      // Concurrent disconnect()/end() disarmed while esp_ble_iso_big_sync was in flight.
-      orphan = big;
-    } else {
-      sSync.big = big;
-      sSync.synced = true;
-    }
-  }
-  if (orphan) {
-    (void)esp_ble_iso_big_terminate(orphan);
-  }
-}
-#endif /* BLE_ISO_SYNC_RECEIVER_SUPPORTED */
-
-/*
- * GAP app callback: installed with esp_ble_iso_common_init when this transport
- * owns the host, or fed by bleIsoOnGapEvent() when audio owns it. Only the
- * Receiver needs it: the armed sync is issued on the first BIGInfo report.
- * A lost BIG sync clears `synced` (onChanDisconnected), so it is issued again
- * on the next BIGInfo once the host is synced to the train again.
- */
-void onGapEvent(esp_ble_iso_gap_app_event_t *event) {
-  if (event == nullptr || !sActive.load(std::memory_order_acquire)) {
-    return;
-  }
-#if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-  if (event->type == ESP_BLE_ISO_GAP_EVENT_BIGINFO_RECV) {
-    doBigSync(event->biginfo_recv.sync_handle, event->biginfo_recv.nse, event->biginfo_recv.encryption != 0);
-  }
-#endif
+  const int s = _impl->slot.load(std::memory_order_acquire);
+  BLEIso::Impl *t = _impl->transport;
+  return t->linkLive(s, _impl->gen) && t->slots[s].connected.load(std::memory_order_acquire);
 }
 
-}  // namespace
-
-// --------------------------------------------------------------------------
-// Channel
-// --------------------------------------------------------------------------
-
-bool Channel::isConnected() const {
-  const int s = _slot.load(std::memory_order_acquire);
-  return slotOk(s) && sSlots[s].connected.load(std::memory_order_acquire);
+bool BLEIso::Channel::canSend() const {
+  if (!_impl) {
+    return false;
+  }
+  const int s = _impl->slot.load(std::memory_order_acquire);
+  BLEIso::Impl *t = _impl->transport;
+  return t->linkLive(s, _impl->gen) && t->slots[s].hasTx.load(std::memory_order_relaxed);
 }
 
-bool Channel::canSend() const {
-  const int s = _slot.load(std::memory_order_acquire);
-  return slotOk(s) && sSlots[s].hasTx.load(std::memory_order_relaxed);
-}
-
-BTStatus Channel::send(const uint8_t *sdu, uint16_t len) {
-  return send(sdu, len, _nextSeq.load(std::memory_order_relaxed));
+BTStatus BLEIso::Channel::send(const uint8_t *sdu, uint16_t len) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  return send(sdu, len, _impl->_nextSeq.load(std::memory_order_relaxed));
 }
 
 // Hot path: no logging, the caller decides what a refused SDU means.
 // A receive-only build (CONFIG_BT_ISO_TX unset) has no Tx path.
-BTStatus Channel::send(const uint8_t *sdu, uint16_t len, uint16_t seqNum) {
-  const int slot = _slot.load(std::memory_order_acquire);
-  if (!slotOk(slot) || !BLE.isInitialized() || BLE.isEnding()) {
+BTStatus BLEIso::Channel::send(const uint8_t *sdu, uint16_t len, uint16_t seqNum) {
+  if (!_impl || !BLE.isInitialized() || BLE.isEnding()) {
     return BTStatus::InvalidState;
   }
-  Slot &s = sSlots[slot];
+  BLEIso::Impl *t = _impl->transport;
+  const int slot = _impl->slot.load(std::memory_order_acquire);
+  if (!t->linkLive(slot, _impl->gen)) {
+    return BTStatus::InvalidState;
+  }
+  BLEIso::Impl::Slot &s = t->slots[slot];
   if (!s.hasTx.load(std::memory_order_relaxed) || !s.connected.load(std::memory_order_acquire)) {
     return BTStatus::Fail;
   }
@@ -857,7 +1017,7 @@ BTStatus Channel::send(const uint8_t *sdu, uint16_t len, uint16_t seqNum) {
   if (esp_ble_iso_chan_send(&s.chan, sdu, len, seqNum) != ESP_OK) {
     return BTStatus::Fail;
   }
-  _nextSeq.store((uint16_t)(seqNum + 1), std::memory_order_relaxed);
+  _impl->_nextSeq.store((uint16_t)(seqNum + 1), std::memory_order_relaxed);
   return BTStatus::OK;
 #else
   (void)sdu;
@@ -866,15 +1026,20 @@ BTStatus Channel::send(const uint8_t *sdu, uint16_t len, uint16_t seqNum) {
 #endif
 }
 
-BTStatus Channel::disconnect() {
-  const int slot = _slot.load(std::memory_order_acquire);
-  if (!slotOk(slot) || !BLE.isInitialized() || BLE.isEnding()) {
+BTStatus BLEIso::Channel::disconnect() {
+  if (!_impl || !BLE.isInitialized() || BLE.isEnding()) {
     return BTStatus::InvalidState;
   }
+  BLEIso::Impl *t = _impl->transport;
+  const int slot = _impl->slot.load(std::memory_order_acquire);
+  if (!t->linkLive(slot, _impl->gen)) {
+    return BTStatus::InvalidState;
+  }
+  BLEIso::Impl::Slot &sl = t->slots[slot];
   esp_err_t err = ESP_ERR_INVALID_STATE;
-  switch (sSlots[slot].kind) {
+  switch (sl.kind) {
 #if ISO_UNICAST
-    case Kind::CisCentral: err = esp_ble_iso_chan_disconnect(&sSlots[slot].chan); break;
+    case Kind::CisCentral: err = esp_ble_iso_chan_disconnect(&sl.chan); break;
     case Kind::CisPeripheral: {
       bool neverAccepted = false;
       {
@@ -882,7 +1047,6 @@ BTStatus Channel::disconnect() {
         // holding isoMtx() across esp_ble_iso_* calls, so the disconnect
         // below runs unlocked (see "Never held across esp_ble_iso_*" above).
         BLELockGuard lock(isoMtx());
-        Slot &sl = sSlots[slot];
         if (sl.chan.iso == nullptr && !sl.accepted.load(std::memory_order_acquire)) {
           // Never accepted anything: stop listening and free the slot instead
           // of erroring on an idle channel. A slot that already served (or is
@@ -891,22 +1055,24 @@ BTStatus Channel::disconnect() {
         }
       }
       if (neverAccepted) {
-        releaseSlot(slot);
+        t->releaseSlot(slot);
         return BTStatus::OK;
       }
-      err = esp_ble_iso_chan_disconnect(&sSlots[slot].chan);
+      err = esp_ble_iso_chan_disconnect(&sl.chan);
       break;
     }
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-    case Kind::BisBroadcaster:
-      if (esp_ble_iso_big_t *big = sBigTx.load(std::memory_order_acquire)) {
+    case Kind::BisBroadcaster: {
+      esp_ble_iso_big_t *big = t->bigTx.load(std::memory_order_acquire);
+      if (big) {
         err = esp_ble_iso_big_terminate(big);
         if (err == ESP_OK) {
-          sBigTx.store(nullptr, std::memory_order_release);
+          t->bigTx.store(nullptr, std::memory_order_release);
         }
       }
       break;
+    }
 #endif
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
     case Kind::BisReceiver: {
@@ -915,10 +1081,10 @@ BTStatus Channel::disconnect() {
       esp_ble_iso_big_t *toTerminate = nullptr;
       {
         BLELockGuard lock(isoMtx());
-        sSync.armed = false;
-        toTerminate = sSync.big;
-        sSync.big = nullptr;
-        sSync.synced = false;
+        t->sync.armed = false;
+        toTerminate = t->sync.big;
+        t->sync.big = nullptr;
+        t->sync.synced = false;
       }
       err = toTerminate ? esp_ble_iso_big_terminate(toTerminate) : ESP_OK;
       break;
@@ -933,51 +1099,82 @@ BTStatus Channel::disconnect() {
   return BTStatus::OK;
 }
 
-Channel &Channel::onConnected(ConnectedCb cb) {
-  BLELockGuard lock(isoMtx());
-  _onConnected = std::move(cb);
+BLEIso::Channel &BLEIso::Channel::onConnected(ConnectedCb cb) {
+  if (_impl) {
+    BLELockGuard lock(isoMtx());
+    _impl->onConnected = std::move(cb);
+  }
   return *this;
 }
 
-Channel &Channel::onDisconnected(DisconnectedCb cb) {
-  BLELockGuard lock(isoMtx());
-  _onDisconnected = std::move(cb);
+BLEIso::Channel &BLEIso::Channel::onDisconnected(DisconnectedCb cb) {
+  if (_impl) {
+    BLELockGuard lock(isoMtx());
+    _impl->onDisconnected = std::move(cb);
+  }
   return *this;
 }
 
-Channel &Channel::onReceive(ReceiveCb cb) {
-  BLELockGuard lock(isoMtx());
-  _onReceive = std::move(cb);
+BLEIso::Channel &BLEIso::Channel::onReceive(ReceiveCb cb) {
+  if (_impl) {
+    BLELockGuard lock(isoMtx());
+    _impl->onReceive = std::move(cb);
+  }
   return *this;
 }
 
-Channel &Channel::onSent(SentCb cb) {
-  BLELockGuard lock(isoMtx());
-  _onSent = std::move(cb);
+BLEIso::Channel &BLEIso::Channel::onSent(SentCb cb) {
+  if (_impl) {
+    BLELockGuard lock(isoMtx());
+    _impl->onSent = std::move(cb);
+  }
   return *this;
 }
 
-void Channel::resetCallbacks() {
+void BLEIso::Channel::resetCallbacks() {
+  if (!_impl) {
+    return;
+  }
   BLELockGuard lock(isoMtx());
-  _onConnected = nullptr;
-  _onDisconnected = nullptr;
-  _onReceive = nullptr;
-  _onSent = nullptr;
+  _impl->onConnected = nullptr;
+  _impl->onDisconnected = nullptr;
+  _impl->onReceive = nullptr;
+  _impl->onSent = nullptr;
 }
 
 // --------------------------------------------------------------------------
-// Lifecycle
+// BLEIso (controller; owns the transport Impl)
 // --------------------------------------------------------------------------
 
-BTStatus end(); // Defined below; begin() retries it after a failed teardown.
+BLEIso::operator bool() const {
+  return (bool)_impl;
+}
 
 // Claims the host unless the LE Audio engine already owns it (then ISO rides on it).
-BTStatus begin() {
+BTStatus BLEIso::begin() {
+  if (!_impl || !BLE.isInitialized() || BLE.isEnding()) {
+    return BTStatus::InvalidState;
+  }
+  return _impl->begin();
+}
+
+BTStatus BLEIso::end() {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  return _impl->end();
+}
+
+bool BLEIso::isActive() const {
+  return _impl && _impl->active.load(std::memory_order_acquire);
+}
+
+BTStatus BLEIso::Impl::begin() {
   if (!BLE.isInitialized() || BLE.isEnding()) {
     return BTStatus::InvalidState;
   }
-  if (sActive.load(std::memory_order_acquire)) {
-    if (!sEndFailed.load(std::memory_order_acquire)) {
+  if (active.load(std::memory_order_acquire)) {
+    if (!endFailed.load(std::memory_order_acquire)) {
       return BTStatus::OK;
     }
     // The previous end() left ISO resources behind; retry the teardown
@@ -999,17 +1196,17 @@ BTStatus begin() {
     sOwnsHost.store(true, std::memory_order_release);
   }
   resetState();
-  sActive.store(true, std::memory_order_release);
-  sEndFailed.store(false, std::memory_order_release);
+  active.store(true, std::memory_order_release);
+  endFailed.store(false, std::memory_order_release);
   log_i("BLEIso: transport up (%s host)", sOwnsHost.load(std::memory_order_relaxed) ? "own" : "shared LE Audio");
   return BTStatus::OK;
 }
 
-BTStatus end() {
-  if (!sActive.load(std::memory_order_acquire)) {
+BTStatus BLEIso::Impl::end() {
+  if (!active.load(std::memory_order_acquire)) {
     return BTStatus::OK;
   }
-  if (bleInStackCallbackTask()) {
+  if (BLETask::inStackCallbackTask()) {
     log_e("BLEIso: end() cannot run from a stack callback; defer it to loop()");
     return BTStatus::Busy;
   }
@@ -1019,19 +1216,19 @@ BTStatus end() {
     // Atomics only: stack-owned chan.state/iso cannot be read safely from this
     // (user) task while the host task may mutate them; connected/accepted are
     // the cross-task liveness bits (see isIdle()).
-    if (!sSlots[i].used.load(std::memory_order_acquire)
-        || (sSlots[i].kind != Kind::CisCentral && sSlots[i].kind != Kind::CisPeripheral)
-        || (!sSlots[i].connected.load(std::memory_order_acquire) && !sSlots[i].accepted.load(std::memory_order_acquire))) {
+    if (!slots[i].used.load(std::memory_order_acquire)
+        || (slots[i].kind != Kind::CisCentral && slots[i].kind != Kind::CisPeripheral)
+        || (!slots[i].connected.load(std::memory_order_acquire) && !slots[i].accepted.load(std::memory_order_acquire))) {
       continue;
     }
-    esp_err_t err = esp_ble_iso_chan_disconnect(&sSlots[i].chan);
+    esp_err_t err = esp_ble_iso_chan_disconnect(&slots[i].chan);
     if (err != ESP_OK) {
       log_e("BLEIso: channel %d disconnect during end failed: %d", i, err);
     }
   }
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-  if (esp_ble_iso_big_t *big = sBigTx.load(std::memory_order_acquire)) {
+  if (esp_ble_iso_big_t *big = bigTx.load(std::memory_order_acquire)) {
     esp_err_t err = esp_ble_iso_big_terminate(big);
     if (err != ESP_OK) {
       log_e("BLEIso: BIG terminate during end failed: %d", err);
@@ -1043,10 +1240,10 @@ BTStatus end() {
     esp_ble_iso_big_t *toTerminate = nullptr;
     {
       BLELockGuard lock(isoMtx());
-      sSync.armed = false;
-      toTerminate = sSync.big;
-      sSync.big = nullptr;
-      sSync.synced = false;
+      sync.armed = false;
+      toTerminate = sync.big;
+      sync.big = nullptr;
+      sync.synced = false;
     }
     if (toTerminate) {
       esp_err_t err = esp_ble_iso_big_terminate(toTerminate);
@@ -1058,39 +1255,39 @@ BTStatus end() {
 #endif
 
   if (!waitDisconnected()) {
-    sEndFailed.store(true, std::memory_order_release);
+    endFailed.store(true, std::memory_order_release);
     return BTStatus::Timeout;
   }
 
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
-  if (sCig) {
-    esp_err_t err = esp_ble_iso_cig_terminate(sCig);
+  if (cig) {
+    esp_err_t err = esp_ble_iso_cig_terminate(cig);
     if (err != ESP_OK) {
       log_e("BLEIso: CIG terminate during end failed: %d", err);
-      sEndFailed.store(true, std::memory_order_release);
+      endFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
-    sCig = nullptr;
+    cig = nullptr;
   }
 #endif
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-  if (sServerRegistered) {
-    esp_err_t err = esp_ble_iso_server_unregister(&sServer);
+  if (serverRegistered) {
+    esp_err_t err = esp_ble_iso_server_unregister(&server);
     if (err != ESP_OK) {
       log_e("BLEIso: server unregister during end failed: %d", err);
-      sEndFailed.store(true, std::memory_order_release);
+      endFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
   }
 #endif
 #if BLE_ISO_BROADCASTER_SUPPORTED
-  if (sBigAdv >= 0) {
+  if (bigAdv >= 0) {
     esp_ble_iso_ext_adv_info_t advInfo = {};
-    advInfo.adv_handle = (uint8_t)sBigAdv;
+    advInfo.adv_handle = (uint8_t)bigAdv;
     esp_err_t err = esp_ble_iso_big_ext_adv_delete(&advInfo);
     if (err != ESP_OK) {
       log_e("BLEIso: advertising set release during end failed: %d", err);
-      sEndFailed.store(true, std::memory_order_release);
+      endFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
   }
@@ -1099,19 +1296,15 @@ BTStatus end() {
     esp_err_t err = esp_ble_iso_common_deinit(nullptr);
     if (err != ESP_OK) {
       log_e("BLEIso: ISO deinit failed: %d (disconnect every CIS/BIS first)", err);
-      sEndFailed.store(true, std::memory_order_release);
+      endFailed.store(true, std::memory_order_release);
       return BTStatus::Fail;
     }
     sOwnsHost.store(false, std::memory_order_release);
   }
   resetState();
-  sActive.store(false, std::memory_order_release);
-  sEndFailed.store(false, std::memory_order_release);
+  active.store(false, std::memory_order_release);
+  endFailed.store(false, std::memory_order_release);
   return BTStatus::OK;
-}
-
-bool isActive() {
-  return sActive.load(std::memory_order_acquire);
 }
 
 // --------------------------------------------------------------------------
@@ -1119,55 +1312,68 @@ bool isActive() {
 // --------------------------------------------------------------------------
 
 #if BLE_ISO_CIS_CENTRAL_SUPPORTED
-Channel *connectCis(uint16_t connHandle, const CisParams &p) {
+BLEIso::Channel BLEIso::connectCis(uint16_t connHandle, const CisParams &p) {
+  if (!_impl) {
+    return Channel();
+  }
   // Validate before the CIG exists: creating it first would waste HCI and
   // race end(), and a recycled handle could address the wrong peer.
-  if (connHandle == 0xFFFF || !bleIsoAclHandleLive(connHandle)) {
+  if (connHandle == 0xFFFF || !BLEIsoInternal::aclHandleLive(connHandle)) {
     log_e("BLEIso: connectCis(): no live ACL for handle %u (passed a disconnected client?)", connHandle);
-    return nullptr;
+    return Channel();
   }
-  Channel *c = takeChannel("connectCis", Kind::CisCentral);
+  Channel c = _impl->takeChannel("connectCis", Kind::CisCentral);
   if (!c) {
-    return nullptr;
+    return Channel();
   }
-  return finish(c, cisConnect(c->slot(), connHandle, p), "CIS connect");
+  return _impl->finish(c, _impl->cisConnect(c._impl->slot.load(std::memory_order_acquire), connHandle, p), "CIS connect");
 }
 #endif
 
 #if BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-Channel *listenCis(const CisParams &p) {
-  Channel *c = takeChannel("listenCis", Kind::None);
-  if (!c) {
-    return nullptr;
+BLEIso::Channel BLEIso::listenCis(const CisParams &p) {
+  if (!_impl) {
+    return Channel();
   }
-  return finish(c, cisListen(c->slot(), p), "CIS listen");
+  Channel c = _impl->takeChannel("listenCis", Kind::None);
+  if (!c) {
+    return Channel();
+  }
+  return _impl->finish(c, _impl->cisListen(c._impl->slot.load(std::memory_order_acquire), p), "CIS listen");
 }
 #endif
 
 #if BLE_ISO_BROADCASTER_SUPPORTED
-Channel *createBig(uint8_t advHandle, const BigParams &p) {
-  Channel *c = takeChannel("createBig", Kind::BisBroadcaster);
-  if (!c) {
-    return nullptr;
+BLEIso::Channel BLEIso::createBig(uint8_t advHandle, const BigParams &p) {
+  if (!_impl) {
+    return Channel();
   }
-  return finish(c, bigCreate(c->slot(), advHandle, p), "BIG create");
+  Channel c = _impl->takeChannel("createBig", Kind::BisBroadcaster);
+  if (!c) {
+    return Channel();
+  }
+  return _impl->finish(c, _impl->bigCreate(c._impl->slot.load(std::memory_order_acquire), advHandle, p), "BIG create");
 }
 #endif
 
 // Sync timeout 100 x 10 ms = 1 s without a BIS PDU before the sync is lost.
 #if BLE_ISO_SYNC_RECEIVER_SUPPORTED
-Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
+BLEIso::Channel BLEIso::syncBig(uint8_t bisIndex, const BigParams &p) {
+  if (!_impl) {
+    return Channel();
+  }
   if (bisIndex == 0 || bisIndex > 31) {
     // ESP_BLE_ISO_BIS_INDEX_BIT(bisIndex) is 1UL << (bisIndex - 1); reject the
     // reserved index 0 and anything that would shift out of range (UB).
     log_e("BLEIso: syncBig() BIS index %u out of range (1..31)", bisIndex);
-    return nullptr;
+    return Channel();
   }
-  Channel *c = takeChannel("syncBig", Kind::BisReceiver);
+  Channel c = _impl->takeChannel("syncBig", Kind::BisReceiver);
   if (!c) {
-    return nullptr;
+    return Channel();
   }
-  return finish(c, bigSyncArm(c->slot(), bisIndex, p, /*syncTimeout=*/100), "BIG sync arm");
+  return _impl->finish(c, _impl->bigSyncArm(c._impl->slot.load(std::memory_order_acquire), bisIndex, p, /*syncTimeout=*/100),
+                       "BIG sync arm");
 }
 #endif
 
@@ -1175,75 +1381,128 @@ Channel *syncBig(uint8_t bisIndex, const BigParams &p) {
 // Feature-disabled factory stubs
 // ==========================================================================
 
+BLEIso::Channel BLEIso::connectCis(uint16_t connHandle) {
+  return connectCis(connHandle, CisParams{});
+}
+
 #if !BLE_ISO_CIS_CENTRAL_SUPPORTED
-Channel *connectCis(uint16_t, const CisParams &) {
+BLEIso::Channel BLEIso::connectCis(uint16_t, const CisParams &) {
   log_e("BLEIso: connectCis() is not enabled in this build (CONFIG_BT_ISO_CENTRAL)");
-  return nullptr;
+  return Channel();
 }
 #endif
+
+BLEIso::Channel BLEIso::listenCis() {
+  return listenCis(CisParams{});
+}
 
 #if !BLE_ISO_CIS_PERIPHERAL_SUPPORTED
-Channel *listenCis(const CisParams &) {
+BLEIso::Channel BLEIso::listenCis(const CisParams &) {
   log_e("BLEIso: listenCis() is not enabled in this build (CONFIG_BT_ISO_PERIPHERAL)");
-  return nullptr;
+  return Channel();
 }
 #endif
+
+BLEIso::Channel BLEIso::createBig(uint8_t advHandle) {
+  return createBig(advHandle, BigParams{});
+}
 
 #if !BLE_ISO_BROADCASTER_SUPPORTED
-Channel *createBig(uint8_t, const BigParams &) {
+BLEIso::Channel BLEIso::createBig(uint8_t, const BigParams &) {
   log_e("BLEIso: createBig() is not enabled in this build (CONFIG_BT_ISO_BROADCASTER)");
-  return nullptr;
+  return Channel();
 }
 #endif
+
+BLEIso::Channel BLEIso::syncBig(uint8_t bisIndex) {
+  return syncBig(bisIndex, BigParams{});
+}
 
 #if !BLE_ISO_SYNC_RECEIVER_SUPPORTED
-Channel *syncBig(uint8_t, const BigParams &) {
+BLEIso::Channel BLEIso::syncBig(uint8_t, const BigParams &) {
   log_e("BLEIso: syncBig() is not enabled in this build (CONFIG_BT_ISO_SYNC_RECEIVER)");
-  return nullptr;
+  return Channel();
 }
 #endif
 
-}  // namespace BLEIso
+// --------------------------------------------------------------------------
+// Controller singleton (mirrors BLEAudio's audioControllerSlot)
+// --------------------------------------------------------------------------
+
+namespace {
+
+BLEIso &controllerSlot() {
+  static BLEIso s;
+  return s;
+}
+
+}  // namespace
+
+std::atomic<BLEIso::Impl *> &transportSingleton() {
+  static std::atomic<BLEIso::Impl *> t{nullptr};
+  return t;
+}
+
+BLEIso BLEClass::getIsoController() {
+  BLELockGuard lifecycle(_impl ? _impl->lifecycleMtx : nullptr);
+  if (!isInitialized() || !_impl || _impl->ending) {
+    log_e("getIsoController: BLE not initialized");
+    return BLEIso();
+  }
+  BLEIso &slot = controllerSlot();
+  if (!slot) {
+    slot = BLEIso(std::make_shared<BLEIso::Impl>());
+    transportSingleton().store(slot.impl(), std::memory_order_release);
+  }
+  return slot;
+}
+
+// Called from the ISO pre-end hook (see isoPreEndTrampoline in BLE.cpp);
+// silent when no controller was ever minted.
+void BLEIsoInternal::preEnd() {
+  BLEIso retained = controllerSlot();
+  if (retained) {
+    (void)retained.end();
+  }
+}
+
+bool BLEIsoInternal::isActive() {
+  BLEIso retained = controllerSlot();
+  return retained && retained.isActive();
+}
 
 // --------------------------------------------------------------------------
 // Host hand-over (BLEIsoHost.h, C linkage)
 // --------------------------------------------------------------------------
 
 bool bleIsoOwnsHost(void) {
-  return BLEIso::sOwnsHost.load(std::memory_order_acquire);
+  return sOwnsHost.load(std::memory_order_acquire);
 }
 
 bool bleIsoHostUp(void) {
-  return BLEIso::sOwnsHost.load(std::memory_order_acquire) || BLEIso::sSharedHost.load(std::memory_order_acquire);
+  return sOwnsHost.load(std::memory_order_acquire) || sSharedHost.load(std::memory_order_acquire);
 }
 
 void bleIsoAttachShared(bool attached) {
-  BLEIso::sSharedHost.store(attached, std::memory_order_release);
-  if (!attached && BLEIso::sActive.load(std::memory_order_acquire) && !BLEIso::sOwnsHost.load(std::memory_order_acquire)) {
+  sSharedHost.store(attached, std::memory_order_release);
+  // Detach only what exists: with no minted controller there can be no ISO
+  // channel, so detaching while the LE Audio engine owns the host is a no-op.
+  BLEIso::Impl *t = transportSingleton().load(std::memory_order_acquire);
+  if (!attached && t != nullptr && t->active.load(std::memory_order_acquire) && !sOwnsHost.load(std::memory_order_acquire)) {
     // The audio engine's deinit already released the ISO layer. Complete the
     // attached raw channels with a reason first: unlike end(), which
     // disconnects natively (real reasons), and begin(), whose documented
     // contract drops previous-session channels, the audio-end() path would
     // otherwise lose them silently while the app still holds the channels.
     // 0x16 = terminated by the local host (no controller event follows).
-    // Only complete slots that actually held a CIS/BIS; idle never-accepted
-    // listen slots are dropped silently (disconnect() on them is also silent).
-    for (int i = 0; i < BLEIso::kMaxChan; i++) {
-      if (BLEIso::sSlots[i].used.load(std::memory_order_acquire) &&
-          (BLEIso::sSlots[i].connected.load(std::memory_order_acquire) ||
-           BLEIso::sSlots[i].accepted.load(std::memory_order_acquire))) {
-        BLEIso::ChannelAccess::disconnected(BLEIso::sChannels[i], 0x16);
-      }
-    }
-    BLEIso::resetState();
-    BLEIso::sActive.store(false, std::memory_order_release);
+    t->attachSharedDone();
   }
 }
 
 // Ignored unless shared: when this transport owns the host, onGapEvent is installed directly.
 void bleIsoOnGapEvent(void *event) {
-  if (BLEIso::sSharedHost.load(std::memory_order_acquire)) {
-    BLEIso::onGapEvent(static_cast<esp_ble_iso_gap_app_event_t *>(event));
+  if (sSharedHost.load(std::memory_order_acquire)) {
+    BLEIso::Impl::onGapEvent(static_cast<esp_ble_iso_gap_app_event_t *>(event));
   }
 }
 
