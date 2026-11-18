@@ -20,7 +20,7 @@
 #include "esp32-hal-i2c.h"
 #include "pins_arduino.h"
 
-#define ES8311_I2C_BUS        0
+#define ES8311_I2C_BUS        1
 #define ES8311_I2C_TIMEOUT_MS 100
 
 namespace {
