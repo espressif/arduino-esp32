@@ -59,8 +59,11 @@ static const uint8_t kReportMap[] = {
 };
 // clang-format on
 
+// Report payload sent over GATT notifications. The Report ID is not part of
+// this payload: it is carried by the Report Reference descriptor (0x2908) of
+// the report characteristic. Including it here would shift every field by one
+// byte on the host side.
 struct __attribute__((packed)) GamepadReport {
-  uint8_t reportId;
   int8_t x;
   int8_t y;
   uint8_t buttons;
@@ -71,7 +74,6 @@ volatile bool deviceConnected = false;
 
 void sendReport(int8_t x, int8_t y, uint8_t buttons) {
   GamepadReport rpt;
-  rpt.reportId = 1;
   rpt.x = x;
   rpt.y = y;
   rpt.buttons = buttons;
