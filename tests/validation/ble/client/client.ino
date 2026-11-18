@@ -1595,7 +1595,17 @@ void setup() {
         noMitmEnc = ci2.isEncrypted();
         noMitmAuth = ci2.isAuthenticated();
       }
-      Serial.printf("[CLIENT] Phase10 noMitm enc=%d auth=%d\n", (int)noMitmEnc, (int)noMitmAuth);
+      // Strictness gate: the S31 split-controller Bluedroid stack ignores
+      // the runtime AUTHEN_REQ update (leg 2 still pairs with MITM), so the
+      // auth==0 assertion cannot hold there yet. Everywhere else an
+      // authenticated key here proves startSecurity() forced MITM.
+      // TODO(s31-bt): drop the carve-out once the S31 BTA honors runtime
+      // authreq updates; the assert will then cover it too.
+      bool mitmStrict = true;
+#if defined(CONFIG_IDF_TARGET_ESP32S31)
+      mitmStrict = strcmp(BLE.getStackName(), "Bluedroid") != 0;
+#endif
+      Serial.printf("[CLIENT] Phase10 noMitm enc=%d auth=%d strict=%d\n", (int)noMitmEnc, (int)noMitmAuth, (int)mitmStrict);
       // Restore the authenticated default and a live link for phase 11.
       secNoMitm.setAuthenticationMode(true, true, true);
       (void)secNoMitm.deleteAllBonds();
