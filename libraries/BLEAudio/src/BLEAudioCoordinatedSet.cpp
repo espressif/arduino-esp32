@@ -156,10 +156,6 @@ BTStatus BLEAudioCoordinatedSetMember::setSirk(const uint8_t sirk[BLE_AUDIO_SIRK
     log_e("CoordinatedSet: setSirk() needs a 16-octet SIRK");
     return BTStatus::InvalidParam;
   }
-  if (impl.registered) {
-    log_e("CoordinatedSet: setSirk() before audio.begin()");
-    return BTStatus::InvalidState;
-  }
   memcpy(impl.sirk, sirk, BLE_AUDIO_SIRK_SIZE);
   impl.sirkCustom = true;
   if (impl.registered) {

@@ -137,7 +137,11 @@ Three invariants keep the boundary clean:
   `on<Event>Cb` callback storage guarded by `BLESharedMutex mtx`. Because roles
   are completely host-agnostic (their backend is the C engine), a role's
   `struct Impl` lives directly in its `BLEAudio<Role>.cpp` file rather than
-  splitting into empty `.nimble.h` / `.bluedroid.h` shells.
+  splitting into empty `.nimble.h` / `.bluedroid.h` shells. Roles friend both
+  `BLEAudio` and `BLEAudioImplCommon`: the BAP data-plane and CAP/CSIP
+  factories mint handles directly in `BLEAudio::create*()`, while the
+  control/identity roles mint through `BLEAudioImplCommon::createStagedRole`;
+  both friends are load-bearing (each construction site needs one).
 - **`BLEAudioPlayer` and `BLEAudioRecorder`** are user-constructed local codec
   endpoints (analogous to `BLEStream` in `BLE`): sketches instantiate them
   directly, configure `setPCMSink()` / `setPCMSource()` or I2S pins, call

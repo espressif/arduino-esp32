@@ -446,8 +446,10 @@ service-init calls are non-idempotent). The coordinator has two modes:
   also works: the audio commit adopts the standalone-published table and republishes it
   once (GAP must be idle; `Busy` otherwise).
 
-Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()` returns
-`bleAudioEngineIsInitialized()` (false when the engine is not compiled in), so audio mode is exactly the window
+Which mode is active is *derived*, not pushed: `BLEGattDatabase::audioModeActive()`
+calls the `bleAudioGattActive()` weak hook, which the linked BLEAudio backend
+defines as `bleAudioEngineIsInitialized()` (false when the engine is not
+compiled in, since the hook is then null), so audio mode is exactly the window
 between `audio.begin()` (engine init) and `audio.end()`. The dependency points one way — the NimBLE-only coordinator observes the
 host-agnostic engine through weak hooks in `core/BLEAudioHooks.h`. In `BLEAudio`, `src/engine/` is 100% pure C, and
 all host-specific glue lives in the single backend pair `BLEAudio.nimble.{h,cpp}` and `BLEAudio.bluedroid.{h,cpp}`.

@@ -24,8 +24,11 @@
  * uses `<BLE.h>` does not compile `BLEAudio`. These hooks are declared weak, so
  * the core code can call them unconditionally and the linker resolves them to
  * null when the BLEAudio library is not part of the build. BLEAudio defines
- * `bleAudioPreEndHook` in `BLEAudio.cpp` and the NimBLE GATT hooks in
- * `BLEAudio.nimble.cpp`.
+ * `bleAudioPreEndHook` in `BLEAudio.cpp` and the GATT pair
+ * (`bleAudioGattActive` / `bleAudioGattFrozen`) in both
+ * `BLEAudio.nimble.cpp` and `BLEAudio.bluedroid.cpp`; only NimBLE needs the
+ * GATT event forwarder (`bleAudioForwardHostGattEvent` in
+ * `BLEAudio.nimble.cpp`), Bluedroid feeds the engine through its own GATTS/GATTC apps.
  */
 
 #include "core/BLEGuards.h"

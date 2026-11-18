@@ -19,6 +19,7 @@
 
 #include <vector>
 #include "BLEAudioUnicastServer.h"
+#include "core/BLEMutex.h"
 #include "core/BLEBackend.h"
 #include "BLEAudioBackend.h"
 #include "core/BLEImplHelpers.h"
@@ -62,6 +63,7 @@ static constexpr uint32_t kMediaPresets =
 
 struct BLEAudioUnicastServer::Impl {
   std::shared_ptr<BLEAudio::Impl> audio;  ///< Owning controller (defaults, role list).
+  BLESharedMutex mtx;                     ///< Guards the staged configuration below.
   uint8_t sinkStreams = 1;                ///< Sink ASEs to register.
   uint8_t sourceStreams = 1;              ///< Source ASEs to register.
   uint8_t maxChannels = 1;                ///< Channels per ASE advertised in the PAC.
@@ -104,6 +106,7 @@ struct BLEAudioUnicastServer::Impl {
    * preferences use the BAP low-latency defaults (RTN 2, 10 ms, 2M PHY).
    */
   BTStatus apply() {
+    BLELockGuard lock(mtx.get());
     ble_audio_pac_t pac;
     bleAudioPacFromPresets(presets, maxChannels, &pac);
     if (sinkStreams) {
@@ -149,6 +152,7 @@ BLEAudioUnicastServer::operator bool() const {
 /** The ASE counts are registered with ASCS, so they can only change before start(). */
 BTStatus BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSinkStreams() after audio.begin()");
     return BTStatus::InvalidState;
@@ -160,6 +164,7 @@ BTStatus BLEAudioUnicastServer::setSinkStreams(uint8_t count) {
 
 BTStatus BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSourceStreams() after audio.begin()");
     return BTStatus::InvalidState;
@@ -171,6 +176,7 @@ BTStatus BLEAudioUnicastServer::setSourceStreams(uint8_t count) {
 
 BTStatus BLEAudioUnicastServer::setSupportedPresets(uint32_t presetMask) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (presetMask == 0) {
     log_e("UnicastServer: setSupportedPresets() with zero mask; keeping current mask");
     return BTStatus::InvalidParam;
@@ -185,6 +191,7 @@ BTStatus BLEAudioUnicastServer::setSupportedPresets(uint32_t presetMask) {
 
 BTStatus BLEAudioUnicastServer::setMaxChannelsPerStream(uint8_t channels) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (channels < 1 || channels > 2) {
     log_e("UnicastServer: invalid channels %u (want 1 or 2)", channels);
     return BTStatus::InvalidParam;
@@ -199,6 +206,7 @@ BTStatus BLEAudioUnicastServer::setMaxChannelsPerStream(uint8_t channels) {
 
 BTStatus BLEAudioUnicastServer::setSinkContexts(BLEAudioContext contexts) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSinkContexts() after audio.begin()");
     return BTStatus::InvalidState;
@@ -209,6 +217,7 @@ BTStatus BLEAudioUnicastServer::setSinkContexts(BLEAudioContext contexts) {
 
 BTStatus BLEAudioUnicastServer::setSourceContexts(BLEAudioContext contexts) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSourceContexts() after audio.begin()");
     return BTStatus::InvalidState;
@@ -219,6 +228,7 @@ BTStatus BLEAudioUnicastServer::setSourceContexts(BLEAudioContext contexts) {
 
 BTStatus BLEAudioUnicastServer::setSinkLocation(BLEAudioLocation location) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSinkLocation() after audio.begin()");
     return BTStatus::InvalidState;
@@ -229,6 +239,7 @@ BTStatus BLEAudioUnicastServer::setSinkLocation(BLEAudioLocation location) {
 
 BTStatus BLEAudioUnicastServer::setSourceLocation(BLEAudioLocation location) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (impl.applied) {
     log_e("UnicastServer: setSourceLocation() after audio.begin()");
     return BTStatus::InvalidState;
@@ -239,6 +250,7 @@ BTStatus BLEAudioUnicastServer::setSourceLocation(BLEAudioLocation location) {
 
 BTStatus BLEAudioUnicastServer::setPresentationDelayRange(uint32_t minUs, uint32_t maxUs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
   if (maxUs != 0 && minUs > maxUs) {
     log_e("UnicastServer: invalid presentation delay range %lu-%lu us", (unsigned long)minUs, (unsigned long)maxUs);
     return BTStatus::InvalidParam;
@@ -324,7 +336,9 @@ BTStatus BLEAudioUnicastServer::configureHeadset() {
 
 /** Only the directions that have ASEs are updated; PACS has no record for the others. */
 BTStatus BLEAudioUnicastServer::setAvailableContexts(BLEAudioContext sink, BLEAudioContext source) {
-  if (!_impl || !_impl->applied) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  BLELockGuard lock(impl.mtx.get());
+  if (!impl.applied) {
     log_e("UnicastServer: setAvailableContexts() before audio.begin()");
     return BTStatus::InvalidState;
   }
@@ -346,11 +360,19 @@ BTStatus BLEAudioUnicastServer::setAvailableContexts(BLEAudioContext sink, BLEAu
 // --------------------------------------------------------------------------
 
 size_t BLEAudioUnicastServer::streamCount() const {
-  return _impl ? _impl->streams.size() : 0;
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return _impl->streams.size();
 }
 
 BLEAudioStream BLEAudioUnicastServer::stream(size_t index) const {
-  return (_impl && index < _impl->streams.size()) ? _impl->streams[index] : BLEAudioStream();
+  if (!_impl) {
+    return BLEAudioStream();
+  }
+  BLELockGuard lock(_impl->mtx.get());
+  return (index < _impl->streams.size()) ? _impl->streams[index] : BLEAudioStream();
 }
 
 /** Streams have no direction until configured, so unconfigured ones never match. */
@@ -358,6 +380,7 @@ BLEAudioStream BLEAudioUnicastServer::stream(BLEAudioStream::Direction dir, uint
   if (!_impl) {
     return BLEAudioStream();
   }
+  BLELockGuard lock(_impl->mtx.get());
   for (const auto &s : _impl->streams) {
     if (s.direction() == dir && index-- == 0) {
       return s;
