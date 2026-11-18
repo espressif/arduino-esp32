@@ -742,6 +742,9 @@ int bleAudioCapUnicastStart(const ble_audio_uc_stream_req_t *reqs, uint8_t count
 }
 
 int bleAudioCapUnicastUpdate(uint16_t context) {
+  /* Callers serialize against handovers (CapInitiator::updateUnicast refuses
+   * while hoBusy): no handover_busy() check here, so a future caller must
+   * join the same contract instead of racing the in-flight handover params. */
   if (atomic_load(&s_uc.group) == NULL || s_uc.count == 0) {
     return ESP_ERR_INVALID_STATE;
   }
@@ -767,6 +770,9 @@ bool bleAudioCapUnicastGroupExists(void) {
 }
 
 int bleAudioCapUnicastStop(void) {
+  /* Same serialization contract as Update (see above): C++ refuses
+   * stopUnicast() while its handover is in flight; a racing stop here would
+   * delete the group the handover is consuming. */
   if (atomic_load(&s_uc.group) == NULL) {
     /* Already released (for example the handover consumed the group): report
      * the terminal state so the role can clear its session. */

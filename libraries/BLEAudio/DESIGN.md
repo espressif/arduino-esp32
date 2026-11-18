@@ -521,6 +521,13 @@ Bluedroid registers separate BTA GATTS apps natively. Pure-audio and pure-ISO
 peripherals also work without calling `BLE.createServer()` on both stacks. Full
 details live in [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startup).
 
+Known backend divergence: `audio.begin()` while GAP is active (legacy
+advertising up) is refused with `Busy` on NimBLE — the single committed table
+cannot be reset under an active GAP — but succeeds on Bluedroid, whose GATTS
+apps register independently of the advertising state. Sketches must not rely on
+either outcome across backends; stop advertising (or scanning) before the
+commit when the peer must see audio services in the same session.
+
 ## Testing
 
 - **Dual-DUT HITL:** `tests/validation/ble_audio/` (15 phases covering pure-audio peripheral lifecycle without `BLEServer`, same-host `audio.end()`→`begin()` re-init, GMAP/HAS callback re-registration across re-init with quiesced links, plain-GATT coexistence & callback-deferred `BLE.end()`, `BLEIso` CIS/BIS, BAP unicast/broadcast, LC3 loopback, VCP/MICP/MCP/CCP, TMAP/GMAP/CSIP/CAP Commander, HAS, stereo broadcast with callback churn, Broadcast Assistant with PAST on handle 0, CAP handover, `BroadcastSource` start/stop race, `CapInitiator` 1/2-BIS interleave, and controller memory release).

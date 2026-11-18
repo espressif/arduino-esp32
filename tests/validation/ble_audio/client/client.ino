@@ -1308,6 +1308,7 @@ void setup() {
     BLE.end(false);
     delay(500);
     int readCount = 0, switched = 0, discOk = 0;
+    volatile bool presetsDone = false;
     BTStatus st = BLE.begin("BLE_CLT_HA");
     if (st) {
       BLEAudio audio = BLE.getAudioController();
@@ -1319,12 +1320,17 @@ void setup() {
           discOk = s2 ? 1 : 0;
           discDone = true;
         });
-        hac.onPreset([&readCount](uint8_t index, bool available, const String &name, bool isLast) {
+        hac.onPreset([&readCount, &presetsDone](uint8_t index, bool available, const String &name, bool isLast) {
           (void)index;
           (void)available;
           (void)name;
-          (void)isLast;
           readCount = readCount + 1;
+          // The stack marks the final record; join on it instead of sleeping
+          // a fixed window so slow links cannot under-count and fast ones do
+          // not stall the phase.
+          if (isLast) {
+            presetsDone = true;
+          }
         });
         volatile bool switchDone = false;
         hac.onPresetSwitch([&switchDone, &switched](BTStatus s2, uint8_t index) {
@@ -1348,7 +1354,9 @@ void setup() {
               }
               if (discOk) {
                 hac.readPresets(1, 255);
-                delay(1500);  // let all preset records stream in
+                for (int i = 0; i < 60 && !presetsDone; i++) {
+                  delay(50);
+                }
                 if (hac.setActivePreset(2)) {
                   for (int i = 0; i < 60 && !switchDone; i++) {
                     delay(50);
@@ -1382,6 +1390,7 @@ void setup() {
         // the controller callback that common_deinit released; the server
         // re-advertises after the first release, so retry the scan.
         int discOk2 = 0, readCount2 = 0;
+        volatile bool presetsDone2 = false;
         BLEAudioHearingAidController hac2 = audio.createHearingAidController();  // lazy init
         volatile bool discDone2 = false;
         hac2.onDiscovered([&discDone2, &discOk2](BTStatus s2, BLEHearingAidType type) {
@@ -1389,12 +1398,14 @@ void setup() {
             discOk2 = s2 ? 1 : 0;
             discDone2 = true;
         });
-        hac2.onPreset([&readCount2](uint8_t index, bool available, const String &name, bool isLast) {
+        hac2.onPreset([&readCount2, &presetsDone2](uint8_t index, bool available, const String &name, bool isLast) {
             (void)index;
             (void)available;
             (void)name;
-            (void)isLast;
             readCount2 = readCount2 + 1;
+            if (isLast) {
+              presetsDone2 = true;
+            }
         });
         audio.onLinkReady([](uint16_t conn) {
             audioLinkConn = conn;
@@ -1417,7 +1428,9 @@ void setup() {
               }
               if (discOk2) {
                 hac2.readPresets(1, 255);
-                delay(1500);
+                for (int i = 0; i < 60 && !presetsDone2; i++) {
+                  delay(50);
+                }
               }
             }
           }

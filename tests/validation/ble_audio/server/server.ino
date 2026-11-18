@@ -243,13 +243,19 @@ void loop() {
         BTStatus preAdvSt = preAdv.start();
         BTStatus beginWhileAdv = audio.begin();
         (void)preAdv.stop();
+        // Known backend divergence (see DESIGN.md "GATT coexistence"): NimBLE
+        // must refuse the commit while GAP is active (its single GATT table
+        // needs a reset, so Busy); Bluedroid registers separate GATTS apps
+        // and commits fine, so end the session right away to leave the stack
+        // clean for the pure-peripheral leg below.
+        bool busyGuardOk;
 #if BLE_NIMBLE
-        bool busyGuardOk = (bool)preAdvSt && beginWhileAdv == BTStatus::Busy;
+        busyGuardOk = (bool)preAdvSt && beginWhileAdv == BTStatus::Busy;
 #else
+        busyGuardOk = (bool)preAdvSt && (bool)beginWhileAdv;
         if (beginWhileAdv) {
           (void)audio.end();
         }
-        bool busyGuardOk = (bool)preAdvSt && (bool)beginWhileAdv;
 #endif
 
         // 1b) Pure-audio peripheral BEFORE BLE.createServer() has ever been
@@ -439,7 +445,6 @@ void loop() {
             aend = audio.end();
           }
         }
-        Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
         Serial.printf("[SERVER] Audio reinit begin=%d start=%d\n", rb ? 1 : 0, rs ? 1 : 0);
         // GATT-first order: stage classic services BEFORE any audio role
         // exists, then commit once. The commit must adopt them into the same
