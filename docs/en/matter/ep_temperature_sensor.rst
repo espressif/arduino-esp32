@@ -8,19 +8,19 @@ About
 The ``MatterTemperatureSensor`` class provides a temperature sensor endpoint for Matter networks. This endpoint implements the Matter temperature sensing standard for read-only temperature reporting.
 
 **Features:**
-* Temperature measurement reporting in Celsius
-* 1/100th degree Celsius precision
-* Read-only sensor (no control functionality)
-* Automatic temperature updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Temperature measurement reporting in Celsius.
+* 1/100th degree Celsius precision.
+* Read-only sensor (no control functionality).
+* Automatic temperature updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Room temperature monitoring
-* Weather stations
-* HVAC systems
-* Temperature logging
-* Smart home climate monitoring
+* Room temperature monitoring.
+* Weather stations.
+* HVAC systems.
+* Temperature logging.
+* Smart home climate monitoring.
 
 API Reference
 -------------
@@ -76,7 +76,7 @@ Sets the reported temperature value.
 
     bool setTemperature(double temperature);
 
-* ``temperature`` - Temperature in Celsius
+* ``temperature`` - Temperature in Celsius.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

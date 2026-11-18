@@ -13,18 +13,13 @@
 // limitations under the License.
 
 /*
- * This example is the smallest code that will create a Matter Device which can be
- * commissioned and controlled from a Matter Environment APP.
- * It controls a GPIO that could be attached to a LED for visualization.
- * Additionally the ESP32 will send debug messages indicating the Matter activity.
- * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
+ * Smallest Matter sketch: one On/Off Light, an LED GPIO, and onChange().
+ * Commission from the pairing code that matterWaitUntilReady() prints.
+ * No button, no matterSetExampleIdentity(), no extra serial after CASE.
  */
 
-// Matter Manager
 #include <Arduino.h>
 #include <Matter.h>
-// List of Matter Endpoints for this Node
-// Single On/Off Light Endpoint - at least one per node
 MatterOnOffLight OnOffLight;
 
 // Wi-Fi credentials for this sketch. Fill these in when the board cannot
@@ -34,16 +29,11 @@ MatterOnOffLight OnOffLight;
 #define WIFI_SSID     "your-ssid"
 #define WIFI_PASSWORD "your-password"
 
-// Light GPIO that can be controlled by Matter APP
 #ifdef LED_BUILTIN
 const uint8_t ledPin = LED_BUILTIN;
 #else
-const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
+const uint8_t ledPin = 2;  // Set your pin if the board has no LED_BUILTIN
 #endif
-
-// set your board USER BUTTON pin here - decommissioning button
-const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-MatterButton button;
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool onOffLightCallback(bool state) {
@@ -55,8 +45,6 @@ bool onOffLightCallback(bool state) {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  button.begin(buttonPin);
   // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
@@ -77,15 +65,7 @@ void setup() {
 }
 
 void loop() {
+  // Reboot if the hub removed the fabric. This sketch has no decommission button.
   matterRestartIfNoFabric();
-
-  matterButtonEvent_t ev;
-  while ((ev = button.poll()) != MATTER_BUTTON_NONE) {
-    if (ev == MATTER_BUTTON_LONG_HOLD) {
-      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
-  }
-
   delay(500);
 }

@@ -45,6 +45,7 @@ ESP32-H2   Yes    Yes         `ESP32-H2`_
 ESP32-P4   Yes    Yes         `ESP32-P4`_
 ESP32-S2   Yes    Yes         `ESP32-S2`_
 ESP32-S3   Yes    Yes         `ESP32-S3`_
+ESP32-S31  Yes    Yes         `ESP32-S31`_
 ========== ====== =========== =================================
 
 .. note::

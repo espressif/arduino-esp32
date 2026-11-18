@@ -81,6 +81,7 @@ void setup() {
   OnOffLight.onChange(setLightOnOff);
 
   // Start Matter
+  matterSetExampleIdentity("OnOff Light");
   Matter.begin();
   matterWaitUntilReady();
   Serial.println("Matter started");

@@ -40,6 +40,11 @@ protected:
   std::shared_ptr<NetworkClientRxBuffer> _rxBuffer = nullptr;
   bool _connected = false;
   bool _readEOF = false;
+  // Legacy SSE marker fallback, used only when there is no socket handle (e.g.
+  // NetworkClientSecure, which owns its fd outside NetworkClientSocketHandle).
+  // Whenever a handle is present the flag lives on the handle instead, so all
+  // copies sharing a connection observe a single per-connection flag.
+  // Deprecated: use WebServer::enableSSE()/isSSE() instead.
   bool _sse = false;
   int _timeout;
   int _lastWriteTimeout = 0;
@@ -71,9 +76,10 @@ public:
   void clear();  // clear rx
   void stop();
   uint8_t connected();
+  [[deprecated("Use WebServer::enableSSE() instead")]]
   void setSSE(bool sse);
+  [[deprecated("Use WebServer::isSSE() instead")]]
   bool isSSE();
-
   operator bool() {
     return connected();
   }

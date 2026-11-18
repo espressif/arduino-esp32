@@ -21,6 +21,7 @@
 #endif
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0) && (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #include "soc/usb_pins.h"
+#include "esp_private/periph_ctrl.h"
 #endif
 
 #include "soc/periph_defs.h"
@@ -47,6 +48,9 @@
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/usb_wrap_ll.h"
+#endif
 #elif CONFIG_IDF_TARGET_ESP32S3
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
 #include "hal/usb_phy_ll.h"
@@ -54,10 +58,20 @@
 #include "hal/usb_fsls_phy_ll.h"
 #endif
 #include "hal/usb_serial_jtag_ll.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/usb_wrap_ll.h"
+#endif
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
+#elif CONFIG_IDF_TARGET_ESP32S31
+#include "soc/lp_system_reg.h"
+#include "esp_rom_sys.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
+#include "hal/usb_wrap_ll.h"
+#include "hal/usb_serial_jtag_ll.h"
+#include "soc/lp_system_reg.h"
+#include "esp_rom_sys.h"
 #endif
 
 typedef enum {
@@ -152,7 +166,7 @@ esp_err_t init_usb_hal(bool external_phy) {
     .target = USB_PHY_TARGET_INT,
 #endif
     .otg_mode = USB_OTG_MODE_DEVICE,
-#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if (CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0) || CONFIG_IDF_TARGET_ESP32S31
     .otg_speed = USB_PHY_SPEED_HIGH,
 #else
     .otg_speed = USB_PHY_SPEED_FULL,
@@ -161,7 +175,18 @@ esp_err_t init_usb_hal(bool external_phy) {
     .otg_io_conf = NULL,
   };
 
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT != 0
+  // Route FS OTG before the PHY driver configures its pins. PHY0 selection
+  // moves USB Serial/JTAG to PHY1 for this application.
+  usb_wrap_ll_phy_select(&USB_WRAP, 0);
+#endif
   ret = usb_new_phy(&phy_config, &phy_handle);
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT != 0
+  if (ret == ESP_OK) {
+    gpio_set_drive_capability(GPIO_NUM_24, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(GPIO_NUM_25, GPIO_DRIVE_CAP_3);
+  }
+#endif
   if (ret != ESP_OK) {
     log_e("Failed to init USB PHY");
   }
@@ -240,15 +265,15 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   tusb_rhport_init_t tinit;
   memset(&tinit, 0, sizeof(tusb_rhport_init_t));
   tinit.role = TUSB_ROLE_DEVICE;
-#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
+#if (CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0) || CONFIG_IDF_TARGET_ESP32S31
   tinit.speed = TUSB_SPEED_HIGH;
 #else
   tinit.speed = TUSB_SPEED_FULL;
 #endif
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 && ARDUINO_USB_PORT == 0
   if (!tusb_init(1, &tinit)) { /* TinyUSB: P4 OTG HS is rhport 1 */
 #else
-  if (!tusb_init(0, &tinit)) { /* S2/S3 FS, S31 single HS */
+  if (!tusb_init(0, &tinit)) { /* P4/S2/S3 FS, S31 single HS */
 #endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
@@ -592,8 +617,12 @@ static void usb_switch_to_cdc_jtag() {
   tud_disconnect();
   deinit_usb_hal();
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_disable_clk_set_rst(PERIPH_MODULE_MAX);
+  // Hold USB-OTG in reset so Serial/JTAG can take the PHY.
+  // PERIPH_MODULE_MAX is not the USB module and resets nothing.
+  PERIPH_RCC_ATOMIC() {
+    usb_wrap_ll_enable_bus_clock(false);
+    REG_SET_BIT(SYSTEM_PERIP_RST_EN0_REG, SYSTEM_USB_RST);
+  }
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -664,8 +693,12 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
 #if CONFIG_IDF_TARGET_ESP32S2
       } else {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-        periph_ll_reset(PERIPH_MODULE_MAX);
-        periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+        // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+        // Pulse DPORT_USB_RST and leave the clock on, same as the IDF 5 path.
+        PERIPH_RCC_ATOMIC() {
+          usb_wrap_ll_enable_bus_clock(true);
+          usb_wrap_ll_reset_register();
+        }
 #else
         periph_ll_reset(PERIPH_USB_MODULE);
         periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -702,6 +735,33 @@ void usb_persist_restart(restart_type_t mode) {
       usb_switch_to_cdc_jtag();
     }
 #endif
+    esp_restart();
+  }
+#elif CONFIG_IDF_TARGET_ESP32S31
+  if (mode == RESTART_BOOTLOADER) {
+    // S31 downloads over USB-OTG HS, without the S3 CDC/JTAG PHY switch.
+    // Reset the whole system so ROM can reinitialize the USB peripheral.
+    REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+    esp_rom_software_reset_system();
+  }
+#elif CONFIG_IDF_TARGET_ESP32P4
+  if (mode == RESTART_BOOTLOADER || mode == RESTART_BOOTLOADER_DFU) {
+    // P4 ROM has no USB-OTG download or DFU: it downloads over USB Serial/JTAG on
+    // FSLS PHY0, so DFU_DETACH lands there too.
+    tud_disconnect();
+    vTaskDelay(pdMS_TO_TICKS(100));
+    deinit_usb_hal();
+#if ARDUINO_USB_PORT != 0
+    // The FS OTG port moved USB Serial/JTAG to PHY1. That mapping is in LP_SYS
+    // and survives a system reset, so give PHY0 back to ROM's Serial/JTAG.
+    usb_serial_jtag_ll_phy_select(0);
+    usb_serial_jtag_ll_phy_enable_pad(true);
+#endif
+    // Reset the whole system (not just the CPU) so ROM reinitializes Serial/JTAG.
+    REG_SET_BIT(LP_SYSTEM_REG_SYS_CTRL_REG, LP_SYSTEM_REG_FORCE_DOWNLOAD_BOOT);
+    esp_rom_software_reset_system();
+  } else if (mode < RESTART_TYPE_MAX) {
+    // No ROM USB persist on P4: restart like S2/S3 do with persist disabled.
     esp_restart();
   }
 #endif
@@ -791,7 +851,10 @@ static void set_usb_serial_num(void) {
   /* Get the MAC address */
 #if CONFIG_IDF_TARGET_ESP32P4
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_0);
-  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_1);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_1_REG, EFUSE_MAC_1);
+#elif CONFIG_IDF_TARGET_ESP32S31
+  const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS0_REG, EFUSE_MAC_0);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS1_REG, EFUSE_MAC_1);
 #else
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_0_REG, EFUSE_MAC_0);
   const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_1_REG, EFUSE_MAC_1);
@@ -925,8 +988,11 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
   if (!usb_did_persist || !usb_persist_enabled) {
     // Reset USB module
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-    periph_ll_reset(PERIPH_MODULE_MAX);
-    periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+    // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+    PERIPH_RCC_ATOMIC() {
+      usb_wrap_ll_enable_bus_clock(true);
+      usb_wrap_ll_reset_register();
+    }
 #else
     periph_ll_reset(PERIPH_USB_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
@@ -958,8 +1024,11 @@ static void tinyusb_host_reset_usb_module(void) {
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
   REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+  // IDF 6 removed PERIPH_USB_MODULE. PERIPH_MODULE_MAX resets nothing.
+  PERIPH_RCC_ATOMIC() {
+    usb_wrap_ll_enable_bus_clock(true);
+    usb_wrap_ll_reset_register();
+  }
 #else
   periph_ll_reset(PERIPH_USB_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);

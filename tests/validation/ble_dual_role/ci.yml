@@ -1,0 +1,15 @@
+tags:
+  - two_duts
+
+fqbn_append: PartitionScheme=huge_app
+
+multi_device:
+  device0: dut0
+  device1: dut1
+
+platforms:
+  wokwi: false
+  qemu: false
+
+requires:
+  - CONFIG_SOC_BLE_SUPPORTED=y

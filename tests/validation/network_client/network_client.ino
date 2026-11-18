@@ -247,10 +247,6 @@ void test_network_client_default_disconnected(void) {
   TEST_ASSERT_EQUAL(0, client.available());
   TEST_ASSERT_EQUAL(-1, client.read());
   TEST_ASSERT_EQUAL(0, client.write(static_cast<uint8_t>('x')));
-  TEST_ASSERT_FALSE(client.isSSE());
-
-  client.setSSE(true);
-  TEST_ASSERT_TRUE(client.isSSE());
   client.flush();
 }
 

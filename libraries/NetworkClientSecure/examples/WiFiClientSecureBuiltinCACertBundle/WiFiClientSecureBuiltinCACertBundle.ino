@@ -1,6 +1,7 @@
 /*
   Wifi secure connection using builtin CA Cert bundle example for ESP32
   Running on TLS 1.2 using mbedTLS
+  Links the Mozilla CA bundle (~70 KB of flash). Use setCACert() with one PEM if size matters.
   2017 - Evandro Copercini - Apache 2.0 License.
   2026 - added support to use embedded CA bundle - Remi
 */

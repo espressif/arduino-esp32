@@ -101,6 +101,7 @@ void setup() {
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Dimmable Light");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf("Initial state: %s | brightness: %u\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());

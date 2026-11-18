@@ -54,7 +54,7 @@ Sets a callback function for receiving temperature data with source information.
 
 .. code-block:: arduino
 
-    void onTempReceiveWithSource(void (*callback)(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address));
+    void onTempReceiveWithSource(void (*callback)(float temperature, uint8_t src_endpoint, ezb_address_t src_address));
 
 * ``callback`` - Function to call when temperature data is received
 * ``temperature`` - Temperature value in degrees Celsius
@@ -94,7 +94,7 @@ Sets a callback function for receiving humidity data with source information.
 
 .. code-block:: arduino
 
-    void onHumidityReceiveWithSource(void (*callback)(float humidity, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address));
+    void onHumidityReceiveWithSource(void (*callback)(float humidity, uint8_t src_endpoint, ezb_address_t src_address));
 
 * ``callback`` - Function to call when humidity data is received
 * ``humidity`` - Humidity value in percentage
@@ -157,7 +157,7 @@ Requests temperature data from a specific endpoint using IEEE address.
 
 .. code-block:: arduino
 
-    void getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void getTemperature(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device
@@ -204,7 +204,7 @@ Requests humidity data from a specific endpoint using IEEE address.
 
 .. code-block:: arduino
 
-    void getHumidity(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void getHumidity(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device
@@ -251,7 +251,7 @@ Requests temperature sensor settings from a specific endpoint using IEEE address
 
 .. code-block:: arduino
 
-    void getTemperatureSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void getTemperatureSettings(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device
@@ -298,7 +298,7 @@ Requests humidity sensor settings from a specific endpoint using IEEE address.
 
 .. code-block:: arduino
 
-    void getHumiditySettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void getHumiditySettings(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device
@@ -355,7 +355,7 @@ Configures temperature reporting for a specific endpoint using IEEE address.
 
 .. code-block:: arduino
 
-    void setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+    void setTemperatureReporting(uint8_t endpoint, const uint8_t *ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device
@@ -415,7 +415,7 @@ Configures humidity reporting for a specific endpoint using IEEE address.
 
 .. code-block:: arduino
 
-    void setHumidityReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+    void setHumidityReporting(uint8_t endpoint, const uint8_t *ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
 * ``endpoint`` - Target endpoint number
 * ``ieee_addr`` - IEEE address of the target device

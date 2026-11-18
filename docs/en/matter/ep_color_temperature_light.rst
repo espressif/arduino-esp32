@@ -8,20 +8,20 @@ About
 The ``MatterColorTemperatureLight`` class provides a color temperature light endpoint for Matter networks with brightness and color temperature control. This endpoint implements the Matter lighting standard for lights that support color temperature adjustment (warm white to cool white).
 
 **Features:**
-* On/off control
-* Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
-* Color temperature control (100-500 mireds; higher mireds are warmer)
-* State persistence support
-* Callback support for state, brightness, and temperature changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel).
+* Color temperature control (100-500 mireds; higher mireds are warmer).
+* State persistence support.
+* Callback support for state, brightness, and temperature changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Tunable white lights
-* Color temperature adjustable lights
-* Smart lighting with warm/cool control
-* Circadian lighting
-* Smart home lighting automation
+* Tunable white lights.
+* Color temperature adjustable lights.
+* Smart lighting with warm/cool control.
+* Circadian lighting.
+* Smart home lighting automation.
 
 API Reference
 -------------
@@ -50,9 +50,9 @@ Initializes the Matter color temperature light endpoint with optional initial st
 
     bool begin(bool initialState = false, uint8_t brightness = 64, uint16_t colorTemperature = 370);
 
-* ``initialState`` - Initial on/off state (default: ``false`` = off)
+* ``initialState`` - Initial on/off state (default: ``false`` = off).
 * ``brightness`` - Initial brightness level (0-255, default: 64 = 25%). ``0`` is stored as ``1``; ``255`` is stored as ``254``.
-* ``colorTemperature`` - Initial color temperature in mireds (100-500, default: 370 = Soft White)
+* ``colorTemperature`` - Initial color temperature in mireds (100-500, default: 370 = Soft White).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

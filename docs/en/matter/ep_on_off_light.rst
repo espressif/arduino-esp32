@@ -8,17 +8,17 @@ About
 The ``MatterOnOffLight`` class provides a simple on/off light endpoint for Matter networks. This endpoint implements the Matter lighting standard for basic light control without dimming or color features.
 
 **Features:**
-* Simple on/off control
-* State persistence support
-* Callback support for state changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Simple on/off control.
+* State persistence support.
+* Callback support for state changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Simple smart lights
-* On/off switches
-* Basic lighting control
-* Smart home automation
+* Simple smart lights.
+* On/off switches.
+* Basic lighting control.
+* Smart home automation.
 
 API Reference
 -------------
@@ -47,7 +47,7 @@ Initializes the Matter on/off light endpoint with an optional initial state.
 
     bool begin(bool initialState = false);
 
-* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
+* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -72,7 +72,7 @@ Sets the on/off state of the light.
 
     bool setOnOff(bool newState);
 
-* ``newState`` - New state (``true`` = on, ``false`` = off)
+* ``newState`` - New state (``true`` = on, ``false`` = off).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -146,7 +146,7 @@ Sets a callback function to be called when the light state changes.
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when state changes.
 
 The callback signature is:
 
@@ -154,7 +154,7 @@ The callback signature is:
 
     bool onChangeCallback(bool newState);
 
-* ``newState`` - New on/off state (``true`` = on, ``false`` = off)
+* ``newState`` - New on/off state (``true`` = on, ``false`` = off).
 
 The callback should return ``true`` if the change was handled successfully.
 
@@ -167,7 +167,7 @@ Sets a callback function to be called when the on/off state changes (same as ``o
 
     void onChangeOnOff(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when state changes.
 
 updateAccessory
 ^^^^^^^^^^^^^^^

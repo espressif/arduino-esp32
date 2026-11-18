@@ -1,0 +1,621 @@
+/*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include "core/BLEGuards.h"
+#if BLE_ENABLED
+
+#include <functional>
+#include <vector>
+#include "freertos/FreeRTOS.h"
+#include "WString.h"
+#include "BTStatus.h"
+#include "BTAddress.h"
+#include "types/BLEAdvTypes.h"
+#include "server/BLEServer.h"
+#include "client/BLEClient.h"
+#include "gatt/BLECharacteristic.h"
+#include "gatt/BLEDescriptor.h"
+#include "gatt/BLEService.h"
+#include "advertising/BLEAdvertising.h"
+#include "scan/BLEScan.h"
+#include "security/BLESecurity.h"
+#include "scan/BLEAdvertisedDevice.h"
+#include "remote/BLERemoteService.h"
+#include "remote/BLERemoteCharacteristic.h"
+#include "remote/BLERemoteDescriptor.h"
+#include "advertising/BLEAdvertisementData.h"
+#include "advertising/BLEBeacon.h"
+#include "advertising/BLEEddystone.h"
+#include "hid/BLEHIDDevice.h"
+#include "stream/BLEStream.h"
+#include "l2cap/BLEL2CAP.h"
+#include "iso/BLEIso.h"
+
+class BLEAudio;
+class BLEIso;
+
+/**
+ * @brief Global BLE singleton -- the entry point for all BLE operations.
+ *
+ * Follows the Arduino convention used by WiFi, Serial, Wire, etc.
+ * The class is BLEClass; users interact via the global `BLE` object.
+ *
+ * Thread safety: the BLE singleton methods (begin, end, whitelist
+ * operations, etc.) are NOT internally synchronized. Call them from
+ * a single task — typically the Arduino loop task. BLE callbacks execute
+ * on the stack's own task (NimBLE host task or Bluedroid BTC task) and
+ * must not block. @ref end from a callback is supported (it defers
+ * teardown); do not call @ref begin from a callback.
+ *
+ * Usage:
+ * @code
+ * #include <BLE.h>
+ *
+ * void setup() {
+ *     BLE.begin("MyDevice");
+ *     BLEServer server = BLE.createServer();
+ *     // ...
+ * }
+ * @endcode
+ */
+class BLEClass {
+public:
+  // --- Lifecycle ---
+
+  /**
+   * @brief Initialize the BLE stack and set the device name.
+   *
+   * Must be called before any other BLE operation. Starts the Bluetooth
+   * controller, host stack, and GATT/GAP services.
+   *
+   * @param deviceName  Advertised device name. Empty string keeps the default.
+   * @return BTStatus indicating success or the specific initialization error.
+   *         @c InvalidState if @ref end is in progress, including a
+   *         callback-context @ref end whose teardown worker has not finished.
+   */
+  BTStatus begin(const String &deviceName = "");
+
+  /**
+   * @brief Shut down the BLE stack.
+   *
+   * Stops advertising, disconnects all peers, and deinitializes the host.
+   * Local GATT services created since the last @ref begin are released; handles
+   * the sketch still holds become detached shells (still non-null, but with no
+   * parent or native handle). @ref createServer returns the same server after a
+   * later @ref begin — rebuild the database before @c start().
+   *
+   * From the stack callback task this claims shutdown immediately so a following
+   * @ref begin returns @c InvalidState, then defers the teardown body to a
+   * worker. If that worker cannot be created, the next user-thread @ref end
+   * completes it.
+   *
+   * @param releaseMemory  If true, also releases the Bluetooth controller
+   *                       memory. After this, begin() cannot reinitialize BLE
+   *                       without a full reboot.
+   */
+  void end(bool releaseMemory = false);
+
+  /**
+   * @brief Check whether the BLE stack has been initialized.
+   *
+   * @return true if begin() completed successfully and end() has not yet
+   *         cleared the public session. A deferred callback-context end() may
+   *         still report true until teardown runs (the worker, or a later
+   *         user-thread @ref end if the worker could not be created); @ref begin
+   *         returns @c InvalidState for that window.
+   */
+  bool isInitialized() const;
+
+  /**
+   * @brief Whether shutdown has claimed the current BLE session.
+   *
+   * Primarily used by retained subsystem handles to reject native operations
+   * during callback-deferred teardown.
+   */
+  bool isEnding() const;
+
+  /**
+   * @brief Boolean conversion — equivalent to isInitialized().
+   *
+   * @return true if BLE is initialized and ready.
+   */
+  explicit operator bool() const;
+
+  // --- Identity ---
+
+  /**
+   * @brief Get the local Bluetooth address currently in use.
+   *
+   * @return The device's BTAddress (public or random, depending on own-address type).
+   */
+  BTAddress getAddress() const;
+
+  /**
+   * @brief Get the device name that was set via begin().
+   *
+   * @return The current device name as a String.
+   */
+  String getDeviceName() const;
+
+  /**
+   * @brief Set the own-address type used for advertising and connections.
+   *
+   * @param type  Address type (Public, Random, RPA with public fallback, etc.).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setOwnAddressType(BTAddress::Type type);
+
+  /**
+   * @brief Get the currently configured own-address type.
+   *
+   * @return The BTAddress::Type in use.
+   */
+  BTAddress::Type getOwnAddressType() const;
+
+  /**
+   * @brief Random device address programmed by `setOwnAddressType(BTAddress::Random)`.
+   *
+   * @internal Used by the Bluedroid advertising backend: extended advertising
+   * sets need the set-level random address (HCI_LE_Set_Extended_Advertising_
+   * Set_Random_Address) before they can be enabled with a random own address.
+   *
+   * @param out  Receives the 6-byte address (LSB-first) when one is programmed.
+   * @return true when an address is available.
+   */
+  bool getOwnRandomAddress(uint8_t out[6]) const;
+
+  /**
+   * @brief Override the local Bluetooth address.
+   *
+   * @note Must be called before begin(), or the stack may ignore the change.
+   *
+   * @param addr  The address to use.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setOwnAddress(const BTAddress &addr);
+
+  // --- Factory / Singletons ---
+
+  /**
+   * @brief Create (or retrieve) the GATT server singleton.
+   *
+   * The first call allocates internal state; subsequent calls return a
+   * handle to the same underlying server.
+   *
+   * @return A BLEServer handle. Check with `operator bool()` for validity.
+   */
+  BLEServer createServer();
+
+  /**
+   * @brief Get the BLE scan singleton.
+   *
+   * @return A BLEScan handle used to configure and start scanning.
+   */
+  BLEScan getScan();
+
+  /**
+   * @brief Get the advertising singleton.
+   *
+   * @return A BLEAdvertising handle used to configure and start advertising.
+   */
+  BLEAdvertising getAdvertising();
+
+  /**
+   * @brief Get the security/pairing singleton.
+   *
+   * @return A BLESecurity handle for configuring pairing and bonding.
+   */
+  BLESecurity getSecurity();
+
+#if BLE_AUDIO_SUPPORTED
+  /**
+   * @brief Get the LE Audio controller handle (GAF entry point).
+   *
+   * Declared in the core so a sketch that does not use LE Audio never compiles
+   * the audio engine. Include `<BLEAudio.h>` from the separate BLEAudio
+   * library before using the returned handle; without it `BLEAudio` is only
+   * forward-declared here.
+   *
+   * The first call allocates the single engine-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin(). Named "controller" because it manages the audio subsystem -- it
+   * does not itself carry audio data.
+   *
+   * @return A BLEAudio handle. Check with `operator bool()` for validity.
+   */
+  BLEAudio getAudioController();
+#endif
+
+#if BLE_ISO_SUPPORTED
+  /**
+   * @brief Get the ISO transport controller handle (raw CIS/BIS entry point).
+   *
+   * The first call allocates the single transport-backed implementation;
+   * subsequent calls return a handle to the same instance. Only valid after
+   * begin().
+   *
+   * @return A BLEIso handle. Check with `operator bool()` for validity.
+   */
+  BLEIso getIsoController();
+#endif
+
+  /**
+   * @brief Create a new GATT client instance.
+   *
+   * Each call allocates a new client. The caller is responsible for
+   * connecting and eventually disconnecting.
+   *
+   * @return A BLEClient handle. Check with `operator bool()` for validity.
+   */
+  BLEClient createClient();
+
+  // --- Connection lookup ---
+
+  /**
+   * @brief Find the connection handle for a connected peer.
+   *
+   * This is the same handle reported by `BLEClient::getHandle()` and
+   * `BLEConnInfo::getHandle()`, and the one connection-scoped APIs take.
+   * Accepts the peer's OTA address (the one reported by
+   * `BLEConnInfo::getAddress()`); NimBLE also matches the resolved identity
+   * address.
+   *
+   * @param peerAddress Peer address.
+   * @return The connection handle, or 0xFFFF if the peer is not connected.
+   */
+  uint16_t getConnHandle(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find the live connection handle for a connected peer.
+   *
+   * Returns one handle per ACL. Bluedroid may have several GATTC client
+   * objects and a GATTS server link on one ACL; the first client handle is
+   * returned, otherwise the server handle. Use the owning handle when you
+   * need a specific GATT application's connection.
+   *
+   * @param peerAddress Peer address.
+   * @return Unique handles in client-before-server order; empty when the peer
+   *         is not connected.
+   */
+  std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find the connection descriptor for a connected peer.
+   *
+   * Returns one descriptor per ACL on both backends. A local device can be both
+   * GATT client and server on that ACL; the descriptor's GAP role is the link
+   * role, and the handle is the application connection that owns the link.
+   * Use the owning `BLEClient`/`BLEServer` handle for a specific GATT
+   * application.
+   *
+   * @param peerAddress Peer address.
+   * @return A valid descriptor, or an empty vector when the peer is not
+   *         connected.
+   * @note PHY/RSSI are normalized as in @ref getConnInfo(const BTAddress &).
+   */
+  std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
+
+  /**
+   * @brief Find connection information for a connected peer.
+   *
+   * @param peerAddress Peer address (OTA, or the identity address on NimBLE).
+   * @return A valid BLEConnInfo snapshot, or an invalid one when the peer is
+   *         not connected.
+   * @note The address lookup normalizes the volatile fields: TX/RX PHY are
+   *       reported as PHY_1M and RSSI as 0 on both backends. Use the owning
+   *       BLEClient/BLEServer handle for live PHY/RSSI values.
+   */
+  BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
+
+  // --- L2CAP CoC ---
+
+  /**
+   * @brief Create an L2CAP Connection-Oriented Channel server.
+   *
+   * Listens for incoming L2CAP CoC connections on the given PSM.
+   *
+   * @param psm  Protocol/Service Multiplexer value to listen on.
+   * @param mtu  Maximum Transmission Unit for the channel (default 512).
+   * @return A BLEL2CAPServer handle.
+   */
+  BLEL2CAPServer createL2CAPServer(uint16_t psm, uint16_t mtu = 512);
+
+  /**
+   * @brief Open an outgoing L2CAP CoC channel to a connected peer.
+   *
+   * @param connHandle  BLE connection handle of the already-connected peer.
+   * @param psm         Protocol/Service Multiplexer on the remote device.
+   * @param mtu         Maximum Transmission Unit for the channel (default 512).
+   * @return A BLEL2CAPChannel handle for the new channel.
+   */
+  BLEL2CAPChannel connectL2CAP(uint16_t connHandle, uint16_t psm, uint16_t mtu = 512);
+
+  // --- Power ---
+
+  /**
+   * @brief Set the BLE transmit power.
+   *
+   * @param txPowerDbm  Transmit power in dBm. Quantized to the nearest supported
+   *                    level: -12, -9, -6, -3, 0, +3, +6, or +9 dBm.
+   * @note No-op if the BLE stack has not been initialized. On hosted-HCI platforms
+   *       (e.g. ESP32-P4) this is unsupported and logs a warning.
+   */
+  void setPower(int8_t txPowerDbm);
+
+  /**
+   * @brief Get the current BLE transmit power.
+   *
+   * @return Transmit power in dBm, or -128 if the stack is not initialized.
+   * @note On hosted-HCI platforms the power level is not queryable and this returns 0.
+   */
+  int8_t getPower() const;
+
+  // --- MTU ---
+
+  /**
+   * @brief Set the preferred ATT MTU for future connections.
+   *
+   * @note Does not affect already-established connections.
+   *
+   * @param mtu  Preferred MTU size (23–517).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setMTU(uint16_t mtu);
+
+  /**
+   * @brief Get the configured preferred ATT MTU.
+   *
+   * @return The preferred MTU value.
+   */
+  uint16_t getMTU() const;
+
+  // --- IRK retrieval (for Home Assistant, ESPresense, etc.) ---
+
+  /**
+   * @brief Copy the local Identity Resolving Key into the provided buffer.
+   *
+   * @param irk  Output buffer of at least 16 bytes.
+   * @return true if the IRK was successfully retrieved.
+   */
+  bool getLocalIRK(uint8_t irk[16]) const;
+
+  /**
+   * @brief Get the local IRK as a hex string.
+   *
+   * @return Hex-encoded IRK, or an empty string on failure.
+   */
+  String getLocalIRKString() const;
+
+  /**
+   * @brief Get the local IRK as a Base64-encoded string.
+   *
+   * @return Base64-encoded IRK, or an empty string on failure.
+   */
+  String getLocalIRKBase64() const;
+
+  /**
+   * @brief Copy a bonded peer's IRK into the provided buffer.
+   *
+   * @param peer  Address of the bonded peer.
+   * @param irk   Output buffer of at least 16 bytes.
+   * @return true if the IRK was found and copied.
+   */
+  bool getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const;
+
+  /**
+   * @brief Get a bonded peer's IRK as a hex string.
+   *
+   * @param peer  Address of the bonded peer.
+   * @return Hex-encoded IRK, or an empty string if not found.
+   */
+  String getPeerIRKString(const BTAddress &peer) const;
+
+  /**
+   * @brief Get a bonded peer's IRK as a Base64-encoded string.
+   *
+   * @param peer  Address of the bonded peer.
+   * @return Base64-encoded IRK, or an empty string if not found.
+   */
+  String getPeerIRKBase64(const BTAddress &peer) const;
+
+  /**
+   * @brief Get a bonded peer's IRK as a byte-reversed hex string.
+   *
+   * Useful for systems that expect the IRK in reverse byte order
+   * (e.g., some Home Assistant integrations).
+   *
+   * @param peer  Address of the bonded peer.
+   * @return Reversed hex-encoded IRK, or an empty string if not found.
+   */
+  String getPeerIRKReverse(const BTAddress &peer) const;
+
+  // --- Default PHY preference (BLE 5.0) ---
+
+  /**
+   * @brief Set the default PHY preferences for new connections.
+   *
+   * @param txPhy  Preferred transmit PHY (1M, 2M, or Coded).
+   * @param rxPhy  Preferred receive PHY (1M, 2M, or Coded).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy);
+
+  /**
+   * @brief Get the current default PHY preferences.
+   *
+   * @param txPhy  Output: current default transmit PHY.
+   * @param rxPhy  Output: current default receive PHY.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const;
+
+  // --- Whitelist ---
+
+  /**
+   * @brief Add a device address to the BLE whitelist.
+   *
+   * @param address  The peer address to add.
+   * @return BTStatus indicating success or failure.
+   * @note Blocks until the controller whitelist update completes.
+   */
+  BTStatus whiteListAdd(const BTAddress &address);
+
+  /**
+   * @brief Remove a device address from the BLE whitelist.
+   *
+   * @param address  The peer address to remove.
+   * @return BTStatus indicating success or failure.
+   * @note Blocks until the controller whitelist update completes.
+   */
+  BTStatus whiteListRemove(const BTAddress &address);
+
+  /**
+   * @brief Check whether an address is on the whitelist.
+   *
+   * @param address  The peer address to look up.
+   * @return true if the address is currently on the whitelist.
+   */
+  bool isOnWhiteList(const BTAddress &address) const;
+
+  // --- Advertising shortcuts ---
+
+  /**
+   * @brief Start advertising using the current advertising configuration.
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus startAdvertising();
+
+  /**
+   * @brief Stop advertising.
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus stopAdvertising();
+
+  // --- Stack info ---
+
+  enum class Stack {
+    NimBLE,
+    Bluedroid
+  };
+
+  /**
+   * @brief Get the Bluetooth stack in use at compile time.
+   *
+   * @return Stack::NimBLE or Stack::Bluedroid.
+   */
+  Stack getStack() const;
+
+  /**
+   * @brief Get the Bluetooth stack name as a C-string.
+   *
+   * @return "NimBLE" or "Bluedroid".
+   */
+  const char *getStackName() const;
+
+  /**
+   * @brief Check whether BLE is running over esp-hosted (e.g., on ESP32-P4).
+   *
+   * @return true if the BLE stack is hosted on a remote co-processor.
+   */
+  bool isHostedBLE() const;
+
+  // --- Hosted BLE (ESP32-P4 via esp-hosted) ---
+
+  /**
+   * @brief Configure the SDIO/SPI pins for the esp-hosted co-processor.
+   *
+   * @note Only relevant on chips that use esp-hosted for BLE (e.g., ESP32-P4).
+   *       Must be called before begin().
+   *
+   * @param clk  Clock pin.
+   * @param cmd  Command pin.
+   * @param d0   Data line 0.
+   * @param d1   Data line 1.
+   * @param d2   Data line 2.
+   * @param d3   Data line 3.
+   * @param rst  Reset pin.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
+
+  // --- Custom event handlers (advanced/extension point) ---
+
+  /**
+   * @brief Signature for raw stack event handlers.
+   *
+   * @param event  Pointer to the backend-specific event structure.
+   * @param arg    Backend-specific context argument.
+   * @return 0 on success; non-zero to signal an error to the stack.
+   */
+  using RawEventHandler = std::function<int(void *event, void *arg)>;
+
+  /**
+   * @brief Register a custom handler for raw GAP events.
+   *
+   * @param handler  Callback invoked for every GAP event from the stack.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setCustomGapHandler(RawEventHandler handler);
+
+  /**
+   * @brief Register a custom handler for raw GATT-client events.
+   *
+   * @param handler  Callback invoked for every GATT-client event from the stack.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setCustomGattcHandler(RawEventHandler handler);
+
+  /**
+   * @brief Register a custom handler for raw GATT-server events.
+   *
+   * @param handler  Callback invoked for every GATT-server event from the stack.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setCustomGattsHandler(RawEventHandler handler);
+
+  BLEClass();
+  ~BLEClass();
+  BLEClass(const BLEClass &) = delete;
+  BLEClass &operator=(const BLEClass &) = delete;
+  BLEClass(BLEClass &&) = delete;
+  BLEClass &operator=(BLEClass &&) = delete;
+
+  struct Impl;
+
+private:
+  friend class BLEStream;
+  // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
+  // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
+  Impl *_impl;
+  bool setStreamEndHooks(void (*preHook)(), void (*postHook)());
+
+  mutable portMUX_TYPE _stateMux = portMUX_INITIALIZER_UNLOCKED;
+  bool _initialized = false;
+  void setInitialized(bool initialized);
+  BTAddress::Type _ownAddressType = BTAddress::Type::Public;
+  String _deviceName;
+  std::vector<BTAddress> _whiteList;
+};
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_BLE)
+extern BLEClass BLE;
+#endif
+
+#endif /* BLE_ENABLED */

@@ -8,18 +8,18 @@ About
 The ``MatterDimmableLight`` class provides a dimmable light endpoint for Matter networks. This endpoint implements the Matter lighting standard for lights with brightness control.
 
 **Features:**
-* On/off control
-* Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel)
-* State persistence support
-* Callback support for state and brightness changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* Brightness level control (Arduino 0-255; Matter ``CurrentLevel`` is 1-254, and 255 is the nullable null sentinel).
+* State persistence support.
+* Callback support for state and brightness changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Dimmable smart lights
-* Brightness control switches
-* Smart home lighting automation
-* Variable brightness lighting
+* Dimmable smart lights.
+* Brightness control switches.
+* Smart home lighting automation.
+* Variable brightness lighting.
 
 API Reference
 -------------
@@ -48,7 +48,7 @@ Initializes the Matter dimmable light endpoint with optional initial state and b
 
     bool begin(bool initialState = false, uint8_t brightness = 64);
 
-* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``)
+* ``initialState`` - Initial on/off state (``true`` = on, ``false`` = off, default: ``false``).
 * ``brightness`` - Initial brightness level (0-255, default: 64 = 25%). ``0`` is stored as ``1``; ``255`` is stored as ``254``.
 
 This function will return ``true`` if successful, ``false`` otherwise.
@@ -74,7 +74,7 @@ Sets the on/off state of the light.
 
     bool setOnOff(bool newState);
 
-* ``newState`` - New state (``true`` = on, ``false`` = off)
+* ``newState`` - New state (``true`` = on, ``false`` = off).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -172,7 +172,7 @@ Sets a callback function to be called when any parameter changes.
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when state changes.
 
 The callback signature is:
 
@@ -180,8 +180,8 @@ The callback signature is:
 
     bool onChangeCallback(bool newState, uint8_t newBrightness);
 
-* ``newState`` - New on/off state
-* ``newBrightness`` - New brightness level (1-254)
+* ``newState`` - New on/off state.
+* ``newBrightness`` - New brightness level (1-254).
 
 onChangeOnOff
 ^^^^^^^^^^^^^
@@ -192,7 +192,7 @@ Sets a callback function to be called when the on/off state changes.
 
     void onChangeOnOff(EndPointOnOffCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when on/off state changes
+* ``onChangeCB`` - Function to call when on/off state changes.
 
 The callback signature is:
 
@@ -209,7 +209,7 @@ Sets a callback function to be called when the brightness level changes.
 
     void onChangeBrightness(EndPointBrightnessCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when brightness changes
+* ``onChangeCB`` - Function to call when brightness changes.
 
 The callback signature is:
 

@@ -1,12 +1,13 @@
 tags:
   - two_duts
 
+fqbn_append: PartitionScheme=huge_app
+
 multi_device:
   device0: server
   device1: client
 
 platforms:
-  # Wokwi and QEMU do not support multi-device tests
   wokwi: false
   qemu: false
   hardware:
@@ -14,4 +15,4 @@ platforms:
 
 requires_any:
   - CONFIG_SOC_BLE_SUPPORTED=y
-  - CONFIG_ESP_HOSTED_ENABLED=y
+  - CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y

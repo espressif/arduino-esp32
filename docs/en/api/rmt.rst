@@ -34,9 +34,10 @@ ESP32-C5  2 blocks TX + 2 RX Separate memory for TX and RX channels
 ESP32-C6  2 blocks TX + 2 RX Separate memory for TX and RX channels
 ESP32-H2  2 blocks TX + 2 RX Separate memory for TX and RX channels
 ESP32-P4  4 blocks TX + 4 RX Separate memory for TX and RX channels
+ESP32-S31 4 blocks TX + 4 RX Separate memory for TX and RX channels
 ========= ================== ======================================
 
-Each memory block can store ``RMT_SYMBOLS_PER_CHANNEL_BLOCK`` symbols (64 for ESP32/ESP32-S2, 48 for ESP32-S3/ESP32-C3/ESP32-C5/ESP32-C6/ESP32-H2/ESP32-P4).
+Each memory block can store ``RMT_SYMBOLS_PER_CHANNEL_BLOCK`` symbols (64 for ESP32/ESP32-S2, 48 for ESP32-S3/ESP32-C3/ESP32-C5/ESP32-C6/ESP32-H2/ESP32-P4/ESP32-S31).
 
 **Note:** Each RMT symbol is 4 bytes (32 bits), containing two pulses with their durations and levels.
 
@@ -421,7 +422,7 @@ RMT_SYMBOLS_PER_CHANNEL_BLOCK
 Constant defining the number of RMT symbols per memory block.
 
 * ESP32/ESP32-S2: 64 symbols per block
-* ESP32-S3/ESP32-C3/ESP32-C5/ESP32-C6/ESP32-H2/ESP32-P4: 48 symbols per block
+* ESP32-S3/ESP32-C3/ESP32-C5/ESP32-C6/ESP32-H2/ESP32-P4/ESP32-S31: 48 symbols per block
 
 **Example:**
 

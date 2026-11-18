@@ -6,8 +6,8 @@ This example demonstrates how to use the Zigbee library to create an end device 
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Illuminance Sensor Functions
 
@@ -17,7 +17,7 @@ Currently, this example supports the following targets.
 
 ## Hardware Required
 
-* ESP32-H2 or ESP32-C6 development board
+* ESP32-C5, ESP32-C6, ESP32-H2 or ESP32-S31 development board
 * A USB cable for power supply and programming
 * Some kind of light sensor, such as a photoresistor
 
@@ -26,7 +26,7 @@ Currently, this example supports the following targets.
 In this example the raw analog value of a light sensor is used to calculate illuminance.
 Alter the calculation according to your use case and calibrate it to receive correct lux values.
 Set the illuminance sensor GPIO by changing the `illuminance_sensor_pin` variable to the pin to the pin to which your sensor is connected.
-Set the button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on ESP32-C6 and ESP32-H2).
+Set the button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on all supported boards).
 
 #### Using Arduino IDE
 
@@ -73,6 +73,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

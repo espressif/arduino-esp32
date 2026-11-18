@@ -57,6 +57,53 @@ Sets the hardware version for the endpoint. The value is added to the Basic clus
 
 * ``version`` - Hardware version (0-255)
 
+setDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Sets the Basic cluster ``DeviceEnabled`` attribute (0x0012). When ``false``, the Zigbee stack ignores ZCL commands on this endpoint (the device stays on the network).
+
+Call once **before** ``Zigbee.addEndpoint()`` to add the attribute to the endpoint descriptor (same pattern as ``setManufacturerAndModel()``). After that, ``setDeviceEnabled()`` / ``getDeviceEnabled()`` work before and after ``Zigbee.begin()``. If the attribute was never added, a call after ``begin()`` returns ``false``.
+
+Useful for soft on/off of an endpoint without leaving the network: maintenance mode, temporarily ignoring hub commands while calibrating a sensor, or disabling an unused secondary endpoint on a multi-EP device. A coordinator or other client can also write this attribute remotely once it is exposed.
+
+.. code-block:: arduino
+
+    bool setDeviceEnabled(bool enabled);
+
+* ``enabled`` - ``true`` to accept ZCL commands (default), ``false`` to ignore ZCL commands on this endpoint
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
+getDeviceEnabled
+^^^^^^^^^^^^^^^^
+
+Returns the current ``DeviceEnabled`` value. Useful to check whether the endpoint is accepting commands (for example after a remote write or reboot). If the attribute is not present, returns ``true`` (ZCL default).
+
+.. code-block:: arduino
+
+    bool getDeviceEnabled();
+
+setReportingDefaultResponse
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enables or disables Default Response on **automatic attribute reports** for one attribute.
+Call after ``setReporting()`` (reporting info must already exist; typically after ``Zigbee.begin()``).
+
+Controls whether automatic reports request a Default Response from the receiver.
+Leave enabled (default) when the sketch waits for DefaultRsp to confirm delivery (for example the
+sleepy temperature example). Set ``enabled`` to ``false`` only if reports are fire-and-forget and
+you want to avoid the extra response traffic.
+
+.. code-block:: arduino
+
+    bool setReportingDefaultResponse(uint16_t cluster_id, uint16_t attr_id, bool enabled, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER);
+
+* ``cluster_id`` / ``attr_id`` - Reportable attribute to configure
+* ``enabled`` - ``true`` to request DefaultRsp on reports, ``false`` to disable it
+* ``cluster_role`` - Cluster role (default server)
+
+This function will return ``true`` if set successfully, ``false`` otherwise.
+
 getEndpoint
 ^^^^^^^^^^^
 
@@ -89,7 +136,7 @@ Gets the list of devices bound to this endpoint.
 
 .. code-block:: arduino
 
-    std::vector<esp_zb_binding_info_t> getBoundDevices();
+    std::list<zb_device_params_t *> getBoundDevices() const;
 
 This function will return list of bound device parameters.
 
@@ -266,11 +313,11 @@ Gets the current network time.
 
 .. code-block:: arduino
 
-    struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {});
+    struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, const uint8_t *ieee_addr = nullptr);
 
 * ``endpoint`` - Target endpoint (default: 1)
 * ``short_addr`` - Target device short address (default: 0x0000)
-* ``ieee_addr`` - Target device IEEE address (default: empty)
+* ``ieee_addr`` - Target device IEEE address (default: ``nullptr``)
 
 This function will return network time structure.
 
@@ -281,43 +328,134 @@ Gets the timezone offset.
 
 .. code-block:: arduino
 
-    int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {});
+    int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, const uint8_t *ieee_addr = nullptr);
 
 * ``endpoint`` - Target endpoint (default: 1)
 * ``short_addr`` - Target device short address (default: 0x0000)
-* ``ieee_addr`` - Target device IEEE address (default: empty)
+* ``ieee_addr`` - Target device IEEE address (default: ``nullptr``)
 
 This function will return GMT offset in seconds.
 
 OTA Support
 ***********
 
+The OTA Upgrade client cluster receives a **full** Zigbee OTA image (not Delta OTA).
+Use a dual-OTA partition scheme (for example ``Zigbee 4MB with spiffs``).
+
+Manufacturer code, image type and file version must match the OTA image header and the
+coordinator policy (ZHA / Zigbee2MQTT / ESP Zigbee ``ota_server``).
+
 addOTAClient
 ^^^^^^^^^^^^
 
-Adds OTA client to the endpoint for firmware updates.
+Adds OTA client to the endpoint for firmware updates. Call before ``Zigbee.addEndpoint()``.
 
 .. code-block:: arduino
 
-    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 223);
+    bool addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 48);
 
-* ``file_version`` - Current firmware version
-* ``downloaded_file_ver`` - Downloaded file version
-* ``hw_version`` - Hardware version
+* ``file_version`` - Current firmware version (``CurrentFileVersion``)
+* ``downloaded_file_ver`` - ``DownloadedFileVersion`` (``0xFFFFFFFF`` = none stored). Must not equal the image version offered by the OTA server or the stack will skip the download after Query approve.
+* ``hw_version`` - Hardware version (passed in Query Next Image when non-zero)
 * ``manufacturer`` - Manufacturer code (default: 0x1001)
 * ``image_type`` - Image type code (default: 0x1011)
-* ``max_data_size`` - Maximum data size for OTA transfer (default: 223)
+* ``max_data_size`` - Maximum Image Block size (default: 48, the stack default; use 223 with Espressif ``ota_server``)
+
+After ``Zigbee.begin()``, ``requestOTAUpdate()`` applies ``hw_version`` and ``max_data_size``
+via the stack APIs.
 
 This function will return ``true`` if added successfully, ``false`` otherwise.
 
 requestOTAUpdate
 ^^^^^^^^^^^^^^^^
 
-Requests OTA update from the server.
+Discovers an OTA Upgrade server on the coordinator (Match Descriptor) and sends
+Query Next Image. Call after the device is connected. Further queries are sent
+every hour automatically. A coordinator (for example Home Assistant ZHA) can also
+start an upgrade with Image Notify without this call.
 
 .. code-block:: arduino
 
     void requestOTAUpdate();
+
+onOTAStateChange / onOTAComplete
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional callbacks for OTA transfer lifecycle:
+
+.. code-block:: arduino
+
+    void onOTAStateChange(void (*callback)(bool active));
+    void onOTAComplete(void (*callback)(bool success));
+
+* ``onOTAStateChange`` - ``true`` when download/apply becomes active, ``false`` when inactive
+* ``onOTAComplete`` - ``true`` on successful FINISH (before reboot), ``false`` on abort/failure
+
+Creating a Zigbee OTA image (Export)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With **Tools → Zigbee Mode** enabled and OTA macros / ``addOTAClient()`` in the
+sketch, **Sketch → Export compiled Binary** runs ``tools/zb_ota_image.py`` and
+writes ``MMMM-TTTT-VVVVVVVV-ota-file.zigbee`` beside the ``.bin`` (build folder
+and ``sketch/build/<fqbn>/``).
+
+Sketch ``#define`` literals the tool reads:
+
+* ``OTA_UPGRADE_MANUFACTURER`` (default ``0x1001`` if omitted but OTA is detected)
+* ``OTA_UPGRADE_IMAGE_TYPE`` (default ``0x1011``)
+* ``OTA_UPGRADE_FILE_VERSION`` or ``OTA_UPGRADE_RUNNING_FILE_VERSION`` (required;
+  must be **greater than** the version running on the device for ZHA to offer it)
+* Optional: ``OTA_UPGRADE_MIN_HW_VERSION`` + ``OTA_UPGRADE_MAX_HW_VERSION`` (only if
+  you need hardware filtering; omit for ZHA local-file testing), and
+  ``OTA_UPGRADE_HEADER_STRING``
+
+The hook soft-skips (does not fail Export) when Zigbee Mode is Disabled, the
+sketch has no OTA intent, or required macros are missing.
+
+Manual alternative: Espressif's
+`image_builder_tool <https://github.com/espressif/esp-zigbee-sdk/tree/main/tools/image_builder_tool>`_
+(see
+`Generate and apply OTA upgrade image <https://docs.espressif.com/projects/esp-zigbee-sdk/en/latest/esp32/user-guide/zcl_ota_upgrade.html>`_).
+
+OTA with Home Assistant ZHA
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Until you place any matching ``.zigbee`` file in the Home Assistant OTA folder
+(``zigpy_ota``), ZHA shows the device firmware as **Unknown** — it has nothing
+to compare against. Upload an image with the **same** version as the firmware
+already on the device to see **Up-to-date**, or a **newer** version when you want
+an Update available.
+
+1. USB-flash a build that is already joined to ZHA (note the running
+   ``OTA_UPGRADE_RUNNING_FILE_VERSION`` on Serial).
+2. Bump ``OTA_UPGRADE_RUNNING_FILE_VERSION`` to a **higher** value (do not USB-flash
+   that build), keep Zigbee Mode enabled, and use **Sketch → Export compiled Binary**
+   to produce the ``.zigbee`` file (or wrap the ``.bin`` with ``image_builder_tool``).
+   ZHA only offers images newer than the device's current file version.
+3. On Home Assistant, install the **Samba share** add-on (or another way to reach
+   the ``config`` folder). Create ``config/zigpy_ota/`` and copy the ``.zigbee``
+   file there.
+4. Add Zigpy OTA config to ``configuration.yaml``. The ``advanced`` provider
+   requires the exact ``warning`` text below (do not paraphrase — zigpy rejects
+   any other string)::
+
+       zha:
+         zigpy_config:
+           ota:
+             extra_providers:
+               - type: advanced
+                 path: /config/zigpy_ota
+                 warning: >-
+                   I understand I can *destroy* my devices by enabling OTA updates from files.
+                   Some OTA updates can be mistakenly applied to the wrong device, breaking it.
+                   I am consciously using this at my own risk.
+5. After copying or replacing the ``.zigbee`` file, open
+   **Settings → Devices & services → Zigbee Home Automation**, click the **⋮**
+   (three dots) on the ZHA integration card, and choose **Reload** so the OTA
+   provider picks up the new file (a full Home Assistant restart also works).
+6. Join the Arduino end device if needed, open the device page and use
+   **Update** to start the firmware upgrade. Wait until the device reboots on
+   the new image.
 
 Device Discovery
 ****************
@@ -329,7 +467,7 @@ Reads the manufacturer name from a remote device.
 
 .. code-block:: arduino
 
-    char *readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
+    char *readManufacturer(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``short_addr`` - Target device short address
@@ -344,7 +482,7 @@ Reads the model identifier from a remote device.
 
 .. code-block:: arduino
 
-    char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
+    char *readModel(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``short_addr`` - Target device short address
@@ -367,6 +505,36 @@ Sets a callback function for identify events.
 * ``callback`` - Function to call when identify event occurs
 * ``time`` - Identify time in seconds
 
+identifyQuery
+^^^^^^^^^^^^^
+
+Sends an Identify Query command. Devices that are currently identifying reply with an Identify Query Response
+(see ``onIdentifyQueryResponse``). Useful for finding & binding style discovery: broadcast a query and collect
+responses from devices the user has put into identify mode (for example via the hub or a button).
+
+.. code-block:: arduino
+
+    bool identifyQuery(uint16_t short_addr = 0xFFFF, uint8_t dst_endpoint = EZB_AF_ENDPOINT_BROADCAST_ID);
+
+* ``short_addr`` - Destination short address (default ``0xFFFF`` = broadcast)
+* ``dst_endpoint`` - Destination endpoint (default broadcast endpoint)
+
+This function will return ``true`` if the command was sent, ``false`` otherwise.
+
+onIdentifyQueryResponse
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a callback for Identify Query Response messages received on this endpoint.
+
+.. code-block:: arduino
+
+    void onIdentifyQueryResponse(void (*callback)(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address));
+
+* ``callback`` - Function to call for each response
+* ``timeout`` - Remaining identify time in seconds on the remote device
+* ``src_endpoint`` - Endpoint of the identifying device
+* ``src_address`` - Address of the identifying device
+
 onDefaultResponse
 ^^^^^^^^^^^^^^^^^
 
@@ -374,7 +542,7 @@ Sets a callback for default response messages for this endpoint.
 
 .. code-block:: arduino
 
-    void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status));
+    void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status));
 
 * ``callback`` - Function pointer to the callback function
 

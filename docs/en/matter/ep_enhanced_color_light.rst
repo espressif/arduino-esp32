@@ -8,22 +8,22 @@ About
 The ``MatterEnhancedColorLight`` class provides an Extended Color Light (0x010D) with RGB (HSV and XY), brightness, and color temperature. Use ``MatterColorLight`` when the endpoint must not include color temperature.
 
 **Features:**
-* On/off control
-* RGB color control with HSV color model
-* Brightness level control (0-255; Matter CurrentLevel uses 1-254, and 255 is the nullable null sentinel)
-* Color temperature control (100-500 mireds; higher mireds are warmer)
-* State persistence support
-* Callback support for all parameter changes
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* On/off control.
+* RGB color control with HSV color model.
+* Brightness level control (0-255; Matter CurrentLevel uses 1-254, and 255 is the nullable null sentinel).
+* Color temperature control (100-500 mireds; higher mireds are warmer).
+* State persistence support.
+* Callback support for all parameter changes.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Full-featured RGB smart lights
-* Advanced color and temperature control
-* Mood lighting with all features
-* Entertainment lighting
-* Circadian lighting with color temperature
-* Smart home advanced lighting automation
+* Full-featured RGB smart lights.
+* Advanced color and temperature control.
+* Mood lighting with all features.
+* Entertainment lighting.
+* Circadian lighting with color temperature.
+* Smart home advanced lighting automation.
 
 API Reference
 -------------
@@ -52,10 +52,10 @@ Initializes the Matter enhanced color light endpoint with optional initial state
 
     bool begin(bool initialState = false, espHsvColor_t colorHSV = {21, 216, 25}, uint8_t newBrightness = 25, uint16_t colorTemperature = 454);
 
-* ``initialState`` - Initial on/off state (default: ``false`` = off)
-* ``colorHSV`` - Initial HSV color (default: HSV(21, 216, 25) = warm white)
-* ``newBrightness`` - Initial brightness level (0-255, default: 25 = 10%)
-* ``colorTemperature`` - Initial color temperature in mireds (100-500, default: 454 = Warm White)
+* ``initialState`` - Initial on/off state (default: ``false`` = off).
+* ``colorHSV`` - Initial HSV color (default: HSV(21, 216, 25) = warm white).
+* ``newBrightness`` - Initial brightness level (0-255, default: 25 = 10%).
+* ``colorTemperature`` - Initial color temperature in mireds (100-500, default: 454 = Warm White).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

@@ -54,7 +54,7 @@ Toggles the state of bound lights (on to off, or off to on).
     void lightToggle();
     void lightToggle(uint16_t group_addr);
     void lightToggle(uint8_t endpoint, uint16_t short_addr);
-    void lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightToggle(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
@@ -71,7 +71,7 @@ Turns on bound lights.
     void lightOn();
     void lightOn(uint16_t group_addr);
     void lightOn(uint8_t endpoint, uint16_t short_addr);
-    void lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightOn(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
@@ -88,7 +88,7 @@ Turns off bound lights.
     void lightOff();
     void lightOff(uint16_t group_addr);
     void lightOff(uint8_t endpoint, uint16_t short_addr);
-    void lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void lightOff(uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
@@ -108,7 +108,7 @@ Sets the brightness level of bound lights.
     void setLightLevel(uint8_t level);
     void setLightLevel(uint8_t level, uint16_t group_addr);
     void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
-    void setLightLevel(uint8_t level, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void setLightLevel(uint8_t level, uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``level`` - Brightness level (0-100, where 0 is off, 100 is full brightness)
 * ``group_addr`` - Group address to control (optional)
@@ -126,7 +126,7 @@ Sends a level step command to bound lights: changes the current level by a fixed
     void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time);
     void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint16_t group_addr);
     void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr);
-    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``direction`` - ``ZIGBEE_LEVEL_STEP_UP`` (0) or ``ZIGBEE_LEVEL_STEP_DOWN`` (1)
 * ``step_size`` - Number of level units to step (e.g. 1–254; one step = one unit change in CurrentLevel)
@@ -156,7 +156,7 @@ Sets the color of bound lights using RGB values.
     void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
     void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr);
     void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr);
-    void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+    void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, const uint8_t *ieee_addr);
 
 * ``red`` - Red component (0-255)
 * ``green`` - Green component (0-255)

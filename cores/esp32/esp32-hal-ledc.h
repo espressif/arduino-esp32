@@ -109,7 +109,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
  * @brief Set the duty cycle of a given pin.
  *
  * @param pin GPIO pin
- * @param duty duty cycle to set
+ * @param duty duty cycle to set. Valid range is [0, 2^resolution] (inclusive, full on).
  *
  * @return true if duty cycle was successfully set, false otherwise.
  */
@@ -119,7 +119,7 @@ bool ledcWrite(uint8_t pin, uint32_t duty);
  * @brief Set the duty cycle of a given channel.
  *
  * @param channel LEDC channel
- * @param duty duty cycle to set
+ * @param duty duty cycle to set. Valid range is [0, 2^resolution] (inclusive, full on).
  *
  * @return true if duty cycle was successfully set, false otherwise.
  */
@@ -204,9 +204,11 @@ bool ledcOutputInvert(uint8_t pin, bool out_invert);
  * @brief Setup and start a fade on a given LEDC pin.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
+ *
+ * Fade may go up or down.
  *
  * @return true if fade was successfully set and started, false otherwise.
  */
@@ -216,10 +218,12 @@ bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fa
  * @brief Setup and start a fade on a given LEDC pin with a callback function.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
  * @param userFunc callback function to be called after fade is finished
+ *
+ * Fade may go up or down.
  *
  * @return true if fade was successfully set and started, false otherwise.
  */
@@ -229,11 +233,13 @@ bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_dut
  * @brief Setup and start a fade on a given LEDC pin with a callback function and argument.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
  * @param userFunc callback function to be called after fade is finished
  * @param arg argument to be passed to the callback function
+ *
+ * Fade may go up or down.
  *
  * @return true if fade was successfully set and started, false otherwise.
  */
@@ -276,9 +282,11 @@ void ledcSetGammaFactor(float factor);
  *        Gamma correction makes LED brightness changes appear more gradual to human eyes.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
+ *
+ * Fade may go up or down.
  *
  * @return true if gamma fade was successfully set and started, false otherwise.
  *
@@ -290,10 +298,12 @@ bool ledcFadeGamma(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int m
  * @brief Setup and start a gamma curve fade on a given LEDC pin with a callback function.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
  * @param userFunc callback function to be called after fade is finished
+ *
+ * Fade may go up or down.
  *
  * @return true if gamma fade was successfully set and started, false otherwise.
  *
@@ -305,11 +315,13 @@ bool ledcFadeGammaWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t targe
  * @brief Setup and start a gamma curve fade on a given LEDC pin with a callback function and argument.
  *
  * @param pin GPIO pin
- * @param start_duty initial duty cycle of the fade
- * @param target_duty target duty cycle of the fade
+ * @param start_duty initial duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
+ * @param target_duty target duty cycle of the fade. Valid range is [0, 2^resolution] (inclusive, full on).
  * @param max_fade_time_ms maximum fade time in milliseconds
  * @param userFunc callback function to be called after fade is finished
  * @param arg argument to be passed to the callback function
+ *
+ * Fade may go up or down.
  *
  * @return true if gamma fade was successfully set and started, false otherwise.
  *

@@ -85,6 +85,7 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _psKey = NULL;
   next = NULL;
   _alpn_protos = NULL;
+  _use_ca_bundle = false;
   _cipher_list = NULL;
 }
 
@@ -104,6 +105,7 @@ void NetworkClientSecure::stop() {
   stop_ssl_socket(sslclient.get());
 
   _connected = false;
+  _sse = false;
   sslclient->peek_buf = -1;
   _lastReadTimeout = 0;
   _lastWriteTimeout = 0;
@@ -337,6 +339,9 @@ void NetworkClientSecure::setInsecure() {
   _private_key = NULL;
   _pskIdent = NULL;
   _psKey = NULL;
+  _use_ca_bundle = false;
+  // Not attach_ssl_certificate_bundle(): it references esp_crt_bundle_attach and would link the CA bundle.
+  sslclient->bundle_attach_cb = NULL;
   _use_insecure = true;
 }
 
@@ -354,6 +359,7 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
     esp_crt_bundle_set(bundle, size);
     attach_ssl_certificate_bundle(sslclient.get(), true);
     _use_ca_bundle = true;
+    _use_insecure = false;
   } else {
     esp_crt_bundle_detach(NULL);
     attach_ssl_certificate_bundle(sslclient.get(), false);
@@ -362,8 +368,14 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
 }
 
 void NetworkClientSecure::useBuiltinCACertBundle() {
+  if (_ca_cert_free && _CA_cert) {
+    free((void *)_CA_cert);
+    _ca_cert_free = false;
+  }
+  _CA_cert = NULL;
   attach_ssl_certificate_bundle(sslclient.get(), true);
   _use_ca_bundle = true;
+  _use_insecure = false;
 }
 
 void NetworkClientSecure::setCertificate(const char *client_ca) {

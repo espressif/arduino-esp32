@@ -1,0 +1,6 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_BT_LE_ISO_SUPPORT=y
+  - CONFIG_BT_BAP_BROADCAST_SINK=y
+  - CONFIG_BT_BAP_SCAN_DELEGATOR=y

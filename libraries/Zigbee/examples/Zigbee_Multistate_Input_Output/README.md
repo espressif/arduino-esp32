@@ -6,8 +6,8 @@ This example shows how to configure the Zigbee end device and use it as a Home A
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 | ESP32-S31 |
+| ----------------- | -------- | -------- | -------- | --------- |
 
 ## Multistate Device Functions
 
@@ -29,7 +29,7 @@ This example demonstrates two different multistate devices:
 
 ### Configure the Project
 
-Set the Button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on ESP32-C6 and ESP32-H2).
+Set the Button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on all supported boards).
 
 The example creates two multistate devices:
 - **Endpoint 1**: Standard multistate device using predefined Zigbee application types
@@ -85,6 +85,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
+* ESP32-C5 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf)
 * ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
+* ESP32-S31 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s31_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

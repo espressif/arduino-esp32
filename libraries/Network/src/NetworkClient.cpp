@@ -169,6 +169,12 @@ private:
   int sockfd;
 
 public:
+  // Legacy Server-Sent Events marker for this connection (deprecated, use
+  // WebServer::enableSSE()/isSSE()). Stored on the handle so every copy
+  // sharing the socket observes a single flag; a fresh accept() creates a
+  // fresh handle, so each new connection starts clear.
+  bool sse = false;
+
   NetworkClientSocketHandle(int fd) : sockfd(fd) {}
 
   ~NetworkClientSocketHandle() {
@@ -180,6 +186,7 @@ public:
       ::close(sockfd);
       sockfd = -1;
     }
+    sse = false;
   }
 
   int fd() {
@@ -204,6 +211,7 @@ void NetworkClient::stop() {
   _rxBuffer = NULL;
   _connected = false;
   _readEOF = false;
+  _sse = false;
   _lastReadTimeout = 0;
   _lastWriteTimeout = 0;
 }
@@ -734,10 +742,19 @@ int NetworkClient::fd() const {
   }
 }
 
+// Deprecated legacy SSE marker (use WebServer::enableSSE()/isSSE()).
 void NetworkClient::setSSE(bool sse) {
   _sse = sse;
+  if (clientSocketHandle) {
+    clientSocketHandle->sse = sse;
+  }
 }
 
 bool NetworkClient::isSSE() {
+  if (clientSocketHandle) {
+    return clientSocketHandle->sse;
+  }
+  // No socket handle (e.g. NetworkClientSecure, which owns its fd outside
+  // NetworkClientSocketHandle): fall back to the per-object marker.
   return _sse;
 }

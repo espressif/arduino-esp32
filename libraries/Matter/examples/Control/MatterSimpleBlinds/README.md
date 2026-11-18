@@ -1,6 +1,6 @@
 # Matter Simple Blinds Example
 
-This is a minimal example demonstrating how to create a Matter-compatible window covering device with lift control only. This example uses a single `onGoToLiftPercentage()` callback to handle all window covering lift changes, making it ideal for simple implementations.
+This is a minimal lift-only window covering. The hub writes Target; the sketch simulates a motor at **1% every 200 ms**, reports Current while it moves, and sets Lift Opening / Closing / Stall so the app can show travel.
 
 ## Supported Targets
 
@@ -33,9 +33,10 @@ To change the path, call `Matter.selectNetwork()` **before** any accessory `begi
 
 ## Features
 
-- Matter protocol implementation for a window covering device
-- **Lift control only** (0-100%) - simplified implementation
-- **Single `onGoToLiftPercentage()` callback** - handles all window covering lift changes when `TargetPositionLiftPercent100ths` changes
+- Lift-only `ROLLERSHADE` (0 = open, 100 = closed in Matter lift scale)
+- Simulated motor: **1 percent every 200 ms** (full travel about 20 s). A new Target mid-move changes direction
+- Reports `CurrentPositionLiftPercent100ths` each step and Lift `OperationalState` (Opening / Closing / Stall)
+- Single `onGoToLiftPercentage()` callback when Target changes
 - Matter commissioning via QR code or manual pairing code
 - Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
 
@@ -60,8 +61,8 @@ Before uploading the sketch, configure the following:
 
 1. **Wi-Fi Credentials** (for ESP32 and ESP32-S2 only):
    ```cpp
-   const char *ssid = "your-ssid";
-   const char *password = "your-password";
+   #define WIFI_SSID "your-ssid"
+   #define WIFI_PASSWORD "your-password"
    ```
 
 ## Building and Flashing
@@ -99,62 +100,53 @@ Controller CASE session is up.
 Matter started
 ```
 
-When a command is received from the Matter controller:
+When the hub sets a new lift target (starts closed at 100%):
 ```
 Window Covering change request: Lift=50%
+Opening: 100% -> 50%
+Lift reached 50%
 ```
+
+Alexa shows Opening or Closing and the moving lift position until Stall. A new Target while moving retargets the simulation.
 
 ## Usage
 
 1. **Commissioning**: Use the QR code or manual pairing code to commission the device to your Matter hub (Home Assistant, Apple Home, Google Home, or Amazon Alexa).
 
-2. **Control**: Once commissioned, you can control the window covering lift percentage (0-100%) from your smart home app. The `onGoToLiftPercentage()` callback will be triggered whenever the target lift percentage changes.
+2. **Control**: Set lift 0-100% from the app. The callback accepts Target and starts Opening or Closing; `loop()` steps Current by 1% every 200 ms until Stall.
 
 ## Code Structure
 
-- **`onBlindsLift()`**: Callback function that handles window covering lift changes. This is registered with `WindowBlinds.onGoToLiftPercentage()` and is triggered when `TargetPositionLiftPercent100ths` changes. The callback receives the target lift percentage (0-100%).
-- **`setup()`**: Initializes Wi-Fi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, starts Matter, and waits for commissioning / CASE via `matterWaitUntilReady()`.
-- **`loop()`**: `matterRestartIfNoFabric()` reboots if the hub removed the fabric. Lift commands are handled in `onBlindsLift()`.
+- **`onBlindsLift()`**: Accepts the new Target (PRE_UPDATE: `liftPercent` / `getTargetLiftPercent100ths()` are the request) and sets Lift Opening or Closing. Does not snap Current.
+- **`simulateLiftStep()`**: From `loop()`, 1% every 200 ms via `setCurrentLiftPercent100ths()`. On arrival, copies Target 100ths and sets Stall.
+- **`setup()`**: Wi-Fi if needed, `ROLLERSHADE` at 100% closed, callback, Matter, `matterWaitUntilReady()`.
+- **`loop()`**: `matterRestartIfNoFabric()` and the lift simulation.
 
 ## Customization
 
 ### Adding Motor Control
 
-In the `onBlindsLift()` callback, replace the simulation code with actual motor control:
+Keep the same reporting contract as the simulation. Drive the motor toward `liftPercent`, set Opening/Closing when it starts, write Current as it moves, and on arrival:
 
 ```cpp
-bool onBlindsLift(uint8_t liftPercent) {
-  Serial.printf("Moving window covering to %" PRIu8 "%%\r\n", liftPercent);
-
-  // Here you would control your actual motor/actuator
-  // For example:
-  // - Calculate target position based on liftPercent and installed limits (if configured)
-  // - Move motor to target position
-  // - When movement is complete, update current position:
-  //   WindowBlinds.setLiftPercentage(finalLiftPercent);
-  //   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
-
-  // For this minimal example, we just return true to accept the command
-  return true;  // Indicate command was accepted
-}
+WindowBlinds.setCurrentLiftPercent100ths(WindowBlinds.getTargetLiftPercent100ths());
+WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
 ```
+
+Change `kSimStepPercent` / `kSimStepMs` to match a slower or faster shade.
 
 ## Troubleshooting
 
 1. **Device not discoverable**: Ensure Wi-Fi is connected (for ESP32/ESP32-S2) or BLE is enabled (for other chips).
 
-2. **Lift percentage not updating**: Check that `onGoToLiftPercentage()` callback is properly registered and that `setLiftPercentage()` is called when movement is complete to update the `CurrentPosition` attribute.
+2. **Lift percentage not updating**: Current is reported from `loop()`, not from the callback. Confirm `simulateLiftStep()` runs and that the last step writes `getTargetLiftPercent100ths()` plus Lift `STALL`.
 
-3. **Commands not working**: Ensure the callback returns `true` to accept the command. If it returns `false`, the command will be rejected.
+3. **Alexa stays on "Opening" after the shade should have arrived**: Current 100ths must equal Target. The last step uses `getTargetLiftPercent100ths()` (cached new request; a cluster read in PRE_UPDATE is still the previous Target).
 
-4. **Motor not responding**: Replace the simulation code in `onBlindsLift()` with your actual motor control implementation. Remember to update `CurrentPosition` and set `OperationalState` to `STALL` when movement is complete.
+4. **Motor not responding**: Replace `simulateLiftStep()` with your motor, but keep the same Current and Stall reports when it arrives.
 
 ## Notes
 
-- This example uses `ROLLERSHADE` window covering type (lift only, no tilt).
-- The example accepts commands but doesn't actually move a motor. In a real implementation, you should:
-  1. Move the motor to the target position in the callback
-  2. Update `CurrentPositionLiftPercent100ths` using `setLiftPercentage()` when movement is complete
-  3. Set `OperationalState` to `STALL` using `setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL)` to indicate the device has reached the target position
-- **Important**: `onGoToLiftPercentage()` is called when `TargetPositionLiftPercent100ths` changes. This happens when commands are executed or when a Matter controller writes directly to the target position attribute.
-- Commands modify `TargetPosition`, not `CurrentPosition`. The application is responsible for updating `CurrentPosition` when the physical device actually moves.
+- `ROLLERSHADE` (lift only). 0 = open, 100 = closed in Matter lift scale. Boot position is 100 percent closed.
+- The sketch simulates travel (1%/200 ms). A real motor should report Current while moving and Stall when it arrives.
+- `onGoToLiftPercentage()` accepts Target only. Current is updated from `loop()`.

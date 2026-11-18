@@ -17,9 +17,9 @@ uint8_t ledB = 4;
 
 const boolean invert = true;  // set true if common anode, false if common cathode
 
-uint8_t color = 0;         // a value from 0 to 255 representing the hue
-uint32_t R, G, B;          // the Red Green and Blue color components
-uint8_t brightness = 255;  // 255 is maximum brightness, but can be changed.  Might need 256 for common anode to fully turn off.
+uint8_t color = 0;         // hue for hueToRGB(), 0 to 255
+uint32_t R, G, B;          // Red, Green and Blue PWM duties written with ledcWrite()
+uint8_t brightness = 255;  // hueToRGB() scale 0-255, not LEDC 8-bit full on (that is 256)
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -35,12 +35,12 @@ void setup() {
 
 // void loop runs over and over again
 void loop() {
-  Serial.println("Send all LEDs a 255 and wait 2 seconds.");
-  // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
-  // If it doesn't fully turn off and is common anode try using 256.
-  ledcWrite(ledR, 255);
-  ledcWrite(ledG, 255);
-  ledcWrite(ledB, 255);
+  Serial.println("Send all LEDs a 256 (8-bit LEDC full on) and wait 2 seconds.");
+  // If your RGB LED turns off instead of on here, check common anode vs cathode.
+  // invert == true (common anode): LEDC full on (256) turns the LED fully off.
+  ledcWrite(ledR, 256);
+  ledcWrite(ledG, 256);
+  ledcWrite(ledB, 256);
   delay(2000);
   Serial.println("Send all LEDs a 0 and wait 2 seconds.");
   ledcWrite(ledR, 0);
@@ -54,10 +54,10 @@ void loop() {
 
     hueToRGB(color, brightness);  // call function to convert hue to RGB
 
-    // write the RGB values to the pins
-    ledcWrite(ledR, R);  // write red component to channel 1, etc.
-    ledcWrite(ledG, G);
-    ledcWrite(ledB, B);
+    // hueToRGB() stays on a 0..255 scale. At 8-bit, 255 is one step below LEDC full on/off, so map that endpoint to 256.
+    ledcWrite(ledR, R == 255 ? 256 : R);
+    ledcWrite(ledG, G == 255 ? 256 : G);
+    ledcWrite(ledB, B == 255 ? 256 : B);
 
     delay(100);  // full cycle of rgb over 256 colors takes 26 seconds
   }

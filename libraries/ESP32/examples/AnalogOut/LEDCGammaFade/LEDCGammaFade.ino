@@ -23,7 +23,7 @@
 
 // define starting duty, target duty and maximum fade time
 #define LEDC_START_DUTY  (0)
-#define LEDC_TARGET_DUTY (4095)
+#define LEDC_TARGET_DUTY (4096)
 #define LEDC_FADE_TIME   (2000)
 
 // gamma factor for mathematical calculation
@@ -73,7 +73,7 @@ void setup() {
   ledcSetGammaFactor(LEDC_GAMMA_FACTOR);  // This is optional to set custom gamma factor (default is 2.8)
 #endif
 
-  // Setup and start gamma curve fade on led (duty from 0 to 4095)
+  // Setup and start gamma curve fade on led (duty from 0 to 4096)
   ledcFadeGamma(ledPinR, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME);
   ledcFadeGamma(ledPinG, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME);
   ledcFadeGamma(ledPinB, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME);
@@ -82,7 +82,7 @@ void setup() {
   // Wait for fade to end
   delay(LEDC_FADE_TIME);
 
-  // Setup and start gamma curve fade off led and use ISR (duty from 4095 to 0)
+  // Setup and start gamma curve fade off led and use ISR (duty from 4096 to 0)
   ledcFadeGammaWithInterrupt(ledPinR, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
   ledcFadeGammaWithInterrupt(ledPinG, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
   ledcFadeGammaWithInterrupt(ledPinB, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);

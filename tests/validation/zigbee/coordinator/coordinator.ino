@@ -6,10 +6,10 @@
  * ZCL interop (coordinator switch -> end device light) runs in loop() only
  * after pytest sends RUN_INTEROP (once the end device has joined).
  *
- * Zigbee.begin() is called only once per boot.
+ * SDK v2 lifecycle: role() once, configure and add endpoints, then begin() once.
  *
  * Pin-to-pin: wireless (802.15.4 radio)
- * Runner: two_duts (C6/H2)
+ * Runner: two_duts (C5/C6/H2/S31)
  * Requires: CONFIG_ZB_ENABLED=y, ZigbeeMode=zczr, PartitionScheme=zigbee_zczr
  */
 
@@ -47,7 +47,11 @@ static void poll_serial_commands(void) {
   while (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim();
-    if (cmd == "RUN_INTEROP") {
+    if (cmd == "OPEN_NETWORK") {
+      // Re-open permit-join when the end device is about to start joining.
+      Zigbee.openNetwork(180);
+      Serial.println("[COORDINATOR] NETWORK_OPEN");
+    } else if (cmd == "RUN_INTEROP") {
       arm_switch_interop();
     }
   }
@@ -72,13 +76,22 @@ void test_coordinator_config(void) {
   TEST_ASSERT_TRUE(Zigbee.allowMultiEndpointBinding());
 
   Zigbee.setTimeout(ZB_TIMEOUT_MS);
-  Zigbee.setPrimaryChannelMask(ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK);
+  // Channel mask and radio config are applied inside role().
+  Zigbee.setPrimaryChannelMask(ZB_TRANSCEIVER_ALL_CHANNELS_MASK);
 
-  esp_zb_radio_config_t radio = Zigbee.getRadioConfig();
-  TEST_ASSERT_EQUAL(ZB_RADIO_MODE_NATIVE, radio.radio_mode);
+  esp_zigbee_radio_config_t radio = Zigbee.getRadioConfig();
+  TEST_ASSERT_EQUAL(ESP_ZIGBEE_RADIO_MODE_NATIVE, radio.radio_mode);
 
-  esp_zb_host_config_t host = Zigbee.getHostConfig();
-  TEST_ASSERT_EQUAL(ZB_HOST_CONNECTION_MODE_NONE, host.host_connection_mode);
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR, true), "role() failed");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must initialize the stack");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.role(ZIGBEE_COORDINATOR), "duplicate role() must succeed");
+
+  // TC / BDB policy APIs (after role())
+  Zigbee.setAllowRejoinsWithWellKnownKey(false);
+  TEST_ASSERT_FALSE(Zigbee.getAllowRejoinsWithWellKnownKey());
+  Zigbee.setAllowRejoinsWithWellKnownKey(true);
+  TEST_ASSERT_TRUE(Zigbee.getAllowRejoinsWithWellKnownKey());
+  Zigbee.setRouterRejoinRequired(true);  // callable on coordinator; no crash
 }
 
 // ==================== All endpoint types (before begin) ====================
@@ -91,7 +104,8 @@ void test_coordinator_register_all_endpoints(void) {
 // ==================== Stack init ====================
 
 void test_coordinator_begin(void) {
-  TEST_ASSERT_TRUE(Zigbee.begin(ZIGBEE_COORDINATOR, true));
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.initialized(), "role() must run before begin()");
+  TEST_ASSERT_TRUE(Zigbee.begin());
 
   unsigned long start = millis();
   while (!Zigbee.started() && millis() - start < ZB_TIMEOUT_MS) {
@@ -99,8 +113,9 @@ void test_coordinator_begin(void) {
   }
   TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "Coordinator failed to start stack");
 
-  TEST_ASSERT_FALSE_MESSAGE(Zigbee.begin(ZIGBEE_COORDINATOR, true), "duplicate begin() must return false");
-  TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "stack must keep running after rejected begin()");
+  // A second begin() does not restart the stack; it reports that it is already running.
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.begin(), "duplicate begin() must return started()");
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.started(), "stack must keep running after duplicate begin()");
 }
 
 // ==================== stop / start ====================
@@ -141,6 +156,28 @@ void test_coordinator_form_network(void) {
   Serial.println("[COORDINATOR] NETWORK_READY");
 }
 
+// ==================== Identify Query send (after network up) ====================
+
+static volatile bool identify_query_rsp_seen = false;
+
+static void onIdentifyQueryRsp(uint16_t timeout, uint8_t src_endpoint, ezb_address_t src_address) {
+  (void)timeout;
+  (void)src_endpoint;
+  (void)src_address;
+  identify_query_rsp_seen = true;
+}
+
+void test_coordinator_identify_query(void) {
+  TEST_ASSERT_TRUE_MESSAGE(Zigbee.connected(), "network required for Identify Query");
+
+  identify_query_rsp_seen = false;
+  // Gateway registers Identify client; use it to send the query.
+  epGateway.onIdentifyQueryResponse(onIdentifyQueryRsp);
+  // Broadcast send must succeed; a response is only expected if a peer is identifying (manual HIL).
+  TEST_ASSERT_TRUE_MESSAGE(epGateway.identifyQuery(), "identifyQuery() send failed");
+  (void)identify_query_rsp_seen;
+}
+
 // ==================== Deep endpoint APIs (after network up) ====================
 
 void test_coordinator_endpoint_deep_tests(void) {
@@ -167,6 +204,7 @@ void setup() {
   RUN_TEST(test_coordinator_stop_start);
   RUN_TEST(test_coordinator_role);
   RUN_TEST(test_coordinator_form_network);
+  RUN_TEST(test_coordinator_identify_query);
   RUN_TEST(test_coordinator_endpoint_deep_tests);
 
   UNITY_END();

@@ -222,9 +222,22 @@ public:
   }
   // The client used for the current request. A derived class can override
   // this (together with acceptClient()) to use a wrapped connection, e.g. TLS.
+  // All response paths go through this hook, so an override observes every
+  // byte written to the active connection.
   virtual NetworkClient &client() {
     return _currentClient;
   }
+  // Enable Server-Sent Events for the current connection: the server keeps
+  // the connection open after the handler returns instead of closing it.
+  // The marker is owned by the server and reset for every new connection, so
+  // it is independent of which client wrapper is used to reach the connection.
+  void enableSSE(bool enable = true) {
+    _sseActive = enable;
+  }
+  // Whether the current connection is a held SSE stream. Reflects both the
+  // server-owned marker (enableSSE()) and the deprecated client-side marker,
+  // so legacy sketches keep working.
+  bool isSSE();
   // A handler registered with an upload callback also receives raw
   // (non-multipart) bodies, so upload() may be reached with no upload in
   // progress and vice versa. Report an inactive object rather than
@@ -331,12 +344,18 @@ protected:
     return _currentClient;
   }
 
-  // Called when the active connection is finished. The default stops client()
-  // and releases _currentClient. A derived class with a different ownership
-  // model can override this.
+  // Called when the active connection is finished. The default releases the
+  // server's reference to the connection and resets any in-progress chunked
+  // session and the SSE marker. It deliberately does not stop the client:
+  // other holders of the same connection (e.g. a sketch-kept copy pushing
+  // Server-Sent Events) keep working until they release it. A derived class
+  // that owns the connection separately instead of sharing the accepted
+  // handle must stop its own wrapper here.
   virtual void closeClient() {
-    client().stop();
     _currentClient = NetworkClient();
+    _chunkedResponseActive = false;
+    _chunkedClient = nullptr;
+    _sseActive = false;
   }
 
   virtual size_t _currentClientWrite(const char *b, size_t l) {
@@ -411,6 +430,7 @@ protected:
 
   String _hostHeader;
   bool _chunked = false;
+  bool _sseActive = false;  // set by enableSSE(); reset per connection
 
 #if WEBSERVER_DIGEST_AUTH
   uint8_t _digestSecret[32] = {};

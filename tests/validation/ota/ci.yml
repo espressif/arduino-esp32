@@ -1,6 +1,10 @@
 tags:
   - wifi_router
 
+# The sketch no longer fits the default 1.25MB app slot on some targets (esp32c6).
+# min_spiffs keeps two OTA slots and raises them to 1.9MB.
+fqbn_append: PartitionScheme=min_spiffs
+
 platforms:
   wokwi: false # Wokwi's Public Gateway no longer reaches the host's LAN HTTP server (regression on Wokwi's side, confirmed by re-running the same esp32p4 command that passed on 2026-05-25)
   qemu: false

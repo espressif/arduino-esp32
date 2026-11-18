@@ -17,7 +17,7 @@
 
 #include <Matter.h>
 #include <MatterEndpoints/MatterColorLight.h>
-#include <app/util/attribute-storage-null-handling.h>
+#include <lib/support/attribute-storage-null-handling.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -233,7 +233,7 @@ MatterColorLight::~MatterColorLight() {
 }
 
 bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
-  ArduinoMatter::_init();
+  ensureMatterNode();
 
   if (getEndPointId() != 0) {
     log_e("Matter RGB Color Light with Endpoint Id %u device has already been created.", getEndPointId());

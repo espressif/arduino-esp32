@@ -5,7 +5,10 @@ Zigbee
 About
 -----
 
-The Zigbee library provides support for creating Zigbee 3.0 compatible devices including:
+The Zigbee library provides support for creating Zigbee 4.0 (specification revision r23) compatible devices.
+Zigbee 4.0 is backwards compatible with Zigbee 3.0 networks and devices.
+
+Supported features include:
 
 * Support for different Zigbee roles (Coordinator, Router, End Device)
 * Network management (scanning, joining, commissioning)
@@ -15,7 +18,8 @@ The Zigbee library provides support for creating Zigbee 3.0 compatible devices i
 * Time synchronization
 * Advanced binding and group management
 
-The Zigbee library is built on top of `ESP-ZIGBEE-SDK <https://github.com/espressif/esp-zigbee-sdk>`_ and provides a high-level Arduino-style interface for creating Zigbee devices.
+Arduino-ESP32 4.0.0 and later use `ESP-ZIGBEE-SDK <https://github.com/espressif/esp-zigbee-sdk>`_ 2.1.0 or newer
+(Zigbee 4.0 / r23 by default) and provide a high-level Arduino-style interface for creating Zigbee devices.
 
 Zigbee Network Topology
 ***********************
@@ -136,6 +140,15 @@ Common Issues
   * Check that devices are within range
   * Verify that routers are properly configured
   * Check for interference from other 2.4 GHz devices
+
+Storage and migration
+*********************
+
+Zigbee persists network state in the default ``nvs`` partition (namespace ``zigbee``), the same partition used by Wi-Fi and Preferences.
+Zigbee partition schemes no longer include a separate ``zb_storage`` partition.
+
+When upgrading from Arduino-ESP32 3.x, or from early 4.0 builds that still used ``zb_storage``, erase flash before upload
+(``Tools -> Erase All Flash Before Sketch Upload: Enabled``) or call ``Zigbee.factoryReset()``. In-place OTA does not keep the old network state.
 
 Factory Reset
 *************

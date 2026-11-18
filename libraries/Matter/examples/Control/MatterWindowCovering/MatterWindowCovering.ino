@@ -250,6 +250,7 @@ void setup() {
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
+  matterSetExampleIdentity("Window Covering");
   Matter.begin();
   matterWaitUntilReady();
   Serial.printf("Initial state: Lift=%u%%, Tilt=%u%%\r\n", WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());

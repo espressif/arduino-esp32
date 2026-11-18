@@ -8,19 +8,19 @@ About
 The ``MatterWaterFreezeDetector`` class provides a water freeze detector endpoint for Matter networks. This endpoint implements the Matter water freeze detection standard for detecting water freeze conditions (detected/not detected states).
 
 **Features:**
-* Water freeze detection state reporting (detected/not detected)
-* Simple boolean state
-* Read-only sensor (no control functionality)
-* Automatic state updates
-* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home
-* Matter standard compliance
+* Water freeze detection state reporting (detected/not detected).
+* Simple boolean state.
+* Read-only sensor (no control functionality).
+* Automatic state updates.
+* Integration with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+* Matter standard compliance.
 
 **Use Cases:**
-* Water pipe freeze monitoring
-* Outdoor water system protection
-* HVAC freeze detection
-* Smart home automation triggers
-* Preventative maintenance systems
+* Water pipe freeze monitoring.
+* Outdoor water system protection.
+* HVAC freeze detection.
+* Smart home automation triggers.
+* Preventative maintenance systems.
 
 API Reference
 -------------
@@ -43,7 +43,7 @@ Initialization
 begin
 ^^^^^
 
-Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after ``Matter.begin()`` with the real sensor reading.
+Initializes the Matter water freeze detector endpoint. Fabric ``StateValue`` starts ``false`` (not detected). Call ``setFreeze()`` after the endpoint ``begin()``; a value set before ``Matter.begin()`` is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
@@ -74,13 +74,13 @@ Water Freeze Detection State Control
 setFreeze
 ^^^^^^^^^
 
-Sets the water freeze detection state. Call after ``Matter.begin()``.
+Sets the water freeze detection state. Call after the endpoint ``begin()``. Before ``Matter.begin()`` the value is cached and applied when the cluster is created.
 
 .. code-block:: arduino
 
     bool setFreeze(bool _freezeState);
 
-* ``_freezeState`` - Water freeze detection state (``true`` = detected, ``false`` = not detected)
+* ``_freezeState`` - Water freeze detection state (``true`` = detected, ``false`` = not detected).
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -120,7 +120,7 @@ Example:
 Assignment operator
 ^^^^^^^^^^^^^^^^^^^
 
-Sets the water freeze detection state. Same as ``setFreeze()``; call after ``Matter.begin()``.
+Sets the water freeze detection state. Same as ``setFreeze()``.
 
 .. code-block:: arduino
 
