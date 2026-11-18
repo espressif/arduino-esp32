@@ -17,6 +17,13 @@
         ]
     },
     {
+        "name": "ESP32IMDB",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ESP32IMDB/examples/TortureTest/TortureTest.ino"
+        ]
+    },
+    {
         "name": "ESP32Servo",
         "exclude_targets": [],
         "sketch_path": [
