@@ -55,11 +55,11 @@ const char *password = "your-password";
 
 ### Using Arduino IDE
 
-* Select board: `Tools -> Board` (e.g. ESP32C6 Dev Module)
+* Select board: `Tools -> Board` (e.g. ESP32-C6 Dev Module)
 * Zigbee mode: `Tools -> Zigbee mode: Zigbee ED (end device)`
-* Partition scheme: `Tools -> Partition Scheme: Zigbee 8MB with spiffs`
-  (Zigbee + Wi‑Fi needs more app flash than the default 4MB Zigbee scheme)
-* Flash size: `Tools -> Flash Size: 8MB`
+* Partition scheme: `Tools -> Partition Scheme: Zigbee 8 MB with spiffs`
+  (Zigbee + Wi‑Fi needs more app flash than the default 4 MB Zigbee scheme)
+* Flash size: `Tools -> Flash Size: 8 MB`
 * Select COM port
 * Optional: `Tools -> Core Debug Level: Verbose`
 
@@ -69,7 +69,7 @@ const char *password = "your-password";
 
 * **Wi‑Fi never connects:** Check SSID/password; ensure the AP is 2.4 GHz.
 * **Weather fetch fails:** Check internet access; Open-Meteo must be reachable on port 80.
-* **Sketch too big:** Use the **Zigbee 8MB with spiffs** partition scheme and **8MB** flash size.
+* **Sketch too big:** Use the **Zigbee 8 MB with spiffs** partition scheme and **8 MB** flash size.
 * **Wi‑Fi fails after Zigbee with `NO_AP_FOUND`:** After `Zigbee.stop()`, the library disables the IEEE802.15.4 radio so Wi‑Fi can use the shared RF. Reflash with that Zigbee library fix; ensure `Zigbee.stop()` completes before `WiFi.begin()`.
 * **`timeout when WiFi un-init` / multi-second stall after resume:** Fully turn Wi‑Fi off (`disconnect` then `WiFi.mode(WIFI_OFF)`) and wait before `Zigbee.start()` so Wi‑Fi finishes PHY cleanup while 802.15.4 is still disabled.
 * **`Failed to report attribute: 0xffffffff` after resume:** Stack/APS not ready yet; the example waits for `Zigbee.connected()`, spaces cluster reports, and retries.
