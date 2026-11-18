@@ -267,17 +267,18 @@ static void phaseControlGatt() {
 
   // CAP acceptor (CAS + included CSIS) — the coordination umbrella.
   BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-  cap.setSetSize(2).setRank(1);
+    cap.setSetSize(2);
+  cap.setRank(1);
 
   // BAP unicast server (PACS/ASCS) so the host sees a full acceptor. BASS is
   // covered in its own scan_delegator phase.
   BLEAudioUnicastServer us = audio.createUnicastServer();
-  us.setSinkStreams(1)
-    .setSourceStreams(1)
-    .setSinkLocation(BLEAudioLocation::Mono)
-    .setSourceLocation(BLEAudioLocation::Mono)
-    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
-    .setSourceContexts(BLEAudioContext::Conversational);
+    us.setSinkStreams(1);
+  us.setSourceStreams(1);
+  us.setSinkLocation(BLEAudioLocation::Mono);
+  us.setSourceLocation(BLEAudioLocation::Mono);
+  us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+  us.setSourceContexts(BLEAudioContext::Conversational);
 
   // VCP renderer (VCS).
   BLEAudioVolumeRenderer vol = audio.createVolumeRenderer();
@@ -300,7 +301,8 @@ static void phaseControlGatt() {
 
   // CCP call server (GTBS).
   BLEAudioCallServer call = audio.createCallServer();
-  call.setProviderName("ESP Phone").setUci("un000");
+    call.setProviderName("ESP Phone");
+  call.setUci("un000");
   // GTBS answers Originate with Invalid Outgoing URI because it has no
   // telephone bearer to route the call to, so this never fires; it stays wired
   // to prove the request is rejected by the bearer and not silently accepted.
@@ -316,7 +318,11 @@ static void phaseControlGatt() {
 
   // HAS hearing-aid device with a small preset list.
   BLEAudioHearingAidDevice ha = audio.createHearingAidDevice();
-  ha.setType(BLEHearingAidType::Binaural).setPresetSync(false).addPreset(1, "Universal").addPreset(2, "Outdoor").addPreset(3, "Restaurant");
+    ha.setType(BLEHearingAidType::Binaural);
+  ha.setPresetSync(false);
+  ha.addPreset(1, "Universal");
+  ha.addPreset(2, "Outdoor");
+  ha.addPreset(3, "Restaurant");
   ha.onPresetSelected([](uint8_t index, bool sync) {
     (void)sync;
     hasSelects = hasSelects + 1;
@@ -329,7 +335,8 @@ static void phaseControlGatt() {
   BLEAudioGmap gmap = audio.createGmap();
   BLEAudioGmapFeatures gf;
   gf.unicastTerminal = BLEAudioGmapFeatures::UgtSink;
-  gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal).setFeatures(gf);
+    gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
+  gmap.setFeatures(gf);
 
   if (!audio.start()) {
     Serial.println("[DUT] ControlGatt start FAILED");
@@ -382,7 +389,9 @@ static void phaseBroadcastAnnouncement() {
     return;
   }
   BLEAudioBroadcastSource source = audio.createBroadcastSource();
-  source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastId(0x123456).setName(dutName);
+    source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+  source.setBroadcastId(0x123456);
+  source.setName(dutName);
 
   bool streaming = false;
   source.onStarted([&streaming]() {
@@ -460,12 +469,12 @@ static void phaseUnicastAudio() {
   });
 
   BLEAudioUnicastServer us = audio.createUnicastServer();
-  us.setSinkStreams(1)
-    .setSourceStreams(1)
-    .setSinkLocation(BLEAudioLocation::Mono)
-    .setSourceLocation(BLEAudioLocation::Mono)
-    .setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational)
-    .setSourceContexts(BLEAudioContext::Conversational);
+    us.setSinkStreams(1);
+  us.setSourceStreams(1);
+  us.setSinkLocation(BLEAudioLocation::Mono);
+  us.setSourceLocation(BLEAudioLocation::Mono);
+  us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+  us.setSourceContexts(BLEAudioContext::Conversational);
   // PCM sink/source instead of I2S pins; set before begin().
   lc3Player.setPCMSink(lc3CountPCM);
   lc3Recorder.setPCMSource(lc3Tone);
@@ -555,7 +564,9 @@ static void phaseBroadcastAudio() {
   BLEAudioBroadcastSource source = audio.createBroadcastSource();
   // 48 kHz HQ matches typical Galaxy Auracast Listen; 16 kHz SQ often shows as
   // "Unknown" / ignores taps even when the announcement is visible.
-  source.setPreset(BLEAudioCodecPreset::LC3_48_4_1).setBroadcastId(0x123456).setName(dutName);
+    source.setPreset(BLEAudioCodecPreset::LC3_48_4_1);
+  source.setBroadcastId(0x123456);
+  source.setName(dutName);
   BLEAudioStream src = source.stream(0);
 
   if (!audio.start() || !source.start()) {

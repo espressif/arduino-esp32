@@ -687,7 +687,9 @@ void loop() {
         // so the marker service stages into the coordinated (audio-owned)
         // table instead of publishing standalone.
         BLEAudioUnicastServer us = audio.createUnicastServer();
-        us.setSinkStreams(1).setSourceStreams(1).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+                us.setSinkStreams(1);
+        us.setSourceStreams(1);
+        us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
         for (size_t i = 0; i < us.streamCount(); i++) {
           us.stream(i).onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
             if (info.status == BLEAudioSduInfo::Status::Valid) {
@@ -766,7 +768,9 @@ void loop() {
       audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastId(0x123456).setName(serverName);
+                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setBroadcastId(0x123456);
+        source.setName(serverName);
         source.onStarted([&bcStreaming]() {
           bcStreaming = true;
         });
@@ -846,7 +850,9 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-          us.setSinkStreams(1).setSourceStreams(0).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+                    us.setSinkStreams(1);
+          us.setSourceStreams(0);
+          us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
           us.setSupportedPresets(BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1) | BLEAudioPresetBit(BLEAudioCodecPreset::LC3_441_2_1));
 
           // PCM sink instead of I2S pins: decoded frames land here on the codec task.
@@ -965,7 +971,8 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-        cap.setSetSize(2).setRank(1);
+                cap.setSetSize(2);
+        cap.setRank(1);
 
         BLEAudioVolumeRenderer vol = audio.createVolumeRenderer();
         vol.setInitialVolume(100);
@@ -1051,14 +1058,16 @@ void loop() {
         // terminal. Bounded so a stuck stack still fails fast.
         // Underlying roles that back the advertised TMAP/GMAP identities.
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-        cap.setSetSize(1).setRank(1);
+                cap.setSetSize(1);
+        cap.setRank(1);
         cap.coordinatedSet().onLockChanged([](bool locked, uint16_t connHandle) {
           (void)locked;
           (void)connHandle;
           topSetLocks = topSetLocks + 1;
         });
         BLEAudioUnicastServer us = audio.createUnicastServer();
-        us.setSinkStreams(1).setSourceStreams(1);
+                us.setSinkStreams(1);
+        us.setSourceStreams(1);
         BLEAudioVolumeRenderer vol = audio.createVolumeRenderer();
         vol.setInitialVolume(100);
         vol.onStateChanged([](uint8_t volume, bool muted) {
@@ -1072,7 +1081,8 @@ void loop() {
         BLEAudioGmap gmap = audio.createGmap();
         BLEAudioGmapFeatures gf;
         gf.unicastTerminal = BLEAudioGmapFeatures::UgtSink;
-        gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal).setFeatures(gf);
+                gmap.setRoles(BLEAudioGmapRole::UnicastGameTerminal);
+        gmap.setFeatures(gf);
 
         BTStatus bst = audio.begin();  // commit
         for (int att = 0; att < 3 && bst == BTStatus::Busy; att++) {
@@ -1130,11 +1140,11 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioHearingAidDevice ha = audio.createHearingAidDevice();
-        ha.setType(BLEHearingAidType::Binaural)
-          .setPresetSync(false)
-          .addPreset(1, "Universal")
-          .addPreset(2, "Outdoor")
-          .addPreset(3, "Restaurant");
+                ha.setType(BLEHearingAidType::Binaural);
+        ha.setPresetSync(false);
+        ha.addPreset(1, "Universal");
+        ha.addPreset(2, "Outdoor");
+        ha.addPreset(3, "Restaurant");
         ha.onPresetSelected([](uint8_t index, bool sync) {
           (void)index;
           (void)sync;
@@ -1190,7 +1200,10 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(2).setName(serverName).setBroadcastCode(STEREO_BROADCAST_CODE);
+                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setChannels(2);
+        source.setName(serverName);
+        source.setBroadcastCode(STEREO_BROADCAST_CODE);
         source.onStarted([&bcStreaming]() {
           bcStreaming = true;
         });
@@ -1253,7 +1266,8 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-        sink.setScanDelegator(true).setAutoSync(false);
+                sink.setScanDelegator(true);
+        sink.setAutoSync(false);
         if (sink && audio.begin()) {
           BLEAdvertising adv = BLE.getAdvertising();
           adv.reset();
@@ -1299,10 +1313,13 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapAcceptor cap = audio.createCapAcceptor();
-        cap.setSetSize(1).setRank(1);
+                cap.setSetSize(1);
+        cap.setRank(1);
 
         BLEAudioUnicastServer us = audio.createUnicastServer();
-        us.setSinkStreams(1).setSourceStreams(0).setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
+                us.setSinkStreams(1);
+        us.setSourceStreams(0);
+        us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
         us.stream(0).onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
           if (info.status == BLEAudioSduInfo::Status::Valid) {
             hoUnicastRx = hoUnicastRx + 1;
@@ -1310,7 +1327,9 @@ void loop() {
         });
 
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-        sink.setScanDelegator(true).setAutoSync(false).onStarted([]() {
+        sink.setScanDelegator(true);
+        sink.setAutoSync(false);
+        sink.onStarted([]() {
           hoBigJoined = true;
         });
         sink.stream(0).onReceive([](BLEAudioStream &, const BLEAudioSduInfo &info, const uint8_t *, uint16_t) {
@@ -1372,7 +1391,9 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSource source = audio.createBroadcastSource();
-        source.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+                source.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        source.setChannels(1);
+        source.setName(serverName);
         source.onStarted([&bcStreaming]() {
           bcStreaming = true;
         });
@@ -1455,7 +1476,8 @@ void loop() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioCapInitiator cap = audio.createCapInitiator();
-        cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastName(serverName);
+                cap.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        cap.setBroadcastName(serverName);
         cap.onBroadcastStarted([]() {});
         cap.onBroadcastStopped([&stoppedEvents](uint8_t) {
           stoppedEvents.fetch_add(1, std::memory_order_relaxed);
@@ -1578,7 +1600,8 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-          us.setSinkStreams(1).setSourceStreams(0);
+                    us.setSinkStreams(1);
+          us.setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Media);
           pacsFirst = audio.begin() ? 1 : 0;
           audio.end();
@@ -1588,7 +1611,8 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioUnicastServer us = audio.createUnicastServer();
-          us.setSinkStreams(1).setSourceStreams(0);
+                    us.setSinkStreams(1);
+          us.setSourceStreams(0);
           us.setSinkContexts(BLEAudioContext::Conversational);
           pacsSecond = audio.begin() ? 1 : 0;
           audio.end();
@@ -1606,7 +1630,9 @@ void loop() {
         BLEAudio audio = BLE.getAudioController();
         {
           BLEAudioBroadcastSource src = audio.createBroadcastSource();
-          src.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+                    src.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+          src.setChannels(1);
+          src.setName(serverName);
           volatile bool cbEntered = false;
           src.onStarted([&]() {
             // Host task: must refuse with Busy, never wedge the stack task.
@@ -1629,7 +1655,9 @@ void loop() {
             {
               BLEAudioBroadcastSource lazy = audio.createBroadcastSource();
               if (lazy && audio.isActive()) {
-                lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setChannels(1).setName(serverName);
+                                lazy.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+                lazy.setChannels(1);
+                lazy.setName(serverName);
                 endRebegin = audio.begin() ? 1 : 0;
               }
             }

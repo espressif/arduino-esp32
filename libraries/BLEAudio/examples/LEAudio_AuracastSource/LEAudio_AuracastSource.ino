@@ -51,15 +51,27 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // createBroadcastSource() makes the transmitter role: no connections, one BIG with 1-2 BISes.
   source = audio.createBroadcastSource();
+  if (!source) {
+    halt("createBroadcastSource", BTStatus::InvalidState);
+  }
 
   // configureAuracast() helper: Broadcast Name + public broadcast announcement + LC3_48_2_1 preset.
-  source.configureAuracast(BROADCAST_NAME, CHANNELS);
+  st = source.configureAuracast(BROADCAST_NAME, CHANNELS);
+  if (!st) {
+    halt("configureAuracast", st);
+  }
   if (BROADCAST_CODE[0] != '\0') {
     // setBroadcastCode() encrypts the BIG. Receivers need the same code. Empty (default) = open.
-    source.setBroadcastCode(BROADCAST_CODE);
+    st = source.setBroadcastCode(BROADCAST_CODE);
+    if (!st) {
+      halt("setBroadcastCode", st);
+    }
   }
 
   // onStarted() fires once the BIG is up and the BISes carry audio.

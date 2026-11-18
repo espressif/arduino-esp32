@@ -88,6 +88,9 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady(onLinkReady);
@@ -97,6 +100,9 @@ void setup() {
 
   // createUnicastClient() makes the initiator side: it discovers the server and sets up streams on it.
   audioClient = audio.createUnicastClient();
+  if (!audioClient) {
+    halt("createUnicastClient", BTStatus::InvalidState);
+  }
 
   // onStarted() fires once every requested stream is streaming.
   audioClient.onStarted([] { Serial.println("Streaming to the speaker"); pendingStart = true; });

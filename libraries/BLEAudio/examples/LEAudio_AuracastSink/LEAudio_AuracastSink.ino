@@ -50,15 +50,27 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // createBroadcastSink() makes the receiver role: scan + PA sync + BIG sync (BASS Scan Delegator included).
   sink = audio.createBroadcastSink();
+  if (!sink) {
+    halt("createBroadcastSink", BTStatus::InvalidState);
+  }
 
   // configureAuracast() helper: auto-join broadcasts named targetName with 1-2 BISes, Media context.
-  sink.configureAuracast(TARGET_NAME, CHANNELS);
+  st = sink.configureAuracast(TARGET_NAME, CHANNELS);
+  if (!st) {
+    halt("configureAuracast", st);
+  }
   if (BROADCAST_CODE[0] != '\0') {
     // setBroadcastCode() is the decode key for encrypted broadcasts. empty = open only.
-    sink.setBroadcastCode(BROADCAST_CODE);
+    st = sink.setBroadcastCode(BROADCAST_CODE);
+    if (!st) {
+      halt("setBroadcastCode", st);
+    }
   }
 
   // onSourceFound() fires per matching advertising report while scanning (repeats, so keep it short).

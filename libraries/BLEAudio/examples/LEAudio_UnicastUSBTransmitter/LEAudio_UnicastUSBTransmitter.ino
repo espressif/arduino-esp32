@@ -170,6 +170,9 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady(onLinkReady);
@@ -179,10 +182,20 @@ void setup() {
 
   // createUnicastClient() makes the initiator side: it discovers the sink and sets up streams on it.
   audioClient = audio.createUnicastClient();
+  if (!audioClient) {
+    halt("createUnicastClient", BTStatus::InvalidState);
+  }
 
   // setPreset() fixes the LC3 codec + QoS of our streams: 48 kHz, 10 ms frames (matches USB).
   // setSinkStreams(1) requests one stream we send, per sink (capped by the sink's ASE count).
-  audioClient.setPreset(BLEAudioCodecPreset::LC3_48_2_1).setSinkStreams(1);
+  st = audioClient.setPreset(BLEAudioCodecPreset::LC3_48_2_1);
+  if (!st) {
+    halt("setPreset", st);
+  }
+  st = audioClient.setSinkStreams(1);
+  if (!st) {
+    halt("setSinkStreams", st);
+  }
 
   // onStarted() fires once every requested stream is streaming.
   audioClient.onStarted([] { Serial.println("Streaming to the sink"); pendingStart = true; });
@@ -206,7 +219,10 @@ void setup() {
   // 4. Feed the recorder from USB instead of I2S: no I2S hardware needed.
 
   // setPCMSource() takes PCM from our callback instead of I2S pins (before begin()).
-  recorder.setPCMSource(onUsbPcmSource);
+  st = recorder.setPCMSource(onUsbPcmSource);
+  if (!st) {
+    halt("setPCMSource", st);
+  }
 
   // recorder.begin() with no pins is only valid after setPCMSource(). The LC3 task is still stopped.
   st = recorder.begin();

@@ -63,6 +63,9 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady([](uint16_t conn) { Serial.printf("Sender connected (link %u)\n", conn); });
@@ -76,16 +79,31 @@ void setup() {
 
   // createCapAcceptor() publishes CAS (+ included CSIS): the CAP identity of this device.
   capAcceptor = audio.createCapAcceptor();
+  if (!capAcceptor) {
+    halt("createCapAcceptor", BTStatus::InvalidState);
+  }
 
   // setSetSize()/setRank() publish our coordinated-set identity: a set of 1, we are rank 1.
   // Rank is 1-based (1..set size).
-  capAcceptor.setSetSize(1).setRank(1);
+  if (!capAcceptor.setSetSize(1)) {
+    halt("setSetSize", BTStatus::InvalidState);
+  }
+  if (!capAcceptor.setRank(1)) {
+    halt("setRank", BTStatus::InvalidState);
+  }
 
   // One sink stream: the sender puts mono or stereo on a single CIS.
   // createUnicastServer() publishes PACS + ASCS: it accepts streams a client configures.
+  unicastServer = audio.createUnicastServer();
+  if (!unicastServer) {
+    halt("createUnicastServer", BTStatus::InvalidState);
+  }
 
   // configureMediaSink() helper: 1 stereo-capable sink ASE, media + conversational contexts.
-  unicastServer.configureMediaSink();
+  st = unicastServer.configureMediaSink();
+  if (!st) {
+    halt("configureMediaSink", st);
+  }
 
   // stream(0) is our only ASE. onConfigured() fires when the client picks a codec for it.
   unicastServer.stream(0).onConfigured(onSinkConfigured);
@@ -99,9 +117,15 @@ void setup() {
   // Let the sender change our volume over VCP.
   // createVolumeRenderer() publishes VCS: the volume service the peer drives.
   volumeRenderer = audio.createVolumeRenderer();
+  if (!volumeRenderer) {
+    halt("createVolumeRenderer", BTStatus::InvalidState);
+  }
 
   // setInitialVolume() sets the volume 0..255 advertised before any peer connects.
-  volumeRenderer.setInitialVolume(160);
+  st = volumeRenderer.setInitialVolume(160);
+  if (!st) {
+    halt("setInitialVolume", st);
+  }
 
   // onStateChanged() fires on every volume/mute change, local or from the peer.
   volumeRenderer.onStateChanged([](uint8_t volume, bool muted) {

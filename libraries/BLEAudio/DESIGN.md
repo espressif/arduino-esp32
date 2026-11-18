@@ -300,9 +300,10 @@ audio.setPresentationDelay(40000);           // 2. defaults, before creating rol
 // the single audio.begin() commits everything, whatever was staged first)
 
 BLEAudioCapAcceptor cap = audio.createCapAcceptor();   // 3. create + configure roles
-cap.setSetSize(2).setRank(1);
+if (!cap.setSetSize(2)) { /* handle error */ }
+if (!cap.setRank(1)) { /* handle error */ }
 BLEAudioUnicastServer us = audio.createUnicastServer();
-us.configureHeadset();
+if (!us.configureHeadset()) { /* handle error */ }
 // (optionally) create/stage plain-GATT BLEServer services here too
 
 audio.begin();                               // 4. run roleApplies, merged PACS, single GATT commit

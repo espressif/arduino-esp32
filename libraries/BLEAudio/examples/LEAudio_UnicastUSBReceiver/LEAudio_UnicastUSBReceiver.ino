@@ -130,6 +130,9 @@ void setup() {
 
   // getAudioController() returns the handle to the shared LE Audio engine.
   audio = BLE.getAudioController();
+  if (!audio) {
+    halt("getAudioController", BTStatus::InvalidState);
+  }
 
   // onLinkReady() fires on the Bluetooth task once a peer link is encrypted and usable.
   audio.onLinkReady([](uint16_t conn) { Serial.printf("Sender connected (link %u)\n", conn); });
@@ -140,20 +143,37 @@ void setup() {
   // One standalone bridge is a coordinated set of one.
   // createCapAcceptor() publishes CAS (+ included CSIS): the CAP identity of this device.
   capAcceptor = audio.createCapAcceptor();
+  if (!capAcceptor) {
+    halt("createCapAcceptor", BTStatus::InvalidState);
+  }
 
   // setSetSize()/setRank() publish our coordinated-set identity: a set of 1, we are rank 1.
-  capAcceptor.setSetSize(1).setRank(1);
+  if (!capAcceptor.setSetSize(1)) {
+    halt("setSetSize", BTStatus::InvalidState);
+  }
+  if (!capAcceptor.setRank(1)) {
+    halt("setRank", BTStatus::InvalidState);
+  }
 
   // One sink stream, 48 kHz presets only so PCM always matches the USB rate.
   // createUnicastServer() publishes PACS + ASCS: it accepts streams a client configures.
   unicastServer = audio.createUnicastServer();
+  if (!unicastServer) {
+    halt("createUnicastServer", BTStatus::InvalidState);
+  }
 
   // configureMediaSink() helper: 1 stereo-capable sink ASE, media + conversational contexts.
-  unicastServer.configureMediaSink();
+  st = unicastServer.configureMediaSink();
+  if (!st) {
+    halt("configureMediaSink", st);
+  }
 
   // setSupportedPresets() narrows the published PACs to 48 kHz (plain presets OR together);
   // peers without 48 kHz LC3 then find no usable preset and cannot connect.
-  unicastServer.setSupportedPresets(BLEAudioCodecPreset::LC3_48_1_1 | BLEAudioCodecPreset::LC3_48_2_1);
+  st = unicastServer.setSupportedPresets(BLEAudioCodecPreset::LC3_48_1_1 | BLEAudioCodecPreset::LC3_48_2_1);
+  if (!st) {
+    halt("setSupportedPresets", st);
+  }
 
   // stream(0) is our only ASE. onConfigured() fires when the client picks a codec for it.
   unicastServer.stream(0).onConfigured(onSinkConfigured);
@@ -167,9 +187,15 @@ void setup() {
   // Let the sender change our volume. Applied as software gain in onPlayerPcm().
   // createVolumeRenderer() publishes VCS: the volume service the peer drives.
   volumeRenderer = audio.createVolumeRenderer();
+  if (!volumeRenderer) {
+    halt("createVolumeRenderer", BTStatus::InvalidState);
+  }
 
   // Unity default: a sender that never touches volume leaves the USB gain at 1.0.
-  volumeRenderer.setInitialVolume(255);
+  st = volumeRenderer.setInitialVolume(255);
+  if (!st) {
+    halt("setInitialVolume", st);
+  }
 
   // onStateChanged() fires on every volume/mute change, local or from the peer.
   volumeRenderer.onStateChanged([](uint8_t volume, bool muted) {
@@ -189,7 +215,10 @@ void setup() {
   // 4. Send decoded PCM to USB instead of I2S: no I2S hardware needed.
 
   // setPCMSink() delivers decoded frames to our callback instead of I2S pins (before begin()).
-  player.setPCMSink(onPlayerPcm);
+  st = player.setPCMSink(onPlayerPcm);
+  if (!st) {
+    halt("setPCMSink", st);
+  }
 
   // player.begin() with no pins is only valid after setPCMSink(). The LC3 task is still stopped.
   st = player.begin();

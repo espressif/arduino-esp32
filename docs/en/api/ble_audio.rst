@@ -190,7 +190,8 @@ Server side (headset/speaker):
 .. code-block:: cpp
 
     BLEAudioUnicastServer us = audio.createUnicastServer();
-    us.setSinkStreams(1).setSourceStreams(0);
+    us.setSinkStreams(1);
+    us.setSourceStreams(0);
     us.setSinkContexts(BLEAudioContext::Media | BLEAudioContext::Conversational);
     // us.setSupportedPresets(...) to narrow the published PACS (default: 16/24/32/48 kHz)
 
@@ -199,7 +200,8 @@ Client side (phone/dongle):
 .. code-block:: cpp
 
     BLEAudioUnicastClient uc = audio.createUnicastClient();
-    uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setSinkStreams(1);
+    uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+    uc.setSinkStreams(1);
     uc.onDiscovered([&](const BLEAudioUnicastPeerInfo &peer) {
         // peer.sinkPresets: mask of presets the server accepts
     });
@@ -221,7 +223,9 @@ streams travel on separate BISes.
 .. code-block:: cpp
 
     BLEAudioBroadcastSource src = audio.createBroadcastSource();
-    src.setPreset(BLEAudioCodecPreset::LC3_48_4_1).setChannels(2).setName("Stage left");
+    src.setPreset(BLEAudioCodecPreset::LC3_48_4_1);
+    src.setChannels(2);
+    src.setName("Stage left");
     // src.setBroadcastCode("...") for encrypted broadcasts
     src.start();   // advertising + BIG come up; onStarted() follows
 
@@ -429,7 +433,7 @@ Lifecycle:
 
     BTStatus begin();
     BTStatus end();
-    BLEAudio &setAutoSecurityPolicy(bool enable);
+    BTStatus setAutoSecurityPolicy(bool enable);
     bool autoSecurityPolicy() const;
 
 ``begin()`` initializes the engine, registers every staged role, merges the PACS
@@ -449,15 +453,15 @@ link is opened through the engine, encrypted, MTU-exchanged and discovered):
     using LinkCallback = std::function<void(uint16_t connHandle)>;
     BTStatus connect(const BTAddress &address);
     BTStatus disconnect(uint16_t connHandle);
-    BLEAudio &onLinkReady(LinkCallback cb);
-    BLEAudio &onDisconnected(LinkCallback cb);
+    void onLinkReady(LinkCallback cb);
+    void onDisconnected(LinkCallback cb);
     void resetCallbacks();
 
 Defaults (before creating roles):
 
 .. code-block:: cpp
 
-    BLEAudio &setPresentationDelay(uint32_t delayUs);  // default 40000
+    BTStatus setPresentationDelay(uint32_t delayUs);  // default 40000
     uint32_t getPresentationDelay() const;
 
 Role factories (each returns an empty handle when the engine cannot initialize,
@@ -629,18 +633,18 @@ streams (see ``BLEAudioStream::onConfigured``).
     BLEAudioUnicastServer();                   // empty; via audio.createUnicastServer()
     explicit operator bool() const;
 
-    // Configuration (chainable, before audio.begin()):
-    BLEAudioUnicastServer &setSinkStreams(uint8_t count);       // ASEs the client sends to, default 1
-    BLEAudioUnicastServer &setSourceStreams(uint8_t count);     // ASEs the client receives, default 1
-    BLEAudioUnicastServer &setSupportedPresets(uint32_t presetMask);  // default 10 ms @16/24/32/48 kHz
-    BLEAudioUnicastServer &setMaxChannelsPerStream(uint8_t channels);  // 1-2, default 1
-    BLEAudioUnicastServer &setSinkContexts(BLEAudioContext contexts);
-    BLEAudioUnicastServer &setSourceContexts(BLEAudioContext contexts);
-    BLEAudioUnicastServer &setSinkLocation(BLEAudioLocation location);    // default Mono
-    BLEAudioUnicastServer &setSourceLocation(BLEAudioLocation location);
-    BLEAudioUnicastServer &setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
-    BLEAudioUnicastServer &configureMediaSink();  // 1 sink / 0 source, stereo, Media|Conversational
-    BLEAudioUnicastServer &configureHeadset();    // 1 sink + 1 source, stereo sink, mono source
+    // Configuration (before audio.begin()):
+    BTStatus setSinkStreams(uint8_t count);       // ASEs the client sends to, default 1
+    BTStatus setSourceStreams(uint8_t count);     // ASEs the client receives, default 1
+    BTStatus setSupportedPresets(uint32_t presetMask);  // default 10 ms @16/24/32/48 kHz
+    BTStatus setMaxChannelsPerStream(uint8_t channels);  // 1-2, default 1
+    BTStatus setSinkContexts(BLEAudioContext contexts);
+    BTStatus setSourceContexts(BLEAudioContext contexts);
+    BTStatus setSinkLocation(BLEAudioLocation location);    // default Mono
+    BTStatus setSourceLocation(BLEAudioLocation location);
+    BTStatus setPresentationDelayRange(uint32_t minUs, uint32_t maxUs);
+    BTStatus configureMediaSink();  // 1 sink / 0 source, stereo, Media|Conversational
+    BTStatus configureHeadset();    // 1 sink + 1 source, stereo sink, mono source
 
     // Runtime:
     BTStatus setAvailableContexts(BLEAudioContext sink, BLEAudioContext source);
@@ -673,12 +677,12 @@ source; ``Direction::Tx`` = local sends.
     BLEAudioUnicastClient();                   // empty; via audio.createUnicastClient()
     explicit operator bool() const;
 
-    // Configuration (read at start(), change while stopped, chainable):
-    BLEAudioUnicastClient &setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
-    BLEAudioUnicastClient &setQos(const BLEAudioQos &qos);
-    BLEAudioUnicastClient &setContext(BLEAudioContext context);    // default Media
-    BLEAudioUnicastClient &setSinkStreams(uint8_t perPeer);        // default 1
-    BLEAudioUnicastClient &setSourceStreams(uint8_t perPeer);      // default 0
+    // Configuration (read at start(), change while stopped):
+    BTStatus setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
+    BTStatus setQos(const BLEAudioQos &qos);
+    BTStatus setContext(BLEAudioContext context);    // default Media
+    BTStatus setSinkStreams(uint8_t perPeer);        // default 1
+    BTStatus setSourceStreams(uint8_t perPeer);      // default 0
 
     // Procedures (after audio.begin()):
     BTStatus addPeer(uint16_t connHandle);
@@ -695,10 +699,10 @@ source; ``Direction::Tx`` = local sends.
     using DiscoveredCallback = std::function<void(const BLEAudioUnicastPeerInfo &peer)>;
     using Callback = std::function<void()>;
     using ErrorCallback = std::function<void(Step step, uint8_t responseCode, uint8_t reason)>;
-    BLEAudioUnicastClient &onDiscovered(DiscoveredCallback cb);
-    BLEAudioUnicastClient &onStarted(Callback cb);   // every stream streaming
-    BLEAudioUnicastClient &onStopped(Callback cb);
-    BLEAudioUnicastClient &onError(ErrorCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onStarted(Callback cb);   // every stream streaming
+    void onStopped(Callback cb);
+    void onError(ErrorCallback cb);
     void resetCallbacks();
 
 BAP broadcast (Auracast)
@@ -718,16 +722,16 @@ BIG. Feed each stream one SDU per interval after ``onStarted()``, or attach a
     BLEAudioBroadcastSource();                 // empty; via audio.createBroadcastSource()
     explicit operator bool() const;
 
-    // Configuration (chainable; codec/QoS/channels/code/context mark the source dirty):
-    BLEAudioBroadcastSource &setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
-    BLEAudioBroadcastSource &setQos(const BLEAudioQos &qos);
-    BLEAudioBroadcastSource &setChannels(uint8_t channels);           // 1 mono, 2 stereo
-    BLEAudioBroadcastSource &setBroadcastId(uint32_t broadcastId);   // 24-bit, default random
-    BLEAudioBroadcastSource &setBroadcastCode(const String &code);    // empty = unencrypted
-    BLEAudioBroadcastSource &setName(const String &name);             // trunc 32, default device name
-    BLEAudioBroadcastSource &setContext(BLEAudioContext context);     // default Media
-    BLEAudioBroadcastSource &setPublicBroadcast(bool enable);         // PBP builds only, default on
-    BLEAudioBroadcastSource &configureAuracast(const String &name, uint8_t channels = 2,
+    // Configuration (staged; codec/QoS/channels/code/context mark the source dirty):
+    BTStatus setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
+    BTStatus setQos(const BLEAudioQos &qos);
+    BTStatus setChannels(uint8_t channels);           // 1 mono, 2 stereo
+    BTStatus setBroadcastId(uint32_t broadcastId);   // 24-bit, default random
+    BTStatus setBroadcastCode(const String &code);    // empty = unencrypted
+    BTStatus setName(const String &name);             // trunc 32, default device name
+    BTStatus setContext(BLEAudioContext context);     // default Media
+    BTStatus setPublicBroadcast(bool enable);         // PBP builds only, default on
+    BTStatus configureAuracast(const String &name, uint8_t channels = 2,
                                                BLEAudioCodecPreset preset = BLEAudioCodecPreset::LC3_48_2_1);
 
     // Control (after audio.begin()):
@@ -742,8 +746,8 @@ BIG. Feed each stream one SDU per interval after ``onStarted()``, or attach a
 
     using Callback = std::function<void()>;
     using StoppedCallback = std::function<void(uint8_t reason)>;
-    BLEAudioBroadcastSource &onStarted(Callback cb);
-    BLEAudioBroadcastSource &onStopped(StoppedCallback cb);
+    void onStarted(Callback cb);
+    void onStopped(StoppedCallback cb);
     void resetCallbacks();
 
 BLEAudioBroadcastSink
@@ -768,19 +772,19 @@ Scan Delegator (BASS, default on) an assistant can steer it remotely.
     explicit operator bool() const;
 
     // Configuration (before audio.begin()):
-    BLEAudioBroadcastSink &setStreams(uint8_t count);              // 1 mono, 2 stereo
-    BLEAudioBroadcastSink &setSupportedPresets(uint32_t presetMask);
-    BLEAudioBroadcastSink &setMaxChannelsPerStream(uint8_t channels);
-    BLEAudioBroadcastSink &setLocation(BLEAudioLocation location);
-    BLEAudioBroadcastSink &setContexts(BLEAudioContext contexts);
-    BLEAudioBroadcastSink &setScanDelegator(bool enable);
+    BTStatus setStreams(uint8_t count);              // 1 mono, 2 stereo
+    BTStatus setSupportedPresets(uint32_t presetMask);
+    BTStatus setMaxChannelsPerStream(uint8_t channels);
+    BTStatus setLocation(BLEAudioLocation location);
+    BTStatus setContexts(BLEAudioContext contexts);
+    BTStatus setScanDelegator(bool enable);
     // Source selection (any time):
-    BLEAudioBroadcastSink &setBroadcastCode(const String &code);
-    BLEAudioBroadcastSink &setTargetName(const String &name);        // empty = any
-    BLEAudioBroadcastSink &setTargetBroadcastId(uint32_t broadcastId);  // 0 = any
-    BLEAudioBroadcastSink &setBisMask(uint32_t mask);               // 0 = lowest indexes
-    BLEAudioBroadcastSink &setAutoSync(bool enable);                // default on
-    BLEAudioBroadcastSink &configureAuracast(const String &targetName = "", uint8_t streams = 2);
+    BTStatus setBroadcastCode(const String &code);
+    BTStatus setTargetName(const String &name);        // empty = any
+    BTStatus setTargetBroadcastId(uint32_t broadcastId);  // 0 = any
+    BTStatus setBisMask(uint32_t mask);               // 0 = lowest indexes
+    BTStatus setAutoSync(bool enable);                // default on
+    BTStatus configureAuracast(const String &targetName = "", uint8_t streams = 2);
 
     // Control (after audio.begin()):
     BTStatus start();
@@ -796,14 +800,14 @@ Scan Delegator (BASS, default on) an assistant can steer it remotely.
     using Callback = std::function<void()>;
     using ReasonCallback = std::function<void(uint8_t reason)>;
     using ErrorCallback = std::function<void(BTStatus status)>;  // NotFound / PermissionDenied
-    BLEAudioBroadcastSink &onSourceFound(SourceFoundCallback cb);
-    BLEAudioBroadcastSink &onSynced(Callback cb);
-    BLEAudioBroadcastSink &onBaseReceived(BaseCallback cb);
-    BLEAudioBroadcastSink &onBroadcastCodeReceived(Callback cb);
-    BLEAudioBroadcastSink &onSyncLost(ReasonCallback cb);
-    BLEAudioBroadcastSink &onSyncFailed(ErrorCallback cb);
-    BLEAudioBroadcastSink &onStarted(Callback cb);
-    BLEAudioBroadcastSink &onStopped(ReasonCallback cb);
+    void onSourceFound(SourceFoundCallback cb);
+    void onSynced(Callback cb);
+    void onBaseReceived(BaseCallback cb);
+    void onBroadcastCodeReceived(Callback cb);
+    void onSyncLost(ReasonCallback cb);
+    void onSyncFailed(ErrorCallback cb);
+    void onStarted(Callback cb);
+    void onStopped(ReasonCallback cb);
     void resetCallbacks();
 
 BLEAudioBroadcastAssistant
@@ -861,10 +865,10 @@ PAST sync info. One sink at a time; calls before ``discover()`` return
     using SourceFoundCallback = std::function<void(const BLEAudioBroadcastSourceInfo &source)>;
     using ReceiveStateCallback = std::function<void(const BLEAudioReceiveState &state)>;
     using ResultCallback = std::function<void(Op op, BTStatus status)>;
-    BLEAudioBroadcastAssistant &onDiscovered(DiscoverCallback cb);
-    BLEAudioBroadcastAssistant &onSourceFound(SourceFoundCallback cb);
-    BLEAudioBroadcastAssistant &onReceiveState(ReceiveStateCallback cb);
-    BLEAudioBroadcastAssistant &onResult(ResultCallback cb);
+    void onDiscovered(DiscoverCallback cb);
+    void onSourceFound(SourceFoundCallback cb);
+    void onReceiveState(ReceiveStateCallback cb);
+    void onResult(ResultCallback cb);
     void resetCallbacks();
 
 CAP and coordinated sets
@@ -880,10 +884,10 @@ BAP roles created next to it.
 
     BLEAudioCapAcceptor();                     // empty; via audio.createCapAcceptor()
     explicit operator bool() const;
-    BLEAudioCapAcceptor &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
-    BLEAudioCapAcceptor &setSetSize(uint8_t size);
-    BLEAudioCapAcceptor &setRank(uint8_t rank);   // 1-based; running set takes it with a new size
-    BLEAudioCapAcceptor &setLockable(bool lockable);
+    BTStatus setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
+    BTStatus setSetSize(uint8_t size);
+    BTStatus setRank(uint8_t rank);   // 1-based
+    BTStatus setLockable(bool lockable);
     BLEAudioCoordinatedSetMember coordinatedSet() const;
 
 BLEAudioCapInitiator
@@ -901,15 +905,15 @@ after ``audio.onLinkReady()``; ``startUnicast()`` brings them all up.
     BLEAudioCapInitiator();                    // empty; via audio.createCapInitiator()
     explicit operator bool() const;
 
-    BLEAudioCapInitiator &setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
-    BLEAudioCapInitiator &setQos(const BLEAudioQos &qos);
-    BLEAudioCapInitiator &setContext(BLEAudioContext context);    // default Media
-    BLEAudioCapInitiator &setSinkStreams(uint8_t perPeer);        // default 1
-    BLEAudioCapInitiator &setSourceStreams(uint8_t perPeer);      // default 0
-    BLEAudioCapInitiator &setBroadcastId(uint32_t broadcastId);
+    BTStatus setPreset(BLEAudioCodecPreset preset);  // default LC3_16_2_1
+    BTStatus setQos(const BLEAudioQos &qos);
+    BTStatus setContext(BLEAudioContext context);    // default Media
+    BTStatus setSinkStreams(uint8_t perPeer);        // default 1
+    BTStatus setSourceStreams(uint8_t perPeer);      // default 0
+    BTStatus setBroadcastId(uint32_t broadcastId);
     uint32_t getBroadcastId() const;
-    BLEAudioCapInitiator &setBroadcastCode(const String &code);
-    BLEAudioCapInitiator &setBroadcastName(const String &name);
+    BTStatus setBroadcastCode(const String &code);
+    BTStatus setBroadcastName(const String &name);
 
     BTStatus discover(uint16_t connHandle);
     BTStatus startUnicast();
@@ -931,13 +935,13 @@ after ``audio.onLinkReady()``; ``startUnicast()`` brings them all up.
     using Callback = std::function<void()>;
     using StoppedCallback = std::function<void(uint8_t reason)>;
     using HandoverCallback = std::function<void(BTStatus status, bool toBroadcast)>;
-    BLEAudioCapInitiator &onDiscovered(DiscoveredCallback cb);
-    BLEAudioCapInitiator &onUnicastStarted(StatusCallback cb);
-    BLEAudioCapInitiator &onUnicastUpdated(StatusCallback cb);
-    BLEAudioCapInitiator &onUnicastStopped(Callback cb);
-    BLEAudioCapInitiator &onBroadcastStarted(Callback cb);
-    BLEAudioCapInitiator &onBroadcastStopped(StoppedCallback cb);
-    BLEAudioCapInitiator &onHandover(HandoverCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onUnicastStarted(StatusCallback cb);
+    void onUnicastUpdated(StatusCallback cb);
+    void onUnicastStopped(Callback cb);
+    void onBroadcastStarted(Callback cb);
+    void onBroadcastStopped(StoppedCallback cb);
+    void onHandover(HandoverCallback cb);
     void resetCallbacks();
 
 BLEAudioCapCommander
@@ -980,9 +984,9 @@ Each procedure returns once started and reports through ``onResult()``.
                                                   bool coordinatedSet, bool broadcastReception)>;
     using ResultCallback = std::function<void(Operation op, BTStatus status)>;
     using ReceiveStateCallback = std::function<void(const ReceiveState &state)>;
-    BLEAudioCapCommander &onDiscovered(DiscoveredCallback cb);
-    BLEAudioCapCommander &onResult(ResultCallback cb);
-    BLEAudioCapCommander &onReceiveState(ReceiveStateCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onResult(ResultCallback cb);
+    void onReceiveState(ReceiveStateCallback cb);
     void resetCallbacks();
 
 Coordinated sets (CSIP)
@@ -1000,17 +1004,17 @@ Coordinated sets (CSIP)
     enum class SirkAccess : uint8_t { Accept, AcceptEncrypted, Reject, OobOnly };
     using LockCallback = std::function<void(bool locked, uint16_t connHandle)>;
     using SirkReadCallback = std::function<SirkAccess(uint16_t connHandle)>;
-    BLEAudioCoordinatedSetMember &setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
-    BLEAudioCoordinatedSetMember &setSetSize(uint8_t size);   // default 2
-    BLEAudioCoordinatedSetMember &setRank(uint8_t rank);      // 1..size, default 1
-    BLEAudioCoordinatedSetMember &setLockable(bool lockable); // default true, read at begin()
-    BLEAudioCoordinatedSetMember &setName(const String &name);
+    BTStatus setSirk(const uint8_t sirk[BLE_AUDIO_SIRK_SIZE]);
+    BTStatus setSetSize(uint8_t size);   // default 2
+    BTStatus setRank(uint8_t rank);      // 1..size, default 1
+    BTStatus setLockable(bool lockable); // default true, read at begin()
+    BTStatus setName(const String &name);
     BTStatus generateRsi(uint8_t rsi[BLE_AUDIO_RSI_SIZE]) const;  // advertise as AD 0x2E
     BTStatus lock();
     BTStatus unlock(bool force = false);
     bool isLocked() const;
-    BLEAudioCoordinatedSetMember &onLockChanged(LockCallback cb);
-    BLEAudioCoordinatedSetMember &onSirkRead(SirkReadCallback cb);  // default: accept
+    void onLockChanged(LockCallback cb);
+    void onSirkRead(SirkReadCallback cb);  // default: accept
     void resetCallbacks();
 
     struct BLEAudioCoordinatedSetInfo {
@@ -1034,9 +1038,9 @@ Coordinated sets (CSIP)
     BTStatus lock();     // every connected discovered member, rank order
     BTStatus unlock();
     BLEAudioCoordinatedSetInfo setInfo() const;
-    BLEAudioCoordinatedSetCoordinator &onDiscovered(DiscoveredCallback cb);
-    BLEAudioCoordinatedSetCoordinator &onLock(LockCallback cb);
-    BLEAudioCoordinatedSetCoordinator &onLockChanged(LockChangedCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onLock(LockCallback cb);
+    void onLockChanged(LockChangedCallback cb);
     void resetCallbacks();
 
 Control profiles: VCP / MICP
@@ -1054,9 +1058,9 @@ state notification, a rejection as ``onResult()``.
     enum class Operation : uint8_t { Unknown, SetVolume, Mute, Unmute, VolumeUp, VolumeDown, SetStep };
     using StateCallback = std::function<void(uint8_t volume, bool muted)>;
     using ResultCallback = std::function<void(Operation op, BTStatus status)>;
-    BLEAudioVolumeRenderer &setInitialVolume(uint8_t volume);  // default 100
-    BLEAudioVolumeRenderer &setInitialMute(bool muted);
-    BLEAudioVolumeRenderer &setVolumeStep(uint8_t step);       // 1..255, default 1
+    BTStatus setInitialVolume(uint8_t volume);  // default 100
+    BTStatus setInitialMute(bool muted);
+    BTStatus setVolumeStep(uint8_t step);       // 1..255, default 1
     BTStatus setVolume(uint8_t volume);
     BTStatus mute();
     BTStatus unmute();
@@ -1064,8 +1068,8 @@ state notification, a rejection as ``onResult()``.
     BTStatus volumeDown();
     uint8_t getVolume() const;
     bool isMuted() const;
-    BLEAudioVolumeRenderer &onStateChanged(StateCallback cb);
-    BLEAudioVolumeRenderer &onResult(ResultCallback cb);
+    void onStateChanged(StateCallback cb);
+    void onResult(ResultCallback cb);
     void resetCallbacks();
 
 .. code-block:: cpp
@@ -1092,11 +1096,11 @@ state notification, a rejection as ``onResult()``.
     bool isMuted() const;
     BTStatus setVolumeOffset(int16_t offset);   // first VOCS, -255..255
     BTStatus setInputGain(int8_t gain);         // first AICS
-    BLEAudioVolumeController &onDiscovered(DiscoveredCallback cb);
-    BLEAudioVolumeController &onStateChanged(StateCallback cb);
-    BLEAudioVolumeController &onOffsetChanged(OffsetCallback cb);
-    BLEAudioVolumeController &onInputChanged(InputCallback cb);
-    BLEAudioVolumeController &onResult(ResultCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onStateChanged(StateCallback cb);
+    void onOffsetChanged(OffsetCallback cb);
+    void onInputChanged(InputCallback cb);
+    void onResult(ResultCallback cb);
     void resetCallbacks();
 
 Microphone device (MICS server) and controller (same one-peer / first-AICS /
@@ -1109,14 +1113,14 @@ queued-write rules as VCP):
     enum class Operation : uint8_t { Unknown, Mute, Unmute, DisableMute };
     using MuteCallback = std::function<void(bool muted)>;
     using ResultCallback = std::function<void(Operation op, BTStatus status)>;
-    BLEAudioMicDevice &setInitialMute(bool muted);
+    BTStatus setInitialMute(bool muted);
     BTStatus mute();
     BTStatus unmute();
     BTStatus disableMute();      // mute unavailable; controllers cannot change it
     bool isMuted() const;
     bool isMuteDisabled() const;
-    BLEAudioMicDevice &onMuteChanged(MuteCallback cb);
-    BLEAudioMicDevice &onResult(ResultCallback cb);
+    void onMuteChanged(MuteCallback cb);
+    void onResult(ResultCallback cb);
     void resetCallbacks();
 
 .. code-block:: cpp
@@ -1136,10 +1140,10 @@ queued-write rules as VCP):
     bool isMuted() const;
     bool isMuteDisabled() const;
     BTStatus setInputGain(int8_t gain);   // first mic AICS
-    BLEAudioMicController &onDiscovered(DiscoveredCallback cb);
-    BLEAudioMicController &onMuteChanged(MuteCallback cb);
-    BLEAudioMicController &onInputChanged(InputCallback cb);
-    BLEAudioMicController &onResult(ResultCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onMuteChanged(MuteCallback cb);
+    void onInputChanged(InputCallback cb);
+    void onResult(ResultCallback cb);
     void resetCallbacks();
 
 Control profiles: MCP / CCP
@@ -1173,8 +1177,8 @@ Media player (GMCS server) and controller:
     BTStatus nextTrack();
     BTStatus previousTrack();
     BLEAudioMediaState getState() const;
-    BLEAudioMediaPlayer &onStateChanged(StateCallback cb);
-    BLEAudioMediaPlayer &onCommandResult(CommandCallback cb);
+    void onStateChanged(StateCallback cb);
+    void onCommandResult(CommandCallback cb);
     void resetCallbacks();
 
 .. code-block:: cpp
@@ -1197,11 +1201,11 @@ Media player (GMCS server) and controller:
     BTStatus readPlayerName();
     BTStatus readTrackTitle();
     BLEAudioMediaState getState() const;  // Inactive after disconnect
-    BLEAudioMediaController &onDiscovered(DiscoveredCallback cb);
-    BLEAudioMediaController &onStateChanged(StateCallback cb);
-    BLEAudioMediaController &onCommandResult(CommandCallback cb);
-    BLEAudioMediaController &onPlayerName(TextCallback cb);
-    BLEAudioMediaController &onTrackTitle(TextCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onStateChanged(StateCallback cb);
+    void onCommandResult(CommandCallback cb);
+    void onPlayerName(TextCallback cb);
+    void onTrackTitle(TextCallback cb);
     void resetCallbacks();
 
 Call server (GTBS phone side) and controller (headset side):
@@ -1220,9 +1224,9 @@ Call server (GTBS phone side) and controller (headset side):
     using OriginateCallback = std::function<bool(uint8_t callIndex, const String &uri)>;
     using TerminatedCallback = std::function<void(uint8_t callIndex, uint8_t reason)>;
     using CallControlCallback = std::function<void(BLEAudioCallOperation operation, uint8_t callIndex)>;
-    BLEAudioCallServer &setProviderName(const String &name);  // default "ESP Phone"
-    BLEAudioCallServer &setUci(const String &uci);
-    BLEAudioCallServer &setUriSchemes(const String &schemes);  // e.g. "tel,skype", default "tel"
+    BTStatus setProviderName(const String &name);  // default "ESP Phone"
+    BTStatus setUci(const String &uci);
+    BTStatus setUriSchemes(const String &schemes);  // e.g. "tel,skype", default "tel"
     BTStatus incomingCall(const String &from, uint8_t &callIndex, const String &friendlyName = "");
     BTStatus accept(uint8_t callIndex);
     BTStatus hold(uint8_t callIndex);
@@ -1231,9 +1235,9 @@ Call server (GTBS phone side) and controller (headset side):
     BTStatus remoteAnswered(uint8_t callIndex);
     BTStatus remoteTerminated(uint8_t callIndex);
     BTStatus updateProviderName(const String &name);
-    BLEAudioCallServer &onOriginate(OriginateCallback cb);
-    BLEAudioCallServer &onTerminated(TerminatedCallback cb);
-    BLEAudioCallServer &onCallControl(CallControlCallback cb);
+    void onOriginate(OriginateCallback cb);
+    void onTerminated(TerminatedCallback cb);
+    void onCallControl(CallControlCallback cb);
     void resetCallbacks();
 
     // Controller (via audio.createCallController()):
@@ -1250,9 +1254,9 @@ Call server (GTBS phone side) and controller (headset side):
     BTStatus hold(uint8_t callIndex);
     BTStatus retrieve(uint8_t callIndex);
     BTStatus readCalls();                    // one onCallState per call
-    BLEAudioCallController &onDiscovered(DiscoveredCallback cb);
-    BLEAudioCallController &onResult(ResultCallback cb);
-    BLEAudioCallController &onCallState(CallStateCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onResult(ResultCallback cb);
+    void onCallState(CallStateCallback cb);
     void resetCallbacks();
 
 Identity profiles and hearing aids
@@ -1277,10 +1281,10 @@ CAP acceptor.
     explicit operator bool() const;
     using DiscoverCallback = std::function<void(uint16_t connHandle, BTStatus status,
                                                 BLEAudioTmapRole peerRoles)>;
-    BLEAudioTmap &setRoles(BLEAudioTmapRole roles);   // before audio.begin()
+    BTStatus setRoles(BLEAudioTmapRole roles);   // before audio.begin()
     BLEAudioTmapRole getRoles() const;
     BTStatus discover(uint16_t connHandle);
-    BLEAudioTmap &onDiscovered(DiscoverCallback cb);
+    void onDiscovered(DiscoverCallback cb);
     void resetCallbacks();
 
     enum class BLEAudioGmapRole : uint8_t {
@@ -1302,13 +1306,13 @@ CAP acceptor.
     using DiscoverCallback = std::function<void(uint16_t connHandle, BTStatus status,
                                                 BLEAudioGmapRole peerRoles,
                                                 const BLEAudioGmapFeatures &peerFeatures)>;
-    BLEAudioGmap &setRoles(BLEAudioGmapRole roles);
-    BLEAudioGmap &setFeatures(const BLEAudioGmapFeatures &features);
-    BLEAudioGmap &setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal,
+    BTStatus setRoles(BLEAudioGmapRole roles);
+    BTStatus setFeatures(const BLEAudioGmapFeatures &features);
+    BTStatus setFeatures(uint8_t unicastGateway, uint8_t unicastTerminal,
                               uint8_t broadcastSender, uint8_t broadcastReceiver);
     BLEAudioGmapRole getRoles() const;
     BTStatus discover(uint16_t connHandle);
-    BLEAudioGmap &onDiscovered(DiscoverCallback cb);
+    void onDiscovered(DiscoverCallback cb);
     void resetCallbacks();
 
 .. code-block:: cpp
@@ -1329,17 +1333,17 @@ CAP acceptor.
     explicit operator bool() const;
     using SelectCallback = std::function<void(uint8_t index, bool sync)>;
     using RenameCallback = std::function<void(uint8_t index, const String &name)>;
-    BLEAudioHearingAidDevice &setType(BLEHearingAidType type);
-    BLEAudioHearingAidDevice &setPresetSync(bool enabled);
-    BLEAudioHearingAidDevice &addPreset(uint8_t index, const String &name,
+    BTStatus setType(BLEHearingAidType type);
+    BTStatus setPresetSync(bool enabled);
+    BTStatus addPreset(uint8_t index, const String &name,
                                         bool available = true, bool writable = false);
     BTStatus removePreset(uint8_t index);
     BTStatus setPresetAvailable(uint8_t index, bool available);
     BTStatus renamePreset(uint8_t index, const String &name);
     BTStatus setActivePreset(uint8_t index);
     uint8_t getActivePreset() const;   // 0 = none
-    BLEAudioHearingAidDevice &onPresetSelected(SelectCallback cb);
-    BLEAudioHearingAidDevice &onPresetRenamed(RenameCallback cb);
+    void onPresetSelected(SelectCallback cb);
+    void onPresetRenamed(RenameCallback cb);
     void resetCallbacks();
 
     // Controller (via audio.createHearingAidController(), one peer at a time):
@@ -1357,9 +1361,9 @@ CAP acceptor.
     BTStatus previousPreset(bool sync = false);
     BTStatus renamePreset(uint8_t index, const String &name);
     uint8_t getActivePreset() const;
-    BLEAudioHearingAidController &onDiscovered(DiscoveredCallback cb);
-    BLEAudioHearingAidController &onPreset(PresetCallback cb);
-    BLEAudioHearingAidController &onPresetSwitch(SwitchCallback cb);
+    void onDiscovered(DiscoveredCallback cb);
+    void onPreset(PresetCallback cb);
+    void onPresetSwitch(SwitchCallback cb);
     void resetCallbacks();
 
 LC3 player and recorder
@@ -1392,8 +1396,8 @@ block on BLE or call ``attach()`` / ``start`` / ``stop`` / ``end()`` from them.
     BTStatus begin();                          // PCM-sink mode (needs setPCMSink())
     BTStatus begin(int bclk, int ws, int dout, int mclk = -1, int port = 0);
     void end();                                // deferred when called from the sink callback
-    BLEAudioPlayer &setPCMSink(BLEAudioPCMSink sink);   // before begin(), wins over I2S
-    BLEAudioPlayer &setJitterDepth(uint8_t sdus);       // 0 = from QoS (default), 2..16
+    BTStatus setPCMSink(BLEAudioPCMSink sink);   // before begin(), wins over I2S
+    BTStatus setJitterDepth(uint8_t sdus);       // 0 = from QoS (default), 2..16
     BTStatus attach(BLEAudioStream stream);
     BTStatus attach(BLEAudioStream stream, BLEAudioStream right);
     BTStatus startPlayback();                  // spawns the decode task
@@ -1416,7 +1420,7 @@ block on BLE or call ``attach()`` / ``start`` / ``stop`` / ``end()`` from them.
     BTStatus begin();                          // PCM-source mode (needs setPCMSource())
     BTStatus begin(int bclk, int ws, int din, int mclk = -1, int port = 0);
     void end();
-    BLEAudioRecorder &setPCMSource(BLEAudioPCMSource source);  // before begin()
+    BTStatus setPCMSource(BLEAudioPCMSource source);  // before begin()
     BTStatus attach(BLEAudioStream stream);
     BTStatus attach(BLEAudioStream stream, BLEAudioStream right);
     BTStatus startCapture();

@@ -25,7 +25,8 @@ void setup() {
   audio = BLE.getAudioController();
 
   BLEAudioUnicastServer server = audio.createUnicastServer();
-  server.configureMediaSink();
+  if (!server) { /* factory failed: role disabled or engine down */ }
+  else if (!server.configureMediaSink()) { /* invalid state */ }
 
   audio.begin();
   BLE.getAdvertising().start();

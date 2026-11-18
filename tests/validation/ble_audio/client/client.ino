@@ -508,7 +508,8 @@ void setup() {
           audioLinkDown = true;
         });
         BLEAudioUnicastClient uc = audio.createUnicastClient();
-        uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setSinkStreams(1);
+                uc.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        uc.setSinkStreams(1);
         // PACS discovery: the server's sink PAC must cover the preset we configure.
         uc.onDiscovered([](const BLEAudioUnicastPeerInfo &peer) {
           bapPresetPublished = (peer.sinkPresets & BLEAudioPresetBit(BLEAudioCodecPreset::LC3_16_2_1)) != 0;
@@ -745,7 +746,8 @@ void setup() {
           volatile bool presetDisc = false;
           volatile bool presetOk = false;
           bool stallPrinted = false, presetPrinted = false;
-          uc.setPreset(wantPreset).setSinkStreams(1);
+                    uc.setPreset(wantPreset);
+          uc.setSinkStreams(1);
           uc.onDiscovered([wantPreset, &presetDisc, &presetOk](const BLEAudioUnicastPeerInfo &peer) {
             presetDisc = true;
             presetOk = (peer.sinkPresets & BLEAudioPresetBit(wantPreset)) != 0;
@@ -1456,10 +1458,10 @@ void setup() {
       BLEAudio audio = BLE.getAudioController();
       {
         BLEAudioBroadcastSink sink = audio.createBroadcastSink();
-        sink.setStreams(2)
-          .setLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight)
-          .setTargetName(targetName)
-          .setBroadcastCode("ArduinoStereo");  // must match the server's STEREO_BROADCAST_CODE
+                sink.setStreams(2);
+        sink.setLocation(BLEAudioLocation::FrontLeft | BLEAudioLocation::FrontRight);
+        sink.setTargetName(targetName);
+        sink.setBroadcastCode("ArduinoStereo");  // must match the server's STEREO_BROADCAST_CODE
         sink.onStarted([&]() {
           // Clearing every callback from inside onStarted must keep the
           // running callable alive and must not deadlock the host task.
@@ -1687,7 +1689,8 @@ void setup() {
           audioLinkConn = conn;
         });
         BLEAudioCapInitiator initiator = audio.createCapInitiator();
-        initiator.setPreset(BLEAudioCodecPreset::LC3_16_2_1).setBroadcastName("BLE_CLT_HO");
+                initiator.setPreset(BLEAudioCodecPreset::LC3_16_2_1);
+        initiator.setBroadcastName("BLE_CLT_HO");
         initiator.onDiscovered([&](BTStatus s2, const BLEAudioCapPeerInfo &peer) {
           discOk = (s2 && peer.sinkEndpoints > 0) ? 1 : 0;
           discDone = true;
