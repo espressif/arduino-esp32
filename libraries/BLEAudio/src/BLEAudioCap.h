@@ -136,6 +136,13 @@ struct BLEAudioCapPeerInfo : BLEAudioUnicastPeerInfo {
  *
  * Created by BLEAudio::createCapInitiator(). Procedures return once
  * started; completion is reported through the matching callback.
+ *
+ * Like all role handles, the initiator's methods must be called from one
+ * task (normally loop()): start/stop/update/handover serialize against each
+ * other through the hoBusy guard, which is a check-then-act sequence, not a
+ * lock held across the asynchronous engine call. Concurrent calls from two
+ * tasks can interleave a stop with an in-flight handover and corrupt the
+ * shared unicast parameters; the engine does not second-guess the caller.
  */
 class BLEAudioCapInitiator {
 public:
