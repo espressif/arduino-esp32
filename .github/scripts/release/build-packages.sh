@@ -80,7 +80,7 @@ cp -Rf "$GITHUB_WORKSPACE/libraries"                        "$PKG_DIR/"
 
 echo "Copying tools root scripts ..."
 shopt -s nullglob
-for tool_file in "$GITHUB_WORKSPACE"/tools/*.sh "$GITHUB_WORKSPACE"/tools/*.py "$GITHUB_WORKSPACE"/tools/*.exe; do
+for tool_file in "$GITHUB_WORKSPACE"/tools/*.cmd "$GITHUB_WORKSPACE"/tools/*.sh "$GITHUB_WORKSPACE"/tools/*.py "$GITHUB_WORKSPACE"/tools/*.exe; do
     tool_base="${tool_file##*/}"
     case "$tool_base" in
         get.*|arduino_cmake.*) continue ;;
