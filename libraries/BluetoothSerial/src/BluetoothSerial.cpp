@@ -132,6 +132,8 @@ struct BluetoothSerial::Impl {
   PeerConnectHandler connectCb;
   PeerDisconnectHandler disconnectCb;
   ConfirmRequestHandler confirmRequestCb;
+  PassKeyRequestHandler passKeyRequestCb;
+  PassKeyDisplayHandler passKeyDisplayCb;
   AuthCompleteHandler authCompleteCb;
   DiscoveryHandler discoveryCb;
 
@@ -612,6 +614,44 @@ void BluetoothSerial::Impl::gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_
         log_w("No confirm request callback, accepting pairing (Just Works — no MitM protection)");
       }
       esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, accept);
+      break;
+    }
+
+    case ESP_BT_GAP_KEY_NOTIF_EVT:
+    {
+      // Secure Simple Pairing — Passkey Entry, display side.
+      // Our IO capability is DisplayOnly, so the stack generated the six-digit
+      // passkey that the user must type on the peer (the keyboard side).
+      // BT Core Spec v5.x, Vol 2, Part C, §4.2.3 (Passkey Entry protocol).
+      BTAddress peer = BTAddress::fromEspBdAddr(param->key_notif.bda);
+      if (s_impl->passKeyDisplayCb) {
+        s_impl->passKeyDisplayCb(peer, param->key_notif.passkey);
+      } else {
+        log_i("SSP passkey for %s: %06lu", peer.toString().c_str(), (unsigned long)param->key_notif.passkey);
+      }
+      break;
+    }
+
+    case ESP_BT_GAP_KEY_REQ_EVT:
+    {
+      // Secure Simple Pairing — Passkey Entry, keyboard side.
+      // The peer is displaying a six-digit passkey; the application must
+      // supply the same value. The reply is mandatory: an unanswered request
+      // fails after the authentication timeout (typically 30 s).
+      // BT Core Spec v5.x, Vol 2, Part C, §4.2.3 (Passkey Entry protocol).
+      BTAddress peer = BTAddress::fromEspBdAddr(param->key_req.bda);
+      uint32_t passkey = 0;
+      bool accept = false;
+      if (s_impl->passKeyRequestCb) {
+        passkey = s_impl->passKeyRequestCb(peer);
+        accept = passkey <= 999999;
+        if (!accept) {
+          log_w("Passkey request handler returned %lu (outside 0-999999); rejecting pairing", (unsigned long)passkey);
+        }
+      } else {
+        log_w("No passkey request callback; rejecting pairing (register onPassKeyRequest)");
+      }
+      esp_bt_gap_ssp_passkey_reply(param->key_req.bda, accept, accept ? passkey : 0);
       break;
     }
 
@@ -1164,6 +1204,24 @@ BTStatus BluetoothSerial::onConfirmRequest(ConfirmRequestHandler callback) {
   }
 
   _impl->confirmRequestCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onPassKeyRequest(PassKeyRequestHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->passKeyRequestCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onPassKeyDisplay(PassKeyDisplayHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->passKeyDisplayCb = std::move(callback);
   return BTStatus::OK;
 }
 

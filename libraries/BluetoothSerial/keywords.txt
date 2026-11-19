@@ -26,6 +26,10 @@ writeTo	KEYWORD2
 onConnect	KEYWORD2
 onDisconnect	KEYWORD2
 onPeerData	KEYWORD2
+onConfirmRequest	KEYWORD2
+onPassKeyRequest	KEYWORD2
+onPassKeyDisplay	KEYWORD2
+onAuthComplete	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

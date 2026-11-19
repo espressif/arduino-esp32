@@ -1,9 +1,14 @@
 // BT Classic validation test — CLIENT (SPP initiator)
 // Phases:
-//   1. basic_lifecycle  — begin / deinit / reinit
-//   2. spp_connect_data — discover server by name, connect, bidirectional data, disconnect
-//   3. bond_management  — list bonds, delete all, verify empty
-//   4. memory_release   — end(true)
+//   1. basic_lifecycle     — begin / deinit / reinit
+//   2. spp_connect_data    — discover server by name, connect, bidirectional data, disconnect
+//   3. bond_management     — list bonds, delete all, verify empty
+//   4. discovery           — sync discover(), discoverAsync() and discoverStop()
+//   5. ssp_passkey_entry   — KeyboardOnly: receive the passkey from the test
+//                            script and complete Passkey Entry with the server
+//   6. ssp_numeric_compare — DisplayYesNo: confirm the numeric value
+//   7. ssp_passkey_reject  — reject the passkey and verify the pairing fails
+//   8. memory_release      — end(true)
 
 #include <Arduino.h>
 #include <BLE.h>
@@ -17,6 +22,15 @@ BluetoothSerial SerialBT;
 String serverName;
 String clientName;
 volatile int currentPhase = 0;
+
+// Server address captured in phase 2 and reused for the discovery callback.
+static BTAddress connectedPeer;
+
+// Security phase state
+static volatile bool authOk = false;
+static volatile bool authFailed = false;
+static volatile bool rejectPasskey = false;
+static volatile bool confirmAccept = true;
 
 // ---------------------------------------------------------------------------
 // Phase coordination (same pattern as BLE validation tests)
@@ -49,6 +63,53 @@ void waitForPhase(int n) {
   }
 }
 
+static void resetSecurityState() {
+  authOk = false;
+  authFailed = false;
+}
+
+static void waitForDisconnect(uint32_t timeoutMs) {
+  uint32_t deadline = millis() + timeoutMs;
+  while (SerialBT.connected() && millis() < deadline) {
+    checkSerial();
+    delay(20);
+  }
+}
+
+// Runs on the Bluetooth host task when the server displays a passkey. The
+// test script sends the six digits as "PASSKEY=<value>" once the server has
+// printed them.
+uint32_t passkeyRequestHandler(const BTAddress &peer) {
+  Serial.printf("[CLIENT] Passkey requested by %s reject=%d\n", peer.toString().c_str(), (int)rejectPasskey);
+  if (rejectPasskey) {
+    Serial.println("[CLIENT] Passkey rejected");
+    return 0xFFFFFFFFu;  // > 999999: explicit negative reply
+  }
+
+  String buf;
+  uint32_t deadline = millis() + 20000;
+  while (millis() < deadline) {
+    while (Serial.available()) {
+      char c = (char)Serial.read();
+      if (c == '\n') {
+        buf.trim();
+        if (buf.startsWith("PASSKEY=")) {
+          uint32_t value = (uint32_t)strtoul(buf.c_str() + 8, nullptr, 10);
+          Serial.printf("[CLIENT] Passkey=%06lu\n", (unsigned long)value);
+          return value;
+        }
+        buf = "";
+      } else if (c != '\r') {
+        buf += c;
+      }
+    }
+    delay(10);
+  }
+
+  Serial.println("[CLIENT] Passkey input timeout");
+  return 0xFFFFFFFFu;
+}
+
 // ---------------------------------------------------------------------------
 // Setup: run all phases sequentially
 // ---------------------------------------------------------------------------
@@ -72,6 +133,22 @@ void setup() {
   serverName = input;
   clientName = serverName + "_C";
   Serial.printf("[CLIENT] Server: %s\n", serverName.c_str());
+
+  // Security callbacks are registered once and persist across end()/begin().
+  SerialBT.onAuthComplete([](bool success) {
+    if (success) {
+      authOk = true;
+    } else {
+      authFailed = true;
+    }
+    Serial.printf("[CLIENT] AuthComplete=%d\n", (int)success);
+  });
+  SerialBT.onPassKeyRequest(passkeyRequestHandler);
+  SerialBT.onConfirmRequest([](uint32_t value) {
+    bool accept = (bool)confirmAccept;
+    Serial.printf("[CLIENT] Confirm=%06lu accept=%d\n", (unsigned long)value, (int)accept);
+    return accept;
+  });
 
   // -------------------------------------------------------------------------
   // Phase 1: basic lifecycle
@@ -129,6 +206,7 @@ void setup() {
     auto peerList = SerialBT.peers();
     Serial.printf("[CLIENT] peers=%u\n", (unsigned)peerList.size());
     if (!peerList.empty()) {
+      connectedPeer = peerList[0];
       Serial.printf("[CLIENT] peerAddr=%s\n", peerList[0].toString().c_str());
     }
   }
@@ -263,9 +341,176 @@ void setup() {
   Serial.printf("[CLIENT] Bonds after delete: %d\n", (int)bonds.size());
 
   // -------------------------------------------------------------------------
-  // Phase 4: memory release
+  // Phase 4: discovery APIs
   // -------------------------------------------------------------------------
   waitForPhase(4);
+
+  Serial.println("[CLIENT] Discovering...");
+  bool found = false;
+  uint32_t discoverCount = 0;
+  uint8_t discoverAttempts = 0;
+  for (; discoverAttempts < 2 && !found; discoverAttempts++) {
+    if (discoverAttempts > 0) {
+      delay(3000);
+    }
+    auto results = SerialBT.discover(8000);
+    discoverCount = results.size();
+    for (const auto &result : results) {
+      if (result.name == serverName) {
+        found = true;
+        break;
+      }
+    }
+  }
+  Serial.printf("[CLIENT] Discover found=%d count=%lu attempts=%u\n", (int)found, (unsigned long)discoverCount, discoverAttempts);
+
+  delay(2000);
+
+  // Match on the address learned in phase 2 as well: an inquiry result may
+  // arrive before its EIR name, and the async path is about the callback, not
+  // name resolution (connect(name) already covers that).
+  static volatile bool asyncFound = false;
+  static volatile uint32_t asyncCount = 0;
+  uint8_t asyncAttempts = 0;
+  bool asyncStarted = false;
+  BTStatus stopStatus = BTStatus::Fail;
+  asyncFound = false;
+  asyncCount = 0;
+  for (; asyncAttempts < 3 && !asyncFound; asyncAttempts++) {
+    if (asyncAttempts > 0) {
+      delay(3000);
+    }
+    asyncFound = false;
+    asyncCount = 0;
+    BTStatus asyncStatus = SerialBT.discoverAsync(
+      [](const BluetoothSerial::DiscoveryResult &result) {
+        asyncCount++;
+        if (result.name == serverName || result.address == connectedPeer) {
+          asyncFound = true;
+        }
+      },
+      20000
+    );
+    if (!asyncStatus) {
+      stopStatus = asyncStatus;
+      break;
+    }
+    asyncStarted = true;
+    uint32_t asyncDeadline = millis() + 15000;
+    while (!asyncFound && millis() < asyncDeadline) {
+      delay(10);
+    }
+    stopStatus = SerialBT.discoverStop();
+    delay(1000);
+  }
+  Serial.printf(
+    "[CLIENT] DiscoverAsync started=%d seen=%d attempts=%u results=%lu\n", (int)asyncStarted, (int)asyncFound, asyncAttempts, (unsigned long)asyncCount
+  );
+  Serial.printf("[CLIENT] DiscoverStop=%s\n", stopStatus ? "OK" : "FAILED");
+
+  // -------------------------------------------------------------------------
+  // Phase 5: SSP passkey entry (KeyboardOnly)
+  // -------------------------------------------------------------------------
+  waitForPhase(5);
+
+  resetSecurityState();
+  rejectPasskey = false;
+  (void)SerialBT.deleteAllBonds();
+  SerialBT.end(false);
+  SerialBT.enableSSP(true, false);  // input only -> KeyboardOnly
+  BTStatus sspStatus = SerialBT.begin(clientName, true);
+  Serial.printf("[CLIENT] Passkey begin=%d\n", (int)(bool)sspStatus);
+
+  Serial.println("[CLIENT] Connecting (passkey)...");
+  BTStatus cs = SerialBT.connect(serverName, 30000);
+  Serial.printf("[CLIENT] Passkey connect=%s\n", cs ? "OK" : cs.toString());
+
+  if (cs) {
+    SerialBT.print("PASSKEY_PROBE");
+    String probeRx;
+    uint32_t probeDeadline = millis() + 20000;
+    while (millis() < probeDeadline) {
+      while (SerialBT.available()) {
+        probeRx += (char)SerialBT.read();
+      }
+      if (probeRx.indexOf("PASSKEY_ACK") >= 0) {
+        break;
+      }
+      delay(10);
+    }
+    if (probeRx.indexOf("PASSKEY_ACK") >= 0) {
+      Serial.println("[CLIENT] Received: PASSKEY_ACK");
+    } else {
+      Serial.println("[CLIENT] PASSKEY_ACK timeout");
+    }
+    SerialBT.disconnect();
+    waitForDisconnect(10000);
+  }
+  Serial.printf("[CLIENT] Passkey done connected=%d auth=%d\n", (int)SerialBT.connected(), (int)authOk);
+
+  // -------------------------------------------------------------------------
+  // Phase 6: SSP numeric comparison (DisplayYesNo)
+  // -------------------------------------------------------------------------
+  waitForPhase(6);
+
+  resetSecurityState();
+  confirmAccept = true;
+  (void)SerialBT.deleteAllBonds();
+  SerialBT.end(false);
+  SerialBT.enableSSP(true, true);  // input + output -> DisplayYesNo
+  sspStatus = SerialBT.begin(clientName, true);
+  Serial.printf("[CLIENT] Numeric begin=%d\n", (int)(bool)sspStatus);
+
+  Serial.println("[CLIENT] Connecting (numeric)...");
+  cs = SerialBT.connect(serverName, 30000);
+  Serial.printf("[CLIENT] Numeric connect=%s\n", cs ? "OK" : cs.toString());
+
+  if (cs) {
+    SerialBT.print("NUMERIC_PROBE");
+    String probeRx;
+    uint32_t probeDeadline = millis() + 20000;
+    while (millis() < probeDeadline) {
+      while (SerialBT.available()) {
+        probeRx += (char)SerialBT.read();
+      }
+      if (probeRx.indexOf("NUMERIC_ACK") >= 0) {
+        break;
+      }
+      delay(10);
+    }
+    if (probeRx.indexOf("NUMERIC_ACK") >= 0) {
+      Serial.println("[CLIENT] Received: NUMERIC_ACK");
+    } else {
+      Serial.println("[CLIENT] NUMERIC_ACK timeout");
+    }
+    SerialBT.disconnect();
+    waitForDisconnect(10000);
+  }
+  Serial.printf("[CLIENT] Numeric done connected=%d auth=%d\n", (int)SerialBT.connected(), (int)authOk);
+
+  // -------------------------------------------------------------------------
+  // Phase 7: SSP passkey entry rejected by this side
+  // -------------------------------------------------------------------------
+  waitForPhase(7);
+
+  resetSecurityState();
+  rejectPasskey = true;
+  (void)SerialBT.deleteAllBonds();
+  SerialBT.end(false);
+  SerialBT.enableSSP(true, false);  // KeyboardOnly
+  sspStatus = SerialBT.begin(clientName, true);
+  Serial.printf("[CLIENT] Reject begin=%d\n", (int)(bool)sspStatus);
+
+  Serial.println("[CLIENT] Connecting (reject)...");
+  uint32_t startMs = millis();
+  cs = SerialBT.connect(serverName, 12000);
+  uint32_t elapsedMs = millis() - startMs;
+  Serial.printf("[CLIENT] Reject connect=%s elapsed=%lu\n", cs ? "OK" : cs.toString(), (unsigned long)elapsedMs);
+
+  // -------------------------------------------------------------------------
+  // Phase 8: memory release
+  // -------------------------------------------------------------------------
+  waitForPhase(8);
 
   SerialBT.end(true);
   Serial.println("[CLIENT] Memory released");
