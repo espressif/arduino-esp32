@@ -121,7 +121,9 @@ void setup() {
 }
 
 void loop() {
-  // Nothing to do here in this example
+  // loopTask never yields on its own. An empty loop keeps running and the idle
+  // task on that core misses the task watchdog (#12604).
+  delay(10);
 }
 
 void printLocalTime() {
