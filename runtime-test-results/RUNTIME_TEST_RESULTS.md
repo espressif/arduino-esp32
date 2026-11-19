@@ -10,6 +10,8 @@ Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
 adc_pwm|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
 ble|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:
+ble_audio|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:
+ble_dual_role|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:
 bt_classic|Error :fire:|-|-|-|-|-|-|-
 bt_inuse_override|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:
 bt_mem_wrap|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:
@@ -36,7 +38,7 @@ psram|Error :fire:|-|Error :fire:|-|-|Error :fire:|Error :fire:|Error :fire:
 signed_ota|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:|Error :fire:
 ticker|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
 timer|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
-tls_http|Error :fire:|Error :fire:|Error :fire:|-|-|-|Error :fire:|Error :fire:
+tls_http|Error :fire:|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:|Error :fire:
 touch|Error :fire:|-|-|-|-|Error :fire:|Error :fire:|Error :fire:
 uart|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
 unity|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
@@ -152,8 +154,8 @@ wifi|38/38 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|
 
 
 
-Generated on: 2026/11/18 01:16:29 UTC
+Generated on: 2026/11/19 01:42:44 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/1e02ab5d9f1c4f0a574ae01997d4a9b7a81de12b) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/44205482013) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/44206762830) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/44212643213)
+[Commit](https://github.com/espressif/arduino-esp32/commit/cb8091d3aec9bb075551e0da1169d163eeb153dd) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/44426717658) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/44430305114) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/44437032753)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/134500872919)
+[Test results](https://github.com/espressif/arduino-esp32/runs/135274694018)
