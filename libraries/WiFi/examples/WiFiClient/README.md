@@ -25,7 +25,7 @@ Default values will allow you to use this example without any changes. If you wa
 * After logging in, click on the "New Channel" button to create a new channel for your data. This is where your data will be stored and displayed.
 * Fill in the Name, Description, and other fields for your channel as desired, then click the "Save Channel" button.
 * Take note of the "Write API Key" located in the "API keys" tab, this is the key you will use to send data to your channel.
-* Replace the channelID from tab "Channel Settings" and privateKey with "Read API Keys" from "API Keys" tab.
+* Replace the channelID from tab "Channel Settings" and readApiKey with "Read API Keys" from "API Keys" tab.
 * Replace the host variable with the thingspeak server hostname "api.thingspeak.com"
 * Upload the sketch to your ESP32 board and make sure that the board is connected to the internet. The ESP32 should now send data to your Thingspeak channel at the intervals specified by the loop function.
 * Go to the channel view page on thingspeak and check the "Field1" for the new incoming data.
@@ -128,7 +128,7 @@ X-Frame-Options: SAMEORIGIN
 
 Closing connection
 ```
-After this the write+read log repeat every 10 seconds.
+After this the write+read log repeats. The sketch waits 15 seconds after each cycle, because ThingSpeak accepts one update per channel every 15 seconds on a free account.
 
 
 ## Troubleshooting
@@ -136,7 +136,8 @@ After this the write+read log repeat every 10 seconds.
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
 * **Wi-Fi not connected:** Check the SSID and password and also that the signal has sufficient strength.
-* **400 Bad Request:** Check the writeApiKey.
+* **400 Bad Request:** Check the writeApiKey. If the read request answers `-1`, check the readApiKey: a private channel needs it.
+* **Write answers `0`, or the channel shows every other value:** writes are coming faster than ThingSpeak accepts them (one per channel every 15 seconds on a free account).
 * **404 Not Found:** Check the channel ID.
 * **No data on chart / reading NULL:** Data must be sent as an integer, without commas.
 

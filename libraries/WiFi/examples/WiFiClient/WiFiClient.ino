@@ -3,7 +3,7 @@
     After logging in, click on the "New Channel" button to create a new channel for your data. This is where your data will be stored and displayed.
     Fill in the Name, Description, and other fields for your channel as desired, then click the "Save Channel" button.
     Take note of the "Write API Key" located in the "API keys" tab, this is the key you will use to send data to your channel.
-    Replace the channelID from tab "Channel Settings" and privateKey with "Read API Keys" from "API Keys" tab.
+    Replace the channelID from tab "Channel Settings" and readApiKey with "Read API Keys" from "API Keys" tab.
     Replace the host variable with the thingspeak server hostname "api.thingspeak.com"
     Upload the sketch to your ESP32 board and make sure that the board is connected to the internet. The ESP32 should now send data to your Thingspeak channel at the intervals specified by the loop function.
     Go to the channel view page on thingspeak and check the "Field1" for the new incoming data.
@@ -89,8 +89,8 @@ void loop() {
 
   // READ --------------------------------------------------------------------------------------------
 
-  String readRequest = "GET /channels/" + channelID + "/fields/" + fieldNumber + ".json?results=" + numberOfResults + " HTTP/1.1\r\n" + "Host: " + host + "\r\n"
-                       + "Connection: close\r\n\r\n";
+  String readRequest = "GET /channels/" + channelID + "/fields/" + fieldNumber + ".json?api_key=" + readApiKey + "&results=" + numberOfResults + " HTTP/1.1\r\n"
+                       + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n";
 
   if (!client.connect(host, httpPort)) {
     return;
@@ -102,5 +102,7 @@ void loop() {
   // -------------------------------------------------------------------------------------------------
 
   ++field1;
-  delay(10000);
+  // ThingSpeak accepts one update per channel every 15 seconds on a free account and answers "0" to a write
+  // that comes sooner, so wait at least that long before the next write.
+  delay(15000);
 }
