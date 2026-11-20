@@ -6,12 +6,213 @@ Introduction
 ------------
 
 This is a guide to highlight **breaking changes** in the API to help the migration of projects from versions 3.X to version 4.0 of the Arduino ESP32 core.
+For every change in a release, see the project `release notes <https://github.com/espressif/arduino-esp32/releases>`_.
+
+ADC
+---
+
+``analogReadMilliVolts()`` returns ``int32_t`` (was ``uint32_t``). On chips other than ESP32-S31 the value is still greater than or equal to zero, so assigning it to ``uint32_t`` still works. A function pointer or declaration that uses the old return type does not.
+
+On ESP32-S31, ``analogRead()`` logs an error and returns 0. Read the comparator sample with ``analogReadComparator()``, or the voltage with ``analogReadMilliVolts()`` (about -2000 mV to +2000 mV). ``analogSetAttenuation()`` and ``analogReadResolution()`` are not supported on that chip.
+
+BLE
+---
+
+The BLE library was rewritten as a stack-agnostic, handle-based API. The full
+`BLE migration guide <https://github.com/espressif/arduino-esp32/blob/master/libraries/BLE/MIGRATION.md>`_
+lists every changed signature, the removed types and macros, the complete API
+mapping, and before/after sketches.
+
+The changes that affect most v3.x sketches:
+
+* ``BLEDevice`` (a class of static methods) is replaced by the global ``BLE``
+  object: ``BLE.begin()``, ``BLE.end()``, ``BLE.getAddress()``. ``#include <BLE.h>``
+  is the only include; NimBLE/Bluedroid ``#ifdef`` blocks are no longer needed.
+* Factories and lookups return lightweight handles **by value**, not pointers.
+  Use ``.`` instead of ``->``. Copying a handle shares ownership; a
+  default-constructed handle is false.
+* Abstract callback classes (``BLEServerCallbacks``, ``BLECharacteristicCallbacks``,
+  ``BLEAdvertisedDeviceCallbacks``, ...) are replaced by lambda registration:
+  ``server.onConnect(...)``, ``chr.onWrite(...)``, ``scan.onResult(...)``.
+  Callbacks receive ``BLEConnInfo`` instead of backend-specific structs.
+* Most methods return ``BTStatus`` instead of ``void`` or ``bool``.
+* Properties and permissions are separate and both mandatory:
+  ``createCharacteristic(uuid, BLEProperty::..., BLEPermission::...)``.
+  ``BLE2901`` / ``BLE2902`` / ``BLE2904`` are replaced by ``BLEDescriptor``
+  factories, and the CCCD is created automatically for Notify/Indicate.
+* ``BLEAddress`` is replaced by the shared ``BTAddress``, and ``std::string`` by
+  Arduino ``String``.
+* A server is committed explicitly with ``server.start()`` after all services and
+  characteristics are created.
+
+v4.0 also adds multiple simultaneous clients, per-connection notifications,
+BLE 5 extended/periodic advertising and scanning, PAST, L2CAP CoC, raw ISO
+channels, ``BLEStream`` (NUS), and the separate ``BLEAudio`` library.
+
+Lifecycle verbs are consistent across BLE and BLEAudio: ``begin()`` / ``end()``
+acquire and release a stack, transport, or engine resource, while ``start()`` /
+``stop()`` begin and end an activity such as advertising, scanning, or a streaming
+session.
+
+.. code-block:: cpp
+
+    // 3.x
+    BLEDevice::init("MyDevice");
+    BLEServer *pServer = BLEDevice::createServer();
+    BLEService *pService = pServer->createService("180A");
+    pService->start();
+    BLEDevice::startAdvertising();
+
+    // 4.0
+    BTStatus status = BLE.begin("MyDevice");
+    BLEServer server = BLE.createServer();
+    BLEService service = server.createService(BLEUUID("180A"));
+    // ... create characteristics ...
+    server.start();
+    BLE.startAdvertising();
+
+Bluetooth Classic (BluetoothSerial)
+-----------------------------------
+
+The full v3.x-to-v4.0 method mapping and before/after examples are in the
+`BluetoothSerial migration guide <https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/MIGRATION.md>`_.
+
+The rewrite changes the lifetime, callback, and address model:
+
+* Nearly every method returns ``BTStatus`` instead of ``void`` or ``bool``; check
+  it, or use ``status.toString()`` for diagnostics.
+* Remote addresses use the shared ``BTAddress``. ``connect()`` no longer accepts a
+  raw ``uint8_t[6]``.
+* ``begin(localName, isInitiator)`` replaces ``begin(localName, isMaster,
+  disableBLE)``. ``end(releaseMemory)`` releases the shared Bluedroid host and,
+  when this session owns it, the controller memory.
+* The object is PIMPL-based: copying is deleted and moving transfers ownership.
+* ``onAuthComplete`` receives only ``bool``; the remote address is gone.
+  Numeric Comparison uses ``onConfirmRequest()`` returning ``bool``, replacing
+  ``confirmReply()``. Passkey Entry uses ``onPassKeyRequest()`` and
+  ``onPassKeyDisplay()``, replacing ``onKeyRequest()`` / ``respondPasskey()``.
+* Discovery returns ``std::vector<DiscoveryResult>``; ``discoverAsync()`` and
+  ``discoverStop()`` replace the ``BTScanResults`` / ``discoverAsyncStop()`` API.
+* Bond management returns ``std::vector<BTAddress>``; ``deleteBond(address)`` and
+  ``deleteAllBonds()`` replace ``deleteBondedDevices()``.
+* Acceptor mode supports multiple simultaneous clients: ``peerCount()``,
+  ``peers()``, ``writeTo()``, ``onPeerData()``, per-peer connect/disconnect
+  callbacks, and ``disconnect(address)``. ``write()`` / ``read()`` keep their
+  broadcast-out / merged-in ``Stream`` semantics.
+* ``enableSSP(input, output)`` selects the IO capability. ``setPin()`` is legacy
+  pairing, and is only programmed as the stack's fixed PIN when SSP is not
+  enabled.
+
+Bluetooth Classic is available on ESP32 and ESP32-S31. On
+ESP32-S31 the prebuilt libraries enable NimBLE only, so ``BluetoothSerial`` there
+requires an ESP-IDF-component build or rebuilt static libraries.
+
+HTTPClient
+----------
+
+``HTTPClient::begin("https://...")`` no longer skips certificate checks.
+
+In 3.x, ``begin("https://...")`` with no CA certificate called ``setInsecure()`` on the internal client. In 4.0 the request fails with ``HTTPC_ERROR_CONNECTION_REFUSED`` unless the sketch provides a trust anchor:
+
+* pass a CA PEM to ``begin(url, CAcert)``, or
+* call ``useBuiltinCACertBundle()`` before ``begin()`` (links the Mozilla bundle, about 70 KB of flash), or
+* call ``setInsecure()`` before ``begin()`` to skip validation.
+
+Certificate date checks need a real clock. Call ``configTime()`` before the request.
+
+``useBuiltinCACertBundle()`` and ``setInsecure()`` on ``HTTPClient`` do not change a client you pass in yourself. Configure that ``NetworkClientSecure`` with ``useBuiltinCACertBundle()``, ``setCACert()``, or ``setInsecure()``.
+
+.. code-block:: cpp
+
+    // 3.x — verification was skipped when no CA was set
+    http.begin("https://example.com/");
+
+    // 4.0 — verify against the builtin CA bundle
+    http.useBuiltinCACertBundle();
+    http.begin("https://example.com/");
+
+    // 4.0 — same behavior as 3.x begin("https://...") with no CA
+    http.setInsecure();
+    http.begin("https://192.168.1.1/");
+
+.. _migration-ledc-duty:
+
+LEDC
+----
+
+Starting with Arduino-ESP32 **4.0.x**, LEDC duty handling matches **ESP-IDF**: the valid ``ledcWrite()`` / ``ledcWriteChannel()`` / ``ledcFade*()`` range is **[0, 2^resolution]** (inclusive). Full on is duty **2^resolution**, not **2^resolution - 1**.
+
+Earlier 4.0.x builds remapped ``ledcWrite(pin, (1 << resolution) - 1)`` to full on (see issue `#11049 <https://github.com/espressif/arduino-esp32/issues/11049>`_). That behavior was incorrect for the LEDC API and is removed.
+
+``analogWrite()`` keeps the Arduino range **0** to **(2^resolution) - 1**. The Arduino maximum is mapped to LEDC full on before the write. Sketches that only use ``analogWrite()`` for PWM usually need no change.
+
+Duty ranges
+***********
+
+.. list-table::
+    :header-rows: 1
+    :widths: 28 36 36
+
+    * - API
+      - Valid ``value`` / ``duty``
+      - Full on
+    * - ``ledcWrite()``, ``ledcWriteChannel()``, ``ledcFade*()``
+      - ``0`` … ``2^resolution`` (inclusive)
+      - ``ledcWrite(pin, 1 << resolution)``
+    * - ``analogWrite()``
+      - ``0`` … ``(2^resolution) - 1`` (non-negative)
+      - ``analogWrite(pin, (1 << resolution) - 1)`` (mapped internally)
+
+Values above the LEDC maximum are **clamped** to full on. Negative ``analogWrite()`` values are **ignored**; the pin is not reconfigured and duty is left unchanged.
+
+Breaking changes
+****************
+
+``ledcWrite(2^n - 1)`` is no longer 100%
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Before (buggy 4.0.x):** ``ledcWrite(pin, 255)`` at 8-bit resolution behaved like full on (duty 256).
+
+**After:** ``ledcWrite(pin, 255)`` is one step below full on (255/256). Use ``ledcWrite(pin, 256)`` for 100%.
+
+At 5-bit resolution (issue report):
+
+.. code-block:: arduino
+
+    ledcAttach(pin, 5000, 5);
+    ledcWrite(pin, 31);   // 31/32, not full on
+    ledcWrite(pin, 32);   // 32/32, full on
+
+``analogWrite(negative)`` no longer becomes full on
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Before:** A negative ``int`` was converted to a large unsigned duty and could clamp to full on.
+
+**After:** Negative values are ignored. On a pin that was never attached via ``analogWrite()``, LEDC is not attached.
+
+Fade and direct LEDC examples use ``2^n`` as full on
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Examples and fades that target 100% duty should use **4096** at 12-bit, **256** at 8-bit, and so on—not ``(1 << resolution) - 1``—when calling ``ledcWrite()`` or ``ledcFade*()`` directly.
+
+Migration checklist
+*******************
+
+1. Search for ``ledcWrite`` / ``ledcWriteChannel`` / ``ledcFade`` with ``255``, ``4095``, or ``(1 << …) - 1`` used as **full brightness**.
+2. Replace full-on LEDC duties with ``1 << resolution`` (or the literal ``256``, ``4096``, etc.).
+3. Keep ``analogWrite(pin, 255)`` (8-bit default) if you want full on through the Arduino API.
+4. Treat negative ``analogWrite()`` as a no-op; do not rely on it to drive the pin high.
+
+Further reading
+***************
+
+API reference: :doc:`/api/ledc`
 
 WebServer
 ---------
 
 Server-Sent Events (SSE) state moved from the client to the server
-*******************************************************************
+******************************************************************
 
 The SSE hold marker is a directive to the server ("do not close this connection"), not a property of the TCP socket, so it is now owned by
 ``WebServer`` instead of ``NetworkClient``. The marker is reset for every new connection and is independent of which client wrapper is used
@@ -49,3 +250,498 @@ Migration example
       server.send(200, "text/event-stream", "");
       // then push "data: ...\n\n" lines from loop() via server.client()
     });
+
+Request hardening
+*****************
+
+The ``WebServer`` library was hardened against malformed and hostile requests. Requests that were previously parsed without any bound on
+length, argument count or loop iterations are now rejected, and a few code paths that could dereference a null pointer or leak state between
+requests were fixed.
+
+This guide lists every change that is visible to a sketch, so an application that relied on the previous behavior can be adjusted. Requests
+produced by browsers and by common HTTP clients are unaffected: every limit below is well above what normal traffic uses, and all of them can
+be raised from the build.
+
+New Request Limits
+^^^^^^^^^^^^^^^^^^
+
+All limits are plain macros with ``#ifndef`` guards, so they can be overridden from the build without editing the library, for example with
+``-DWEBSERVER_MAX_URI_LEN=8192`` in ``build_opt.h`` or in the platform build flags.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 34 12 54
+
+    * - Macro
+      - Default
+      - Effect when exceeded
+    * - ``WEBSERVER_MAX_URI_LEN``
+      - 2048
+      - The request is answered with ``414 URI Too Long`` and the connection is closed. Set to ``0`` to disable the check.
+    * - ``WEBSERVER_MAX_LINE_LEN``
+      - 4096
+      - A single protocol line (request line, header, or multipart part header) is refused. See `Request Line and Headers`_.
+    * - ``WEBSERVER_MAX_POST_ARG_LEN``
+      - 16384
+      - One line of a non-file multipart field value is refused and the request is aborted.
+    * - ``WEBSERVER_MAX_LINE_WAIT``
+      - 5000 ms
+      - A protocol line that has not arrived complete in time is answered with ``408 Request Timeout``. Set to ``0`` to disable.
+    * - ``WEBSERVER_MAX_HEADER_WAIT``
+      - 10000 ms
+      - The request line and headers together took too long; answered with ``408 Request Timeout``. Set to ``0`` to disable.
+    * - ``WEBSERVER_DIGEST_NONCE_TTL``
+      - 300000 ms
+      - How long a signed Digest nonce stays valid for any client. Set to ``0`` to disable expiry. See `Authentication`_.
+    * - ``WEBSERVER_MAX_QUERY_ARGS``
+      - 256
+      - Further arguments are dropped, but the request is still handled. See `Query and Form Arguments`_.
+    * - ``WEBSERVER_MAX_MULTIPART_SKIP_LINES``
+      - 64
+      - The multipart body is treated as malformed and the upload is aborted. See `Multipart Bodies`_.
+    * - ``WEBSERVER_MAX_REGEX_URI_LEN``
+      - 2048
+      - The request-target is not matched against ``UriRegex`` routes. See `Regular Expression Routes`_.
+    * - ``WEBSERVER_MAX_BACKREF_REGEX_URI_LEN``
+      - 64
+      - Same, for patterns that contain a back-reference. See `Regular Expression Routes`_.
+
+Three response codes that the library never produced before can now be sent: ``408 Request Timeout``, ``414 URI Too Long`` and
+``431 Request Header Fields Too Large``.
+
+Behavior Changes
+^^^^^^^^^^^^^^^^
+
+Authentication
+""""""""""""""
+
+``authenticate(username, password)`` now only accepts the ``Basic`` and ``Digest`` schemes. Previously any ``Authorization`` header whose
+value matched the configured user name was accepted, including a bare ``Authorization: <username>`` with no scheme and no password.
+
+Sketches that pass their own callback to ``authenticate()`` are unaffected: the callback still receives every scheme, including
+``OTHER_AUTH``, and decides on its own.
+
+Digest authentication no longer keeps a single nonce for the whole server. Each 401 issues a signed nonce that stays valid for
+``WEBSERVER_DIGEST_NONCE_TTL`` (five minutes by default), so several browsers or scripts can stay logged in at the same time. A request whose
+digest response is correct for an expired or unknown nonce is answered with ``stale=true``, as required by :rfc:`7616`, so the client retries
+silently instead of showing the login dialog again.
+
+The digest ``uri`` parameter is compared with the full request-target, including any query string. A captured ``Authorization`` header for one
+path or query is no longer accepted for a different request-target.
+
+Removing Digest Authentication
+""""""""""""""""""""""""""""""
+
+Digest authentication shares its entry points with Basic authentication, so a Basic-only application links the MD5, SHA-2 and HMAC code used to
+verify Digest credentials even though it never answers a Digest challenge. Set ``WEBSERVER_DIGEST_AUTH`` to ``0`` in ``build_opt.h`` or in the
+platform build flags to compile that code out:
+
+.. code-block:: none
+
+    -DWEBSERVER_DIGEST_AUTH=0
+
+Basic authentication and custom ``authenticate()`` callbacks that handle ``OTHER_AUTH`` continue to work unchanged. An ``Authorization``
+header using Digest is rejected. ``requestAuthentication(DIGEST_AUTH)`` does not fall back to a ``Basic`` challenge because that would
+invite the client to send credentials in the clear using a scheme that the sketch did not request. Instead, it logs an error and responds
+with ``403 Forbidden``, so a build that still selects Digest is denied rather than authenticated with a weaker scheme. The saving is
+several kilobytes of flash (about 9 KB in a large application, around 11 KB for a minimal ``WebServer`` sketch on an ESP32-S3).
+
+The default is ``1``, which keeps the current behavior. The switch removes Digest support; it does not make the nonce signing optional.
+
+serveStatic()
+"""""""""""""
+
+.. vale off
+
+A request path containing a ``.`` or ``..`` segment is refused, both in its literal and in its percent-encoded form, and the resolved path
+must stay under the configured filesystem root. Applications that depended on ``..`` being resolved by the filesystem must now request the
+canonical path.
+
+.. vale on
+
+A related bug was fixed at the same time: ``serveStatic("/", fs, "/")`` used to answer every request with ``404``. Mapping a handler to the
+filesystem root now works.
+
+Request Line and Headers
+""""""""""""""""""""""""
+
+The request line and every header are read with a bounded reader instead of ``Stream::readStringUntil()``. A peer that never sends a line
+terminator can no longer grow the heap until the device runs out of memory.
+
+* A request line longer than ``WEBSERVER_MAX_LINE_LEN`` is answered with ``414 URI Too Long``.
+* A header line longer than ``WEBSERVER_MAX_LINE_LEN`` is answered with ``431 Request Header Fields Too Large``.
+
+In both cases the already-received part of the request is drained before the connection is closed, so the status reaches the client instead of
+being lost to a connection reset.
+
+Reading is also bounded in time, which fixes `issue #12788 <https://github.com/espressif/arduino-esp32/issues/12788>`_. The stream timeout
+alone only requires that *some* byte arrive every few seconds, so a client sending one byte at a time could keep ``handleClient()`` from
+returning indefinitely and eventually trip the task watchdog. Two deadlines now apply, and both answer ``408 Request Timeout``:
+
+* ``WEBSERVER_MAX_LINE_WAIT`` bounds how long one line may take to arrive complete.
+* ``WEBSERVER_MAX_HEADER_WAIT`` bounds the request line and all headers together. This is the one that catches a client sending an endless
+  stream of complete but tiny headers, since every completed line restarts the per-line deadline.
+
+The header deadline deliberately does not cover the request body, so uploads that legitimately take minutes are unaffected. A client on a link
+so slow that it cannot deliver its headers within ``WEBSERVER_MAX_HEADER_WAIT`` is now dropped, where previously it would be served.
+
+Query and Form Arguments
+""""""""""""""""""""""""
+
+The argument array is sized from the number of ``key=value`` pairs the parser will actually accept, instead of from the number of ``&``
+separators. This has two visible consequences:
+
+* A body or query string made only of separators, such as ``&&&&``, now yields zero arguments. It previously yielded one empty argument per
+  separator.
+* Arguments past ``WEBSERVER_MAX_QUERY_ARGS`` are dropped with a warning in the log. The request is still routed and handled, and the
+  arguments below the limit are still available.
+
+Argument arrays are also allocated with ``std::nothrow``. When the allocation fails, ``args()`` reports ``0`` and ``arg()`` returns an empty
+string, where the previous code aborted.
+
+Multipart Bodies
+""""""""""""""""
+
+* A preamble or epilogue around the parts is skipped, as required by :rfc:`2046`, but only up to ``WEBSERVER_MAX_MULTIPART_SKIP_LINES``
+  lines. Beyond that, and when no data arrives for ``HTTP_MAX_POST_WAIT``, the upload is aborted instead of looping.
+* A body truncated right after the boundary aborts the upload instead of spinning the server task forever.
+* Exceeding ``WEBSERVER_MAX_POST_ARGS`` now calls the upload callback with ``UPLOAD_FILE_ABORTED`` before failing. It previously failed
+  without notifying the callback, so a handler could be left holding an open file.
+* A non-file field value is read with the same bounded reader as the rest of the protocol, capped per line by ``WEBSERVER_MAX_POST_ARG_LEN``
+  and by ``WEBSERVER_MAX_LINE_WAIT``. A field value line longer than the cap, or a client that stalls part-way through one, aborts the
+  request. The cap is separate from ``WEBSERVER_MAX_LINE_LEN`` and much larger, because a long field value is legitimate.
+
+Per-Request State
+"""""""""""""""""
+
+Upload state, raw-body state and collected form fields are reset at the start of every request. On a keep-alive connection, a field from an
+earlier request can no longer be returned by ``arg()`` or ``hasArg()``, and an aborted multipart request can no longer leave fields visible to
+the request that follows.
+
+Sketches that read ``upload()`` or ``arg()`` outside the handler for the request they belong to will now see empty state.
+
+upload() and raw()
+""""""""""""""""""
+
+A handler registered with an upload callback also receives raw, non-multipart bodies. ``upload()`` and ``raw()`` could therefore be called
+with no corresponding object allocated, dereferencing a null pointer.
+
+Both now return a reference to an inactive object whose ``status`` is ``UPLOAD_FILE_ABORTED`` or ``RAW_ABORTED`` instead. Two accessors were
+added to tell the two contexts apart:
+
+.. code-block:: arduino
+
+    server.on(
+      "/data", HTTP_POST, []() { server.send(200); },
+      []() {
+        if (server.hasUpload()) {
+          HTTPUpload &upload = server.upload();
+          // multipart upload
+        } else if (server.hasRaw()) {
+          HTTPRaw &raw = server.raw();
+          // raw body
+        }
+      }
+    );
+
+Regular Expression Routes
+"""""""""""""""""""""""""
+
+``UriRegex`` now compiles its pattern with the bounded matcher provided by the standard library instead of the default recursive one. The
+recursive matcher consumed task stack in proportion to the length of the request-target, and took exponential time on patterns with nested
+quantifiers, both of which an unauthenticated request could trigger. Measured on an ESP32:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 46 27 27
+
+    * - Case
+      - Recursive matcher
+      - Bounded matcher
+    * - Stack, 160-character target
+      - 21.9 KB
+      - 2.5 KB
+    * - Stack, 2000-character target
+      - Overflows the task stack
+      - 2.5 KB
+    * - ``^(a+)+$`` against 22 characters
+      - 13.8 s
+      - 1.4 ms
+    * - Matching a 160-character target
+      - 0.3 ms
+      - 4.7 ms (about 26 us per character)
+
+Stack use no longer depends on the length of the request-target, which is why ``WEBSERVER_MAX_REGEX_URI_LEN`` defaults to 2048 rather than to
+a value derived from the stack of the task that calls ``handleClient()``.
+
+The trade-offs of the bounded matcher are:
+
+* **Back-references are not supported.** A pattern containing ``\1`` to ``\9`` keeps the recursive matcher, and with it the much smaller
+  ``WEBSERVER_MAX_BACKREF_REGEX_URI_LEN`` limit. Route patterns essentially never use back-references, since a back-reference in a route
+  means one path segment has to repeat another.
+* **Matching is slower.** A short path costs roughly 0.6 ms instead of 0.1 ms, and a long one grows linearly at about 26 us per character. The
+  cost is paid once per registered ``UriRegex`` route per request, so an application with many regex routes and long request-targets may want
+  to lower ``WEBSERVER_MAX_REGEX_URI_LEN``.
+* **Pending states are held on the heap** rather than on the stack, at roughly 3 bytes per character of request-target. A failure to allocate
+  is reported as "route does not match", so the client receives a ``404`` instead of the device restarting.
+
+Everything else behaves as before. Anchors, character classes, greedy and lazy quantifiers, counted repetition, alternation, capture groups,
+lookahead, word boundaries and the ``icase`` flag were all compared between the two matchers and produce identical captures.
+
+.. note::
+
+    The bounded matcher is a libstdc++ extension. It is selected only when the standard library provides it, and the library falls back to the
+    previous matcher otherwise, so no configuration is required.
+
+A request-target longer than the applicable limit is not matched against regex routes, and an error is logged naming the limit that was
+exceeded. Plain string routes registered for the same path are unaffected, since they are matched first.
+
+New upload and raw APIs
+^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``bool WebServer::hasUpload() const`` - true when a multipart upload is in progress.
+* ``bool WebServer::hasRaw() const`` - true when a raw request body is in progress.
+
+Restoring the Previous Limits
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Every limit can be raised, and the request-target check can be disabled entirely, from the build. For example, in ``build_opt.h``:
+
+.. code-block:: none
+
+    -DWEBSERVER_MAX_URI_LEN=0
+    -DWEBSERVER_MAX_LINE_LEN=16384
+    -DWEBSERVER_MAX_QUERY_ARGS=1024
+    -DWEBSERVER_MAX_HEADER_WAIT=30000
+
+.. warning::
+
+    Raising these limits restores the memory-exhaustion behavior they were added to prevent. Prefer raising a single limit to the value the
+    application actually needs.
+
+The dot-segment rejection in ``serveStatic()``, the authentication scheme check, the Digest nonce signing and the per-request state reset are
+not configurable, because each of them fixes a security issue rather than imposing a limit. ``WEBSERVER_DIGEST_AUTH=0`` removes Digest
+authentication entirely; it does not weaken Basic authentication or make the remaining code paths configurable.
+
+Zigbee
+------
+
+The Zigbee library is built on ESP Zigbee SDK 2.x. Startup, network storage, scan results, and SDK types used in callbacks all changed.
+Endpoint helpers (``setTemperature()``, ``lightOn()``, and the rest) keep the same names. Overloads that took an IEEE address now take ``const uint8_t *`` instead of ``esp_zb_ieee_addr_t``. A ``uint8_t[8]`` still passes through.
+
+Startup is split into ``role()`` and ``begin()``
+************************************************
+
+``Zigbee.begin(role)`` and ``Zigbee.begin(&config)`` are gone. ``begin()`` takes no arguments and only starts a stack that ``role()`` already initialized.
+``Zigbee.begin()`` in 3.x defaulted to an end device. In 4.0 that call fails until ``role()`` has run.
+
+Call order:
+
+1. ``setRadioConfig()`` and ``setPrimaryChannelMask()`` — before ``role()``. Both are applied inside ``role()``.
+2. ``Zigbee.role(role)`` or ``Zigbee.role(&config)``. ``erase_nvs`` moved here from ``begin()``.
+3. Configure the endpoint (``setManufacturerAndModel()``, ``setMinMaxValue()``, ``addTimeCluster()``, ``addOTAClient()``, …). These return ``false`` if ``role()`` has not run.
+4. ``Zigbee.addEndpoint()``.
+5. ``Zigbee.begin()``.
+
+.. code-block:: cpp
+
+    // 3.x — end device (begin() defaulted to ZIGBEE_END_DEVICE)
+    zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+    Zigbee.addEndpoint(&zbTempSensor);
+    Zigbee.begin();
+
+    // 4.0
+    Zigbee.role(ZIGBEE_END_DEVICE);
+    zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+    Zigbee.addEndpoint(&zbTempSensor);
+    Zigbee.begin();
+
+.. code-block:: cpp
+
+    // 3.x — router or coordinator
+    Zigbee.addEndpoint(&zbExtender);
+    Zigbee.begin(ZIGBEE_ROUTER);
+
+    // 4.0
+    Zigbee.role(ZIGBEE_ROUTER);
+    Zigbee.addEndpoint(&zbExtender);
+    Zigbee.begin();
+
+Custom role configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``esp_zb_cfg_t`` is now ``esp_zigbee_device_config_t``. Pass it to ``role()``, not ``begin()``.
+The default macros still exist, with different fields:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 50 50
+
+    * - 3.x
+      - 4.0
+    * - ``esp_zb_cfg_t``
+      - ``esp_zigbee_device_config_t``
+    * - ``.esp_zb_role``
+      - ``.device_type``
+    * - ``.nwk_cfg.zed_cfg``
+      - ``.zed_config``
+    * - ``.nwk_cfg.zczr_cfg``
+      - ``.zczr_config``
+    * - ``ESP_ZB_DEVICE_TYPE_ED``
+      - ``EZB_NWK_DEVICE_TYPE_END_DEVICE``
+    * - ``ESP_ZB_DEVICE_TYPE_ROUTER``
+      - ``EZB_NWK_DEVICE_TYPE_ROUTER``
+    * - ``ESP_ZB_DEVICE_TYPE_COORDINATOR``
+      - ``EZB_NWK_DEVICE_TYPE_COORDINATOR``
+    * - ``ESP_ZB_ED_AGING_TIMEOUT_*``
+      - ``EZB_NWK_ED_TIMEOUT_*``
+
+.. code-block:: cpp
+
+    // 3.x
+    esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+    zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
+    Zigbee.begin(&zigbeeConfig, false);
+
+    // 4.0
+    esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+    zigbeeConfig.zed_config.keep_alive = 10000;
+    Zigbee.role(&zigbeeConfig, false);
+    Zigbee.begin();
+
+.. code-block:: cpp
+
+    // 3.x
+    esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
+    zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;
+    Zigbee.begin(&zigbeeConfig);
+
+    // 4.0
+    esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
+    zigbeeConfig.zczr_config.max_children = 20;
+    Zigbee.role(&zigbeeConfig);
+    Zigbee.begin();
+
+Network storage
+***************
+
+Zigbee network state is stored in the default ``nvs`` partition, namespace ``zigbee`` (the same partition as Wi-Fi and Preferences).
+Zigbee partition schemes no longer have a ``zb_storage`` partition. The space was given back to ``spiffs``.
+
+A 3.x device that upgrades in place will not keep its network. Erase flash before upload
+(``Tools -> Erase All Flash Before Sketch Upload``) or call ``Zigbee.factoryReset()``.
+``role(role, true)`` erases only the ``zigbee`` NVS namespace. It does not wipe Wi-Fi credentials or Preferences.
+
+Removed APIs
+************
+
+* ``ZigbeeCore::setHostConfig`` / ``getHostConfig``
+* ``ZigbeeEP::setEpConfig``
+
+Radio configuration
+*******************
+
+``setRadioConfig()`` / ``getRadioConfig()`` take ``esp_zigbee_radio_config_t`` (was ``esp_zb_radio_config_t``).
+``ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()`` uses ``ESP_ZIGBEE_RADIO_MODE_UART_RCP`` (was ``ZB_RADIO_MODE_UART_RCP``).
+Call ``setRadioConfig()`` before ``role()``.
+
+Scan results
+************
+
+``scanNetworks()`` default channel mask macro is ``ZB_TRANSCEIVER_ALL_CHANNELS_MASK`` (was ``ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK``). The value is still ``0x07FFF800`` (channels 11–26).
+
+``zigbee_scan_result_t`` is ``ezb_nwk_active_scan_result_t``. Fields used by the 3.x scan example:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 40 60
+
+    * - 3.x
+      - 4.0
+    * - ``short_pan_id``
+      - ``panid``
+    * - ``logic_channel``
+      - ``channel_number``
+    * - ``permit_joining``
+      - ``permit_join``
+    * - ``router_capacity``
+      - ``router_capacity``
+    * - ``end_device_capacity``
+      - ``enddev_capacity``
+    * - ``extended_pan_id[i]``
+      - ``extpanid.u8[i]``
+
+4.0 also reports ``lqa``, ``rssi``, ``shortaddr``, ``channel_page``, and ``nwk_update_id``.
+
+.. code-block:: cpp
+
+    // 3.x
+    Serial.printf("0x%04x", scan_result[i].short_pan_id);
+    Serial.printf("%2u", scan_result[i].logic_channel);
+    scan_result[i].permit_joining ? "Yes" : "No";
+    scan_result[i].extended_pan_id[7];
+
+    // 4.0
+    Serial.printf("0x%04x", scan_result[i].panid);
+    Serial.printf("%2u", scan_result[i].channel_number);
+    scan_result[i].permit_join ? "Yes" : "No";
+    scan_result[i].extpanid.u8[7];
+
+SDK types in callbacks
+**********************
+
+Sketches that name ESP Zigbee SDK types need the 2.x names. Cluster ID macros moved from ``ESP_ZB_ZCL_CLUSTER_ID_*`` to ``EZB_ZCL_CLUSTER_ID_*`` (the numeric IDs are unchanged).
+
+.. list-table::
+    :header-rows: 1
+    :widths: 55 45
+
+    * - 3.x
+      - 4.0
+    * - ``esp_zb_zcl_status_t``
+      - ``ezb_zcl_status_t``
+    * - ``esp_zb_zcl_addr_t``
+      - ``ezb_address_t``
+    * - ``esp_zb_ieee_addr_t``
+      - ``const uint8_t *`` (or ``uint8_t[8]``)
+    * - ``esp_zb_zcl_privilege_command_message_t``
+      - ``ezb_zcl_manuf_spec_cmd_message_t``
+    * - ``esp_zb_zcl_custom_cluster_command_message_t``
+      - ``ezb_zcl_manuf_spec_cmd_message_t``
+    * - ``ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS``
+      - ``EZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS``
+
+``onDefaultResponse`` and ``onGlobalDefaultResponse`` use ``ezb_zcl_status_t``.
+Address-bearing callbacks (``onLightStateChangeWithSource``, ``onTempReceiveWithSource``, and the same pattern on other endpoints) use ``ezb_address_t``.
+
+Privilege and manufacturer-specific commands use one message type. The header and payload moved:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 55 45
+
+    * - 3.x
+      - 4.0
+    * - ``message->info.cluster``
+      - ``message->info.cluster_id``
+    * - ``message->info.command.id``
+      - ``message->in.header->cmd_id``
+    * - ``message->info.src_endpoint``
+      - ``message->in.header->src_ep``
+    * - ``message->info.src_address.u.short_addr``
+      - ``message->in.header->src_addr.u.short_addr``
+    * - ``message->size`` / ``message->data``
+      - ``message->in.payload_size`` / ``message->in.payload``
+
+``formatIEEEAddress()`` takes ``const uint8_t *``. ``zb_device_params_t.ieee_addr`` is ``uint8_t[8]``.
+
+OTA image block size
+********************
+
+``addOTAClient()`` default ``max_data_size`` is **48** (the stack default). In 3.x the default was **223**.
+Pass ``223`` explicitly when the OTA server is Espressif ``ota_server``.
+
+.. code-block:: cpp
+
+    // 4.0, Espressif ota_server
+    zbEp.addOTAClient(fileVersion, 0xFFFFFFFF, hwVersion, 0x1001, 0x1011, 223);
