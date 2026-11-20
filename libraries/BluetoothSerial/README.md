@@ -2,7 +2,11 @@
 
 A simple Serial-compatible library using ESP32 Classic Bluetooth Serial Port Profile (SPP).
 
-> **Note:** Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
+> **Note:** Bluetooth Classic (BR/EDR) is available on the **original ESP32** and on
+> **ESP32-S31**. On ESP32-S31 the prebuilt libraries enable NimBLE only, so
+> `BluetoothSerial` requires using Arduino as an ESP-IDF component or rebuilding the
+> static libraries. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6,
+> ESP32-H2, or ESP32-P4.
 
 ### How to use it?
 
@@ -43,6 +47,15 @@ SSP is disabled by default. The device will accept any pairing attempt automatic
 This method should not be used if security is a concern.
 See the [SerialBridge](examples/SerialBridge/SerialBridge.ino) example.
 
+To require a fixed PIN instead, call `SerialBT.setPin("1234")` before `begin()` and do
+**not** call `enableSSP()` — the two settings are mutually exclusive (`enableSSP()`
+wins and the PIN is never programmed). A fixed PIN is legacy pairing: phones and PCs
+that support SSP negotiate SSP and never ask for it. To force legacy pairing they must
+be prevented from using SSP, which needs the build-time option described in
+[Legacy Pairing (IDF component)](#legacy-pairing-idf-component). If both are configured,
+the stored PIN still answers a legacy-only peer that falls back to legacy pairing, but
+an SSP peer never requests it.
+
 ### With SSP
 
 Secure Simple Pairing (SSP) provides a secure connection. Enable it before calling `begin()`:
@@ -61,16 +74,46 @@ See the [SSPPairing](examples/SSPPairing/SSPPairing.ino) example.
 
 **outputCapability** - Whether the ESP32 has an output method (Serial terminal, display, or similar)
 
-* **inputCapability=true and outputCapability=true**
-    * Both devices display a randomly generated code. If they match, the user confirms pairing on both devices.
-    * Register a callback via `onConfirmRequest()` that receives the passkey and **returns `true`** to accept or **`false`** to reject.
-* **inputCapability=false and outputCapability=false**
-    * Only the other device authenticates pairing without any PIN.
-* **inputCapability=false and outputCapability=true**
-    * Only the other device authenticates pairing without any PIN.
-* **inputCapability=true and outputCapability=false**
-    * The remote device displays a passkey; the user must confirm it matches on the ESP32 side.
-    * Register a callback via `onConfirmRequest()` that returns `true` to accept or `false` to reject.
+* **inputCapability=true and outputCapability=true** (`ESP_BT_IO_CAP_IO`, DisplayYesNo)
+    * Against another display-capable device this is Numeric Comparison: both sides show a random
+      six-digit code that must match.
+    * Register a callback via `onConfirmRequest()` that receives the code and **returns `true`** to
+      accept or **`false`** to reject.
+* **inputCapability=false and outputCapability=false** (`ESP_BT_IO_CAP_NONE`, NoInputNoOutput)
+    * Just Works: the devices pair without a PIN.
+* **inputCapability=false and outputCapability=true** (`ESP_BT_IO_CAP_OUT`, DisplayOnly)
+    * Against a display-capable phone or PC this also resolves to Just Works (unauthenticated).
+    * Against a keyboard-only peer it selects Passkey Entry: the stack generates a six-digit code and
+      delivers it to `onPassKeyDisplay()`, and the user types it on the peer. Without a handler the
+      code is only written to the info log, which is compiled out at the default core debug level —
+      register the handler if the device must show it.
+* **inputCapability=true and outputCapability=false** (`ESP_BT_IO_CAP_IN`, KeyboardOnly)
+    * Requests Passkey Entry as soon as the peer can display a code.
+    * The peer shows the code; `onPassKeyRequest()` must return it (0–999999). Returning a value
+      above 999999, or leaving the handler unset, rejects the pairing instead of timing out.
+    * Two KeyboardOnly boards also work: both sides are asked to enter the code, so entering the
+      same value on both consoles is the SSP equivalent of a fixed PIN. See the
+      [PasskeyEntry](examples/PasskeyEntry/PasskeyEntry.ino) example.
+
+#### Passkey Entry callbacks
+
+```cpp
+// Keyboard side: the peer displays the code, the sketch returns it.
+SerialBT.onPassKeyRequest([](const BTAddress &peer) -> uint32_t {
+    Serial.printf("Type the 6-digit passkey shown on %s: ", peer.toString().c_str());
+    // ... read six digits from Serial ...
+    return passkey;    // 0-999999, or >999999 to reject
+});
+
+// Display side: show the generated code to the user.
+SerialBT.onPassKeyDisplay([](const BTAddress &peer, uint32_t passkey) {
+    Serial.printf("Passkey for %s: %06lu\n", peer.toString().c_str(), (unsigned long)passkey);
+});
+```
+
+Both handlers run on the Bluetooth host task. Bound any interactive input: reply before the
+authentication timeout (~30 s) instead of waiting indefinitely, so other Bluetooth work is not
+stalled.
 
 ### Legacy Pairing (IDF component)
 

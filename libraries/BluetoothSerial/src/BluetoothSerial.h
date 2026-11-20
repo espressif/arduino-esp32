@@ -48,6 +48,17 @@ public:
 
   using DiscoveryHandler = std::function<void(const DiscoveryResult &)>;
   using ConfirmRequestHandler = std::function<bool(uint32_t)>;
+  /**
+   * @brief Supplies the passkey for SSP Passkey Entry (keyboard side).
+   *
+   * Invoked on the Bluetooth host task when the peer displays a six-digit
+   * passkey. Return the value the user read from the peer, in the range
+   * 0-999999; a value above 999999 rejects the pairing. It runs on the BT
+   * task, so bound any interactive wait to avoid stalling other Bluetooth work.
+   */
+  using PassKeyRequestHandler = std::function<uint32_t(const BTAddress &peer)>;
+  /** @brief Receives the passkey to display (display side of SSP Passkey Entry). */
+  using PassKeyDisplayHandler = std::function<void(const BTAddress &peer, uint32_t passKey)>;
   using AuthCompleteHandler = std::function<void(bool)>;
   using DataHandler = std::function<void(const uint8_t *, size_t)>;
   using PeerConnectHandler = std::function<void(const BTAddress &)>;
@@ -91,6 +102,8 @@ public:
   void disableSSP();
   void setPin(const char *pin);
   BTStatus onConfirmRequest(ConfirmRequestHandler callback);
+  BTStatus onPassKeyRequest(PassKeyRequestHandler callback);
+  BTStatus onPassKeyDisplay(PassKeyDisplayHandler callback);
   BTStatus onAuthComplete(AuthCompleteHandler callback);
 
   // Bond management

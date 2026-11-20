@@ -305,12 +305,31 @@ enableSSP / disableSSP
     void SerialBT.enableSSP(bool input = false, bool output = false);
     void SerialBT.disableSSP();
 
-``enableSSP`` turns on Secure Simple Pairing. The ``input`` and ``output`` flags map to IO capability hints used during pairing (whether the device can display or accept user input).
+``enableSSP`` turns on Secure Simple Pairing before ``begin()``. The ``input`` and
+``output`` flags select the IO capability reported during pairing:
+
+* ``(true, true)`` --- DisplayYesNo (``ESP_BT_IO_CAP_IO``): Numeric Comparison against
+  another display-capable device; ``onConfirmRequest()`` receives the six-digit code.
+* ``(false, false)`` --- NoInputNoOutput (``ESP_BT_IO_CAP_NONE``): Just Works.
+* ``(false, true)`` --- DisplayOnly (``ESP_BT_IO_CAP_OUT``): Just Works against a
+  display-capable phone or PC. Against a keyboard-only peer it selects Passkey Entry:
+  the stack generates the six-digit code and delivers it to ``onPassKeyDisplay()``.
+* ``(true, false)`` --- KeyboardOnly (``ESP_BT_IO_CAP_IN``): Passkey Entry against a
+  display-capable peer. The peer shows the code and ``onPassKeyRequest()`` must return
+  it (0--999999); without a handler the request is declined instead of timing out.
+
+Call ``disableSSP()`` to turn it off. If the setting changes after ``begin()``, call
+``end()`` and then ``begin()`` again.
 
 setPin
 ^^^^^^
 
 Set a legacy PIN code for pairing (up to 16 characters; longer strings are truncated internally).
+The PIN is only programmed when ``enableSSP()`` has not been called: the two settings
+are mutually exclusive, and an active SSP negotiation does not request the PIN.
+``setPin()`` must be called before ``begin()``. If both are configured, the stored PIN
+still answers a legacy-only peer that falls back to legacy pairing, but an SSP peer
+never requests it.
 
 .. code-block:: cpp
 
@@ -376,6 +395,40 @@ onConfirmRequest
     BTStatus SerialBT.onConfirmRequest(std::function<bool(uint32_t)> callback);
 
 Registers a callback for SSP numeric-comparison pairing. The ``uint32_t`` argument is the numeric value to display to the user. The callback must return ``true`` to accept the pairing or ``false`` to reject it. Returns ``BTStatus::OK`` on success.
+
+onPassKeyRequest
+^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    BTStatus SerialBT.onPassKeyRequest(
+        std::function<uint32_t(const BTAddress &peer)> callback
+    );
+
+Registers the keyboard side of SSP Passkey Entry, selected by
+``enableSSP(true, false)``. When the peer displays a six-digit passkey, the callback
+receives the peer address and returns the code to enter, in the range 0--999999.
+Returning a value above 999999 rejects the pairing. With no handler installed the
+request is declined with a negative reply, so the peer fails immediately instead of
+waiting for the authentication timeout.
+
+The callback runs on the Bluetooth host task, so bound any interactive input:
+reply before the authentication timeout instead of waiting indefinitely.
+
+onPassKeyDisplay
+^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    BTStatus SerialBT.onPassKeyDisplay(
+        std::function<void(const BTAddress &peer, uint32_t passKey)> callback
+    );
+
+Registers the display side of SSP Passkey Entry, selected by ``enableSSP(false, true)``
+against a keyboard-only peer. The stack generates the six-digit ``passKey`` and the
+callback should show it to the user, who types it on the peer. When no handler is
+installed the passkey is only written to the info log, which is compiled out at the
+default core debug level, so register the handler to make pairing possible.
 
 onAuthComplete
 ^^^^^^^^^^^^^^
