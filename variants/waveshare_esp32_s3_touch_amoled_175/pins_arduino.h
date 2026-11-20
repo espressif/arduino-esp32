@@ -41,6 +41,7 @@
 #define PA_CTRL  46  // speaker amplifier enable
 
 #define QMI8658_ADDRESS  0x6B
+#define QMI8658_INT2     21
 #define PCF85063_ADDRESS 0x51
 
 #define BUTTON_BOOT 0
@@ -58,10 +59,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = IIC_SDA;
 static const uint8_t SCL = IIC_SCL;
 
-// Not wired to anything on the board; GPIO 33-37 belong to the octal PSRAM.
-static const uint8_t SS = 21;
-static const uint8_t MOSI = 18;
-static const uint8_t MISO = 17;
-static const uint8_t SCK = 41;
+// The microSD slot is also wired for SPI, so SD.begin() works with the defaults
+static const uint8_t SS = 41;
+static const uint8_t MOSI = 1;
+static const uint8_t MISO = 3;
+static const uint8_t SCK = 2;
 
 #endif /* Pins_Arduino_h */

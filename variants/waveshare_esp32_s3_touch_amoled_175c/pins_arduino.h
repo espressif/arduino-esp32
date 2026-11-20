@@ -41,6 +41,7 @@
 #define PA_CTRL  46  // speaker amplifier enable
 
 #define QMI8658_ADDRESS 0x6B
+#define QMI8658_INT1    21
 
 #define BUTTON_BOOT 0
 
@@ -53,8 +54,8 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = IIC_SDA;
 static const uint8_t SCL = IIC_SCL;
 
-// Not wired to anything on the board; GPIO 33-37 belong to the octal PSRAM.
-static const uint8_t SS = 21;
+// On the test pads on the back of the board (17, 18, 41, 42)
+static const uint8_t SS = 42;
 static const uint8_t MOSI = 18;
 static const uint8_t MISO = 17;
 static const uint8_t SCK = 41;
