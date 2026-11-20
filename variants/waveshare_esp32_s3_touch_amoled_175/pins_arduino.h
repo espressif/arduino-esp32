@@ -46,7 +46,8 @@
 #define BUTTON_BOOT 0
 
 // microSD, 1-bit SDMMC
-#define BOARD_HAS_SD_SDMMC
+#define BOARD_HAS_SDMMC
+#define BOARD_HAS_1BIT_SDMMC
 #define SDMMC_CLK 2
 #define SDMMC_CMD 1
 #define SDMMC_D0  3

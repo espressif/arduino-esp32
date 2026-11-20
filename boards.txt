@@ -48476,8 +48476,9 @@ waveshare_esp32_s3_touch_amoled_175c.menu.UploadMode.cdc.upload.use_1200bps_touc
 waveshare_esp32_s3_touch_amoled_175c.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.default_32MB=Default 32MB with spiffs (12.5MB APP/6.75MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.default_32MB.build.partitions=default_32MB
+waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.default_32MB.upload.maximum_size=13107200
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.max_app_32MB=Max APP 32MB (31.4 MB)
-waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.max_app_32MB.build.custom_partitions=max_app_32MB
+waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.max_app_32MB.build.partitions=max_app_32MB
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.max_app_32MB.upload.maximum_size=33423360
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 waveshare_esp32_s3_touch_amoled_175c.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
