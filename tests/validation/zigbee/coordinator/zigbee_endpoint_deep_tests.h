@@ -193,6 +193,23 @@ static void test_fan_mode_sequence(void) {
   TEST_ASSERT_EQUAL(FAN_MODE_OFF, epFan.getFanMode());
 }
 
+static void test_hvac_setpoints(void) {
+  TEST_ASSERT_EQUAL(HVAC_SYSTEM_MODE_OFF, epHVAC.getSystemMode());
+  TEST_ASSERT_EQUAL(HVAC_SEQ_COOLING_AND_HEATING, epHVAC.getControlSequence());
+  TEST_ASSERT_TRUE(epHVAC.setOccupiedCoolingSetpoint(28.0f));
+  TEST_ASSERT_TRUE(epHVAC.setOccupiedHeatingSetpoint(22.0f));
+  // MinSetpointDeadBand is 2.5°C, so 27°C heat against 28°C cool is rejected.
+  TEST_ASSERT_FALSE(epHVAC.setOccupiedHeatingSetpoint(27.0f));
+  TEST_ASSERT_FALSE(epHVAC.setSystemMode((ZigbeeHVACSystemMode)0x02));
+  TEST_ASSERT_TRUE(epHVAC.setSystemMode(HVAC_SYSTEM_MODE_HEAT));
+  TEST_ASSERT_EQUAL(HVAC_SYSTEM_MODE_HEAT, epHVAC.getSystemMode());
+  TEST_ASSERT_TRUE(epHVAC.setLocalTemperature(21.5f));
+  TEST_ASSERT_TRUE(epHVAC.setRunningState(HVAC_RUNNING_HEAT));
+  TEST_ASSERT_EQUAL_UINT16(HVAC_RUNNING_HEAT, epHVAC.getRunningState());
+  TEST_ASSERT_EQUAL_FLOAT(22.0f, epHVAC.getOccupiedHeatingSetpoint());
+  TEST_ASSERT_EQUAL_FLOAT(28.0f, epHVAC.getOccupiedCoolingSetpoint());
+}
+
 static void test_window_covering(void) {
   TEST_ASSERT_TRUE(epCovering.setCoveringType(BLIND_LIFT_AND_TILT));
   TEST_ASSERT_TRUE(epCovering.setLimits(0, 100, 0, 90));
@@ -448,6 +465,7 @@ static void run_all_zigbee_endpoint_deep_tests(void) {
   RUN_TEST(test_color_light_rgb_and_level);
   RUN_TEST(test_power_outlet);
   RUN_TEST(test_fan_mode_sequence);
+  RUN_TEST(test_hvac_setpoints);
   RUN_TEST(test_window_covering);
   RUN_TEST(test_ias_zone_devices);
   RUN_TEST(test_temp_humidity_sensor);

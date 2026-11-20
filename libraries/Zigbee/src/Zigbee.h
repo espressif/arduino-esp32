@@ -33,6 +33,7 @@
 #include "ep/ZigbeeLight.h"
 //// Controllers
 #include "ep/ZigbeeThermostat.h"
+#include "ep/ZigbeeHVAC.h"
 #include "ep/ZigbeeFanControl.h"
 ////Locks
 #include "ep/ZigbeeDoorLock.h"

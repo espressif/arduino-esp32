@@ -38,6 +38,7 @@
 #define ZB_EP_GATEWAY         25
 #define ZB_EP_RANGE_EXT       26
 #define ZB_EP_DOOR_LOCK       27
+#define ZB_EP_HVAC            28
 
 static ZigbeeLight epLight(ZB_EP_LIGHT);
 static ZigbeeDimmableLight epDimmable(ZB_EP_DIMMABLE);
@@ -66,6 +67,7 @@ static ZigbeeElectricalMeasurement epElectrical(ZB_EP_ELECTRICAL);
 static ZigbeeGateway epGateway(ZB_EP_GATEWAY);
 static ZigbeeRangeExtender epRangeExt(ZB_EP_RANGE_EXT);
 static ZigbeeDoorLock epDoorLock(ZB_EP_DOOR_LOCK);
+static ZigbeeHVAC epHVAC(ZB_EP_HVAC);
 
 static bool register_all_zigbee_endpoints(void) {
   epLight.setManufacturerAndModel("Espressif", "ZBValLight");
@@ -248,6 +250,14 @@ static bool register_all_zigbee_endpoints(void) {
   }
   epDoorLock.setManufacturerAndModel("Espressif", "ZBValDoorLock");
   if (!Zigbee.addEndpoint(&epDoorLock)) {
+    return false;
+  }
+
+  if (!epHVAC.setControlSequence(HVAC_SEQ_COOLING_AND_HEATING) || !epHVAC.setSystemMode(HVAC_SYSTEM_MODE_OFF)) {
+    return false;
+  }
+  epHVAC.setManufacturerAndModel("Espressif", "ZBValHVAC");
+  if (!Zigbee.addEndpoint(&epHVAC)) {
     return false;
   }
 

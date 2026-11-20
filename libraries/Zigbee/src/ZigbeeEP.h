@@ -187,6 +187,12 @@ public:
 
   // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {};
+  // Thermostat SetpointRaiseOrLower. mode is heat (0), cool (1) or both (2). Setpoints are 0.01°C.
+  virtual void zbThermostatSetpoint(uint8_t mode, int16_t heat_centi, int16_t cool_centi) {
+    (void)mode;
+    (void)heat_centi;
+    (void)cool_centi;
+  };
   virtual void zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) {};
   virtual void zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, ezb_zcl_status_t status, uint8_t src_endpoint, ezb_address_t src_address) {
   };
