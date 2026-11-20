@@ -103,7 +103,7 @@ The rewrite changes the lifetime, callback, and address model:
   pairing, and is only programmed as the stack's fixed PIN when SSP is not
   enabled.
 
-Bluetooth Classic is available on the original ESP32 and on ESP32-S31. On
+Bluetooth Classic is available on ESP32 and ESP32-S31. On
 ESP32-S31 the prebuilt libraries enable NimBLE only, so ``BluetoothSerial`` there
 requires an ESP-IDF-component build or rebuilt static libraries.
 
