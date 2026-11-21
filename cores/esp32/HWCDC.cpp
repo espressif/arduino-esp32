@@ -695,7 +695,8 @@ void HWCDC::begin(unsigned long baud) {
   // Pulling those pins down here disconnects the device and the next upload
   // cannot find the COM port.
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-  usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+  // Keep pending RX so the interrupt handler can drain the hardware FIFO.
+  usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK & ~USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT);
   hw_cdc_set_connected(false);
   hw_cdc_reset_session();
   intr_mask =
