@@ -27,14 +27,6 @@ ADC
 
 See :doc:`/api/adc`.
 
-Arduino as an ESP-IDF Component
--------------------------------
-
-Arduino-ESP32 4.0 is built on **ESP-IDF 6.1** (3.x used ESP-IDF 5.x). Projects that use Arduino as an ESP-IDF component and call ESP-IDF APIs or set IDF Kconfig options are also subject to the `ESP-IDF 6.x migration guide <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-6.x/6.0/index.html>`_:
-
-* ``CONFIG_ESP_WIFI_REMOTE_ENABLED`` was replaced by ``CONFIG_ESP_HOSTED_ENABLED`` for ESP32-P4 hosted Wi-Fi / BLE.
-* Zigbee no longer uses ``esp-zboss-lib`` (replaced by ``esp-zigbee-lib`` 2.x).
-
 BLE
 ---
 
@@ -145,6 +137,14 @@ ESP32P4 Core Board and third-party ESP32-P4 board definitions keep their 3.x def
 
 See :doc:`/boards/ESP32-P4X-Function-EV-Board`.
 
+ESP-IDF
+-------
+
+Arduino-ESP32 4.0 is built on **ESP-IDF 6.1** (3.x used ESP-IDF 5.x). Projects, sketches, or third-party libraries that call ESP-IDF APIs or set IDF Kconfig options directly are subject to the `ESP-IDF 6.x migration guide <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-6.x/6.0/index.html>`_:
+
+* **Removed legacy headers and macros:** Code including removed ESP-IDF 5.x headers or macros directly (such as ``driver/adc.h``, ``driver/rmt.h``, ``driver/i2s.h``, ``driver/timer.h``, ``driver/pcnt.h``, ``driver/mcpwm.h``, ``driver/dac.h``, ``driver/sigmadelta.h``, ``esp_spiram.h``, ``esp_spi_flash.h``, ``sntp.h``, ``esp_ping.h``, ``EXT_RAM_ATTR``, ``vTaskDelayUntil()``, or ``esp_deep_sleep_enable_gpio_wakeup()``) fails to compile.
+* **Kconfig and component changes:** ``CONFIG_ESP_WIFI_REMOTE_ENABLED`` was replaced by ``CONFIG_ESP_HOSTED_ENABLED`` for ESP32-P4 hosted Wi-Fi / BLE, and Zigbee no longer uses ``esp-zboss-lib`` (replaced by ``esp-zigbee-lib`` 2.x).
+
 HTTPClient
 ----------
 
@@ -235,6 +235,15 @@ Matter
     OccupancySensor.setHoldTime(30);
     Matter.begin();
 
+NetworkClientSecure
+-------------------
+
+``NetworkClientSecure`` now runs on **Mbed TLS 4.0** (PSA Crypto), which removes legacy TLS cipher suites, small elliptic curves, and legacy ``mbedtls_*`` cryptography functions.
+
+* Finite-field DHE and non-forward-secret ``TLS_RSA_*`` key exchanges are removed, so connections to legacy TLS 1.2 servers that only offer those suites fail.
+* Elliptic curves smaller than 250 bits (such as ``secp192r1`` and ``secp224r1``) are no longer supported in TLS handshakes or X.509 certificates.
+* Legacy cryptography APIs (such as ``mbedtls_sha256_*()``, ``mbedtls_aes_*()``, ``mbedtls_entropy_*()``, and ``mbedtls_ctr_drbg_*()``) were removed. Sketches or third-party libraries that call them directly fail to compile and need Arduino's ``Hash`` library or PSA Crypto (``<psa/crypto.h>`` with ``psa_crypto_init()``).
+
 SD_MMC
 ------
 
@@ -251,6 +260,21 @@ On SoCs with UHS-I support (**ESP32-P4** and **ESP32-S31**), ``SD_MMC.begin()`` 
 
     // 4.0 — defaults to SDR50 (100 MHz) on P4/S31; pass 40 MHz explicitly to match 3.x
     SD_MMC.begin("/sdcard", false, false, SDMMC_FREQ_HIGHSPEED);
+
+TFLiteMicro
+-----------
+
+The bundled ``TFLiteMicro`` library was removed from Arduino-ESP32 in 4.0. Sketches that use TensorFlow Lite Micro need an external library such as `esp-tflite-micro <https://github.com/espressif/esp-tflite-micro>`_.
+
+Toolchain
+---------
+
+Arduino-ESP32 4.0 upgrades the compiler to **GCC 15.1.0**, compiles C files in **C23** mode (``-std=gnu23``), and enables stricter linker checks.
+
+* **C23 rules in ``.c`` files:** ``bool``, ``true``, and ``false`` are reserved keywords, and empty parameter lists such as ``void func()`` mean ``void func(void)``. Legacy C files in third-party libraries that redefine ``bool`` or pass arguments to unprototyped functions fail to compile.
+* **Stricter C++ template and diagnostic checks:** GCC 15 diagnoses errors inside uninstantiated templates (``-Wtemplate-body``) and adds warnings such as ``-Wunterminated-string-initialization``, ``-Wheader-guard``, and ``-Wdangling-reference``.
+* **Orphan linker sections:** Unplaced sections now cause a linker error (``-Wl,--orphan-handling=error``). Sketches or libraries defining custom sections need a linker fragment that places them.
+* **Global constructor order:** Global C++ constructors and ``__attribute__((constructor))`` functions now run in ascending order on both Xtensa and RISC-V targets.
 
 WebServer
 ---------
@@ -390,6 +414,15 @@ Regular Expression Routes
 * Patterns containing back-references (``\1``–``\9``) fall back to the recursive matcher and are capped by ``WEBSERVER_MAX_BACKREF_REGEX_URI_LEN`` (64).
 * Bounded matching is slower (~0.6 ms for short paths, ~26 us/char on longer targets) and allocates pending states on the heap (~3 bytes per target character; allocation failure returns ``404``).
 * Request-targets longer than the applicable limit log an error and skip ``UriRegex`` matching; plain string routes still match first.
+
+WiFiProv
+--------
+
+Prebuilt Arduino-ESP32 4.0 libraries disable Protocomm Security 0 and Security 1 (``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_0`` and ``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1`` are off). Only **Security 2** (``NETWORK_PROV_SECURITY_2``) is enabled by default.
+
+* Sketches that pass ``NETWORK_PROV_SECURITY_0`` or ``NETWORK_PROV_SECURITY_1`` explicitly to ``WiFiProv.beginProvision()`` fail at runtime when using prebuilt libraries.
+* ``NETWORK_PROV_SECURITY`` (the default ``security`` argument) selects ``NETWORK_PROV_SECURITY_2`` and requires a provisioning client app that supports Security 2 (SRP6a).
+* Security 0 or Security 1 remains available when building Arduino as an ESP-IDF component with the corresponding ``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_*`` Kconfig option enabled.
 
 Zigbee
 ------
