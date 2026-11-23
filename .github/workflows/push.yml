@@ -362,11 +362,44 @@ jobs:
         with:
           python-version: "3.x"
 
-      # Already installed by default in MacOS and Linux
+      # Already installed by default in MacOS and Linux.
+      # Download pinned GitHub release binaries instead of Chocolatey: the
+      # community feed 504s often enough to fail this job (yq package lookup).
       - name: Install yq and ccache (Windows)
         if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          YQ_VERSION: v4.48.1
+          YQ_SHA256: 38AE580C6FC7F733CDBADE2E32525107468CBA7BBDFDB59FE49561D088FFC117
+          CCACHE_VERSION: 4.14.3
+          CCACHE_SHA256: C845C3D65BE81954C75659145A522A793A27586BF940C5DCFE18AF33FA1A67DD
         run: |
-          choco install yq ccache -y
+          $ErrorActionPreference = 'Stop'
+          $tools = Join-Path $env:RUNNER_TEMP 'ci-tools'
+          New-Item -ItemType Directory -Force -Path $tools | Out-Null
+
+          function Assert-Sha256([string]$Path, [string]$Expected) {
+            $actual = (Get-FileHash -Algorithm SHA256 -Path $Path).Hash
+            if ($actual -ne $Expected) {
+              throw "SHA256 mismatch for $(Split-Path $Path -Leaf): expected $Expected, got $actual"
+            }
+          }
+
+          $yqPath = Join-Path $tools 'yq.exe'
+          curl.exe -fsSL -o $yqPath `
+            "https://github.com/mikefarah/yq/releases/download/$env:YQ_VERSION/yq_windows_amd64.exe"
+          Assert-Sha256 $yqPath $env:YQ_SHA256
+
+          $ccacheZip = Join-Path $env:RUNNER_TEMP "ccache-$env:CCACHE_VERSION.zip"
+          curl.exe -fsSL -o $ccacheZip `
+            "https://github.com/ccache/ccache/releases/download/v$env:CCACHE_VERSION/ccache-$env:CCACHE_VERSION-windows-x86_64.zip"
+          Assert-Sha256 $ccacheZip $env:CCACHE_SHA256
+          Expand-Archive -Path $ccacheZip -DestinationPath $env:RUNNER_TEMP -Force
+          Copy-Item (Join-Path $env:RUNNER_TEMP "ccache-$env:CCACHE_VERSION-windows-x86_64\ccache.exe") `
+            (Join-Path $tools 'ccache.exe')
+
+          "$tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $env:PATH = "$tools;$env:PATH"
           yq --version
           ccache --version
 
