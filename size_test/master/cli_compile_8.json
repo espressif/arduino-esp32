@@ -2,98 +2,66 @@
 { "board": "espressif:esp32:esp32s31",
                 "target": "esp32s31",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 985080,
+                        "flash_bytes": 971660,
                         "flash_percentage": 31,
-                        "ram_bytes": 28868,
+                        "ram_bytes": 28732,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 980410,
+                        "flash_bytes": 986626,
                         "flash_percentage": 31,
-                        "ram_bytes": 28884,
+                        "ram_bytes": 28964,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/BLEAudio/examples/UnicastUSBReceiver",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 1592464,
-                        "flash_percentage": 51,
-                        "ram_bytes": 93544,
-                        "ram_percentage": 29
-                        }]
-                },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
-                "sizes": [{
-                        "flash_bytes": 318780,
+                        "flash_bytes": 315714,
                         "flash_percentage": 10,
-                        "ram_bytes": 24536,
+                        "ram_bytes": 23496,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 280734,
-                        "flash_percentage": 21,
-                        "ram_bytes": 23032,
+                        "flash_bytes": 340636,
+                        "flash_percentage": 11,
+                        "ram_bytes": 27476,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
+                "sizes": [{
+                        "flash_bytes": 314654,
+                        "flash_percentage": 10,
+                        "ram_bytes": 23456,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 313148,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23448,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
-                "sizes": [{
-                        "flash_bytes": 324250,
+                        "flash_bytes": 331568,
                         "flash_percentage": 25,
-                        "ram_bytes": 23824,
+                        "ram_bytes": 24152,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 419046,
-                        "flash_percentage": 13,
-                        "ram_bytes": 23744,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
-                "sizes": [{
-                        "flash_bytes": 1028938,
-                        "flash_percentage": 79,
-                        "ram_bytes": 56116,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_LAN8720",
-                "sizes": [{
-                        "flash_bytes": 528818,
-                        "flash_percentage": 40,
-                        "ram_bytes": 29196,
-                        "ram_percentage": 9
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1165624,
+                        "flash_bytes": 1166510,
                         "flash_percentage": 89,
                         "ram_bytes": 55420,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 315208,
-                        "flash_percentage": 24,
+                        "flash_bytes": 323360,
+                        "flash_percentage": 25,
                         "ram_bytes": 23448,
                         "ram_percentage": 7
                         }]
@@ -122,76 +90,76 @@
                         "ram_percentage": 46
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1145694,
-                        "flash_percentage": 87,
-                        "ram_bytes": 69488,
+                        "flash_bytes": 1114746,
+                        "flash_percentage": 85,
+                        "ram_bytes": 68452,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1057396,
-                        "flash_percentage": 81,
-                        "ram_bytes": 68904,
-                        "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
-                "sizes": [{
-                        "flash_bytes": 1025138,
+                        "flash_bytes": 1019530,
                         "flash_percentage": 78,
-                        "ram_bytes": 67916,
+                        "ram_bytes": 68508,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
                 "sizes": [{
-                        "flash_bytes": 2076464,
-                        "flash_percentage": 51,
-                        "ram_bytes": 59728,
-                        "ram_percentage": 18
+                        "flash_bytes": 1053750,
+                        "flash_percentage": 80,
+                        "ram_bytes": 69536,
+                        "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 2078886,
-                        "flash_percentage": 51,
-                        "ram_bytes": 60480,
-                        "ram_percentage": 18
+                        "flash_bytes": 322164,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23464,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SD2USBMSC",
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                 "sizes": [{
-                        "flash_bytes": 509336,
-                        "flash_percentage": 39,
-                        "ram_bytes": 73452,
-                        "ram_percentage": 22
+                        "flash_bytes": 318058,
+                        "flash_percentage": 24,
+                        "ram_bytes": 24060,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/CompositeDevice",
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
                 "sizes": [{
-                        "flash_bytes": 428128,
-                        "flash_percentage": 33,
-                        "ram_bytes": 73176,
-                        "ram_percentage": 22
+                        "flash_bytes": 1048428,
+                        "flash_percentage": 80,
+                        "ram_bytes": 55092,
+                        "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 388398,
+                        "flash_bytes": 398408,
                         "flash_percentage": 30,
-                        "ram_bytes": 72384,
+                        "ram_bytes": 71832,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
                 "sizes": [{
-                        "flash_bytes": 1135548,
-                        "flash_percentage": 87,
-                        "ram_bytes": 60872,
-                        "ram_percentage": 19
+                        "flash_bytes": 1101086,
+                        "flash_percentage": 84,
+                        "ram_bytes": 58400,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 1040718,
+                        "flash_percentage": 79,
+                        "ram_bytes": 55324,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -202,12 +170,36 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Dimmable_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
                 "sizes": [{
-                        "flash_bytes": 668922,
-                        "flash_percentage": 51,
-                        "ram_bytes": 35024,
+                        "flash_bytes": 658302,
+                        "flash_percentage": 50,
+                        "ram_bytes": 34448,
                         "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1250864,
+                        "flash_percentage": 37,
+                        "ram_bytes": 62900,
+                        "ram_percentage": 19
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+                "sizes": [{
+                        "flash_bytes": 674584,
+                        "flash_percentage": 51,
+                        "ram_bytes": 35032,
+                        "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1341208,
+                        "flash_percentage": 39,
+                        "ram_bytes": 63328,
+                        "ram_percentage": 19
                         }]
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
@@ -223,74 +215,74 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 1144837,
+                        "flash_bytes": 1130161,
                         "flash_percentage": 36,
                         "ram_bytes": 42448,
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 1141453,
+                        "flash_bytes": 1145909,
                         "flash_percentage": 36,
-                        "ram_bytes": 42472,
+                        "ram_bytes": 42544,
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/BluetoothSerial/examples/MasterConnect",
                 "sizes": [{
-                        "flash_bytes": 306057,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23792,
+                        "flash_bytes": 1091681,
+                        "flash_percentage": 83,
+                        "ram_bytes": 42096,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
+                "sizes": [{
+                        "flash_bytes": 304149,
+                        "flash_percentage": 23,
+                        "ram_bytes": 23320,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 303957,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23296,
+                        "flash_bytes": 315852,
+                        "flash_percentage": 24,
+                        "ram_bytes": 26476,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
+                "sizes": [{
+                        "flash_bytes": 302477,
+                        "flash_percentage": 23,
+                        "ram_bytes": 23280,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 310917,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23328,
+                        "flash_bytes": 316001,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23568,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 994973,
-                        "flash_percentage": 76,
-                        "ram_bytes": 50800,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_LAN8720",
-                "sizes": [{
-                        "flash_bytes": 520513,
-                        "flash_percentage": 40,
-                        "ram_bytes": 28672,
-                        "ram_percentage": 9
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1132773,
+                        "flash_bytes": 1133521,
                         "flash_percentage": 86,
                         "ram_bytes": 51704,
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 303029,
-                        "flash_percentage": 23,
+                        "flash_bytes": 311789,
+                        "flash_percentage": 24,
                         "ram_bytes": 23280,
                         "ram_percentage": 7
                         }]
@@ -319,12 +311,44 @@
                         "ram_percentage": 33
                         }]
                 },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 1076444,
-                        "flash_percentage": 82,
-                        "ram_bytes": 55044,
-                        "ram_percentage": 17
+                        "flash_bytes": 309765,
+                        "flash_percentage": 10,
+                        "ram_bytes": 23304,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 280913,
+                        "flash_percentage": 21,
+                        "ram_bytes": 22996,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1015707,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50356,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                "sizes": [{
+                        "flash_bytes": 1041952,
+                        "flash_percentage": 79,
+                        "ram_bytes": 52572,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 1005961,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50368,
+                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -334,80 +358,80 @@
                         "ram_bytes": 48824,
                         "ram_percentage": 15
                         }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
+                "sizes": [{
+                        "flash_bytes": 657745,
+                        "flash_percentage": 50,
+                        "ram_bytes": 31280,
+                        "ram_percentage": 10
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1277586,
+                        "flash_percentage": 37,
+                        "ram_bytes": 59300,
+                        "ram_percentage": 18
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 665379,
+                        "flash_bytes": 650105,
                         "flash_percentage": 21,
-                        "ram_bytes": 18448,
+                        "ram_bytes": 18312,
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 660393,
+                        "flash_bytes": 668017,
                         "flash_percentage": 21,
-                        "ram_bytes": 18480,
+                        "ram_bytes": 18544,
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 293401,
+                        "flash_bytes": 290425,
                         "flash_percentage": 9,
-                        "ram_bytes": 14712,
+                        "ram_bytes": 14144,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 320945,
-                        "flash_percentage": 24,
-                        "ram_bytes": 14852,
+                        "flash_bytes": 306755,
+                        "flash_percentage": 10,
+                        "ram_bytes": 17684,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 287839,
-                        "flash_percentage": 22,
+                        "flash_bytes": 289559,
+                        "flash_percentage": 9,
                         "ram_bytes": 14112,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 299637,
-                        "flash_percentage": 23,
-                        "ram_bytes": 14472,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
-                "sizes": [{
-                        "flash_bytes": 1041335,
-                        "flash_percentage": 79,
-                        "ram_bytes": 39656,
-                        "ram_percentage": 12
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1189805,
+                        "flash_bytes": 1190847,
                         "flash_percentage": 91,
                         "ram_bytes": 39304,
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 290109,
-                        "flash_percentage": 22,
+                        "flash_bytes": 300543,
+                        "flash_percentage": 23,
                         "ram_bytes": 14104,
                         "ram_percentage": 4
                         }]
@@ -436,28 +460,44 @@
                         "ram_percentage": 27
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 1817659,
-                        "flash_percentage": 45,
-                        "ram_bytes": 43668,
+                        "flash_bytes": 298043,
+                        "flash_percentage": 9,
+                        "ram_bytes": 14136,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 287265,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14388,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1061455,
+                        "flash_percentage": 81,
+                        "ram_bytes": 38992,
+                        "ram_percentage": 12
+                        }]
+                },
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                "sizes": [{
+                        "flash_bytes": 1109237,
+                        "flash_percentage": 85,
+                        "ram_bytes": 41484,
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
                 "sizes": [{
-                        "flash_bytes": 1819849,
-                        "flash_percentage": 45,
-                        "ram_bytes": 43948,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
-                "sizes": [{
-                        "flash_bytes": 1148499,
-                        "flash_percentage": 88,
-                        "ram_bytes": 43956,
-                        "ram_percentage": 13
+                        "flash_bytes": 1053073,
+                        "flash_percentage": 80,
+                        "ram_bytes": 39208,
+                        "ram_percentage": 12
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -467,80 +507,80 @@
                         "ram_bytes": 37664,
                         "ram_percentage": 11
                         }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
+                "sizes": [{
+                        "flash_bytes": 686851,
+                        "flash_percentage": 52,
+                        "ram_bytes": 22900,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1344329,
+                        "flash_percentage": 39,
+                        "ram_bytes": 46848,
+                        "ram_percentage": 14
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 833561,
+                        "flash_bytes": 818813,
                         "flash_percentage": 26,
-                        "ram_bytes": 23072,
+                        "ram_bytes": 22944,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 828603,
-                        "flash_percentage": 26,
-                        "ram_bytes": 23088,
+                        "flash_bytes": 836191,
+                        "flash_percentage": 27,
+                        "ram_bytes": 23160,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 310728,
+                        "flash_bytes": 307740,
                         "flash_percentage": 10,
-                        "ram_bytes": 18420,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 337776,
-                        "flash_percentage": 26,
-                        "ram_bytes": 18480,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
-                "sizes": [{
-                        "flash_bytes": 304922,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17732,
+                        "ram_bytes": 17772,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 316562,
-                        "flash_percentage": 24,
-                        "ram_bytes": 18100,
-                        "ram_percentage": 6
+                        "flash_bytes": 323596,
+                        "flash_percentage": 10,
+                        "ram_bytes": 21320,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 1117651,
-                        "flash_percentage": 85,
-                        "ram_bytes": 53144,
-                        "ram_percentage": 16
+                        "flash_bytes": 306636,
+                        "flash_percentage": 10,
+                        "ram_bytes": 17724,
+                        "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 1264767,
-                        "flash_percentage": 96,
+                        "flash_bytes": 1265807,
+                        "flash_percentage": 97,
                         "ram_bytes": 52448,
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 307188,
-                        "flash_percentage": 23,
+                        "flash_bytes": 317628,
+                        "flash_percentage": 24,
                         "ram_bytes": 17724,
                         "ram_percentage": 5
                         }]
@@ -569,52 +609,68 @@
                         "ram_percentage": 35
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1239731,
-                        "flash_percentage": 95,
-                        "ram_bytes": 64668,
-                        "ram_percentage": 20
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
-                "sizes": [{
-                        "flash_bytes": 1141071,
-                        "flash_percentage": 87,
-                        "ram_bytes": 64092,
-                        "ram_percentage": 20
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
-                "sizes": [{
-                        "flash_bytes": 1117641,
-                        "flash_percentage": 85,
-                        "ram_bytes": 63552,
-                        "ram_percentage": 19
-                        }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
-                "sizes": [{
-                        "flash_bytes": 2028791,
-                        "flash_percentage": 50,
-                        "ram_bytes": 56528,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
-                "sizes": [{
-                        "flash_bytes": 2031153,
-                        "flash_percentage": 50,
-                        "ram_bytes": 56880,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
-                "sizes": [{
-                        "flash_bytes": 1224481,
+                        "flash_bytes": 1217151,
                         "flash_percentage": 93,
-                        "ram_bytes": 57444,
-                        "ram_percentage": 18
+                        "ram_bytes": 64088,
+                        "ram_percentage": 20
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+                "sizes": [{
+                        "flash_bytes": 1110785,
+                        "flash_percentage": 85,
+                        "ram_bytes": 64144,
+                        "ram_percentage": 20
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1137037,
+                        "flash_percentage": 87,
+                        "ram_bytes": 64716,
+                        "ram_percentage": 20
+                        }]
+                },
+{"name": "libraries/Preferences/examples/Prefs2Struct",
+                "sizes": [{
+                        "flash_bytes": 315098,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17748,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 301874,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17872,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1137175,
+                        "flash_percentage": 87,
+                        "ram_bytes": 52136,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                "sizes": [{
+                        "flash_bytes": 1185255,
+                        "flash_percentage": 90,
+                        "ram_bytes": 54988,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 1128843,
+                        "flash_percentage": 86,
+                        "ram_bytes": 52352,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -625,12 +681,36 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Dimmable_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
                 "sizes": [{
-                        "flash_bytes": 721531,
+                        "flash_bytes": 723083,
                         "flash_percentage": 55,
-                        "ram_bytes": 30172,
+                        "ram_bytes": 30044,
                         "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1377643,
+                        "flash_percentage": 40,
+                        "ram_bytes": 59912,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+                "sizes": [{
+                        "flash_bytes": 728013,
+                        "flash_percentage": 56,
+                        "ram_bytes": 30180,
+                        "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1475967,
+                        "flash_percentage": 43,
+                        "ram_bytes": 60348,
+                        "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
@@ -646,73 +726,57 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 774749,
-                        "flash_percentage": 25,
-                        "ram_bytes": 18764,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/BLE/examples/ServerSecure",
-                "sizes": [{
-                        "flash_bytes": 769787,
+                        "flash_bytes": 760001,
                         "flash_percentage": 24,
-                        "ram_bytes": 18796,
+                        "ram_bytes": 18636,
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 272726,
+                        "flash_bytes": 777399,
+                        "flash_percentage": 25,
+                        "ram_bytes": 18868,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
+                "sizes": [{
+                        "flash_bytes": 269824,
                         "flash_percentage": 9,
-                        "ram_bytes": 15252,
-                        "ram_percentage": 5
+                        "ram_bytes": 14588,
+                        "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 299812,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15296,
-                        "ram_percentage": 5
+                        "flash_bytes": 285670,
+                        "flash_percentage": 9,
+                        "ram_bytes": 18128,
+                        "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 266970,
-                        "flash_percentage": 20,
+                        "flash_bytes": 268694,
+                        "flash_percentage": 9,
                         "ram_bytes": 14540,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 278544,
-                        "flash_percentage": 21,
-                        "ram_bytes": 14908,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
-                "sizes": [{
-                        "flash_bytes": 1075979,
-                        "flash_percentage": 82,
-                        "ram_bytes": 45360,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1217609,
+                        "flash_bytes": 1218651,
                         "flash_percentage": 93,
                         "ram_bytes": 45024,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 269134,
+                        "flash_bytes": 279578,
                         "flash_percentage": 21,
                         "ram_bytes": 14540,
                         "ram_percentage": 4
@@ -742,52 +806,68 @@
                         "ram_percentage": 43
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1197629,
-                        "flash_percentage": 91,
-                        "ram_bytes": 60408,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
-                "sizes": [{
-                        "flash_bytes": 1098703,
-                        "flash_percentage": 84,
-                        "ram_bytes": 59840,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
-                "sizes": [{
-                        "flash_bytes": 1075277,
-                        "flash_percentage": 82,
-                        "ram_bytes": 59292,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
-                "sizes": [{
-                        "flash_bytes": 1987579,
-                        "flash_percentage": 49,
-                        "ram_bytes": 49032,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
-                "sizes": [{
-                        "flash_bytes": 1989975,
-                        "flash_percentage": 49,
-                        "ram_bytes": 49408,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
-                "sizes": [{
-                        "flash_bytes": 1183325,
+                        "flash_bytes": 1175133,
                         "flash_percentage": 90,
-                        "ram_bytes": 49668,
-                        "ram_percentage": 15
+                        "ram_bytes": 59828,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+                "sizes": [{
+                        "flash_bytes": 1068355,
+                        "flash_percentage": 82,
+                        "ram_bytes": 59884,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1094643,
+                        "flash_percentage": 84,
+                        "ram_bytes": 60464,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/Preferences/examples/Prefs2Struct",
+                "sizes": [{
+                        "flash_bytes": 277178,
+                        "flash_percentage": 21,
+                        "ram_bytes": 14564,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 263850,
+                        "flash_percentage": 20,
+                        "ram_bytes": 14688,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1087161,
+                        "flash_percentage": 83,
+                        "ram_bytes": 44712,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                "sizes": [{
+                        "flash_bytes": 1143849,
+                        "flash_percentage": 87,
+                        "ram_bytes": 47188,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 1087959,
+                        "flash_percentage": 83,
+                        "ram_bytes": 44920,
+                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -798,12 +878,28 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Dimmable_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
                 "sizes": [{
-                        "flash_bytes": 667319,
+                        "flash_bytes": 668885,
+                        "flash_percentage": 51,
+                        "ram_bytes": 25800,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+                "sizes": [{
+                        "flash_bytes": 673839,
                         "flash_percentage": 51,
                         "ram_bytes": 25952,
                         "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1431401,
+                        "flash_percentage": 42,
+                        "ram_bytes": 52908,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
@@ -819,58 +915,50 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 788507,
+                        "flash_bytes": 773771,
                         "flash_percentage": 25,
-                        "ram_bytes": 17076,
+                        "ram_bytes": 16940,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 783541,
+                        "flash_bytes": 791149,
                         "flash_percentage": 25,
-                        "ram_bytes": 17092,
+                        "ram_bytes": 17164,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 297648,
+                        "flash_bytes": 292932,
                         "flash_percentage": 9,
-                        "ram_bytes": 14864,
+                        "ram_bytes": 14224,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
+                "sizes": [{
+                        "flash_bytes": 310082,
+                        "flash_percentage": 10,
+                        "ram_bytes": 17756,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 324950,
-                        "flash_percentage": 25,
-                        "ram_bytes": 14940,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
-                "sizes": [{
-                        "flash_bytes": 291404,
-                        "flash_percentage": 22,
+                        "flash_bytes": 293104,
+                        "flash_percentage": 9,
                         "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 303710,
-                        "flash_percentage": 23,
-                        "ram_bytes": 14552,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/HEX",
-                "sizes": [{
-                        "flash_bytes": 293674,
-                        "flash_percentage": 22,
+                        "flash_bytes": 304150,
+                        "flash_percentage": 10,
                         "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
@@ -899,34 +987,58 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1203047,
-                        "flash_percentage": 92,
-                        "ram_bytes": 58400,
+                        "flash_bytes": 1179831,
+                        "flash_percentage": 90,
+                        "ram_bytes": 57828,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1103339,
-                        "flash_percentage": 84,
-                        "ram_bytes": 57816,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
-                "sizes": [{
-                        "flash_bytes": 1079957,
+                        "flash_bytes": 1073041,
                         "flash_percentage": 82,
-                        "ram_bytes": 57276,
-                        "ram_percentage": 17
+                        "ram_bytes": 57876,
+                        "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Dimmable_Light",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
                 "sizes": [{
-                        "flash_bytes": 670999,
+                        "flash_bytes": 1099299,
+                        "flash_percentage": 84,
+                        "ram_bytes": 58440,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/Preferences/examples/Prefs2Struct",
+                "sizes": [{
+                        "flash_bytes": 301596,
+                        "flash_percentage": 23,
+                        "ram_bytes": 14192,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 290494,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14452,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
+                "sizes": [{
+                        "flash_bytes": 672573,
                         "flash_percentage": 51,
+                        "ram_bytes": 23808,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+                "sizes": [{
+                        "flash_bytes": 677507,
+                        "flash_percentage": 52,
                         "ram_bytes": 23928,
                         "ram_percentage": 7
                         }]
@@ -944,124 +1056,116 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 871600,
-                        "flash_percentage": 28,
-                        "ram_bytes": 27548,
-                        "ram_percentage": 8
-                        }]
-                },
-{"name": "libraries/BLE/examples/ServerSecure",
-                "sizes": [{
-                        "flash_bytes": 866644,
-                        "flash_percentage": 28,
-                        "ram_bytes": 27580,
-                        "ram_percentage": 8
-                        }]
-                },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
-                "sizes": [{
-                        "flash_bytes": 354724,
-                        "flash_percentage": 11,
-                        "ram_bytes": 23908,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 364228,
-                        "flash_percentage": 28,
-                        "ram_bytes": 23492,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
-                "sizes": [{
-                        "flash_bytes": 351992,
+                        "flash_bytes": 857830,
                         "flash_percentage": 27,
+                        "ram_bytes": 27420,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/BLE/examples/MultiService",
+                "sizes": [{
+                        "flash_bytes": 872948,
+                        "flash_percentage": 28,
+                        "ram_bytes": 27644,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
+                "sizes": [{
+                        "flash_bytes": 354534,
+                        "flash_percentage": 11,
+                        "ram_bytes": 23252,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
+                "sizes": [{
+                        "flash_bytes": 381216,
+                        "flash_percentage": 12,
+                        "ram_bytes": 27248,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
+                "sizes": [{
+                        "flash_bytes": 353714,
+                        "flash_percentage": 11,
                         "ram_bytes": 23228,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 360548,
+                        "flash_bytes": 369786,
                         "flash_percentage": 28,
-                        "ram_bytes": 23276,
+                        "ram_bytes": 23636,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP_SR/examples/Basic",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 1898308,
-                        "flash_percentage": 45,
-                        "ram_bytes": 59720,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
-                "sizes": [{
-                        "flash_bytes": 1057770,
-                        "flash_percentage": 34,
-                        "ram_bytes": 24760,
-                        "ram_percentage": 8
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
-                "sizes": [{
-                        "flash_bytes": 890482,
-                        "flash_percentage": 68,
-                        "ram_bytes": 32220,
-                        "ram_percentage": 10
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1139888,
+                        "flash_bytes": 1140922,
                         "flash_percentage": 87,
                         "ram_bytes": 31948,
                         "ram_percentage": 10
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 354252,
-                        "flash_percentage": 27,
+                        "flash_bytes": 362956,
+                        "flash_percentage": 28,
                         "ram_bytes": 23220,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SD2USBMSC",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 535822,
-                        "flash_percentage": 41,
-                        "ram_bytes": 73788,
-                        "ram_percentage": 23
-                        }]
-                },
-{"name": "libraries/USB/examples/CompositeDevice",
-                "sizes": [{
-                        "flash_bytes": 321608,
-                        "flash_percentage": 25,
-                        "ram_bytes": 23004,
+                        "flash_bytes": 362138,
+                        "flash_percentage": 28,
+                        "ram_bytes": 23244,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                 "sizes": [{
-                        "flash_bytes": 321608,
+                        "flash_bytes": 323732,
                         "flash_percentage": 25,
-                        "ram_bytes": 23004,
+                        "ram_bytes": 22812,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
                 "sizes": [{
-                        "flash_bytes": 1068538,
-                        "flash_percentage": 82,
-                        "ram_bytes": 36836,
-                        "ram_percentage": 11
+                        "flash_bytes": 909996,
+                        "flash_percentage": 69,
+                        "ram_bytes": 31220,
+                        "ram_percentage": 10
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostHIDCombo",
+                "sizes": [{
+                        "flash_bytes": 447380,
+                        "flash_percentage": 34,
+                        "ram_bytes": 73068,
+                        "ram_percentage": 22
+                        }]
+                },
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                "sizes": [{
+                        "flash_bytes": 946840,
+                        "flash_percentage": 72,
+                        "ram_bytes": 33876,
+                        "ram_percentage": 10
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 907892,
+                        "flash_percentage": 69,
+                        "ram_bytes": 31428,
+                        "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -1077,50 +1181,50 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 256197,
+                        "flash_bytes": 251433,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17200,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
+                "sizes": [{
+                        "flash_bytes": 266194,
                         "flash_percentage": 20,
-                        "ram_bytes": 18128,
+                        "ram_bytes": 20748,
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 249349,
+                        "flash_bytes": 250693,
                         "flash_percentage": 19,
-                        "ram_bytes": 17168,
+                        "ram_bytes": 17184,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 261289,
+                        "flash_bytes": 267329,
                         "flash_percentage": 20,
-                        "ram_bytes": 17584,
+                        "ram_bytes": 17936,
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 922064,
-                        "flash_percentage": 70,
-                        "ram_bytes": 45952,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1059368,
+                        "flash_bytes": 1060084,
                         "flash_percentage": 81,
                         "ram_bytes": 45264,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 251113,
-                        "flash_percentage": 19,
+                        "flash_bytes": 259509,
+                        "flash_percentage": 20,
                         "ram_bytes": 17168,
                         "ram_percentage": 5
                         }]
@@ -1149,44 +1253,52 @@
                         "ram_percentage": 32
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 1389949,
-                        "flash_percentage": 34,
-                        "ram_bytes": 47676,
-                        "ram_percentage": 15
+                        "flash_bytes": 257817,
+                        "flash_percentage": 8,
+                        "ram_bytes": 17184,
+                        "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                 "sizes": [{
-                        "flash_bytes": 1392089,
-                        "flash_percentage": 34,
-                        "ram_bytes": 48252,
-                        "ram_percentage": 15
+                        "flash_bytes": 249958,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17628,
+                        "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/USB/examples/CompositeDevice",
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
                 "sizes": [{
-                        "flash_bytes": 365745,
-                        "flash_percentage": 28,
-                        "ram_bytes": 51008,
-                        "ram_percentage": 16
+                        "flash_bytes": 942204,
+                        "flash_percentage": 72,
+                        "ram_bytes": 44976,
+                        "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 326665,
+                        "flash_bytes": 331557,
                         "flash_percentage": 25,
-                        "ram_bytes": 50176,
+                        "ram_bytes": 49584,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
                 "sizes": [{
-                        "flash_bytes": 1017629,
-                        "flash_percentage": 78,
-                        "ram_bytes": 50268,
+                        "flash_bytes": 983433,
+                        "flash_percentage": 75,
+                        "ram_bytes": 47836,
                         "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 933280,
+                        "flash_percentage": 71,
+                        "ram_bytes": 45168,
+                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -1196,96 +1308,88 @@
                         "ram_bytes": 43616,
                         "ram_percentage": 13
                         }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
+                "sizes": [{
+                        "flash_bytes": 611505,
+                        "flash_percentage": 47,
+                        "ram_bytes": 26064,
+                        "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1201256,
+                        "flash_percentage": 35,
+                        "ram_bytes": 52816,
+                        "ram_percentage": 16
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/BLE/examples/HID_Composite",
+{"name": "libraries/BLE/examples/ClientSecure",
                 "sizes": [{
-                        "flash_bytes": 619716,
-                        "flash_percentage": 20,
-                        "ram_bytes": 28140,
+                        "flash_bytes": 605380,
+                        "flash_percentage": 19,
+                        "ram_bytes": 28012,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/BLE/examples/ServerSecure",
+{"name": "libraries/BLE/examples/MultiService",
                 "sizes": [{
-                        "flash_bytes": 614872,
+                        "flash_bytes": 620428,
                         "flash_percentage": 20,
-                        "ram_bytes": 28156,
+                        "ram_bytes": 28220,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+{"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 292421,
+                        "flash_bytes": 287665,
                         "flash_percentage": 9,
-                        "ram_bytes": 23468,
+                        "ram_bytes": 22524,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
+{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 320681,
+                        "flash_bytes": 312353,
                         "flash_percentage": 10,
-                        "ram_bytes": 23024,
-                        "ram_percentage": 7
+                        "ram_bytes": 26300,
+                        "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo",
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 288209,
+                        "flash_bytes": 286745,
                         "flash_percentage": 9,
-                        "ram_bytes": 22508,
+                        "ram_bytes": 22476,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Timer/FunctionalInterrupt",
+{"name": "libraries/ESP32/examples/Touch/TouchButton",
                 "sizes": [{
-                        "flash_bytes": 297221,
-                        "flash_percentage": 9,
-                        "ram_bytes": 22908,
+                        "flash_bytes": 303965,
+                        "flash_percentage": 23,
+                        "ram_bytes": 23260,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP_SR/examples/Basic",
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 1762537,
-                        "flash_percentage": 56,
-                        "ram_bytes": 60112,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
-                "sizes": [{
-                        "flash_bytes": 388625,
-                        "flash_percentage": 12,
-                        "ram_bytes": 22796,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
-                "sizes": [{
-                        "flash_bytes": 955804,
-                        "flash_percentage": 73,
-                        "ram_bytes": 49068,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
-                "sizes": [{
-                        "flash_bytes": 1091632,
+                        "flash_bytes": 1092360,
                         "flash_percentage": 83,
                         "ram_bytes": 48396,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Hash/examples/HEX",
+{"name": "libraries/Hash/examples/HMAC",
                 "sizes": [{
-                        "flash_bytes": 287137,
-                        "flash_percentage": 22,
+                        "flash_bytes": 295533,
+                        "flash_percentage": 23,
                         "ram_bytes": 22476,
                         "ram_percentage": 7
                         }]
@@ -1314,52 +1418,52 @@
                         "ram_percentage": 33
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerCustom",
+{"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 1672388,
-                        "flash_percentage": 41,
-                        "ram_bytes": 53008,
-                        "ram_percentage": 16
+                        "flash_bytes": 293877,
+                        "flash_percentage": 9,
+                        "ram_bytes": 22508,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                 "sizes": [{
-                        "flash_bytes": 1675148,
-                        "flash_percentage": 41,
-                        "ram_bytes": 53584,
-                        "ram_percentage": 16
+                        "flash_bytes": 296845,
+                        "flash_percentage": 23,
+                        "ram_bytes": 23084,
+                        "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SD2USBMSC",
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
                 "sizes": [{
-                        "flash_bytes": 478101,
-                        "flash_percentage": 36,
-                        "ram_bytes": 56380,
-                        "ram_percentage": 17
+                        "flash_bytes": 976308,
+                        "flash_percentage": 74,
+                        "ram_bytes": 48076,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/CompositeDevice",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 429245,
-                        "flash_percentage": 33,
-                        "ram_bytes": 56732,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
-                "sizes": [{
-                        "flash_bytes": 394281,
+                        "flash_bytes": 399177,
                         "flash_percentage": 30,
-                        "ram_bytes": 56252,
+                        "ram_bytes": 55676,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
                 "sizes": [{
-                        "flash_bytes": 1059164,
-                        "flash_percentage": 81,
-                        "ram_bytes": 53612,
+                        "flash_bytes": 1026036,
+                        "flash_percentage": 78,
+                        "ram_bytes": 51180,
                         "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples/SimpleAuthentification",
+                "sizes": [{
+                        "flash_bytes": 966432,
+                        "flash_percentage": 74,
+                        "ram_bytes": 48284,
+                        "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/WiFi/examples/WiFiExtender",
@@ -1368,6 +1472,22 @@
                         "flash_percentage": 70,
                         "ram_bytes": 46748,
                         "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Attribute_Storage",
+                "sizes": [{
+                        "flash_bytes": 643893,
+                        "flash_percentage": 49,
+                        "ram_bytes": 31340,
+                        "ram_percentage": 10
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                "sizes": [{
+                        "flash_bytes": 1235680,
+                        "flash_percentage": 36,
+                        "ram_bytes": 55932,
+                        "ram_percentage": 17
                         }]
                 }
 ]
