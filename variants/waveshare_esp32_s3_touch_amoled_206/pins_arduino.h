@@ -69,4 +69,4 @@ static const uint8_t RX = 44;
 #define MOSI 1
 #define MISO 3
 #define SCK  2
-#endif           /* Pins_Arduino_h */
+#endif /* Pins_Arduino_h */
