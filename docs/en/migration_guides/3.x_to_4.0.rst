@@ -97,12 +97,12 @@ For the full method mapping and before/after sketches, see the `BluetoothSerial 
 Boards
 ------
 
-ESP32P4 Dev Module
-******************
+ESP32-P4 Dev Module
+*******************
 
-The generic **ESP32P4 Dev Module** definition (``esp32p4`` in ``boards.txt``) now targets **ESP32-P4X-Function-EV-Board v1.6** instead of **v1.4**. Because the Arduino IDE selects the first entry in each menu by default, projects built with default board options inherit new chip, CPU, and USB defaults.
+The generic **ESP32-P4 Dev Module** definition now targets **ESP32-P4X-Function-EV-Board v1.6** instead of **v1.4**. Because the Arduino IDE selects the first entry in each menu by default, projects built with default board options inherit new chip, CPU, and USB defaults.
 
-ESP32P4 Core Board and third-party ESP32-P4 board definitions keep their 3.x defaults.
+ESP32-P4 Core Board and third-party ESP32-P4 board definitions keep their 3.x defaults.
 
 .. list-table::
     :header-rows: 1
