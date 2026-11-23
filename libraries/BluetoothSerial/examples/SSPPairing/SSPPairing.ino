@@ -14,25 +14,49 @@
 
 BluetoothSerial SerialBT;
 
+// The authentication procedure gives up after about 30 s; reply sooner so the
+// peer gets an explicit rejection instead of a timeout.
+static constexpr uint32_t AUTH_INPUT_TIMEOUT_MS = 20000;
+
+// loop() forwards Serial into SerialBT. The confirm callback also reads Serial,
+// but from the Bluetooth host task, so the Arduino loop must not consume y/n
+// while that prompt is active.
+static volatile bool awaitingConfirm = false;
+
 bool confirmRequestCallback(uint32_t passkey) {
+  awaitingConfirm = true;
+
+  // Drop anything typed before the prompt so leftover keystrokes are not taken
+  // as the confirmation.
+  while (Serial.available()) {
+    Serial.read();
+  }
+
   Serial.printf("Confirm passkey: %06lu (y/n)? ", passkey);
-  while (Serial.available() == 0) {
-    delay(100);
+
+  uint32_t start = millis();
+  while (!Serial.available()) {
+    if (millis() - start > AUTH_INPUT_TIMEOUT_MS) {
+      Serial.println("\nTimeout -- rejecting pairing.");
+      awaitingConfirm = false;
+      return false;
+    }
+    delay(10);
   }
   char c = Serial.read();
+  awaitingConfirm = false;
   if (c == 'y' || c == 'Y') {
     Serial.println("Accepted.");
     return true;
-  } else {
-    Serial.println("Rejected.");
-    return false;
   }
+  Serial.println("Rejected.");
+  return false;
 }
 
 void setup() {
   Serial.begin(115200);
 
-  SerialBT.enableSSP(false, true);
+  SerialBT.enableSSP(true, true);  // display + keyboard -> numeric comparison with a phone
   SerialBT.onConfirmRequest(confirmRequestCallback);
   SerialBT.onAuthComplete([](bool success) {
     if (success) {
@@ -58,8 +82,10 @@ void loop() {
     Serial.write(SerialBT.read());
   }
 
-  while (Serial.available()) {
-    SerialBT.write(Serial.read());
+  if (!awaitingConfirm) {
+    while (Serial.available()) {
+      SerialBT.write(Serial.read());
+    }
   }
 
   delay(1);

@@ -2,7 +2,11 @@
 
 This guide helps you migrate existing sketches that use the `BluetoothSerial` library from the v3.x API to the v4.0 API. It covers every breaking change with before/after examples.
 
-> **Note:** Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC.
+> **Note:** Bluetooth Classic (BR/EDR) is available on the **original ESP32** and on
+> **ESP32-S31**. On ESP32-S31 the prebuilt libraries enable NimBLE only, so
+> `BluetoothSerial` requires using Arduino as an ESP-IDF component or rebuilding the
+> static libraries. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6,
+> ESP32-H2, or ESP32-P4.
 
 ---
 
@@ -164,24 +168,47 @@ SerialBT.onConfirmRequest([](uint32_t passkey) -> bool {
 // confirmReply() has been removed
 ```
 
-#### onKeyRequest / respondPasskey (removed)
+#### onKeyRequest / respondPasskey (replaced)
 
-The old `onKeyRequest()` / `respondPasskey()` pair for passkey-entry IO capability has been removed.
-Passkey entry and numeric comparison are both handled through `onConfirmRequest()` in v4.0.
+v3.x split passkey entry across a `void()` callback and a later `respondPasskey()` call that trusted
+one global "last peer" address. v4.0 replaces the pair with a value-returning handler that receives
+the peer address, so there is no cross-peer state:
+
+| v3.x | v4.0 |
+|---|---|
+| `void onKeyRequest(cb)` | `BTStatus onPassKeyRequest(cb)` — `cb` returns the passkey |
+| `void respondPasskey(uint32_t)` | Return the passkey from the `onPassKeyRequest` callback |
+| *(no display API)* | `BTStatus onPassKeyDisplay(cb)` — receives the generated passkey to show |
+
+`onPassKeyRequest` runs on the keyboard side: the peer displays a six-digit code and the handler
+returns it (0–999999). Returning a value above 999999 rejects the pairing; with no handler the
+request is declined instead of timing out. `onPassKeyDisplay` runs on the display side and receives
+the code the stack generated for the user to type on the peer.
 
 ```cpp
 // v3.x (removed)
 SerialBT.onKeyRequest([]() {
-    SerialBT.respondPasskey(123456);
+    SerialBT.respondPasskey(123456);   // which peer?
 });
 
-// v4.0 -- use onConfirmRequest with the passkey-check pattern
-SerialBT.onConfirmRequest([](uint32_t passkey) -> bool {
-    Serial.printf("Passkey: %06lu -- accept? ", passkey);
-    // Read from serial, return decision
-    return true;
+// v4.0 -- value returned synchronously, peer address supplied
+SerialBT.onPassKeyRequest([](const BTAddress &peer) -> uint32_t {
+    Serial.printf("Passkey shown on %s: ", peer.toString().c_str());
+    // ... read six digits ...
+    return passkey;                    // 0-999999
+});
+
+// v4.0 -- display side
+SerialBT.onPassKeyDisplay([](const BTAddress &peer, uint32_t passkey) {
+    Serial.printf("Passkey for %s: %06lu\n", peer.toString().c_str(), (unsigned long)passkey);
 });
 ```
+
+Passkey Entry is selected by `enableSSP(true, false)` (KeyboardOnly) against a display-capable peer,
+or by `enableSSP(false, true)` (DisplayOnly) against a keyboard-only peer. Two KeyboardOnly boards
+are both prompted, so entering the same code on both consoles works as a fixed PIN. Numeric
+Comparison (`enableSSP(true, true)` + `onConfirmRequest`) remains the recommended model for
+phones and PCs.
 
 ### 7. Auth-Complete Callback Signature
 
@@ -261,8 +288,8 @@ FreeRTOS resources (queues, semaphores, task) are allocated in `begin()` and rel
 | `SerialBT.disconnect()` returning `bool` | `BTStatus SerialBT.disconnect()` |
 | `SerialBT.connected(int timeout)` | `bool SerialBT.connected() const` (no timeout) |
 | `SerialBT.confirmReply(bool)` | Callback registered via `onConfirmRequest` returns `bool` directly |
-| `SerialBT.onKeyRequest(cb)` | Handled via `onConfirmRequest` |
-| `SerialBT.respondPasskey(uint32_t)` | Handled via `onConfirmRequest` |
+| `SerialBT.onKeyRequest(cb)` | `BTStatus SerialBT.onPassKeyRequest(cb)` — callback returns the passkey |
+| `SerialBT.respondPasskey(uint32_t)` | Return the passkey from the `onPassKeyRequest` callback |
 | `SerialBT.onAuthComplete(void(uint8_t*, bool))` | `onAuthComplete(void(bool))` — no address |
 | `SerialBT.getBondedDevices()` returning `int` | Returns `std::vector<BTAddress>` |
 | `SerialBT.getBondedDeviceAddress(int, uint8_t*)` | Iterate `getBondedDevices()` vector |
@@ -332,8 +359,9 @@ Unchanged: `available()`, `read()`, `write()`, `peek()`, `flush()`, `print()`, `
 | `void setPin(const char *pin, uint8_t len)` | `void setPin(const char *pin)` | Length dropped (uses `strlen`) |
 | `void onConfirmRequest(std::function<void(uint32_t)>)` | `BTStatus onConfirmRequest(std::function<bool(uint32_t)>)` | Callback returns bool |
 | `void confirmReply(bool)` | **Removed** | Return bool from `onConfirmRequest` callback |
-| `void onKeyRequest(cb)` | **Removed** | Use `onConfirmRequest` |
-| `void respondPasskey(uint32_t)` | **Removed** | Use `onConfirmRequest` |
+| `void onKeyRequest(cb)` | `BTStatus onPassKeyRequest(std::function<uint32_t(const BTAddress &)>)` | Callback returns the passkey |
+| `void respondPasskey(uint32_t)` | Returned from `onPassKeyRequest` | No out-of-band reply call |
+| *(none)* | `BTStatus onPassKeyDisplay(std::function<void(const BTAddress &, uint32_t)>)` | New: display side of Passkey Entry |
 | `void onAuthComplete(std::function<void(uint8_t*, bool)>)` | `BTStatus onAuthComplete(std::function<void(bool)>)` | No address parameter |
 
 ### Bond Management
@@ -477,7 +505,7 @@ void setup() {
 BluetoothSerial SerialBT;
 
 void setup() {
-    SerialBT.enableSSP(false, true);  // output capability
+    SerialBT.enableSSP(true, true);   // display + keyboard -> numeric comparison
     SerialBT.onConfirmRequest([](uint32_t passkey) -> bool {
         Serial.printf("Confirm %06lu? Auto-accepting.\n", passkey);
         return true;   // accept directly; confirmReply() no longer exists
