@@ -22,6 +22,7 @@
 
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
+#include "esp32-hal-log.h"
 
 BLERemoteDescriptor::BLERemoteDescriptor() : _impl(nullptr) {}
 

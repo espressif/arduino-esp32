@@ -23,6 +23,7 @@
 #include "core/BLEBackend.h"
 #include "core/BLEImplHelpers.h"
 #include "types/BLEProperty.h"
+#include "esp32-hal-log.h"
 
 #include <string.h>
 
