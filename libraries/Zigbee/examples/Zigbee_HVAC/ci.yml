@@ -1,4 +1,5 @@
-fqbn_append: PartitionScheme=zigbee_zczr,ZigbeeMode=zczr
+fqbn_append: PartitionScheme=zigbee,ZigbeeMode=ed
 
 requires:
+  - CONFIG_SOC_IEEE802154_SUPPORTED=y
   - CONFIG_ZB_ENABLED=y

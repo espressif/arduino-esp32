@@ -62,6 +62,14 @@ public:
   ZigbeeHVAC(uint8_t endpoint);
   ~ZigbeeHVAC() {}
 
+  // Call after Zigbee.role() and before Zigbee.begin(). Makes running state reportable.
+  // The stack rejects the change once begin() has registered the device.
+  bool enableReporting();
+
+  // Send the current values to bound devices. Call from loop(), not from the onHVACChange callback.
+  bool report();
+  bool reportLocalTemperature();
+
   // Call after Zigbee.role(). Works before and after Zigbee.addEndpoint().
   // Temperatures are degrees Celsius. Occupied cooling must stay at least 2.5°C above occupied heating.
   bool setControlSequence(ZigbeeHVACControlSequence sequence);
@@ -91,6 +99,7 @@ public:
   }
 
   // Called when the coordinator writes SystemMode or an occupied setpoint, or sends SetpointRaiseOrLower.
+  // Runs in the Zigbee task. Keep it short: store the values and finish. LED, serial, and report() belong in loop().
   void onHVACChange(void (*callback)(ZigbeeHVACSystemMode mode, float heating_setpoint, float cooling_setpoint)) {
     _on_hvac_change = callback;
   }
@@ -100,6 +109,7 @@ private:
   void zbThermostatSetpoint(uint8_t mode, int16_t heat_centi, int16_t cool_centi) override;
 
   bool writeAttr(const char *api, uint16_t attr_id, void *value);
+  bool reportAttr(uint16_t attr_id);
   void hvacChanged();
 
   void (*_on_hvac_change)(ZigbeeHVACSystemMode mode, float heating_setpoint, float cooling_setpoint);

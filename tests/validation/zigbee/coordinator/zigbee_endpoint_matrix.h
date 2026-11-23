@@ -253,7 +253,7 @@ static bool register_all_zigbee_endpoints(void) {
     return false;
   }
 
-  if (!epHVAC.setControlSequence(HVAC_SEQ_COOLING_AND_HEATING) || !epHVAC.setSystemMode(HVAC_SYSTEM_MODE_OFF)) {
+  if (!epHVAC.enableReporting() || !epHVAC.setControlSequence(HVAC_SEQ_COOLING_AND_HEATING) || !epHVAC.setSystemMode(HVAC_SYSTEM_MODE_OFF)) {
     return false;
   }
   epHVAC.setManufacturerAndModel("Espressif", "ZBValHVAC");

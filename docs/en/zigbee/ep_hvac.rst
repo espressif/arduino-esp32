@@ -36,6 +36,12 @@ ZigbeeHVAC
 
 Call the setters after ``Zigbee.role()``. They work before and after ``Zigbee.addEndpoint()``. Temperatures are degrees Celsius.
 
+Call ``enableReporting()`` after ``Zigbee.role()`` and before ``Zigbee.begin()``. It makes running state reportable. The stack rejects that change once ``begin()`` has registered the device. ``LocalTemperature`` is already reportable. System mode and the occupied setpoints stay unreportable. The stack answers those writes and reports local temperature and running state to the bound coordinator.
+
+.. code-block:: arduino
+
+    bool enableReporting();
+
 System Mode
 ***********
 
@@ -109,7 +115,14 @@ Event Handling
 
     void onHVACChange(void (*callback)(ZigbeeHVACSystemMode mode, float heating_setpoint, float cooling_setpoint));
 
-The callback runs when the coordinator writes system mode or an occupied setpoint, and when it sends ``SetpointRaiseOrLower``. It runs in the Zigbee stack callback. Update outputs there, and publish temperature or running state from ``loop()``.
+The callback runs when the coordinator writes system mode or an occupied setpoint, and when it sends ``SetpointRaiseOrLower``. It runs in the Zigbee task. Store the new values and return. Update outputs from ``loop()``.
+
+``report()`` sends the current temperature and running state to bound coordinators. ``reportLocalTemperature()`` sends only the room temperature. Either report is sent through the binding table.
+
+.. code-block:: arduino
+
+    bool report();
+    bool reportLocalTemperature();
 
 Example
 -------
