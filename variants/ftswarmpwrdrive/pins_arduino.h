@@ -11,7 +11,7 @@
 #define Pins_Arduino_h
 
 #include <driver/gpio.h>
-#include <driver/adc.h>
+#include <hal/adc_types.h>
 
 // my hardware features
 #define FTSWARM_BOARD_PWRDRIVE
@@ -90,7 +90,7 @@ static const char INPUT_NAME[][7] = {"ES1", "ES2", "ES3", "ES4", "EM"};
 static const gpio_num_t INPUT_GPIO[] = {ES1, ES2, ES3, ES4, EM};
 static const uint8_t INPUT_FLAGS[] = {FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE};
 static const int8_t INPUT_ADC_UNIT[] = {ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1};
-static const int8_t INPUT_ADC_CHANNEL[] = {ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0};
+static const int8_t INPUT_ADC_CHANNEL[] = {ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0};
 static const adc_atten_t INPUT_ATTENUATION[] = {ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12};
 static const int8_t INPUT_IOTYPE[] = {FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL};
 

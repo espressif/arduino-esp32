@@ -11,7 +11,7 @@
 #define Pins_Arduino_h
 
 #include <driver/gpio.h>
-#include <driver/adc.h>
+#include <hal/adc_types.h>
 
 // my hardware features
 #define FTSWARM_BOARD_XL
@@ -97,8 +97,8 @@ static const gpio_num_t INPUT_GPIO[] = {A1, A2, A3, A4, A5, A6, A7, A8};
 static const uint8_t INPUT_FLAGS[] = {FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE,
                                       FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE};
 static const int8_t INPUT_ADC_UNIT[] = {ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1};
-static const int8_t INPUT_ADC_CHANNEL[] = {ADC1_CHANNEL_0, ADC1_CHANNEL_1, ADC1_CHANNEL_2, ADC1_CHANNEL_3,
-                                           ADC1_CHANNEL_4, ADC1_CHANNEL_7, ADC1_CHANNEL_9, ADC1_CHANNEL_8};
+static const int8_t INPUT_ADC_CHANNEL[] = {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2, ADC_CHANNEL_3,
+                                           ADC_CHANNEL_4, ADC_CHANNEL_7, ADC_CHANNEL_9, ADC_CHANNEL_8};
 static const adc_atten_t INPUT_ATTENUATION[] = {ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12,
                                                 ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12};
 static const int8_t INPUT_IOTYPE[] = {FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL,

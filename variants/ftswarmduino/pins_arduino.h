@@ -19,7 +19,7 @@
 #define FTSWARM_HAL_PIXELS    2
 
 #include <driver/gpio.h>
-#include <driver/adc.h>
+#include <hal/adc_types.h>
 
 // to solve some hen & egg problems
 static const int8_t FTSWARM_HAL_IO_DIGITAL = 1;
@@ -100,8 +100,8 @@ static const uint8_t INPUT_FLAGS[] = {FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NO
                                       FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE, FTSWARM_HAL_FLAG_NONE};
 static const int8_t INPUT_ADC_UNIT[] = {ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1,
                                         ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1, ADC_UNIT_1};
-static const int8_t INPUT_ADC_CHANNEL[] = {ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0,
-                                           ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0, ADC1_CHANNEL_0};
+static const int8_t INPUT_ADC_CHANNEL[] = {ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0,
+                                           ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0, ADC_CHANNEL_0};
 static const adc_atten_t INPUT_ATTENUATION[] = {ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12,
                                                 ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12, ADC_ATTEN_DB_12};
 static const int8_t INPUT_IOTYPE[] = {FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL, FTSWARM_HAL_IO_DIGITAL,
