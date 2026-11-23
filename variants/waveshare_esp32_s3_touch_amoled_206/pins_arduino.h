@@ -5,7 +5,8 @@
 #include "soc/soc_caps.h"
 
 // SDMMC (1-bit)
-#define BOARD_HAS_SD_SDMMC
+#define BOARD_HAS_SDMMC
+#define BOARD_HAS_1BIT_SDMMC
 #define SDMMC_CLK 2
 #define SDMMC_CMD 1
 #define SDMMC_D0  3
@@ -62,9 +63,10 @@ static const uint8_t SCL = 14;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-//esp32s3-PSFlash   SPI1/SPI0
-#define SS   32  // FSPICS0
-#define MOSI 35  // FSPID
-#define MISO 34  // FSPIQ
-#define SCK  33  // FSPICLK
-#endif           /* Pins_Arduino_h */
+// The microSD slot's SPI wiring, so SD.begin() works with the defaults.
+// (GPIO 33-37 belong to the octal PSRAM.)
+#define SS   17
+#define MOSI 1
+#define MISO 3
+#define SCK  2
+#endif /* Pins_Arduino_h */
