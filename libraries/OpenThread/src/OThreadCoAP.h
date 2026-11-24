@@ -145,7 +145,7 @@ class OThreadCoAPResourceStore;
  * itself — otherwise the failure is silently reported as success. Multicast
  * requests are never auto-answered (RFC 7252 §8.2); see isMulticast().
  */
-typedef void (*OThreadCoAPHandler)(OThreadCoAPRequest &request, OThreadCoAPResponse &response, void *context);
+using OThreadCoAPHandler = void (*)(OThreadCoAPRequest &request, OThreadCoAPResponse &response, void *context);
 
 /**
  * @brief Static helpers shared by the OThreadCoAP client/server classes.
@@ -337,11 +337,20 @@ private:
  * For confirmable requests, wire retransmission is tuned to match setTimeout()
  * by default (see useDefaultCoapRetransmit()).
  * Reuse a single instance for many requests. Requires the device to be attached.
+ *
+ * The first request lazily starts the shared CoAP UDP socket (port 5683) if the
+ * server has not already. There is no client close(); tear down the stack or
+ * stop OThreadCoAPServer when done.
+ *
+ * Multicast destinations (IPv6 first byte 0xFF) are always sent as NON
+ * (RFC 7252 §8.1), even if setConfirmable(true). Prefer sendNonBlocking() for
+ * group commands.
  */
 class OThreadCoAPClient {
 public:
   /** @brief Construct a client with default port, timeout, and CON mode. */
   OThreadCoAPClient();
+  /** @brief Destroy the client and release any in-flight request context. */
   ~OThreadCoAPClient();
 
   /**
@@ -647,9 +656,11 @@ public:
    * @param event   One of the OT_COAP_SECURE_* event constants.
    * @param context User pointer supplied to onConnectEvent().
    */
-  typedef void (*ConnectCallback)(int event, void *context);
+  using ConnectCallback = void (*)(int event, void *context);
 
+  /** @brief Construct a CoAPS client; call setPSK() or setCertificate() then connect(). */
   OThreadCoAPSecureClient();
+  /** @brief Disconnect if needed and destroy the client. */
   ~OThreadCoAPSecureClient();
 
   /**
@@ -873,6 +884,10 @@ private:
  *
  * After attach(server, "notes"), it serves GET (list), GET/<id>, POST, PUT/<id>,
  * and DELETE/<id> automatically and keeps the items in memory.
+ *
+ * JSON list/item bodies are capped at OT_COAP_MAX_PAYLOAD (default 512 bytes).
+ * Oversized assemblies return 5.00 Internal Server Error instead of a truncated
+ * payload. One store may be attached per plain CoAP server.
  */
 class OThreadCoAPResourceStore {
 public:
@@ -887,9 +902,11 @@ public:
    * @param basePath Base path the store is attached to.
    * @param context  User pointer supplied to onChange().
    */
-  typedef void (*ChangeCallback)(const char *basePath, void *context);
+  using ChangeCallback = void (*)(const char *basePath, void *context);
 
+  /** @brief Construct an empty store; call @ref attach() to bind it to a server. */
   OThreadCoAPResourceStore();
+  /** @brief Detach from the server and free stored items. */
   ~OThreadCoAPResourceStore();
 
   /**
@@ -897,7 +914,7 @@ public:
    * @param server   Library global OThreadCoAPServer (not OThreadCoAPSecureServer).
    * @param basePath Collection base path without leading slash (e.g. "notes").
    * @param maxItems Maximum number of items to retain.
-   * @return true on success.
+   * @return true on success; false if another store is already attached (one store per server).
    */
   bool attach(OThreadCoAPServerClass &server, const char *basePath, size_t maxItems = 8);
 

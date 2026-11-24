@@ -34,7 +34,7 @@
 #include <functional>
 
 /** @brief Callback type invoked on each complete line of OpenThread CLI output. */
-typedef std::function<void(void)> OnReceiveCb_t;
+using OnReceiveCb_t = std::function<void(void)>;
 
 /**
  * @brief Arduino `Stream` front-end to the OpenThread command-line interface.
@@ -49,7 +49,9 @@ private:
   static bool otCLIStarted;
 
 public:
+  /** @brief Construct the CLI Stream wrapper. Prefer the global @ref OThreadCLI instance. */
   OpenThreadCLI();
+  /** @brief Destroy the wrapper and call @ref end(). */
   ~OpenThreadCLI();
 
   /** @brief true if the OpenThread CLI is running. */
@@ -92,7 +94,10 @@ public:
    */
   void onReceive(OnReceiveCb_t func);
 
-  /** @brief Initialize the OpenThread CLI layer. Call after OThread.begin(). */
+  /**
+   * @brief Initialize the OpenThread CLI layer.
+   * @note Call after @c OThread.begin() and before using CLI helpers or @ref startConsole().
+   */
   void begin();
 
   /** @brief Deinitialize the OpenThread CLI and release its resources. */
@@ -101,30 +106,43 @@ public:
   /**
    * @brief Set the transmit queue size.
    * @param tx_queue_len Size in bytes (default 256).
-   * @return The size actually applied.
+   * @return The size actually applied, or 0 on error.
    */
   size_t setTxBufferSize(size_t tx_queue_len);
 
   /**
    * @brief Set the receive queue size.
    * @param rx_queue_len Size in bytes (default 1024).
-   * @return The size actually applied.
+   * @return The size actually applied, or 0 on error.
    */
   size_t setRxBufferSize(size_t rx_queue_len);
 
-  /** @brief Stream API: write one byte to the CLI input. @return bytes written. */
-  size_t write(uint8_t);
+  /**
+   * @brief Stream API: write one byte to the CLI input.
+   * @param c Byte to write.
+   * @return Number of bytes written (1 on success, 0 on failure).
+   */
+  size_t write(uint8_t c);
 
-  /** @brief Stream API: number of response bytes available to read. */
+  /**
+   * @brief Stream API: number of response bytes available to read.
+   * @return Byte count, or -1 if the CLI is not initialized.
+   */
   int available();
 
-  /** @brief Stream API: read one response byte, or -1 if none. */
+  /**
+   * @brief Stream API: read one response byte.
+   * @return The byte, or -1 if none is available.
+   */
   int read();
 
-  /** @brief Stream API: peek at the next response byte without consuming it. */
+  /**
+   * @brief Stream API: peek at the next response byte without consuming it.
+   * @return The byte, or -1 if none is available.
+   */
   int peek();
 
-  /** @brief Stream API: flush the CLI buffers. */
+  /** @brief Stream API: wait until the CLI transmit buffer has been sent. */
   void flush();
 };
 

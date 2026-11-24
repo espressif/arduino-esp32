@@ -201,7 +201,7 @@ typedef enum {
  * @param error   OpenThread error (`OT_ERROR_NONE` on success).
  * @param context User context from @ref OThreadDNSSDClass::onServiceEvent.
  */
-typedef void (*OThreadDNSSDEventCallback)(ot_dnssd_event_t event, otError error, void *context);
+using OThreadDNSSDEventCallback = void (*)(ot_dnssd_event_t event, otError error, void *context);
 
 #if defined(CONFIG_OPENTHREAD_DNS_CLIENT) && CONFIG_OPENTHREAD_DNS_CLIENT
 /** @brief Which async discover operation finished. */
@@ -232,7 +232,7 @@ typedef enum {
  *                For host resolve: `1` if an address was stored, else `0`.
  * @param context User context from @ref OThreadDNSSDClass::onQueryEvent.
  */
-typedef void (*OThreadDNSSDQueryCallback)(ot_dnssd_query_kind_t kind, ot_dnssd_query_event_t event, otError error, int count, void *context);
+using OThreadDNSSDQueryCallback = void (*)(ot_dnssd_query_kind_t kind, ot_dnssd_query_event_t event, otError error, int count, void *context);
 #endif /* CONFIG_OPENTHREAD_DNS_CLIENT */
 
 /**
@@ -243,7 +243,9 @@ typedef void (*OThreadDNSSDQueryCallback)(ot_dnssd_query_kind_t kind, ot_dnssd_q
  */
 class OThreadDNSSDClass {
 public:
+  /** @brief Construct the DNS-SD helper. Prefer the global @ref OThreadDNSSD instance. */
   OThreadDNSSDClass();
+  /** @brief Destroy the helper; calls @ref end() if still started. */
   ~OThreadDNSSDClass();
 
   /**
@@ -263,6 +265,7 @@ public:
    *         query APIs until a later successful begin().
    */
   bool begin(const char *hostName);
+  /** @brief Arduino String overload of @ref begin(const char *). */
   bool begin(const String &hostName) {
     return begin(hostName.c_str());
   }
@@ -287,7 +290,10 @@ public:
    */
   void end();
 
-  /** @return true after a successful @ref begin and before @ref end. */
+  /**
+   * @brief Whether DNS-SD is active after a successful @ref begin.
+   * @return true after a successful @ref begin and before @ref end.
+   */
   bool started() const {
     return _started;
   }
@@ -301,8 +307,10 @@ public:
    * @brief Override instance label used for subsequent @ref addService calls.
    *
    * Default instance name is the host name from @ref begin.
+   * @param name Instance label (no domain).
    */
   void setInstanceName(const char *name);
+  /** @brief Arduino String overload of @ref setInstanceName(const char *). */
   void setInstanceName(const String &name) {
     setInstanceName(name.c_str());
   }
@@ -321,6 +329,7 @@ public:
    * (idempotent) unless a remove of that slot is still in flight.
    */
   bool addService(const char *service, const char *proto, uint16_t port);
+  /** @brief Arduino String overload of @ref addService(const char *, const char *, uint16_t). */
   bool addService(const String &service, const String &proto, uint16_t port) {
     return addService(service.c_str(), proto.c_str(), port);
   }
@@ -333,8 +342,14 @@ public:
    * Values are C strings (`strlen`); an empty value is a boolean TXT key.
    * Embedded NUL in the value is not supported. Discover getters (`txt` / `txtKey`)
    * also return `String` (NUL-terminated).
+   * @param service Service type (leading underscores optional; stripped).
+   * @param proto   Protocol (leading underscores optional; stripped).
+   * @param key     TXT key.
+   * @param value   TXT value; empty string is a boolean key.
+   * @return true if stored and queued for update; false if full, missing, or invalid.
    */
   bool addServiceTxt(const char *service, const char *proto, const char *key, const char *value);
+  /** @brief Arduino String overload of @ref addServiceTxt(const char *, const char *, const char *, const char *). */
   bool addServiceTxt(const String &service, const String &proto, const String &key, const String &value) {
     return addServiceTxt(service.c_str(), proto.c_str(), key.c_str(), value.c_str());
   }
@@ -349,12 +364,15 @@ public:
    * @return true if stored and queued for update (or already present); false if full or invalid.
    */
   bool addServiceSubtype(const char *service, const char *proto, const char *subtype);
+  /** @brief Arduino String overload of @ref addServiceSubtype(const char *, const char *, const char *). */
   bool addServiceSubtype(const String &service, const String &proto, const String &subtype) {
     return addServiceSubtype(service.c_str(), proto.c_str(), subtype.c_str());
   }
 
   /**
    * @brief Request removal of one service from the SRP server.
+   * @param service Service type (leading underscores optional; stripped).
+   * @param proto   Protocol (leading underscores optional; stripped).
    * @return true if remove was queued (or already in flight / cleared locally).
    *
    * Slot string buffers stay valid until OpenThread reports the service
@@ -363,6 +381,7 @@ public:
    * of the same type returns false until the slot is reclaimed.
    */
   bool removeService(const char *service, const char *proto);
+  /** @brief Arduino String overload of @ref removeService(const char *, const char *). */
   bool removeService(const String &service, const String &proto) {
     return removeService(service.c_str(), proto.c_str());
   }
@@ -372,6 +391,8 @@ public:
    *
    * Stays registered across @ref end / @ref begin until replaced or set to
    * `nullptr`. Do not call other OThreadDNSSD methods from the callback.
+   * @param callback Event callback, or @c nullptr to clear.
+   * @param context  Optional user pointer passed back to @p callback.
    */
   void onServiceEvent(OThreadDNSSDEventCallback callback, void *context = nullptr);
 
@@ -417,9 +438,13 @@ public:
    * After a timeout (`lastError` == `OT_ERROR_RESPONSE_TIMEOUT`) or @ref end,
    * do not rely on getters until a new query; copy what you need on return.
    *
-   * @return Number of results stored (0 on failure / none found).
+   * @param service Service type (leading underscores optional; stripped).
+   * @param proto   Protocol (leading underscores optional; stripped).
+   * @return Number of results stored (0 on failure / none found). An empty
+   *         successful browse returns 0 with @ref lastError == @c OT_ERROR_NONE.
    */
   int queryService(const char *service, const char *proto);
+  /** @brief Arduino String overload of @ref queryService(const char *, const char *). */
   int queryService(const String &service, const String &proto) {
     return queryService(service.c_str(), proto.c_str());
   }
@@ -442,6 +467,7 @@ public:
    *                 and UINT32_MAX for forever).
    */
   IPAddress queryHost(const char *host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS);
+  /** @brief Arduino String overload of @ref queryHost(const char *, uint32_t). */
   IPAddress queryHost(const String &host, uint32_t timeoutMs = OT_DNSSD_QUERY_TIMEOUT_MS) {
     return queryHost(host.c_str(), timeoutMs);
   }
@@ -454,6 +480,8 @@ public:
    * call other OThreadDNSSD methods from the callback. On
    * @ref OT_DNSSD_QUERY_DONE, copy results in `loop()`; after timeout /
    * @ref end, do not rely on getters until a new query.
+   * @param callback Discover callback, or @c nullptr to clear.
+   * @param context  Optional user pointer passed back to @p callback.
    */
   void onQueryEvent(OThreadDNSSDQueryCallback callback, void *context = nullptr);
 
@@ -463,9 +491,12 @@ public:
    * Returns immediately. Completion is reported via @ref onQueryEvent. Only one
    * discover operation (blocking or async) may be in flight.
    *
+   * @param service Service type (leading underscores optional; stripped).
+   * @param proto   Protocol (leading underscores optional; stripped).
    * @return true if the browse was started; false if busy, not started, or invalid.
    */
   bool startQueryService(const char *service, const char *proto);
+  /** @brief Arduino String overload of @ref startQueryService(const char *, const char *). */
   bool startQueryService(const String &service, const String &proto) {
     return startQueryService(service.c_str(), proto.c_str());
   }
@@ -475,14 +506,19 @@ public:
    *
    * Returns immediately. On @ref OT_DNSSD_QUERY_DONE, read @ref resolvedAddress.
    *
+   * @param host Host label or FQDN.
    * @return true if the resolve was started; false if busy, not started, or invalid.
    */
   bool startQueryHost(const char *host);
+  /** @brief Arduino String overload of @ref startQueryHost(const char *). */
   bool startQueryHost(const String &host) {
     return startQueryHost(host.c_str());
   }
 
-  /** @return true while a blocking or async discover is in flight. */
+  /**
+   * @brief Whether a blocking or async discover is in flight.
+   * @return true while a blocking or async discover is in flight.
+   */
   bool isQueryInProgress() const {
     return _queryInProgress;
   }
@@ -524,7 +560,10 @@ public:
   uint16_t port(int idx) const;
   /** @brief Number of TXT entries stored for result @p idx. */
   int numTxt(int idx) const;
-  /** @return true if result @p idx has a TXT entry with key @p key. */
+  /**
+   * @brief Whether result @p idx has a TXT entry with key @p key.
+   * @return true if result @p idx has a TXT entry with key @p key.
+   */
   bool hasTxt(int idx, const char *key) const;
   /** @brief TXT value for @p key on result @p idx (empty String if missing). */
   String txt(int idx, const char *key) const;

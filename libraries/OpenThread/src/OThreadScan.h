@@ -106,14 +106,14 @@ struct OThreadNetworkInfo {
 };
 
 /** @brief Called for each network found during discovery. */
-typedef void (*OThreadDiscoverResultCallback)(const OThreadNetworkInfo &info, void *context);
+using OThreadDiscoverResultCallback = void (*)(const OThreadNetworkInfo &info, void *context);
 
 /**
  * @brief Called when discovery finishes.
  * @param resultCount Number of networks collected, or @ref OT_DISCOVER_FAILED.
  * @param error       OpenThread error from the start request, or @c OT_ERROR_NONE on success.
  */
-typedef void (*OThreadDiscoverCompleteCallback)(int16_t resultCount, otError error, void *context);
+using OThreadDiscoverCompleteCallback = void (*)(int16_t resultCount, otError error, void *context);
 
 /**
  * @brief Discover nearby Thread networks (MLE discover).
@@ -165,10 +165,15 @@ typedef void (*OThreadDiscoverCompleteCallback)(int16_t resultCount, otError err
  */
 class OThreadScanClass {
 public:
+  /** @brief Construct the discovery helper. Prefer the global @ref OThreadScan instance. */
   OThreadScanClass();
+  /** @brief Destroy the helper and release any stored results. */
   ~OThreadScanClass();
 
-  /** @brief Set the maximum time to wait for blocking discovery or async completion. */
+  /**
+   * @brief Set the maximum time to wait for blocking discovery or async completion.
+   * @param ms Timeout in milliseconds (default @ref OT_DISCOVER_DEFAULT_TIMEOUT_MS, 30000).
+   */
   void setScanTimeout(uint32_t ms);
 
   /**
@@ -177,17 +182,24 @@ public:
    */
   void setChannel(uint8_t channel);
 
-  /** @brief Configure PAN / joiner / EUI-64 filters for the next discovery. */
+  /**
+   * @brief Configure PAN / joiner / EUI-64 filters for the next discovery.
+   * @param filters Filter set; defaults match CLI `discover` (no extra filtering).
+   */
   void setDiscoverFilters(const OThreadDiscoverFilters &filters);
 
   /**
    * @brief Register a per-network callback (optional; OpenThread streams results).
+   * @param callback Invoked for each Discovery Response, or @c nullptr to clear.
+   * @param context  Optional user pointer passed back to @p callback.
    * @note Do not call other `OThreadScan` methods from this callback.
    */
   void onResult(OThreadDiscoverResultCallback callback, void *context = nullptr);
 
   /**
    * @brief Register a completion callback (optional).
+   * @param callback Invoked when discovery finishes, or @c nullptr to clear.
+   * @param context  Optional user pointer passed back to @p callback.
    * @note Do not call other `OThreadScan` methods from this callback.
    */
   void onComplete(OThreadDiscoverCompleteCallback callback, void *context = nullptr);
@@ -213,6 +225,8 @@ public:
    * @brief Poll async discovery state.
    * @return Result count when done, @ref OT_DISCOVER_RUNNING while busy,
    *         or @ref OT_DISCOVER_FAILED on error / timeout / no scan triggered.
+   * @note Completion is reported only after the final discovery callback.
+   *       Do not treat @c otThreadIsDiscoverInProgress() as a substitute.
    */
   int16_t scanComplete();
 

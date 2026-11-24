@@ -66,7 +66,11 @@ extern const IPAddress OT_IN6ADDR_ANY;
  */
 class OThreadUDP : public UDP {
 public:
+  /**
+   * @brief Construct a closed socket. Call @ref begin() or @ref beginMulticast() to open it.
+   */
   OThreadUDP();
+  /** @brief Destroy the socket; calls @ref stop() automatically. */
   ~OThreadUDP();
 
   /** @brief true when the underlying otUdpSocket is open. */
@@ -78,9 +82,11 @@ public:
 
   /**
    * @brief Open a socket bound to a specific local address and port.
-   * @param addr Local IPv6 address to bind to.
+   * @param addr Local IPv6 address to bind to. Use @ref OT_IN6ADDR_ANY for any local address.
    * @param port Local UDP port.
    * @return 1 on success, 0 on failure.
+   * @note Binding before attach succeeds, but no traffic flows until the device
+   *       is Child / Router / Leader.
    */
   uint8_t begin(IPAddress addr, uint16_t port);
 
@@ -93,21 +99,32 @@ public:
 
   /**
    * @brief Open a socket and subscribe to an IPv6 multicast group.
+   *
+   * Internally calls @ref begin(uint16_t) then @c OThread.subscribeMulticast().
+   * @ref stop() unsubscribes symmetrically. The socket also receives unicast on
+   * the same port. Senders that only transmit to a group should use @ref begin()
+   * instead of joining.
    * @param group Multicast group to join (e.g. ff03::abcd).
    * @param port  Local UDP port.
    * @return 1 on success, 0 on failure.
    */
   uint8_t beginMulticast(IPAddress group, uint16_t port);
 
-  /** @brief Close the socket. Multicast membership is reference-counted via
-   *         OThread.subscribeMulticast() / unsubscribeMulticast(). */
+  /**
+   * @brief Close the socket.
+   *
+   * Frees any pending TX buffer, unsubscribes a group joined via
+   * @ref beginMulticast(), and closes the @c otUdpSocket. Safe to call multiple
+   * times. @c OpenThread::end() does not close application UDP sockets — call
+   * this before tearing the stack down.
+   */
   void stop();
 
   /**
    * @brief Begin composing an outgoing datagram to an address.
    * @param ip   Destination IPv6 address.
    * @param port Destination UDP port.
-   * @return 1 on success, 0 on failure.
+   * @return 1 on success, 0 if no message buffer was available.
    */
   int beginPacket(IPAddress ip, uint16_t port);
 
@@ -115,7 +132,7 @@ public:
    * @brief Begin composing an outgoing datagram to a textual IPv6 host.
    * @param host Destination IPv6 address in textual form.
    * @param port Destination UDP port.
-   * @return 1 on success, 0 on failure.
+   * @return 1 on success, 0 on failure or if @p host is not a valid IPv6 literal.
    */
   int beginPacket(const char *host, uint16_t port);
 
@@ -142,6 +159,9 @@ public:
 
   /**
    * @brief Dequeue the next received datagram for reading.
+   *
+   * Successive calls drop any unread bytes from the previous packet.
+   * If the RX queue is full when a datagram arrives, the oldest entry is dropped.
    * @return Size in bytes of the datagram, or 0 if none is available.
    */
   int parsePacket();
@@ -156,7 +176,7 @@ public:
    * @brief Read bytes from the current datagram into a buffer.
    * @param buf Destination buffer.
    * @param len Capacity of @p buf.
-   * @return Number of bytes read, or -1 if none.
+   * @return Number of bytes copied, or 0 if no packet is current.
    */
   int read(unsigned char *buf, size_t len);
 
@@ -164,7 +184,7 @@ public:
    * @brief Read bytes from the current datagram into a char buffer.
    * @param buf Destination buffer.
    * @param len Capacity of @p buf.
-   * @return Number of bytes read, or -1 if none.
+   * @return Number of bytes copied, or 0 if no packet is current.
    */
   int read(char *buf, size_t len);
 
@@ -174,10 +194,16 @@ public:
   /** @brief Discard the current received datagram. */
   void flush();
 
-  /** @brief Source IPv6 address of the datagram returned by parsePacket(). */
+  /**
+   * @brief Source IPv6 address of the datagram returned by parsePacket().
+   * @return Sender address, or @c IPAddress(IPv6) if no packet has been parsed yet.
+   */
   IPAddress remoteIP();
 
-  /** @brief Source UDP port of the datagram returned by parsePacket(). */
+  /**
+   * @brief Source UDP port of the datagram returned by parsePacket().
+   * @return Sender port, or 0 if no packet has been parsed yet.
+   */
   uint16_t remotePort();
 
 private:
