@@ -1,0 +1,57 @@
+#######################################
+# Syntax Coloring Map For Insights
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+Insights	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESPInsightsClass	KEYWORD1
+ESPInsightsMetricsClass	KEYWORD1
+ESPInsightsVariablesClass	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+addBool	KEYWORD2
+addFloat	KEYWORD2
+addInt	KEYWORD2
+addIPv4	KEYWORD2
+addMAC	KEYWORD2
+addString	KEYWORD2
+addUint	KEYWORD2
+begin	KEYWORD2
+dumpHeap	KEYWORD2
+dumpTasksStatus	KEYWORD2
+dumpWiFi	KEYWORD2
+end	KEYWORD2
+esp_diag_log_event	KEYWORD2
+event	KEYWORD2
+metrics	KEYWORD2
+nodeID	KEYWORD2
+remove	KEYWORD2
+removeAll	KEYWORD2
+send	KEYWORD2
+setBool	KEYWORD2
+setFloat	KEYWORD2
+setHeapPeriod	KEYWORD2
+setInt	KEYWORD2
+setIPv4	KEYWORD2
+setMAC	KEYWORD2
+setString	KEYWORD2
+setUint	KEYWORD2
+setWiFiPeriod	KEYWORD2
+variables	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+insightsEvent	LITERAL1

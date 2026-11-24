@@ -1,5 +1,9 @@
 #######################################
-# Syntax Coloring Map For Ultrasound
+# Syntax Coloring Map For AsyncUDP
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
 #######################################
 
 #######################################
@@ -9,51 +13,55 @@
 AsyncUDP	KEYWORD1
 AsyncUDPPacket	KEYWORD1
 AsyncUDPMessage	KEYWORD1
+AuPacketHandlerFunction	KEYWORD1
+AuPacketHandlerFunctionWithArg	KEYWORD1
+tcpip_adapter_if_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+available	KEYWORD2
+broadcast	KEYWORD2
+broadcastTo	KEYWORD2
+close	KEYWORD2
 connect	KEYWORD2
 connected	KEYWORD2
-listen	KEYWORD2
-listenMulticast	KEYWORD2
-close	KEYWORD2
-write	KEYWORD2
-space	KEYWORD2
-flush	KEYWORD2
-isBroadcast	KEYWORD2
-isMulticast	KEYWORD2
-isIPv6	KEYWORD2
-interface	KEYWORD2
-localIPv6	KEYWORD2
-remoteIPv6	KEYWORD2
-remoteMac	KEYWORD2
-send	KEYWORD2
-peek	KEYWORD2
-available	KEYWORD2
-writeTo	KEYWORD2
-broadcastTo	KEYWORD2
-sendTo	KEYWORD2
-broadcast	KEYWORD2
-onPacket	KEYWORD2
 data	KEYWORD2
+dropCount	KEYWORD2
+flush	KEYWORD2
+interface	KEYWORD2
+isBroadcast	KEYWORD2
+isIPv6	KEYWORD2
+isMulticast	KEYWORD2
+lastErr	KEYWORD2
 length	KEYWORD2
-localIP	KEYWORD2
-localPort	KEYWORD2
-remoteIP	KEYWORD2
-remotePort	KEYWORD2
+listen	KEYWORD2
 listenIP	KEYWORD2
 listenIPv6	KEYWORD2
-lastErr	KEYWORD2
-_s_recv	KEYWORD2
+listenMulticast	KEYWORD2
+localIP	KEYWORD2
+localIPv6	KEYWORD2
+localPort	KEYWORD2
+onPacket	KEYWORD2
+peek	KEYWORD2
+read	KEYWORD2
+remoteIP	KEYWORD2
+remoteIPv6	KEYWORD2
+remoteMac	KEYWORD2
+remotePort	KEYWORD2
+send	KEYWORD2
+sendTo	KEYWORD2
+space	KEYWORD2
+write	KEYWORD2
+writeTo	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
 TCPIP_ADAPTER_IF_STA	LITERAL1
-TCPIP_ADAPTER_IF_STA	LITERAL1
 TCPIP_ADAPTER_IF_AP	LITERAL1
 TCPIP_ADAPTER_IF_ETH	LITERAL1
 TCPIP_ADAPTER_IF_PPP	LITERAL1
+TCPIP_ADAPTER_IF_MAX	LITERAL1

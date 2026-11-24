@@ -1,36 +1,67 @@
 #######################################
-# Syntax Coloring Map SPI
+# Syntax Coloring Map For SPI
 #######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+SPI	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-SPI	KEYWORD1
+SPIClass	KEYWORD1
+SPISettings	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-begin	KEYWORD2
-end	KEYWORD2
-transfer	KEYWORD2
-setBitOrder	KEYWORD2
-setDataMode	KEYWORD2
-setClockDivider	KEYWORD2
 
+begin	KEYWORD2
+beginTransaction	KEYWORD2
+bus	KEYWORD2
+end	KEYWORD2
+endTransaction	KEYWORD2
+getClockDivider	KEYWORD2
+pinSS	KEYWORD2
+setBitOrder	KEYWORD2
+setClockDivider	KEYWORD2
+setDataMode	KEYWORD2
+setFrequency	KEYWORD2
+setHwCs	KEYWORD2
+setSSInvert	KEYWORD2
+transfer	KEYWORD2
+transfer16	KEYWORD2
+transfer32	KEYWORD2
+transferBits	KEYWORD2
+transferBytes	KEYWORD2
+write	KEYWORD2
+write16	KEYWORD2
+write32	KEYWORD2
+writeBytes	KEYWORD2
+writePattern	KEYWORD2
+writePixels	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
-SPI_CLOCK_DIV4	LITERAL1
-SPI_CLOCK_DIV16	LITERAL1
-SPI_CLOCK_DIV64	LITERAL1
+
+FSPI	LITERAL1
+HSPI	LITERAL1
 SPI_CLOCK_DIV128	LITERAL1
+SPI_CLOCK_DIV16	LITERAL1
 SPI_CLOCK_DIV2	LITERAL1
-SPI_CLOCK_DIV8	LITERAL1
 SPI_CLOCK_DIV32	LITERAL1
+SPI_CLOCK_DIV4	LITERAL1
 SPI_CLOCK_DIV64	LITERAL1
+SPI_CLOCK_DIV8	LITERAL1
+SPI_HAS_TRANSACTION	LITERAL1
+SPI_LSBFIRST	LITERAL1
 SPI_MODE0	LITERAL1
 SPI_MODE1	LITERAL1
 SPI_MODE2	LITERAL1
 SPI_MODE3	LITERAL1
+SPI_MSBFIRST	LITERAL1
+VSPI	LITERAL1

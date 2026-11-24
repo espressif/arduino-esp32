@@ -1,0 +1,47 @@
+#######################################
+# Syntax Coloring Map For SD_MMC
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+SD_MMC	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SDMMCFS	KEYWORD1
+sdcard_type_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setPins	KEYWORD2
+setPowerChannel	KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
+cardType	KEYWORD2
+cardSize	KEYWORD2
+totalBytes	KEYWORD2
+usedBytes	KEYWORD2
+sectorSize	KEYWORD2
+numSectors	KEYWORD2
+cardClockKHz	KEYWORD2
+cardIsDDR	KEYWORD2
+cardIsUHS1	KEYWORD2
+readRAW	KEYWORD2
+writeRAW	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+BOARD_MAX_SDMMC_FREQ	LITERAL1
+CARD_NONE	LITERAL1
+CARD_MMC	LITERAL1
+CARD_SD	LITERAL1
+CARD_SDHC	LITERAL1
+CARD_UNKNOWN	LITERAL1

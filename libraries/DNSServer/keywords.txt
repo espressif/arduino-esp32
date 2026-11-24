@@ -1,0 +1,68 @@
+#######################################
+# Syntax Coloring Map For DNSServer
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DNSClass	KEYWORD1
+DNSHeader	KEYWORD1
+DNSQuestion	KEYWORD1
+DNSRDLength	KEYWORD1
+DNSReplyCode	KEYWORD1
+DNSServer	KEYWORD1
+DNSType	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+isCaptive	KEYWORD2
+isUp	KEYWORD2
+processNextRequest	KEYWORD2
+setErrorReplyCode	KEYWORD2
+setTTL	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+DNS_CLASS_CH	LITERAL1
+DNS_CLASS_IN	LITERAL1
+DNS_DEFAULT_PORT	LITERAL1
+DNS_DEFAULT_TTL	LITERAL1
+DNS_HEADER_SIZE	LITERAL1
+DNS_MINIMAL_TTL	LITERAL1
+DNS_OFFSET_DOMAIN_NAME	LITERAL1
+DNS_OPCODE_QUERY	LITERAL1
+DNS_QR_QUERY	LITERAL1
+DNS_QR_RESPONSE	LITERAL1
+DNS_RDLENGTH_IPV4	LITERAL1
+DNS_SOA_EXPIRE	LITERAL1
+DNS_SOA_MNAME_LABEL	LITERAL1
+DNS_SOA_POSTFIX_LABEL	LITERAL1
+DNS_SOA_REFRESH	LITERAL1
+DNS_SOA_RETRY	LITERAL1
+DNS_SOA_RNAME_LABEL	LITERAL1
+DNS_SOA_SERIAL	LITERAL1
+DNS_TYPE_A	LITERAL1
+DNS_TYPE_AAAA	LITERAL1
+DNS_TYPE_DNAME	LITERAL1
+DNS_TYPE_PTR	LITERAL1
+DNS_TYPE_SOA	LITERAL1
+FormError	LITERAL1
+NoError	LITERAL1
+NonExistentDomain	LITERAL1
+NotImplemented	LITERAL1
+NXRRSet	LITERAL1
+Refused	LITERAL1
+ServerFailure	LITERAL1
+YXDomain	LITERAL1
+YXRRSet	LITERAL1

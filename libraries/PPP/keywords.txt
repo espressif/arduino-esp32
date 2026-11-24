@@ -1,0 +1,62 @@
+#######################################
+# Syntax Coloring Map For PPP
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+PPP	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PPPClass	KEYWORD1
+ppp_modem_model_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+attached	KEYWORD2
+batteryLevel	KEYWORD2
+batteryStatus	KEYWORD2
+batteryVoltage	KEYWORD2
+begin	KEYWORD2
+BER	KEYWORD2
+cmd	KEYWORD2
+end	KEYWORD2
+handle	KEYWORD2
+IMEI	KEYWORD2
+IMSI	KEYWORD2
+mode	KEYWORD2
+moduleName	KEYWORD2
+networkMode	KEYWORD2
+operatorName	KEYWORD2
+powerDown	KEYWORD2
+radioState	KEYWORD2
+reset	KEYWORD2
+RSSI	KEYWORD2
+sendAtBurst	KEYWORD2
+setApn	KEYWORD2
+setBaudrate	KEYWORD2
+setPin	KEYWORD2
+setPins	KEYWORD2
+setResetPin	KEYWORD2
+sms	KEYWORD2
+storeProfile	KEYWORD2
+sync	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+PPP_MODEM_BG96	LITERAL1
+PPP_MODEM_CUSTOM	LITERAL1
+PPP_MODEM_GENERIC	LITERAL1
+PPP_MODEM_MAX	LITERAL1
+PPP_MODEM_SIM7000	LITERAL1
+PPP_MODEM_SIM7070	LITERAL1
+PPP_MODEM_SIM7600	LITERAL1
+PPP_MODEM_SIM800	LITERAL1

@@ -1,0 +1,57 @@
+#######################################
+# Syntax Coloring Map For FS
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+File	KEYWORD1
+FS	KEYWORD1
+SeekMode	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+available	KEYWORD2
+close	KEYWORD2
+exists	KEYWORD2
+flush	KEYWORD2
+getLastWrite	KEYWORD2
+getNextFileName	KEYWORD2
+isDirectory	KEYWORD2
+mkdir	KEYWORD2
+mountpoint	KEYWORD2
+name	KEYWORD2
+open	KEYWORD2
+openNextFile	KEYWORD2
+path	KEYWORD2
+peek	KEYWORD2
+position	KEYWORD2
+read	KEYWORD2
+readBytes	KEYWORD2
+remove	KEYWORD2
+rename	KEYWORD2
+rewindDirectory	KEYWORD2
+rmdir	KEYWORD2
+seek	KEYWORD2
+seekDir	KEYWORD2
+setBufferSize	KEYWORD2
+size	KEYWORD2
+write	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+FILE_APPEND	LITERAL1
+FILE_READ	LITERAL1
+FILE_WRITE	LITERAL1
+SeekCur	LITERAL1
+SeekEnd	LITERAL1
+SeekSet	LITERAL1

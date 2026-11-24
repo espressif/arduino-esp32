@@ -1,0 +1,41 @@
+#######################################
+# Syntax Coloring Map For WiFiProv
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+WiFiProv	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+WiFiProvClass	KEYWORD1
+prov_scheme_t	KEYWORD1
+scheme_handler_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+beginProvision	KEYWORD2
+disableAutoStop	KEYWORD2
+endProvision	KEYWORD2
+initProvision	KEYWORD2
+printQR	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+NETWORK_PROV_SCHEME_BLE	LITERAL1
+NETWORK_PROV_SCHEME_HANDLER_FREE_BLE	LITERAL1
+NETWORK_PROV_SCHEME_HANDLER_FREE_BT	LITERAL1
+NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM	LITERAL1
+NETWORK_PROV_SCHEME_HANDLER_MAX	LITERAL1
+NETWORK_PROV_SCHEME_HANDLER_NONE	LITERAL1
+NETWORK_PROV_SCHEME_MAX	LITERAL1
+NETWORK_PROV_SCHEME_SOFTAP	LITERAL1
+NETWORK_PROV_SECURITY	LITERAL1

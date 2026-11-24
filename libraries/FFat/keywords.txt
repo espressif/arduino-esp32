@@ -1,0 +1,34 @@
+#######################################
+# Syntax Coloring Map For FFat
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+FFat	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+F_Fat	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+format	KEYWORD2
+totalBytes	KEYWORD2
+usedBytes	KEYWORD2
+freeBytes	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+FFAT_WIPE_QUICK	LITERAL1
+FFAT_WIPE_FULL	LITERAL1
+FFAT_PARTITION_LABEL	LITERAL1

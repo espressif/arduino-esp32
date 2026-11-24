@@ -1,5 +1,9 @@
 #######################################
-# Syntax Coloring Map NVS
+# Syntax Coloring Map For Preferences
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
 #######################################
 
 #######################################
@@ -7,10 +11,12 @@
 #######################################
 
 Preferences	KEYWORD1
+PreferenceType	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+
 begin	KEYWORD2
 end	KEYWORD2
 
@@ -49,6 +55,24 @@ getBool	KEYWORD2
 getString	KEYWORD2
 getBytes	KEYWORD2
 
+isKey	KEYWORD2
+getType	KEYWORD2
+getStringLength	KEYWORD2
+getBytesLength	KEYWORD2
+freeEntries	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+PT_I8	LITERAL1
+PT_U8	LITERAL1
+PT_I16	LITERAL1
+PT_U16	LITERAL1
+PT_I32	LITERAL1
+PT_U32	LITERAL1
+PT_I64	LITERAL1
+PT_U64	LITERAL1
+PT_STR	LITERAL1
+PT_BLOB	LITERAL1
+PT_INVALID	LITERAL1

@@ -1,0 +1,41 @@
+#######################################
+# Syntax Coloring Map For SD
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+SD	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SDFS	KEYWORD1
+sdcard_type_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+cardType	KEYWORD2
+cardSize	KEYWORD2
+numSectors	KEYWORD2
+sectorSize	KEYWORD2
+totalBytes	KEYWORD2
+usedBytes	KEYWORD2
+readRAW	KEYWORD2
+writeRAW	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+CARD_NONE	LITERAL1
+CARD_MMC	LITERAL1
+CARD_SD	LITERAL1
+CARD_SDHC	LITERAL1
+CARD_UNKNOWN	LITERAL1

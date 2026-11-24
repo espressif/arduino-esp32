@@ -3,12 +3,17 @@
 #######################################
 
 #######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+Zigbee	KEYWORD3
+
+#######################################
 # Datatypes (KEYWORD1)
 #######################################
 
 # Base Classes
 ZigbeeCore	KEYWORD1
-Zigbee	KEYWORD1
 ZigbeeEP	KEYWORD1
 
 # Endpoint Classes
@@ -60,14 +65,24 @@ ZigbeeColorMode	KEYWORD1
 ZIGBEE_DC_MEASUREMENT_TYPE	KEYWORD1
 ZIGBEE_AC_MEASUREMENT_TYPE	KEYWORD1
 ZIGBEE_AC_PHASE_TYPE	KEYWORD1
+ZigbeeColorLightRgbCallback	KEYWORD1
+ZigbeeColorLightHsvCallback	KEYWORD1
+ZigbeeColorLightTempCallback	KEYWORD1
+zb_ota_file_parser_t	KEYWORD1
+zb_ota_element_tag_id_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+# ZigbeeTypes / ZigbeeEP helpers
+esp_zb_zcl_status_to_name	KEYWORD2
+
 # ZigbeeCore
 role	KEYWORD2
 begin	KEYWORD2
+stop	KEYWORD2
+start	KEYWORD2
 initialized	KEYWORD2
 endpointsRegistered	KEYWORD2
 stackRunning	KEYWORD2
@@ -104,6 +119,7 @@ formatIEEEAddress	KEYWORD2
 formatShortAddress	KEYWORD2
 
 # Common ZigbeeEP
+isEpReady	KEYWORD2
 setVersion	KEYWORD2
 setHardwareVersion	KEYWORD2
 getEndpoint	KEYWORD2
@@ -115,6 +131,8 @@ setManualBinding	KEYWORD2
 setManufacturerAndModel	KEYWORD2
 setDeviceEnabled	KEYWORD2
 getDeviceEnabled	KEYWORD2
+setAttributePersistent	KEYWORD2
+getAttribute	KEYWORD2
 setReportingDefaultResponse	KEYWORD2
 setPowerSource	KEYWORD2
 setBatteryPercentage	KEYWORD2
@@ -126,15 +144,19 @@ onIdentify	KEYWORD2
 identifyQuery	KEYWORD2
 onIdentifyQueryResponse	KEYWORD2
 addTimeCluster	KEYWORD2
+registerTimeServer	KEYWORD2
 setTime	KEYWORD2
 setTimezone	KEYWORD2
 getTime	KEYWORD2
 getTimezone	KEYWORD2
+epAllowMultipleBinding	KEYWORD2
+epUseManualBinding	KEYWORD2
 addOTAClient	KEYWORD2
 requestOTAUpdate	KEYWORD2
 onOTAStateChange	KEYWORD2
 onOTAComplete	KEYWORD2
 addPrivilegeCommand	KEYWORD2
+sendIASZoneEnrollResponse	KEYWORD2
 onPrivilegeCommand	KEYWORD2
 onCustomClusterCommand	KEYWORD2
 clearBoundDevices	KEYWORD2
@@ -154,6 +176,7 @@ getLightLevel	KEYWORD2
 getLightRed	KEYWORD2
 getLightGreen	KEYWORD2
 getLightBlue	KEYWORD2
+getLightColor	KEYWORD2
 getLightColorTemperature	KEYWORD2
 getLightColorMode	KEYWORD2
 getLightColorHue	KEYWORD2
@@ -163,11 +186,8 @@ onLightChange	KEYWORD2
 onLightChangeRgb	KEYWORD2
 onLightChangeHsv	KEYWORD2
 onLightChangeTemp	KEYWORD2
-onLightColorChangeWithSource	KEYWORD2
 onLightLevelChange	KEYWORD2
-onLightLevelChangeWithSource	KEYWORD2
 onLightStateChange	KEYWORD2
-onLightStateChangeWithSource	KEYWORD2
 
 # ZigbeeSwitch + ZigbeeColorDimmerSwitch
 lightToggle	KEYWORD2
@@ -176,16 +196,9 @@ lightOff	KEYWORD2
 lightOffWithEffect	KEYWORD2
 lightOnWithTimedOff	KEYWORD2
 lightOnWithSceneRecall	KEYWORD2
-setLightLevel	KEYWORD2
 setLightLevelStep	KEYWORD2
-setLightColor	KEYWORD2
-getLightState	KEYWORD2
-getLightLevel	KEYWORD2
-getLightColor	KEYWORD2
 getLightColorHS	KEYWORD2
-onLightStateChange	KEYWORD2
 onLightStateChangeWithSource	KEYWORD2
-onLightLevelChange	KEYWORD2
 onLightLevelChangeWithSource	KEYWORD2
 onLightColorChange	KEYWORD2
 onLightColorChangeWithSource	KEYWORD2
@@ -216,7 +229,6 @@ setTemperature	KEYWORD2
 reportTemperature	KEYWORD2
 addHumiditySensor	KEYWORD2
 setHumidity	KEYWORD2
-setHumidityReporting	KEYWORD2
 reportHumidity	KEYWORD2
 
 # ZigbeeIlluminanceSensor
@@ -238,6 +250,7 @@ addAnalogOutput	KEYWORD2
 onAnalogOutputChange	KEYWORD2
 setAnalogInput	KEYWORD2
 setAnalogOutput	KEYWORD2
+getAnalogInput	KEYWORD2
 getAnalogOutput	KEYWORD2
 reportAnalogInput	KEYWORD2
 reportAnalogOutput	KEYWORD2
@@ -366,10 +379,15 @@ setMultistateInputStates	KEYWORD2
 setMultistateOutputApplication	KEYWORD2
 setMultistateOutputDescription	KEYWORD2
 setMultistateOutputStates	KEYWORD2
-#getMultistateInputStateNames	KEYWORD2
 getMultistateInputStateNamesLength	KEYWORD2
-#getMultistateOutputStateNames	KEYWORD2
 getMultistateOutputStateNamesLength	KEYWORD2
+
+# ZigbeeOTAFileParser
+zb_ota_file_parser_init	KEYWORD2
+zb_ota_file_parser_setup	KEYWORD2
+zb_ota_file_parser_is_element_value	KEYWORD2
+zb_ota_file_parser_process	KEYWORD2
+zb_ota_file_parser_check	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -381,10 +399,21 @@ ZIGBEE_END_DEVICE	LITERAL1
 ZIGBEE_DEFAULT_ED_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_ROUTER_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_COORDINATOR_CONFIG	LITERAL1
-ZIGBEE_DEFAULT_RADIO_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG	LITERAL1
-ZIGBEE_DEFAULT_HOST_CONFIG	LITERAL1
 ZB_ARRAY_LENGHT	LITERAL1
+ZB_SCAN_RUNNING	LITERAL1
+ZB_SCAN_FAILED	LITERAL1
+ZB_BEGIN_TIMEOUT_DEFAULT	LITERAL1
+ZB_TRANSCEIVER_ALL_CHANNELS_MASK	LITERAL1
+ZB_CMD_TIMEOUT	LITERAL1
+OTA_UPGRADE_QUERY_INTERVAL_S	LITERAL1
+ZB_MAX_NAME_LENGTH	LITERAL1
+ZB_OTA_ELEMENT_HEADER_LEN	LITERAL1
+ZB_OTA_ELEMENT_UPGRADE_IMAGE	LITERAL1
+ZB_DOOR_LOCK_MAX_PIN_LENGTH	LITERAL1
+ZB_DOOR_LOCK_MIN_PIN_LENGTH	LITERAL1
+ZB_DOOR_LOCK_DEFAULT_USERS	LITERAL1
+ZB_DOOR_LOCK_ALL_USERS	LITERAL1
 
 # ZigbeeMultistate
 ZB_MULTISTATE_APPLICATION_TYPE_0_INDEX	LITERAL1

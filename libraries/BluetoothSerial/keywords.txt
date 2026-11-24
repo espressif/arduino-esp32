@@ -3,33 +3,61 @@
 #######################################
 
 #######################################
-# Library (KEYWORD3)
+# Global Instances (KEYWORD3)
 #######################################
-
-BluetoothSerial	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
 BluetoothSerial	KEYWORD1
+DiscoveryResult	KEYWORD1
+DiscoveryHandler	KEYWORD1
+ConfirmRequestHandler	KEYWORD1
+PassKeyRequestHandler	KEYWORD1
+PassKeyDisplayHandler	KEYWORD1
+AuthCompleteHandler	KEYWORD1
+DataHandler	KEYWORD1
+PeerConnectHandler	KEYWORD1
+PeerDisconnectHandler	KEYWORD1
+PeerDataHandler	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-SerialBT	KEYWORD2
+available	KEYWORD2
+begin	KEYWORD2
+connect	KEYWORD2
+connected	KEYWORD2
+deleteAllBonds	KEYWORD2
+deleteBond	KEYWORD2
+disableSSP	KEYWORD2
+disconnect	KEYWORD2
+discover	KEYWORD2
+discoverAsync	KEYWORD2
+discoverStop	KEYWORD2
+enableSSP	KEYWORD2
+end	KEYWORD2
+flush	KEYWORD2
+getAddress	KEYWORD2
+getBondedDevices	KEYWORD2
 hasClient	KEYWORD2
+onAuthComplete	KEYWORD2
+onConfirmRequest	KEYWORD2
+onConnect	KEYWORD2
+onData	KEYWORD2
+onDisconnect	KEYWORD2
+onPassKeyDisplay	KEYWORD2
+onPassKeyRequest	KEYWORD2
+onPeerData	KEYWORD2
+peek	KEYWORD2
 peerCount	KEYWORD2
 peers	KEYWORD2
+read	KEYWORD2
+setPin	KEYWORD2
+write	KEYWORD2
 writeTo	KEYWORD2
-onConnect	KEYWORD2
-onDisconnect	KEYWORD2
-onPeerData	KEYWORD2
-onConfirmRequest	KEYWORD2
-onPassKeyRequest	KEYWORD2
-onPassKeyDisplay	KEYWORD2
-onAuthComplete	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

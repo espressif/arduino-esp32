@@ -3,10 +3,15 @@
 #######################################
 
 #######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+ESP_SR	KEYWORD3
+
+#######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-ESP_SR	KEYWORD1
 ESP_SR_Class	KEYWORD1
 sr_cmd_t	KEYWORD1
 sr_event_t	KEYWORD1
@@ -19,6 +24,8 @@ sr_cb	KEYWORD1
 #######################################
 
 onEvent	KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
 setMode	KEYWORD2
 pause	KEYWORD2
 resume	KEYWORD2
@@ -27,14 +34,18 @@ resume	KEYWORD2
 # Constants (LITERAL1)
 #######################################
 
+SR_CMD_STR_LEN_MAX	LITERAL1
 SR_EVENT_WAKEWORD	LITERAL1
 SR_EVENT_WAKEWORD_CHANNEL	LITERAL1
 SR_EVENT_COMMAND	LITERAL1
 SR_EVENT_TIMEOUT	LITERAL1
+SR_EVENT_MAX	LITERAL1
 SR_MODE_OFF	LITERAL1
 SR_MODE_WAKEWORD	LITERAL1
 SR_MODE_COMMAND	LITERAL1
 SR_MODE_MAX	LITERAL1
 SR_CHANNELS_MONO	LITERAL1
 SR_CHANNELS_STEREO	LITERAL1
+SR_CHANNELS_TRIPLE	LITERAL1
+SR_CHANNELS_QUAD	LITERAL1
 SR_CHANNELS_MAX	LITERAL1

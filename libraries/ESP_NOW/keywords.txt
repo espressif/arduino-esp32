@@ -1,0 +1,56 @@
+#######################################
+# Syntax Coloring Map For ESP_NOW
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+ESP_NOW	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESP_NOW_Class	KEYWORD1
+ESP_NOW_Peer	KEYWORD1
+ESP_NOW_Serial_Class	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+addr	KEYWORD2
+available	KEYWORD2
+availableForWrite	KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
+flush	KEYWORD2
+getChannel	KEYWORD2
+getEncryptedPeerCount	KEYWORD2
+getInterface	KEYWORD2
+getMaxDataLen	KEYWORD2
+getRate	KEYWORD2
+getTotalPeerCount	KEYWORD2
+getVersion	KEYWORD2
+isEncrypted	KEYWORD2
+onNewPeer	KEYWORD2
+onReceive	KEYWORD2
+onSent	KEYWORD2
+peek	KEYWORD2
+read	KEYWORD2
+removePeer	KEYWORD2
+setChannel	KEYWORD2
+setInterface	KEYWORD2
+setKey	KEYWORD2
+setRate	KEYWORD2
+setRxBufferSize	KEYWORD2
+setTxBufferSize	KEYWORD2
+write	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+BROADCAST_ADDR	LITERAL1
+DEFAULT_ESPNOW_RATE_CONFIG	LITERAL1

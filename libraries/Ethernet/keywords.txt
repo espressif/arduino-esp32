@@ -1,0 +1,82 @@
+#######################################
+# Syntax Coloring Map For Ethernet
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+ETH	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ETHClass	KEYWORD1
+eth_clock_mode_t	KEYWORD1
+eth_phy_type_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+addMacFilter	KEYWORD2
+addMulticastFilter	KEYWORD2
+autoNegotiation	KEYWORD2
+begin	KEYWORD2
+end	KEYWORD2
+fullDuplex	KEYWORD2
+handle	KEYWORD2
+linkSpeed	KEYWORD2
+phyAddr	KEYWORD2
+receiveAllMulticast	KEYWORD2
+removeMacFilter	KEYWORD2
+removeMulticastFilter	KEYWORD2
+setAutoNegotiation	KEYWORD2
+setFullDuplex	KEYWORD2
+setLinkSpeed	KEYWORD2
+setPollPeriod	KEYWORD2
+setTaskStackSize	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ETH_CLOCK_GPIO0_IN	LITERAL1
+ETH_CLOCK_GPIO0_OUT	LITERAL1
+ETH_CLOCK_GPIO16_OUT	LITERAL1
+ETH_CLOCK_GPIO17_OUT	LITERAL1
+ETH_PHY_ADDR_AUTO	LITERAL1
+ETH_PHY_DP83848	LITERAL1
+ETH_PHY_DM9051	LITERAL1
+ETH_PHY_GENERIC	LITERAL1
+ETH_PHY_IP101	LITERAL1
+ETH_PHY_JL1101	LITERAL1
+ETH_PHY_KSZ8041	LITERAL1
+ETH_PHY_KSZ8081	LITERAL1
+ETH_PHY_KSZ8851	LITERAL1
+ETH_PHY_LAN867X	LITERAL1
+ETH_PHY_LAN8720	LITERAL1
+ETH_PHY_MAX	LITERAL1
+ETH_PHY_RTL8201	LITERAL1
+ETH_PHY_SPI_FREQ_MHZ	LITERAL1
+ETH_PHY_TLK110	LITERAL1
+ETH_PHY_W5500	LITERAL1
+ETH_PHY_YT8531DC	LITERAL1
+ETH_RMII_CLK	LITERAL1
+ETH_RMII_CLK_IN	LITERAL1
+ETH_RMII_CRS_DV	LITERAL1
+ETH_RMII_RX0	LITERAL1
+ETH_RMII_RX1	LITERAL1
+ETH_RMII_RX1_EN	LITERAL1
+ETH_RMII_RX2	LITERAL1
+ETH_RMII_RX3	LITERAL1
+ETH_RMII_RX_CLK	LITERAL1
+ETH_RMII_RX_CTL	LITERAL1
+ETH_RMII_TX0	LITERAL1
+ETH_RMII_TX1	LITERAL1
+ETH_RMII_TX2	LITERAL1
+ETH_RMII_TX3	LITERAL1
+ETH_RMII_TX_CLK	LITERAL1
+ETH_RMII_TX_CTL	LITERAL1
+ETH_RMII_TX_EN	LITERAL1

@@ -1,6 +1,12 @@
 #######################################
-# Syntax Coloring Map For ESPNBNS
+# Syntax Coloring Map For NetBIOS
 #######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+NBNS	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
@@ -13,12 +19,7 @@ NetBIOS	KEYWORD1
 #######################################
 
 begin	KEYWORD2
-
-#######################################
-# Instances (KEYWORD2)
-#######################################
-
-NBNS	KEYWORD2
+end	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
