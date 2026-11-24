@@ -19,32 +19,79 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter rain sensor endpoint (detected / not detected).
+ *
+ * Read-only Boolean State. Fabric StateValue starts false (not detected). Call
+ * @ref setRain after endpoint @c begin(); a value set before @c Matter.begin()
+ * is cached and applied when the cluster is created.
+ */
 class MatterRainSensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter rain sensor endpoint.
+   */
   MatterRainSensor();
+  /**
+   * @brief Destroy the rain sensor endpoint object.
+   */
   ~MatterRainSensor();
-  // begin Matter Rain Sensor endpoint. Fabric StateValue starts false.
+  /**
+   * @brief Initialize the Matter rain sensor endpoint.
+   *
+   * Fabric StateValue starts false (not detected). Call @ref setRain after this.
+   *
+   * @return true if successful, false otherwise.
+   */
   bool begin();
-  // this will just stop processing Rain Sensor Matter events
+  /**
+   * @brief Stop processing Matter rain sensor events.
+   */
   void end();
 
-  // set the rain state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
+  /**
+   * @brief Set the rain detection state. Call after the endpoint @c begin().
+   *
+   * Before @c Matter.begin() the value is cached and applied when the cluster is created.
+   *
+   * @param _rainState true = detected, false = not detected.
+   * @return true if successful, false otherwise.
+   */
   bool setRain(bool _rainState);
-  // returns the rain state
+  /**
+   * @brief Get the current rain detection state.
+   * @return true if rain is detected, false if not detected.
+   */
   bool getRain() {
     return rainState;
   }
 
-  // bool conversion operator
+  /**
+   * @brief Assignment — set rain state (same as @ref setRain).
+   * @param _rainState true = detected, false = not detected.
+   */
   void operator=(bool _rainState) {
     setRain(_rainState);
   }
-  // bool conversion operator
+  /**
+   * @brief Boolean conversion — current rain detection state.
+   * @return true if detected.
+   */
   operator bool() {
     return getRain();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

@@ -19,36 +19,104 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter on/off light endpoint (basic light control without dimming or color).
+ *
+ * Simple on/off control with optional state persistence and controller callbacks.
+ * Compatible with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterOnOffLight : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter on/off light endpoint.
+   */
   MatterOnOffLight();
+  /**
+   * @brief Destroy the on/off light endpoint object.
+   */
   ~MatterOnOffLight();
-  virtual bool begin(bool initialState = false);  // default initial state is off
-  void end();                                     // this will just stop processing Light Matter events
+  /**
+   * @brief Initialize the Matter on/off light endpoint.
+   * @param initialState Initial on/off state (true = on, false = off, default false).
+   * @return true if successful, false otherwise.
+   */
+  virtual bool begin(bool initialState = false);
+  /**
+   * @brief Stop processing Matter light events.
+   *
+   * Stops processing Light Matter events but does not remove the endpoint.
+   */
+  void end();
 
-  bool setOnOff(bool newState);  // returns true if successful
-  bool getOnOff();               // returns current light state
-  bool toggle();                 // returns true if successful
+  /**
+   * @brief Set the on/off state of the light.
+   * @param newState New state (true = on, false = off).
+   * @return true if successful, false otherwise.
+   */
+  bool setOnOff(bool newState);
+  /**
+   * @brief Get the current on/off state of the light.
+   * @return true if the light is on, false if off.
+   */
+  bool getOnOff();
+  /**
+   * @brief Toggle the on/off state of the light.
+   * @return true if successful, false otherwise.
+   */
+  bool toggle();
 
-  // User Callback for whenever the Light state is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the light state changes.
+   * @param newState New on/off state (true = on, false = off).
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(bool)>;
+  /**
+   * @brief Register a callback for light state changes from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // User Callback for whenever the Light On/Off state is changed by the Matter Controller
+  /**
+   * @brief Register a callback for on/off state changes (same as @ref onChange).
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChangeOnOff(EndPointCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // used to update the state of the light using the current Matter Light internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical light state
+  /**
+   * @brief Apply the current Matter Light internal state to the accessory.
+   *
+   * Calls the registered @ref onChange callback with the current state. Set a
+   * user callback with @ref onChange to handle the physical light.
+   */
   void updateAccessory();
 
-  operator bool();             // returns current light state
-  void operator=(bool state);  // turns light on or off
+  /**
+   * @brief Boolean conversion — current on/off state of the light.
+   * @return true if the light is on.
+   */
+  operator bool();
+  /**
+   * @brief Assignment — turn the light on or off.
+   * @param state true to turn on, false to turn off.
+   */
+  void operator=(bool state);
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

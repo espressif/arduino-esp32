@@ -19,37 +19,79 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter pressure sensor endpoint (read-only reporting in hectopascals).
+ *
+ * Typical atmospheric pressure at sea level is around 1013.25 hPa.
+ * Compatible with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterPressureSensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter pressure sensor endpoint.
+   */
   MatterPressureSensor();
+  /**
+   * @brief Destroy the pressure sensor endpoint object.
+   */
   ~MatterPressureSensor();
-  // begin Matter Pressure Sensor endpoint with initial float pressure
+  /**
+   * @brief Initialize the Matter pressure sensor endpoint.
+   * @param pressure Initial pressure in hectopascals (hPa, default 0.00).
+   * @return true if successful, false otherwise.
+   * @note Typical atmospheric pressure at sea level is around 1013.25 hPa (often 950–1050 hPa).
+   */
   bool begin(double pressure = 0.00) {
     return begin(static_cast<int16_t>(pressure));
   }
-  // this will stop processing Pressure Sensor Matter events
+  /**
+   * @brief Stop processing Matter pressure sensor events.
+   */
   void end();
 
-  // set the reported raw pressure in hPa
+  /**
+   * @brief Set the reported pressure value.
+   * @param pressure Pressure in hectopascals (hPa).
+   * @return true if successful, false otherwise.
+   */
   bool setPressure(double pressure) {
     int16_t rawValue = static_cast<int16_t>(pressure);
     return setRawPressure(rawValue);
   }
-  // returns the reported float pressure in hPa
+  /**
+   * @brief Get the current reported pressure value.
+   * @return Pressure in hectopascals (hPa).
+   */
   double getPressure() {
     return (double)rawPressure;
   }
 
-  // double conversion operator
+  /**
+   * @brief Assignment — set the reported pressure.
+   * @param pressure Pressure in hectopascals (hPa).
+   */
   void operator=(double pressure) {
     setPressure(pressure);
   }
-  // double conversion operator
+  /**
+   * @brief Conversion — current reported pressure.
+   * @return Pressure in hectopascals (hPa).
+   */
   operator double() {
     return (double)getPressure();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

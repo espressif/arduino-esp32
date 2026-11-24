@@ -19,73 +19,219 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter Extended Color Light (0x010D) with RGB (HSV and XY), brightness, and color temperature.
+ *
+ * Use @ref MatterColorLight when the endpoint must not include color temperature.
+ * Arduino brightness input is 0–255; Matter CurrentLevel uses 1–254. Color
+ * temperature is 100–500 mireds (higher mireds are warmer).
+ */
 class MatterEnhancedColorLight : public MatterEndPoint {
 public:
-  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
+  /**
+   * @brief Arduino full-scale brightness input (255). Matter stores this as 254.
+   */
   static const uint8_t MAX_BRIGHTNESS = 255;
+  /**
+   * @brief Maximum color temperature in mireds (500 = warm white, about 2000 K).
+   */
   static const uint16_t MAX_COLOR_TEMPERATURE = 500;
+  /**
+   * @brief Minimum color temperature in mireds (100 = cool white, about 10000 K).
+   */
   static const uint16_t MIN_COLOR_TEMPERATURE = 100;
 
+  /**
+   * @brief Create a new Matter enhanced color light endpoint.
+   */
   MatterEnhancedColorLight();
+  /**
+   * @brief Destroy the enhanced color light endpoint object.
+   */
   ~MatterEnhancedColorLight();
-  // default initial state is off, brightness = 25 (10%), HSV(21, 216, 25), color temperature is 454 (Warm White)
+  /**
+   * @brief Initialize the Matter enhanced color light endpoint.
+   * @param initialState Initial on/off state (default false = off).
+   * @param colorHSV Initial HSV color (default HSV(21, 216, 25) = warm white).
+   * @param newBrightness Initial brightness (0–255, default 25 = 10%).
+   * @param colorTemperature Initial color temperature in mireds (100–500, default 454 = Warm White).
+   * @return true if successful, false otherwise.
+   */
   virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = {21, 216, 25}, uint8_t newBrightness = 25, uint16_t colorTemperature = 454);
-  // this will just stop processing Light Matter events
+  /**
+   * @brief Stop processing Matter light events.
+   */
   void end();
 
-  bool setOnOff(bool newState);  // returns true if successful
-  bool getOnOff();               // returns current light state
-  bool toggle();                 // returns true if successful
+  /**
+   * @brief Set the on/off state of the light.
+   * @param newState New state (true = on, false = off).
+   * @return true if successful, false otherwise.
+   */
+  bool setOnOff(bool newState);
+  /**
+   * @brief Get the current on/off state.
+   * @return true if the light is on, false if off.
+   */
+  bool getOnOff();
+  /**
+   * @brief Toggle the on/off state.
+   * @return true if successful, false otherwise.
+   */
+  bool toggle();
 
-  bool setColorTemperature(uint16_t newTemperature);  // returns true if successful
-  uint16_t getColorTemperature();                     // returns current temperature
+  /**
+   * @brief Set the color temperature.
+   * @param newTemperature Color temperature in mireds. Values outside 100–500 are clamped.
+   *                       ColorTempPhysicalMin/MaxMireds are advertised as 100/500.
+   *                       Higher mireds are warmer white; lower mireds are cooler white.
+   * @return true if successful, false otherwise.
+   */
+  bool setColorTemperature(uint16_t newTemperature);
+  /**
+   * @brief Get the current color temperature.
+   * @return Color temperature in mireds.
+   */
+  uint16_t getColorTemperature();
 
-  bool setBrightness(uint8_t newBrightness);  // returns true if successful
-  uint8_t getBrightness();                    // returns current brightness
+  /**
+   * @brief Set the brightness level.
+   * @param newBrightness Brightness (0–255). 0 clamps to 1 and 255 clamps to 254.
+   * @return true if successful, false otherwise.
+   */
+  bool setBrightness(uint8_t newBrightness);
+  /**
+   * @brief Get the current brightness level.
+   * @return Brightness level (1–254).
+   */
+  uint8_t getBrightness();
 
-  bool setColorRGB(espRgbColor_t rgbColor);  // returns true if successful
-  espRgbColor_t getColorRGB();               // returns current RGB Color
-  bool setColorHSV(espHsvColor_t hsvColor);  // returns true if successful
-  espHsvColor_t getColorHSV();               // returns current HSV Color
+  /**
+   * @brief Set the color using RGB values.
+   * @param rgbColor RGB color with red, green, and blue values (0–255 each).
+   * @return true if successful, false otherwise.
+   */
+  bool setColorRGB(espRgbColor_t rgbColor);
+  /**
+   * @brief Get the current color as RGB values.
+   * @return Current RGB color.
+   */
+  espRgbColor_t getColorRGB();
+  /**
+   * @brief Set the color using HSV values.
+   * @param hsvColor HSV color: hue (0–254, where 254 is 360°), saturation (0–254),
+   *                 and value/brightness (0–254). Do not pass degrees in the 0–360 range.
+   * @return true if successful, false otherwise.
+   */
+  bool setColorHSV(espHsvColor_t hsvColor);
+  /**
+   * @brief Get the current color as HSV values.
+   * @return Current HSV color.
+   */
+  espHsvColor_t getColorHSV();
 
-  // User Callback for whenever the Light On/Off state is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the on/off state changes.
+   * @param newState New on/off state.
+   * @return true if the change was handled successfully.
+   */
   using EndPointOnOffCB = std::function<bool(bool)>;
+  /**
+   * @brief Register a callback for on/off state changes from the Matter controller.
+   * @param onChangeCB Function to call when on/off state changes.
+   */
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // User Callback for whenever the Light brightness value [1..254] is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when brightness changes.
+   * @param newBrightness New brightness level (1–254).
+   * @return true if the change was handled successfully.
+   */
   using EndPointBrightnessCB = std::function<bool(uint8_t)>;
+  /**
+   * @brief Register a callback for brightness changes from the Matter controller.
+   * @param onChangeCB Function to call when brightness changes.
+   */
   void onChangeBrightness(EndPointBrightnessCB onChangeCB) {
     _onChangeBrightnessCB = onChangeCB;
   }
 
-  // User Callback for whenever the HSV Color value is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when HSV color changes.
+   * @param newColor New HSV color.
+   * @return true if the change was handled successfully.
+   */
   using EndPointRGBColorCB = std::function<bool(espHsvColor_t)>;
+  /**
+   * @brief Register a callback for color changes from the Matter controller.
+   * @param onChangeCB Function to call when color changes.
+   */
   void onChangeColorHSV(EndPointRGBColorCB onChangeCB) {
     _onChangeColorCB = onChangeCB;
   }
 
-  // User Callbqck for whenever the Light temperature value is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when color temperature changes.
+   * @param newTemperature New color temperature in mireds.
+   * @return true if the change was handled successfully.
+   */
   using EndPointTemperatureCB = std::function<bool(uint16_t)>;
+  /**
+   * @brief Register a callback for color temperature changes from the Matter controller.
+   * @param onChangeCB Function to call when color temperature changes.
+   */
   void onChangeColorTemperature(EndPointTemperatureCB onChangeCB) {
     _onChangeTemperatureCB = onChangeCB;
   }
 
-  // User Callback for whenever any parameter is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when any light parameter changes.
+   * @param newState New on/off state.
+   * @param newColor New HSV color.
+   * @param newBrightness New brightness level (1–254).
+   * @param newTemperature New color temperature in mireds.
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(bool, espHsvColor_t, uint8_t, uint16_t)>;
+  /**
+   * @brief Register a callback for any parameter change from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // used to update the state of the light using the current Matter Light internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical light state
+  /**
+   * @brief Apply the current Matter Light internal state to the physical light.
+   *
+   * Set a user callback with @ref onChange to handle the physical light.
+   */
   void updateAccessory();
 
-  operator bool();             // returns current on/off light state
-  void operator=(bool state);  // turns light on or off
+  /**
+   * @brief Boolean conversion — current on/off state of the light.
+   * @return true if the light is on.
+   */
+  operator bool();
+  /**
+   * @brief Assignment — turn the light on or off.
+   * @param state true to turn on, false to turn off.
+   */
+  void operator=(bool state);
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

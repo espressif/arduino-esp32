@@ -19,33 +19,76 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter temperature sensor endpoint (read-only reporting in Celsius).
+ *
+ * Stores temperature with 1/100th degree Celsius precision. Compatible with
+ * Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterTemperatureSensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter temperature sensor endpoint.
+   */
   MatterTemperatureSensor();
+  /**
+   * @brief Destroy the temperature sensor endpoint object.
+   */
   ~MatterTemperatureSensor();
-  // begin Matter Temperature Sensor endpoint with initial temperature in Celsius
-  // MeasuredValue is int16 hundredths: −327.68…327.67 °C
+  /**
+   * @brief Initialize the Matter temperature sensor endpoint.
+   * @param temperature Initial temperature in Celsius (default 0.00).
+   *                    Matter MeasuredValue is int16 hundredths (−327.68…327.67 °C).
+   * @return true if successful, false if the value is out of range or creation fails.
+   * @note The implementation stores temperature with 1/100th degree Celsius precision internally.
+   */
   bool begin(double temperature = 0.00);
-  // this will stop processing Temperature Sensor Matter events
+  /**
+   * @brief Stop processing Matter temperature sensor events.
+   */
   void end();
 
-  // set the reported temperature in Celsius (−327.68…327.67)
+  /**
+   * @brief Set the reported temperature value.
+   * @param temperature Temperature in Celsius.
+   * @return true if successful, false otherwise (including int16 overflow outside −327.68…327.67 °C).
+   * @note Temperature is stored with 1/100th degree Celsius precision.
+   */
   bool setTemperature(double temperature);
-  // returns the reported float temperature with 1/100th Celsius precision
+  /**
+   * @brief Get the current reported temperature value.
+   * @return Temperature in Celsius with 1/100th degree precision.
+   */
   double getTemperature() {
     return (double)rawTemperature / 100.0;
   }
 
-  // double conversion operator
+  /**
+   * @brief Assignment — set the reported temperature.
+   * @param temperature Temperature in Celsius.
+   */
   void operator=(double temperature) {
     setTemperature(temperature);
   }
-  // double conversion operator
+  /**
+   * @brief Conversion — current reported temperature.
+   * @return Temperature in Celsius.
+   */
   operator double() {
     return (double)getTemperature();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

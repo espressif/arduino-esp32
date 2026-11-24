@@ -19,36 +19,101 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter on/off plugin unit (power outlet / relay) endpoint.
+ *
+ * Simple on/off control for power outlets, relays, and other on/off devices.
+ * Compatible with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterOnOffPlugin : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter on/off plugin endpoint.
+   */
   MatterOnOffPlugin();
+  /**
+   * @brief Destroy the on/off plugin endpoint object.
+   */
   ~MatterOnOffPlugin();
-  virtual bool begin(bool initialState = false);  // default initial state is off
-  void end();                                     // this will just stop processing Plugin Matter events
+  /**
+   * @brief Initialize the Matter on/off plugin endpoint.
+   * @param initialState Initial on/off state (true = on, false = off, default false).
+   * @return true if successful, false otherwise.
+   */
+  virtual bool begin(bool initialState = false);
+  /**
+   * @brief Stop processing Matter plugin events.
+   */
+  void end();
 
-  bool setOnOff(bool newState);  // returns true if successful
-  bool getOnOff();               // returns current plugin state
-  bool toggle();                 // returns true if successful
+  /**
+   * @brief Set the on/off state of the plugin.
+   * @param newState New state (true = on, false = off).
+   * @return true if successful, false otherwise.
+   */
+  bool setOnOff(bool newState);
+  /**
+   * @brief Get the current on/off state of the plugin.
+   * @return true if the plugin is on, false if off.
+   */
+  bool getOnOff();
+  /**
+   * @brief Toggle the on/off state of the plugin.
+   * @return true if successful, false otherwise.
+   */
+  bool toggle();
 
-  // User Callback for whenever the Plugin state is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the plugin state changes.
+   * @param newState New on/off state (true = on, false = off).
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(bool)>;
+  /**
+   * @brief Register a callback for plugin state changes from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // User Callback for whenever the On/Off state is changed by the Matter Controller
+  /**
+   * @brief Register a callback for on/off state changes (same as @ref onChange).
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChangeOnOff(EndPointCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // used to update the state of the plugin using the current Matter Plugin internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical plugin state
+  /**
+   * @brief Apply the current Matter Plugin internal state to the accessory.
+   *
+   * Calls the registered @ref onChange callback with the current state.
+   */
   void updateAccessory();
 
-  operator bool();             // returns current plugin state
-  void operator=(bool state);  // turns plugin on or off
+  /**
+   * @brief Boolean conversion — current on/off state of the plugin.
+   * @return true if the plugin is on.
+   */
+  operator bool();
+  /**
+   * @brief Assignment — turn the plugin on or off.
+   * @param state true to turn on, false to turn off.
+   */
+  void operator=(bool state);
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:
