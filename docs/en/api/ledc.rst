@@ -12,7 +12,7 @@ generate independent waveforms, for example to drive RGB LED devices.
 
 .. warning::
 
-   **Breaking change (4.0.x):** ``ledcWrite()`` and related LEDC APIs use duty **0** … **2^resolution** (inclusive). Full on is **2^resolution**, not **(2^resolution) - 1**. Sketches that used ``ledcWrite(pin, (1 << resolution) - 1)`` for 100% duty must use ``ledcWrite(pin, 1 << resolution)`` instead. ``analogWrite()`` still uses **0** … **(2^resolution) - 1** and maps the maximum to LEDC full on. See :doc:`/migration_guides/ledc_duty_range`.
+   **Breaking change (4.0.x):** ``ledcWrite()`` and related LEDC APIs use duty **0** … **2^resolution** (inclusive). Full on is **2^resolution**, not **(2^resolution) - 1**. Sketches that used ``ledcWrite(pin, (1 << resolution) - 1)`` for 100% duty must use ``ledcWrite(pin, 1 << resolution)`` instead. ``analogWrite()`` still uses **0** … **(2^resolution) - 1** and maps the maximum to LEDC full on. See :ref:`the LEDC section of the 3.x to 4.0 migration guide <migration-ledc-duty>`.
 
 ================= ======== ====== ===================
 ESP32 SoC         Channels Groups Timers (per group)

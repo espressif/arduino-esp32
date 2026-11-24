@@ -5,32 +5,289 @@ Migration from 3.x to 4.0
 Introduction
 ------------
 
-This is a guide to highlight **breaking changes** in the API to help the migration of projects from versions 3.X to version 4.0 of the Arduino ESP32 core.
+This guide highlights **breaking changes** in the API and board defaults when migrating projects from Arduino-ESP32 **3.x** (ESP-IDF 5.x) to **4.0** (ESP-IDF 6.1).
+For the full list of changes and new features, see the `release notes <https://github.com/espressif/arduino-esp32/releases>`_.
+
+ADC
+---
+
+``analogReadMilliVolts()`` now returns ``int32_t`` instead of ``uint32_t``.
+
+* On chips other than ESP32-S31, the return value remains non-negative, so assigning it to ``uint32_t`` continues to work. Function pointers or declarations using ``uint32_t`` fail to compile.
+* On ESP32-S31, ``analogReadMilliVolts()`` returns signed millivolts (about -2000 mV to +2000 mV). ``analogRead()`` logs an error and returns ``0``; ``analogReadComparator()`` provides the raw comparator sample instead.
+* On ESP32-S31, ``analogSetAttenuation()`` and ``analogReadResolution()`` are not supported.
+
+.. code-block:: cpp
+
+    // 3.x
+    uint32_t mv = analogReadMilliVolts(pin);
+
+    // 4.0
+    int32_t mv = analogReadMilliVolts(pin);
+
+See :doc:`/api/adc`.
+
+BLE
+---
+
+The BLE library was rewritten as a stack-agnostic, handle-based API.
+
+* Static ``BLEDevice`` methods are replaced by the global ``BLE`` object (``BLE.begin()``, ``BLE.end()``, ``BLE.getAddress()``). ``#include <BLE.h>`` is the only header needed, and NimBLE/Bluedroid ``#ifdef`` guards are no longer required.
+* Factories and lookups return lightweight handles **by value** instead of pointers, so members are accessed with ``.`` rather than ``->``. Copying a handle shares ownership, and a default-constructed handle evaluates to ``false``.
+* Virtual callback classes (``BLEServerCallbacks``, ``BLECharacteristicCallbacks``, ``BLEAdvertisedDeviceCallbacks``, ...) are replaced by lambda registration (``server.onConnect(...)``, ``chr.onWrite(...)``, ``scan.onResult(...)``), with callbacks receiving ``BLEConnInfo`` instead of stack-specific structs.
+* Most methods return ``BTStatus`` instead of ``void`` or ``bool``.
+* ``createCharacteristic(uuid, BLEProperty::..., BLEPermission::...)`` requires both ``BLEProperty`` and ``BLEPermission`` arguments.
+* ``BLE2901``, ``BLE2902``, and ``BLE2904`` are replaced by ``BLEDescriptor`` factories, and Notify/Indicate characteristics create their CCCD automatically.
+* ``BLEAddress`` is replaced by ``BTAddress``, and ``std::string`` is replaced by Arduino ``String``.
+* A server is committed explicitly with ``server.start()`` after all services and characteristics are added.
+* Lifecycle verbs are uniform across ``BLE`` and ``BLEAudio``: ``begin()`` and ``end()`` manage the stack or transport, while ``start()`` and ``stop()`` control advertising, scanning, or streaming.
+
+.. code-block:: cpp
+
+    // 3.x
+    BLEDevice::init("MyDevice");
+    BLEServer *pServer = BLEDevice::createServer();
+    BLEService *pService = pServer->createService("180A");
+    pService->start();
+    BLEDevice::startAdvertising();
+
+    // 4.0
+    BTStatus status = BLE.begin("MyDevice");
+    BLEServer server = BLE.createServer();
+    BLEService service = server.createService(BLEUUID("180A"));
+    // ... create characteristics ...
+    server.start();
+    BLE.startAdvertising();
+
+For every changed signature, removed symbol, and full before/after examples, see the `BLE migration guide <https://github.com/espressif/arduino-esp32/blob/master/libraries/BLE/MIGRATION.md>`_.
+
+Bluetooth Classic (BluetoothSerial)
+-----------------------------------
+
+``BluetoothSerial`` was rewritten around ``BTStatus``, ``BTAddress``, and a non-copyable PIMPL ownership model.
+
+* Most methods return ``BTStatus`` instead of ``void`` or ``bool``, with ``status.toString()`` available for diagnostics.
+* ``connect()`` takes ``BTAddress`` instead of a raw ``uint8_t[6]`` array.
+* ``begin(localName, isInitiator)`` replaces ``begin(localName, isMaster, disableBLE)``. ``end(releaseMemory)`` releases the Bluedroid host and, when owned by the session, controller memory.
+* ``BluetoothSerial`` is move-only (copying is deleted).
+* ``onAuthComplete`` receives only ``bool``; the remote address parameter was removed.
+* Numeric Comparison uses ``onConfirmRequest()`` returning ``bool`` instead of ``confirmReply()``. Passkey Entry uses ``onPassKeyRequest()`` and ``onPassKeyDisplay()`` instead of ``onKeyRequest()`` and ``respondPasskey()``.
+* Discovery returns ``std::vector<DiscoveryResult>``, and ``discoverAsync()`` / ``discoverStop()`` replace ``BTScanResults`` and ``discoverAsyncStop()``.
+* Bond management returns ``std::vector<BTAddress>``, and ``deleteBond(address)`` / ``deleteAllBonds()`` replace ``deleteBondedDevices()``.
+* Acceptor mode supports multiple clients via ``peerCount()``, ``peers()``, ``writeTo()``, ``onPeerData()``, per-peer connect/disconnect callbacks, and ``disconnect(address)``. ``write()`` and ``read()`` keep broadcast-out / merged-in ``Stream`` behavior.
+* ``enableSSP(input, output)`` selects IO capability; ``setPin()`` applies only to legacy pairing when SSP is disabled.
+* Bluetooth Classic is available on ESP32 and ESP32-S31. On ESP32-S31, prebuilt libraries enable NimBLE only, so ``BluetoothSerial`` requires an ESP-IDF component build or rebuilt static libraries.
+
+.. code-block:: cpp
+
+    // 3.x
+    uint8_t addr[6] = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};
+    SerialBT.begin("ESP32", true);
+    SerialBT.connect(addr);
+
+    // 4.0
+    BTAddress addr("AA:BB:CC:11:22:33");
+    BTStatus status = SerialBT.begin("ESP32", true);
+    if (status) {
+      SerialBT.connect(addr);
+    }
+
+For the full method mapping and before/after sketches, see the `BluetoothSerial migration guide <https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/MIGRATION.md>`_.
+
+Boards
+------
+
+ESP32-P4 Dev Module
+*******************
+
+The generic **ESP32-P4 Dev Module** definition now targets **ESP32-P4X-Function-EV-Board v1.6** instead of **v1.4**. Because the Arduino IDE selects the first entry in each menu by default, projects built with default board options inherit new chip, CPU, and USB defaults.
+
+ESP32-P4 Core Board and third-party ESP32-P4 board definitions keep their 3.x defaults.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 22 39 39
+
+    * - Setting
+      - 3.x default
+      - 4.0 default
+    * - Chip Variant
+      - Before v3.00 (``esp32p4_es``)
+      - v3.00 or newer (``esp32p4``)
+    * - CPU frequency
+      - 360 MHz
+      - 400 MHz
+    * - USB Mode
+      - USB-OTG (TinyUSB)
+      - Hardware CDC and JTAG
+    * - USB CDC on Boot
+      - Disabled
+      - Enabled
+    * - ``Serial`` maps to
+      - ``Serial0`` (UART0)
+      - ``HWCDCSerial`` (USB Serial/JTAG)
+
+* Sketches targeting **v1.4** or pre-v3.00 silicon run at 400 MHz on the wrong chip variant and route ``Serial`` to USB Serial/JTAG instead of UART0 unless adjusted in **Tools**:
+
+  * **Chip Variant** → ``Before v3.00`` (needed for pre-v3.00 silicon and Function-EV v1.4)
+  * **USB Mode** → ``USB-OTG (TinyUSB)`` (when using TinyUSB ``Serial``)
+  * **USB CDC on Boot** → ``Disabled`` (when using UART0)
+
+* Function-EV **v1.4** includes a CP2102N USB-to-UART bridge, so UART0 output appears on USB even with CDC disabled. **v1.6** removes that bridge, so Hardware CDC and CDC on Boot are needed for ``Serial.println()`` over the USB Serial/JTAG port. ``printf()`` and ESP-IDF logs still output on that port regardless of the Arduino USB menus.
+
+See :doc:`/boards/ESP32-P4X-Function-EV-Board`.
+
+ESP-IDF
+-------
+
+Arduino-ESP32 4.0 is built on **ESP-IDF 6.1** (3.x used ESP-IDF 5.x). Projects, sketches, or third-party libraries that call ESP-IDF APIs or set IDF Kconfig options directly are subject to the `ESP-IDF 6.x migration guide <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-6.x/6.0/index.html>`_:
+
+* **Removed legacy headers and macros:** Code including removed ESP-IDF 5.x headers or macros directly (such as ``driver/adc.h``, ``driver/rmt.h``, ``driver/i2s.h``, ``driver/timer.h``, ``driver/pcnt.h``, ``driver/mcpwm.h``, ``driver/dac.h``, ``driver/sigmadelta.h``, ``esp_spiram.h``, ``esp_spi_flash.h``, ``sntp.h``, ``esp_ping.h``, ``EXT_RAM_ATTR``, ``vTaskDelayUntil()``, or ``esp_deep_sleep_enable_gpio_wakeup()``) fails to compile.
+* **Kconfig and component changes:** ``CONFIG_ESP_WIFI_REMOTE_ENABLED`` was replaced by ``CONFIG_ESP_HOSTED_ENABLED`` for ESP32-P4 hosted Wi-Fi / BLE, and Zigbee no longer uses ``esp-zboss-lib`` (replaced by ``esp-zigbee-lib`` 2.x).
+
+HTTPClient
+----------
+
+``HTTPClient::begin("https://...")`` no longer skips certificate verification when no CA certificate is given. In 4.0, unconfigured HTTPS requests fail with ``HTTPC_ERROR_CONNECTION_REFUSED``.
+
+Before calling ``begin()``, a trust anchor or explicit opt-out is needed:
+
+* Passing a CA PEM certificate to ``begin(url, CAcert)`` verifies against that certificate.
+* Calling ``useBuiltinCACertBundle()`` verifies against the Mozilla CA bundle (adds about 70 KB of flash).
+* Calling ``setInsecure()`` restores 3.x behavior and skips validation.
+
+Additional notes:
+
+* Certificate validity checks require a synchronized system clock (for example via ``configTime()``) before making HTTPS requests.
+* ``HTTPClient::useBuiltinCACertBundle()`` and ``HTTPClient::setInsecure()`` apply only to the internal client. A user-supplied ``NetworkClientSecure`` needs to be configured directly before it is passed to ``begin()``.
+
+.. code-block:: cpp
+
+    // 3.x — verification skipped when no CA was provided
+    http.begin("https://example.com/");
+
+    // 4.0 — verify using the built-in CA bundle
+    http.useBuiltinCACertBundle();
+    http.begin("https://example.com/");
+
+    // 4.0 — explicitly skip verification (matches 3.x)
+    http.setInsecure();
+    http.begin("https://192.168.1.1/");
+
+.. _migration-ledc-duty:
+
+LEDC
+----
+
+LEDC duty functions now match **ESP-IDF**: the valid range for ``ledcWrite()``, ``ledcWriteChannel()``, and ``ledcFade*()`` is ``[0, 2^resolution]`` (inclusive), so full on is ``2^resolution`` instead of ``2^resolution - 1``.
+
+``analogWrite()`` keeps the Arduino range ``[0, 2^resolution - 1]`` and maps full brightness to ``2^resolution`` internally.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 28 36 36
+
+    * - API
+      - Valid ``value`` / ``duty``
+      - Full on
+    * - ``ledcWrite()``, ``ledcWriteChannel()``, ``ledcFade*()``
+      - ``0`` … ``2^resolution`` (inclusive)
+      - ``1 << resolution``
+    * - ``analogWrite()``
+      - ``0`` … ``(2^resolution) - 1`` (non-negative)
+      - ``(1 << resolution) - 1`` (mapped internally)
+
+* Calls to ``ledcWrite()``, ``ledcWriteChannel()``, and ``ledcFade*()`` that used ``255``, ``4095``, or ``(1 << resolution) - 1`` for 100% duty now leave the signal one step below full on (for example, 255/256 at 8-bit) and need ``1 << resolution`` instead (``256`` at 8-bit, ``4096`` at 12-bit).
+* Values above ``2^resolution`` are clamped to full on.
+* Negative ``analogWrite()`` values are ignored instead of wrapping to full on. On a pin not yet attached through ``analogWrite()``, LEDC is not attached.
+
+.. code-block:: cpp
+
+    // 3.x — 255 treated as 100% at 8-bit
+    ledcAttach(pin, 5000, 8);
+    ledcWrite(pin, 255);
+
+    // 4.0 — 256 (2^8) is 100% for LEDC; analogWrite() still uses 255
+    ledcAttach(pin, 5000, 8);
+    ledcWrite(pin, 256);
+
+See :doc:`/api/ledc`.
+
+Matter
+------
+
+``MatterOccupancySensor::setHoldTime()`` and ``MatterOccupancySensor::setHoldTimeLimits()`` now need to be called **after** the endpoint ``begin()`` and **before** ``Matter.begin()``.
+
+* Calling them only after ``Matter.begin()`` no longer creates the HoldTime attributes on the Occupancy Sensing cluster.
+* Once ``Matter.begin()`` has run, those methods only update a cluster whose HoldTime feature was already enabled.
+
+.. code-block:: cpp
+
+    // 3.x
+    OccupancySensor.begin();
+    Matter.begin();
+    OccupancySensor.setHoldTimeLimits(1, 3600, 30);
+    OccupancySensor.setHoldTime(30);
+
+    // 4.0
+    OccupancySensor.begin();
+    OccupancySensor.setHoldTimeLimits(1, 3600, 30);
+    OccupancySensor.setHoldTime(30);
+    Matter.begin();
+
+NetworkClientSecure
+-------------------
+
+``NetworkClientSecure`` now runs on **Mbed TLS 4.0** (PSA Crypto), which removes legacy TLS cipher suites, small elliptic curves, and legacy ``mbedtls_*`` cryptography functions.
+
+* Finite-field DHE and non-forward-secret ``TLS_RSA_*`` key exchanges are removed, so connections to legacy TLS 1.2 servers that only offer those suites fail.
+* Elliptic curves smaller than 250 bits (such as ``secp192r1`` and ``secp224r1``) are no longer supported in TLS handshakes or X.509 certificates.
+* Legacy cryptography APIs (such as ``mbedtls_sha256_*()``, ``mbedtls_aes_*()``, ``mbedtls_entropy_*()``, and ``mbedtls_ctr_drbg_*()``) were removed. Sketches or third-party libraries that call them directly fail to compile and need Arduino's ``Hash`` library or PSA Crypto (``<psa/crypto.h>`` with ``psa_crypto_init()``).
+
+SD_MMC
+------
+
+On SoCs with UHS-I support (**ESP32-P4** and **ESP32-S31**), ``SD_MMC.begin()`` now defaults to **SDR50 (100 MHz)** instead of high speed (**40 MHz**). Other targets still default to 40 MHz.
+
+* If the card does not switch to 1.8 V, LDO setup fails, or initialization succeeds without UHS, ``begin()`` automatically retries at 40 MHz.
+* ESP32-P4 enables UHS only when ``BOARD_SDMMC_POWER_CHANNEL`` (defined by official P4 variants) or ``setPowerChannel()`` selects the 1.8 V LDO channel. ESP32-S31 uses on-chip LDO channel 1 (shared with PSRAM).
+* Passing ``SDMMC_FREQ_HIGHSPEED`` to ``begin()``, or defining ``BOARD_MAX_SDMMC_FREQ`` as ``SDMMC_FREQ_HIGHSPEED`` in ``pins_arduino.h`` or ``build_opt.h``, keeps the 3.x 40 MHz default.
+
+.. code-block:: cpp
+
+    // 3.x — defaulted to 40 MHz
+    SD_MMC.begin("/sdcard");
+
+    // 4.0 — defaults to SDR50 (100 MHz) on P4/S31; pass 40 MHz explicitly to match 3.x
+    SD_MMC.begin("/sdcard", false, false, SDMMC_FREQ_HIGHSPEED);
+
+TFLiteMicro
+-----------
+
+The bundled ``TFLiteMicro`` library was removed from Arduino-ESP32 in 4.0. Sketches that use TensorFlow Lite Micro need an external library such as `esp-tflite-micro <https://github.com/espressif/esp-tflite-micro>`_.
+
+Toolchain
+---------
+
+Arduino-ESP32 4.0 upgrades the compiler to **GCC 15.1.0**, compiles C files in **C23** mode (``-std=gnu23``), and enables stricter linker checks.
+
+* **C23 rules in ``.c`` files:** ``bool``, ``true``, and ``false`` are reserved keywords, and empty parameter lists such as ``void func()`` mean ``void func(void)``. Legacy C files in third-party libraries that redefine ``bool`` or pass arguments to unprototyped functions fail to compile.
+* **Stricter C++ template and diagnostic checks:** GCC 15 diagnoses errors inside uninstantiated templates (``-Wtemplate-body``) and adds warnings such as ``-Wunterminated-string-initialization``, ``-Wheader-guard``, and ``-Wdangling-reference``.
+* **Orphan linker sections:** Unplaced sections now cause a linker error (``-Wl,--orphan-handling=error``). Sketches or libraries defining custom sections need a linker fragment that places them.
+* **Global constructor order:** Global C++ constructors and ``__attribute__((constructor))`` functions now run in ascending order on both Xtensa and RISC-V targets.
 
 WebServer
 ---------
 
-Server-Sent Events (SSE) state moved from the client to the server
-*******************************************************************
+``WebServer`` moved Server-Sent Events (SSE) ownership from ``NetworkClient`` to ``WebServer`` and added bounds on request parsing and regex routing.
 
-The SSE hold marker is a directive to the server ("do not close this connection"), not a property of the TCP socket, so it is now owned by
-``WebServer`` instead of ``NetworkClient``. The marker is reset for every new connection and is independent of which client wrapper is used
-to reach the connection.
+Server-Sent Events (SSE)
+************************
 
-Deprecated APIs (still functional, removal planned for 5.0)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The SSE hold state is now stored on ``WebServer`` instead of ``NetworkClient`` and resets on every new connection.
 
-* ``NetworkClient::setSSE`` — use ``WebServer::enableSSE()`` instead.
-* ``NetworkClient::isSSE`` — use ``WebServer::isSSE()`` instead. Note that ``NetworkClient::isSSE()`` only reflects the legacy marker, while ``WebServer::isSSE()`` reflects both.
-
-New APIs
-^^^^^^^^
-
-* ``WebServer::enableSSE`` — call it from the request handler to keep the connection open as an SSE stream (replaces ``server.client().setSSE(true)``).
-* ``WebServer::isSSE`` — query whether the current connection is a held SSE stream (replaces ``server.client().isSSE()``).
-
-Migration example
-^^^^^^^^^^^^^^^^^
+* ``NetworkClient::setSSE()`` is deprecated (removal planned for 5.0); ``WebServer::enableSSE()`` replaces it.
+* ``NetworkClient::isSSE()`` is deprecated (removal planned for 5.0) and reflects only the legacy marker; ``WebServer::isSSE()`` reflects both.
 
 .. code-block:: cpp
 
@@ -39,7 +296,6 @@ Migration example
       server.client().setSSE(true);
       server.setContentLength(CONTENT_LENGTH_UNKNOWN);
       server.send(200, "text/event-stream", "");
-      // then push "data: ...\n\n" lines from loop() via server.client()
     });
 
     // 4.0
@@ -47,5 +303,322 @@ Migration example
       server.enableSSE();
       server.setContentLength(CONTENT_LENGTH_UNKNOWN);
       server.send(200, "text/event-stream", "");
-      // then push "data: ...\n\n" lines from loop() via server.client()
     });
+
+Request Limits
+**************
+
+Requests that exceed protocol size, count, or time bounds are rejected instead of being parsed without limits. Standard browsers and common HTTP clients are unaffected.
+
+Every limit is an ``#ifndef``-guarded macro that can be overridden in ``build_opt.h`` or platform build flags (for example, ``-DWEBSERVER_MAX_URI_LEN=8192``).
+
+.. list-table::
+    :header-rows: 1
+    :widths: 34 12 54
+
+    * - Macro
+      - Default
+      - Effect when exceeded
+    * - ``WEBSERVER_MAX_URI_LEN``
+      - 2048
+      - Responds with ``414 URI Too Long`` and closes the connection. Setting ``0`` disables the check.
+    * - ``WEBSERVER_MAX_LINE_LEN``
+      - 4096
+      - Rejects a request line (``414``), header line (``431``), or multipart part header.
+    * - ``WEBSERVER_MAX_POST_ARG_LEN``
+      - 16384
+      - Rejects a non-file multipart field line and aborts the request.
+    * - ``WEBSERVER_MAX_LINE_WAIT``
+      - 5000 ms
+      - Responds with ``408 Request Timeout`` if a protocol line stalls. Setting ``0`` disables the timeout.
+    * - ``WEBSERVER_MAX_HEADER_WAIT``
+      - 10000 ms
+      - Responds with ``408 Request Timeout`` if the request line and headers together exceed the deadline. Setting ``0`` disables the timeout.
+    * - ``WEBSERVER_DIGEST_NONCE_TTL``
+      - 300000 ms
+      - Lifetime of a signed Digest nonce. Setting ``0`` disables expiry.
+    * - ``WEBSERVER_MAX_QUERY_ARGS``
+      - 256
+      - Drops excess arguments with a log warning while still handling the request.
+    * - ``WEBSERVER_MAX_MULTIPART_SKIP_LINES``
+      - 64
+      - Treats the multipart body as malformed and aborts the upload.
+    * - ``WEBSERVER_MAX_REGEX_URI_LEN``
+      - 2048
+      - Skips matching the request-target against ``UriRegex`` routes.
+    * - ``WEBSERVER_MAX_BACKREF_REGEX_URI_LEN``
+      - 64
+      - Skips matching against ``UriRegex`` patterns that contain a back-reference.
+
+* ``WebServer`` can now return three new status codes: ``408 Request Timeout``, ``414 URI Too Long``, and ``431 Request Header Fields Too Large``.
+* Raising limits in ``build_opt.h`` (such as ``-DWEBSERVER_MAX_URI_LEN=0``) restores the previous unbounded memory and time exposure for those paths.
+* The dot-segment check in ``serveStatic()``, ``Basic`` / ``Digest`` scheme validation, Digest nonce signing, and per-request state resets are always enabled and cannot be disabled.
+
+Authentication
+**************
+
+* ``authenticate(username, password)`` now accepts only ``Basic`` and ``Digest`` schemes; bare ``Authorization: <username>`` headers are rejected. Custom ``authenticate()`` callbacks still receive ``OTHER_AUTH``.
+* Digest authentication issues per-challenge signed nonces valid for ``WEBSERVER_DIGEST_NONCE_TTL`` instead of a single server-wide nonce. Correct responses to expired or unknown nonces receive ``stale=true`` (:rfc:`7616`) so clients retry transparently.
+* The Digest ``uri`` parameter is checked against the full request-target including query parameters.
+* Setting ``-DWEBSERVER_DIGEST_AUTH=0`` in ``build_opt.h`` strips Digest crypto code (about 9–11 KB of flash). ``Basic`` and custom ``OTHER_AUTH`` callbacks continue to work; Digest headers are rejected, and ``requestAuthentication(DIGEST_AUTH)`` logs an error and returns ``403 Forbidden`` instead of falling back to ``Basic``.
+
+serveStatic()
+*************
+
+.. vale off
+
+* Request paths containing literal or percent-encoded ``.`` or ``..`` segments are rejected, and resolved paths must remain under the configured filesystem root. Requests need to use canonical paths rather than relying on ``..`` resolution.
+
+.. vale on
+
+* ``serveStatic("/", fs, "/")`` now works instead of returning ``404``.
+
+Request Line, Headers, and Arguments
+************************************
+
+* Request and header lines use a bounded reader instead of ``Stream::readStringUntil()``. Oversized request lines return ``414``, oversized headers return ``431``, and unread request bytes are drained before closing.
+* Both ``WEBSERVER_MAX_LINE_WAIT`` and ``WEBSERVER_MAX_HEADER_WAIT`` apply to headers and return ``408`` on timeout, preventing slow-loris stalls (fixes `issue #12788 <https://github.com/espressif/arduino-esp32/issues/12788>`_). Request bodies are exempt from ``WEBSERVER_MAX_HEADER_WAIT``.
+* Query and form argument arrays count parsed ``key=value`` pairs rather than ``&`` separators. Separator-only strings like ``&&&&`` now produce zero arguments, and arguments past ``WEBSERVER_MAX_QUERY_ARGS`` are dropped.
+* Argument arrays allocate with ``std::nothrow``; on allocation failure, ``args()`` returns ``0`` and ``arg()`` returns an empty string instead of aborting.
+
+Multipart Bodies, Per-Request State, and upload() / raw()
+*********************************************************
+
+* Multipart preamble/epilogue skipping stops at ``WEBSERVER_MAX_MULTIPART_SKIP_LINES`` or after ``HTTP_MAX_POST_WAIT`` with no data. Truncated bodies after a boundary abort instead of looping.
+* Exceeding ``WEBSERVER_MAX_POST_ARGS`` invokes the upload callback with ``UPLOAD_FILE_ABORTED`` before failing.
+* Non-file multipart field values are bounded per line by ``WEBSERVER_MAX_POST_ARG_LEN`` and ``WEBSERVER_MAX_LINE_WAIT``.
+* Upload state, raw-body state, and parsed arguments reset at the start of every request. Reading ``upload()`` or ``arg()`` outside the matching request handler now returns empty state.
+* Calling ``upload()`` during a raw request or ``raw()`` during a multipart upload no longer dereferences a null pointer; both return an inactive object with status ``UPLOAD_FILE_ABORTED`` or ``RAW_ABORTED``. ``hasUpload()`` and ``hasRaw()`` distinguish the two states.
+
+.. code-block:: cpp
+
+    server.on(
+      "/data", HTTP_POST, []() { server.send(200); },
+      []() {
+        if (server.hasUpload()) {
+          HTTPUpload &upload = server.upload();
+          // multipart upload
+        } else if (server.hasRaw()) {
+          HTTPRaw &raw = server.raw();
+          // raw body
+        }
+      }
+    );
+
+Regular Expression Routes
+*************************
+
+``UriRegex`` now uses the bounded standard-library matcher (when provided by libstdc++) instead of the recursive matcher.
+
+* Stack usage stays constant (~2.5 KB) regardless of target length and avoids exponential backtracking on nested quantifiers.
+* Patterns containing back-references (``\1``–``\9``) fall back to the recursive matcher and are capped by ``WEBSERVER_MAX_BACKREF_REGEX_URI_LEN`` (64).
+* Bounded matching is slower (~0.6 ms for short paths, ~26 us/char on longer targets) and allocates pending states on the heap (~3 bytes per target character; allocation failure returns ``404``).
+* Request-targets longer than the applicable limit log an error and skip ``UriRegex`` matching; plain string routes still match first.
+
+WiFiProv
+--------
+
+Prebuilt Arduino-ESP32 4.0 libraries disable Protocomm Security 0 and Security 1 (``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_0`` and ``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1`` are off). Only **Security 2** (``NETWORK_PROV_SECURITY_2``) is enabled by default.
+
+* Sketches that pass ``NETWORK_PROV_SECURITY_0`` or ``NETWORK_PROV_SECURITY_1`` explicitly to ``WiFiProv.beginProvision()`` fail at runtime when using prebuilt libraries.
+* ``NETWORK_PROV_SECURITY`` (the default ``security`` argument) selects ``NETWORK_PROV_SECURITY_2`` and requires a provisioning client app that supports Security 2 (SRP6a).
+* Security 0 or Security 1 remains available when building Arduino as an ESP-IDF component with the corresponding ``CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_*`` Kconfig option enabled.
+
+Zigbee
+------
+
+The Zigbee library now uses **ESP Zigbee SDK 2.x** (native Espressif stack). Endpoint helpers (``setTemperature()``, ``lightOn()``, etc.) keep the same names, while IEEE address overloads now take ``const uint8_t *`` (``uint8_t[8]`` still decays).
+
+Startup and Role Configuration
+******************************
+
+``Zigbee.begin(role)`` and ``Zigbee.begin(&config)`` were removed. In 4.0, ``Zigbee.role()`` initializes the role before endpoints are configured and added, and ``Zigbee.begin()`` takes no arguments and no longer defaults to an end device.
+
+Initialization order:
+
+1. ``setRadioConfig()`` and ``setPrimaryChannelMask()`` (if used).
+2. ``Zigbee.role(role)`` or ``Zigbee.role(&config, erase_nvs)``.
+3. Endpoint setup (``setManufacturerAndModel()``, ``setMinMaxValue()``, ``addTimeCluster()``, ``addOTAClient()``, ...). These return ``false`` before ``role()`` runs.
+4. ``Zigbee.addEndpoint()``.
+5. ``Zigbee.begin()``.
+
+.. code-block:: cpp
+
+    // 3.x — end device (begin() defaulted to ZIGBEE_END_DEVICE)
+    zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+    Zigbee.addEndpoint(&zbTempSensor);
+    Zigbee.begin();
+
+    // 4.0
+    Zigbee.role(ZIGBEE_END_DEVICE);
+    zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+    Zigbee.addEndpoint(&zbTempSensor);
+    Zigbee.begin();
+
+.. code-block:: cpp
+
+    // 3.x — router or coordinator
+    Zigbee.addEndpoint(&zbExtender);
+    Zigbee.begin(ZIGBEE_ROUTER);
+
+    // 4.0
+    Zigbee.role(ZIGBEE_ROUTER);
+    Zigbee.addEndpoint(&zbExtender);
+    Zigbee.begin();
+
+Custom role structs and enums also changed:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 50 50
+
+    * - 3.x
+      - 4.0
+    * - ``esp_zb_cfg_t``
+      - ``esp_zigbee_device_config_t``
+    * - ``.esp_zb_role``
+      - ``.device_type``
+    * - ``.nwk_cfg.zed_cfg``
+      - ``.zed_config``
+    * - ``.nwk_cfg.zczr_cfg``
+      - ``.zczr_config``
+    * - ``ESP_ZB_DEVICE_TYPE_ED``
+      - ``EZB_NWK_DEVICE_TYPE_END_DEVICE``
+    * - ``ESP_ZB_DEVICE_TYPE_ROUTER``
+      - ``EZB_NWK_DEVICE_TYPE_ROUTER``
+    * - ``ESP_ZB_DEVICE_TYPE_COORDINATOR``
+      - ``EZB_NWK_DEVICE_TYPE_COORDINATOR``
+    * - ``ESP_ZB_ED_AGING_TIMEOUT_*``
+      - ``EZB_NWK_ED_TIMEOUT_*``
+
+.. code-block:: cpp
+
+    // 3.x
+    esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+    zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
+    Zigbee.begin(&zigbeeConfig, false);
+
+    // 4.0
+    esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+    zigbeeConfig.zed_config.keep_alive = 10000;
+    Zigbee.role(&zigbeeConfig, false);
+    Zigbee.begin();
+
+Network Storage
+***************
+
+Zigbee network state now lives in the default ``nvs`` partition (namespace ``zigbee``), and the ``zb_storage`` partition was removed from Zigbee partition schemes (space returned to ``spiffs``).
+
+* Devices upgraded from 3.x in place do not keep their existing network; a flash erase (``Tools -> Erase All Flash Before Sketch Upload``) or ``Zigbee.factoryReset()`` is needed.
+* ``Zigbee.role(role, true)`` erases only the ``zigbee`` NVS namespace without clearing Wi-Fi credentials or ``Preferences``.
+
+Removed APIs
+************
+
+* ``ZigbeeCore::setHostConfig`` / ``ZigbeeCore::getHostConfig``
+* ``ZigbeeEP::setEpConfig``
+
+Radio Configuration
+*******************
+
+* ``setRadioConfig()`` and ``getRadioConfig()`` take ``esp_zigbee_radio_config_t`` (was ``esp_zb_radio_config_t``), and ``setRadioConfig()`` needs to run before ``Zigbee.role()``.
+* ``ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()`` uses ``ESP_ZIGBEE_RADIO_MODE_UART_RCP`` (was ``ZB_RADIO_MODE_UART_RCP``).
+
+Scan Results
+************
+
+* ``scanNetworks()`` default channel mask macro is ``ZB_TRANSCEIVER_ALL_CHANNELS_MASK`` (was ``ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK``; value unchanged: ``0x07FFF800``).
+* ``zigbee_scan_result_t`` is now ``ezb_nwk_active_scan_result_t``. 4.0 also adds ``lqa``, ``rssi``, ``shortaddr``, ``channel_page``, and ``nwk_update_id``.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 40 60
+
+    * - 3.x
+      - 4.0
+    * - ``short_pan_id``
+      - ``panid``
+    * - ``logic_channel``
+      - ``channel_number``
+    * - ``permit_joining``
+      - ``permit_join``
+    * - ``router_capacity``
+      - ``router_capacity``
+    * - ``end_device_capacity``
+      - ``enddev_capacity``
+    * - ``extended_pan_id[i]``
+      - ``extpanid.u8[i]``
+
+.. code-block:: cpp
+
+    // 3.x
+    Serial.printf("0x%04x", scan_result[i].short_pan_id);
+    Serial.printf("%2u", scan_result[i].logic_channel);
+    scan_result[i].permit_joining ? "Yes" : "No";
+    scan_result[i].extended_pan_id[7];
+
+    // 4.0
+    Serial.printf("0x%04x", scan_result[i].panid);
+    Serial.printf("%2u", scan_result[i].channel_number);
+    scan_result[i].permit_join ? "Yes" : "No";
+    scan_result[i].extpanid.u8[7];
+
+SDK Types in Callbacks
+**********************
+
+ESP Zigbee SDK 1.x types and ``ESP_ZB_ZCL_CLUSTER_ID_*`` macros are replaced by SDK 2.x types and ``EZB_ZCL_CLUSTER_ID_*`` (numeric IDs are unchanged).
+
+* ``onDefaultResponse`` and ``onGlobalDefaultResponse`` use ``ezb_zcl_status_t``.
+* Address-bearing callbacks (such as ``onLightStateChangeWithSource`` and ``onTempReceiveWithSource``) use ``ezb_address_t``.
+* ``formatIEEEAddress()`` takes ``const uint8_t *``, and ``zb_device_params_t.ieee_addr`` is ``uint8_t[8]``.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 55 45
+
+    * - 3.x
+      - 4.0
+    * - ``esp_zb_zcl_status_t``
+      - ``ezb_zcl_status_t``
+    * - ``esp_zb_zcl_addr_t``
+      - ``ezb_address_t``
+    * - ``esp_zb_ieee_addr_t``
+      - ``const uint8_t *`` (or ``uint8_t[8]``)
+    * - ``esp_zb_zcl_privilege_command_message_t``
+      - ``ezb_zcl_manuf_spec_cmd_message_t``
+    * - ``esp_zb_zcl_custom_cluster_command_message_t``
+      - ``ezb_zcl_manuf_spec_cmd_message_t``
+    * - ``ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS``
+      - ``EZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS``
+
+Privilege and manufacturer-specific commands share ``ezb_zcl_manuf_spec_cmd_message_t``:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 55 45
+
+    * - 3.x
+      - 4.0
+    * - ``message->info.cluster``
+      - ``message->info.cluster_id``
+    * - ``message->info.command.id``
+      - ``message->in.header->cmd_id``
+    * - ``message->info.src_endpoint``
+      - ``message->in.header->src_ep``
+    * - ``message->info.src_address.u.short_addr``
+      - ``message->in.header->src_addr.u.short_addr``
+    * - ``message->size`` / ``message->data``
+      - ``message->in.payload_size`` / ``message->in.payload``
+
+OTA Image Block Size
+********************
+
+``addOTAClient()`` now defaults ``max_data_size`` to **48** instead of **223**. Espressif ``ota_server`` requires passing ``223`` explicitly.
+
+.. code-block:: cpp
+
+    // 3.x — 223 was the default
+    zbEp.addOTAClient(fileVersion, 0xFFFFFFFF, hwVersion, 0x1001, 0x1011);
+
+    // 4.0 — pass 223 explicitly for Espressif ota_server (default is 48)
+    zbEp.addOTAClient(fileVersion, 0xFFFFFFFF, hwVersion, 0x1001, 0x1011, 223);
