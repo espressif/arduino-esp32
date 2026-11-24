@@ -22,22 +22,41 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief Smart power outlet endpoint for remote on/off control (Zigbee HA).
+ */
 class ZigbeePowerOutlet : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee power outlet endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeePowerOutlet(uint8_t endpoint);
   ~ZigbeePowerOutlet() {}
 
-  // Use to set a cb function to be called on outlet change
+  /**
+   * @brief Set a callback invoked when the power outlet state changes.
+   * @param callback Function called with the new power state (true = on).
+   */
   void onPowerOutletChange(void (*callback)(bool)) {
     _on_state_change = callback;
   }
-  // Use to restore outlet state
+  /**
+   * @brief Restore the power outlet state and trigger any registered callbacks.
+   */
   void restoreState() {
     stateChanged();
   }
-  // Use to control outlet state
+  /**
+   * @brief Set the power outlet state (on or off).
+   * @param state true to turn on, false to turn off.
+   * @return true if successful.
+   */
   bool setState(bool state);
-  // Use to get outlet state
+  /**
+   * @brief Get the current power outlet state.
+   * @return true if on, false if off.
+   */
   bool getPowerOutletState() {
     return _current_state;
   }

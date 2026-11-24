@@ -23,18 +23,38 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/occupancy_sensing_desc.h"
 
+/**
+ * @brief Occupancy sensor endpoint for presence detection (Zigbee HA).
+ *
+ * Supports occupied/unoccupied reporting and multiple sensor types (PIR, ultrasonic, etc.).
+ */
 class ZigbeeOccupancySensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee occupancy sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeOccupancySensor(uint8_t endpoint);
   ~ZigbeeOccupancySensor() {}
 
-  // Set the occupancy value. True for occupied, false for unoccupied
+  /**
+   * @brief Set the occupancy state.
+   * @param occupied true if occupied, false if unoccupied.
+   * @return true if successful.
+   */
   bool setOccupancy(bool occupied);
 
-  // Set the sensor type, see ezb_zcl_occupancy_sensing_server_occupancy_sensor_type_t
+  /**
+   * @brief Set the sensor type.
+   * @param sensor_type Sensor type identifier (see `ezb_zcl_occupancy_sensing_server_occupancy_sensor_type_t`).
+   * @return true if successful.
+   */
   bool setSensorType(uint8_t sensor_type);
 
-  // Report the occupancy value
+  /**
+   * @brief Manually report the current occupancy state.
+   * @return true if successful.
+   */
   bool report();
 
 private:

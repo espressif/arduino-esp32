@@ -22,39 +22,137 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief On/off switch endpoint that controls bound lights (Zigbee HA).
+ *
+ * Sends on/off commands to bound devices, groups, or a specific address.
+ */
 class ZigbeeSwitch : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee switch endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeSwitch(uint8_t endpoint);
   ~ZigbeeSwitch() {}
 
-  // methods to control the on/off light
+  /**
+   * @brief Toggle bound lights (on to off, or off to on).
+   */
   void lightToggle();
+  /**
+   * @brief Toggle lights in a group.
+   * @param group_addr Group address to control.
+   */
   void lightToggle(uint16_t group_addr);
+  /**
+   * @brief Toggle a light by short address.
+   * @param endpoint Target device endpoint.
+   * @param short_addr Target device short address.
+   */
   void lightToggle(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Toggle a light by IEEE address.
+   * @param endpoint Target device endpoint.
+   * @param ieee_addr Target device IEEE address.
+   */
   void lightToggle(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Turn on bound lights.
+   */
   void lightOn();
+  /**
+   * @brief Turn on lights in a group.
+   * @param group_addr Group address to control.
+   */
   void lightOn(uint16_t group_addr);
+  /**
+   * @brief Turn on a light by short address.
+   * @param endpoint Target device endpoint.
+   * @param short_addr Target device short address.
+   */
   void lightOn(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Turn on a light by IEEE address.
+   * @param endpoint Target device endpoint.
+   * @param ieee_addr Target device IEEE address.
+   */
   void lightOn(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Turn off bound lights.
+   */
   void lightOff();
+  /**
+   * @brief Turn off lights in a group.
+   * @param group_addr Group address to control.
+   */
   void lightOff(uint16_t group_addr);
+  /**
+   * @brief Turn off a light by short address.
+   * @param endpoint Target device endpoint.
+   * @param short_addr Target device short address.
+   */
   void lightOff(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Turn off a light by IEEE address.
+   * @param endpoint Target device endpoint.
+   * @param ieee_addr Target device IEEE address.
+   */
   void lightOff(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Turn off lights with a specific effect.
+   * @param effect_id Effect identifier.
+   * @param effect_variant Effect variant.
+   */
   void lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant);
+  /**
+   * @brief Turn on lights with automatic turn-off after a specified time.
+   * @param on_off_control Control byte.
+   * @param time_on Time to stay on (in 1/10th seconds).
+   * @param time_off Time to stay off (in 1/10th seconds).
+   */
   void lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off);
+  /**
+   * @brief Turn on lights by recalling a scene.
+   */
   void lightOnWithSceneRecall();
 
+  /**
+   * @brief Request the on/off state from bound lights.
+   */
   void getLightState();
+  /**
+   * @brief Request the on/off state from a group.
+   * @param group_addr Group address.
+   */
   void getLightState(uint16_t group_addr);
+  /**
+   * @brief Request the on/off state from a device by short address.
+   * @param endpoint Target device endpoint.
+   * @param short_addr Target device short address.
+   */
   void getLightState(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Request the on/off state from a device by IEEE address.
+   * @param endpoint Target device endpoint.
+   * @param ieee_addr Target device IEEE address.
+   */
   void getLightState(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Set a callback invoked when a bound light's state is reported.
+   * @param callback Function called with the light state (true = on).
+   */
   void onLightStateChange(void (*callback)(bool)) {
     _on_light_state_change = callback;
   }
+  /**
+   * @brief Set a callback invoked when a bound light's state is reported, with source info.
+   * @param callback Function called with state, source endpoint, and source address.
+   */
   void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, ezb_address_t)) {
     _on_light_state_change_with_source = callback;
   }

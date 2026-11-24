@@ -22,84 +22,276 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief Thermostat endpoint that binds to temperature and humidity sensors (Zigbee HA).
+ *
+ * Discovers sensors, receives temperature/humidity readings, retrieves sensor
+ * settings, and configures reporting. Addressing overloads target all bound
+ * devices, a group, a short address, or an IEEE address.
+ */
 class ZigbeeThermostat : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee thermostat endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeThermostat(uint8_t endpoint);
   ~ZigbeeThermostat() {}
 
-  // Temperature measuring methods
+  /**
+   * @brief Set a callback for receiving temperature data.
+   * @param callback Function called with temperature in degrees Celsius.
+   */
   void onTempReceive(void (*callback)(float)) {
     _on_temp_receive = callback;
   }
+  /**
+   * @brief Set a callback for receiving temperature data with source information.
+   * @param callback Function called with temperature (°C), source endpoint, and source address.
+   */
   void onTempReceiveWithSource(void (*callback)(float, uint8_t, ezb_address_t)) {
     _on_temp_receive_with_source = callback;
   }
-  // For backward compatibility: keep onConfigReceive as an alias to onTempConfigReceive (deprecated).
+  /**
+   * @brief Set a callback for receiving sensor configuration data.
+   *
+   * Use `onTempConfigReceive()` instead.
+   *
+   * @param callback Function called with min temperature, max temperature, and tolerance.
+   */
   [[deprecated("Use onTempConfigReceive instead.")]]
   void onConfigReceive(void (*callback)(float, float, float)) {
     onTempConfigReceive(callback);
   }
+  /**
+   * @brief Set a callback for receiving temperature sensor configuration data.
+   * @param callback Function called with min temperature, max temperature, and tolerance (°C).
+   */
   void onTempConfigReceive(void (*callback)(float, float, float)) {
     _on_temp_config_receive = callback;
   }
 
+  /**
+   * @brief Request temperature data from all bound sensors.
+   */
   void getTemperature();
+  /**
+   * @brief Request temperature data from a specific group.
+   * @param group_addr Group address to send the request to.
+   */
   void getTemperature(uint16_t group_addr);
+  /**
+   * @brief Request temperature data from a device by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   */
   void getTemperature(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Request temperature data from a device by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   */
   void getTemperature(uint8_t endpoint, const uint8_t *ieee_addr);
 
-  // For backward compatibility: keep getSensorSettings as an alias to getTemperatureSettings (deprecated).
+  /**
+   * @brief Request temperature sensor settings from all bound sensors.
+   *
+   * Use `getTemperatureSettings()` instead.
+   */
   [[deprecated("Use getTemperatureSettings instead.")]]
   void getSensorSettings() {
     getTemperatureSettings();
   }
+  /**
+   * @brief Request temperature sensor settings from a group.
+   *
+   * Use `getTemperatureSettings()` instead.
+   *
+   * @param group_addr Group address to send the request to.
+   */
   [[deprecated("Use getTemperatureSettings instead.")]]
   void getSensorSettings(uint16_t group_addr) {
     getTemperatureSettings(group_addr);
   }
+  /**
+   * @brief Request temperature sensor settings by short address.
+   *
+   * Use `getTemperatureSettings()` instead.
+   *
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   */
   [[deprecated("Use getTemperatureSettings instead.")]]
   void getSensorSettings(uint8_t endpoint, uint16_t short_addr) {
     getTemperatureSettings(endpoint, short_addr);
   }
+  /**
+   * @brief Request temperature sensor settings by IEEE address.
+   *
+   * Use `getTemperatureSettings()` instead.
+   *
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   */
   [[deprecated("Use getTemperatureSettings instead.")]]
   void getSensorSettings(uint8_t endpoint, const uint8_t *ieee_addr) {
     getTemperatureSettings(endpoint, ieee_addr);
   }
 
+  /**
+   * @brief Request temperature sensor settings from all bound sensors.
+   */
   void getTemperatureSettings();
+  /**
+   * @brief Request temperature sensor settings from a specific group.
+   * @param group_addr Group address to send the request to.
+   */
   void getTemperatureSettings(uint16_t group_addr);
+  /**
+   * @brief Request temperature sensor settings by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   */
   void getTemperatureSettings(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Request temperature sensor settings by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   */
   void getTemperatureSettings(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Configure temperature reporting for all bound sensors.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in temperature to trigger a report.
+   */
   void setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure temperature reporting for a specific group.
+   * @param group_addr Group address to configure.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in temperature to trigger a report.
+   */
   void setTemperatureReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure temperature reporting by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in temperature to trigger a report.
+   */
   void setTemperatureReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure temperature reporting by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in temperature to trigger a report.
+   */
   void setTemperatureReporting(uint8_t endpoint, const uint8_t *ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
-  // Humidity measuring methods
+  /**
+   * @brief Set a callback for receiving humidity data.
+   * @param callback Function called with humidity in percent.
+   */
   void onHumidityReceive(void (*callback)(float)) {
     _on_humidity_receive = callback;
   }
+  /**
+   * @brief Set a callback for receiving humidity data with source information.
+   * @param callback Function called with humidity (%), source endpoint, and source address.
+   */
   void onHumidityReceiveWithSource(void (*callback)(float, uint8_t, ezb_address_t)) {
     _on_humidity_receive_with_source = callback;
   }
+  /**
+   * @brief Set a callback for receiving humidity sensor configuration data.
+   * @param callback Function called with min humidity, max humidity, and tolerance (%).
+   */
   void onHumidityConfigReceive(void (*callback)(float, float, float)) {
     _on_humidity_config_receive = callback;
   }
 
+  /**
+   * @brief Request humidity data from all bound sensors.
+   */
   void getHumidity();
+  /**
+   * @brief Request humidity data from a specific group.
+   * @param group_addr Group address to send the request to.
+   */
   void getHumidity(uint16_t group_addr);
+  /**
+   * @brief Request humidity data from a device by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   */
   void getHumidity(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Request humidity data from a device by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   */
   void getHumidity(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Request humidity sensor settings from all bound sensors.
+   */
   void getHumiditySettings();
+  /**
+   * @brief Request humidity sensor settings from a specific group.
+   * @param group_addr Group address to send the request to.
+   */
   void getHumiditySettings(uint16_t group_addr);
+  /**
+   * @brief Request humidity sensor settings by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   */
   void getHumiditySettings(uint8_t endpoint, uint16_t short_addr);
+  /**
+   * @brief Request humidity sensor settings by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   */
   void getHumiditySettings(uint8_t endpoint, const uint8_t *ieee_addr);
 
+  /**
+   * @brief Configure humidity reporting for all bound sensors.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in humidity to trigger a report.
+   */
   void setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure humidity reporting for a specific group.
+   * @param group_addr Group address to configure.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in humidity to trigger a report.
+   */
   void setHumidityReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure humidity reporting by short address.
+   * @param endpoint Target endpoint number.
+   * @param short_addr Short address of the target device.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in humidity to trigger a report.
+   */
   void setHumidityReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Configure humidity reporting by IEEE address.
+   * @param endpoint Target endpoint number.
+   * @param ieee_addr IEEE address of the target device.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change in humidity to trigger a report.
+   */
   void setHumidityReporting(uint8_t endpoint, const uint8_t *ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
