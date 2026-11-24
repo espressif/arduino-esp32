@@ -188,10 +188,7 @@ public:
   bool isActive() const;
   /** @brief Whether begin() committed the roles and the GATT table (false on a null handle). */
   bool isCommitted() const;
-  /**
-   * @brief Deprecated alias for isCommitted().
-   * @deprecated Use isCommitted() instead.
-   */
+  /** @brief Deprecated alias for isCommitted(). */
   [[deprecated("Use isCommitted() instead")]]
   bool isStarted() const {
     return isCommitted();
