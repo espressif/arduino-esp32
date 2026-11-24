@@ -22,6 +22,7 @@ void setup() {
   Serial.println();
 
   camera_config_t config;
+  memset(&config, 0, sizeof(camera_config_t));
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
