@@ -32,7 +32,7 @@ Endpoint registration and pre-`begin()` configuration live in `coordinator/zigbe
 | `test_coordinator_role` | `getRole()` returns coordinator |
 | `test_coordinator_form_network` | `openNetwork()`, `connected()`, prints `NETWORK_READY` |
 | `test_coordinator_identify_query` | Register `onIdentifyQueryResponse` on gateway EP; assert broadcast `identifyQuery()` send succeeds (response covered in manual HIL) |
-| `test_coordinator_endpoint_deep_tests` | 15 deep test groups: lights (incl. DeviceEnabled get/set), outlet, fan, covering, IAS zones, temp/humidity, environmental sensors, analog/binary/multistate I/O, electrical measurement |
+| `test_coordinator_endpoint_deep_tests` | 15 deep test groups: lights (incl. DeviceEnabled get/set), outlet, fan, covering, IAS zones, temp/humidity, environmental sensors, analog/binary/multistate I/O, electrical measurement (DC plus AC voltage and frequency min/max) |
 
 After Unity, `loop()` runs coordinator→end-device switch/light interop when pytest sends `RUN_INTEROP`.
 
