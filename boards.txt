@@ -57471,7 +57471,7 @@ pcbcupid_cypher.menu.EraseFlash.all.upload.erase_cmd=-e
 pcbcupid_s3_lucid.name=Pcbcupid GLYPH S3 Lucid
 
 pcbcupid_s3_lucid.vid.0=0x303A
-pcbcupid_s3_lucid.pid.0=0x83F4
+pcbcupid_s3_lucid.pid.0=0x8401
 
 pcbcupid_s3_lucid.bootloader.tool=esptool_py
 pcbcupid_s3_lucid.bootloader.tool.default=esptool_py
@@ -57480,7 +57480,7 @@ pcbcupid_s3_lucid.upload.tool=esptool_py
 pcbcupid_s3_lucid.upload.tool.default=esptool_py
 pcbcupid_s3_lucid.upload.tool.network=esp_ota
 
-pcbcupid_s3_lucid.upload.maximum_size=1310720
+pcbcupid_s3_lucid.upload.maximum_size=3342336
 pcbcupid_s3_lucid.upload.maximum_data_size=327680
 pcbcupid_s3_lucid.upload.flags=
 pcbcupid_s3_lucid.upload.extra_flags=
@@ -57503,14 +57503,14 @@ pcbcupid_s3_lucid.build.cdc_on_boot=1
 pcbcupid_s3_lucid.build.msc_on_boot=0
 pcbcupid_s3_lucid.build.dfu_on_boot=0
 pcbcupid_s3_lucid.build.f_cpu=240000000L
-pcbcupid_s3_lucid.build.flash_size=4MB
+pcbcupid_s3_lucid.build.flash_size=8MB
 pcbcupid_s3_lucid.build.flash_freq=80m
 pcbcupid_s3_lucid.build.flash_mode=dio
 pcbcupid_s3_lucid.build.boot=qio
 pcbcupid_s3_lucid.build.boot_freq=80m
-pcbcupid_s3_lucid.build.partitions=default
-pcbcupid_s3_lucid.build.defines=-DBOARD_HAS_PSRAM
-pcbcupid_s3_lucid.build.memory_type={build.boot}_{build.psram_type}
+pcbcupid_s3_lucid.build.partitions=default_8MB
+pcbcupid_s3_lucid.build.defines=
+pcbcupid_s3_lucid.build.memory_type={build.boot}_qspi
 pcbcupid_s3_lucid.build.loop_core=
 pcbcupid_s3_lucid.build.event_core=
 
@@ -57525,13 +57525,6 @@ pcbcupid_s3_lucid.menu.JTAGAdapter.external.build.copy_jtag_files=1
 pcbcupid_s3_lucid.menu.JTAGAdapter.bridge=ESP USB Bridge
 pcbcupid_s3_lucid.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 pcbcupid_s3_lucid.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
-
-pcbcupid_s3_lucid.menu.PSRAM.enabled=QSPI PSRAM
-pcbcupid_s3_lucid.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-pcbcupid_s3_lucid.menu.PSRAM.enabled.build.psram_type=qspi
-pcbcupid_s3_lucid.menu.PSRAM.disabled=Disabled
-pcbcupid_s3_lucid.menu.PSRAM.disabled.build.defines=
-pcbcupid_s3_lucid.menu.PSRAM.disabled.build.psram_type=qspi
 
 pcbcupid_s3_lucid.menu.USBMode.hwcdc=Hardware CDC and JTAG
 pcbcupid_s3_lucid.menu.USBMode.hwcdc.build.usb_mode=1
@@ -57570,9 +57563,9 @@ pcbcupid_s3_lucid.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_COR
 pcbcupid_s3_lucid.menu.EventsCore.0=Core 0
 pcbcupid_s3_lucid.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-pcbcupid_s3_lucid.menu.PartitionScheme.default=Default 4MB (1.2MB APP/1.5MB OTA/1MB SPIFFS)
-pcbcupid_s3_lucid.menu.PartitionScheme.default.build.partitions=default
-pcbcupid_s3_lucid.menu.PartitionScheme.default.upload.maximum_size=1310720
+pcbcupid_s3_lucid.menu.PartitionScheme.default_8MB=Default 8MB (3.2MB APP x2/1.5MB SPIFFS)
+pcbcupid_s3_lucid.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pcbcupid_s3_lucid.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 pcbcupid_s3_lucid.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 pcbcupid_s3_lucid.menu.PartitionScheme.huge_app.build.partitions=huge_app
 pcbcupid_s3_lucid.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
@@ -57607,8 +57600,8 @@ pcbcupid_s3_lucid.menu.FlashFreq.80.build.flash_freq=80m
 pcbcupid_s3_lucid.menu.FlashFreq.40=40MHz
 pcbcupid_s3_lucid.menu.FlashFreq.40.build.flash_freq=40m
 
-pcbcupid_s3_lucid.menu.FlashSize.4M=4MB (32Mb)
-pcbcupid_s3_lucid.menu.FlashSize.4M.build.flash_size=4MB
+pcbcupid_s3_lucid.menu.FlashSize.8M=8MB (64Mb)
+pcbcupid_s3_lucid.menu.FlashSize.8M.build.flash_size=8MB
 
 pcbcupid_s3_lucid.menu.UploadSpeed.921600=921600
 pcbcupid_s3_lucid.menu.UploadSpeed.921600.upload.speed=921600
