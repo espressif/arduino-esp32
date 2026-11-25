@@ -35,7 +35,11 @@
 #include "Zigbee.h"
 
 #define ZIGBEE_LIGHT_ENDPOINT 10
+#ifdef RGB_BUILTIN
 uint8_t led = RGB_BUILTIN;
+#else
+uint8_t led = 2;
+#endif
 uint8_t button = BOOT_PIN;
 
 // Replace these bytes with the Philips Hue ZLL Trust Center link key.

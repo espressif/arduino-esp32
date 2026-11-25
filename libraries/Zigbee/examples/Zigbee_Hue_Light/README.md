@@ -23,7 +23,7 @@ Currently, this example supports the following targets.
 
 ### Configure the Project
 
-Set the LED GPIO by changing the `led` definition. By default it is `RGB_BUILTIN`.
+Set the LED GPIO by changing the `led` definition. By default it is `RGB_BUILTIN`. Boards without that pin use GPIO 2.
 
 #### Using Arduino IDE
 
