@@ -15,9 +15,9 @@
 #define PIN_NEOPIXEL 33
 #define NEOPIXEL_NUM 1
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
-#define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
+#define BUILTIN_LED    LED_BUILTIN
+#define LED_BUILTIN    LED_BUILTIN
+#define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 // Battery measurement (ADC2_CH0, 200K/200K divider -> multiply reading by 2)
