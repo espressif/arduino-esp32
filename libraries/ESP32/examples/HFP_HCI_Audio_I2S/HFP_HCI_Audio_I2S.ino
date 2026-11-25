@@ -15,8 +15,9 @@
 //
 // The I2S peripheral is (re)configured each time the SCO channel opens, so
 // clocks always match the negotiated codec:
-//   CVSD  →  8 000 Hz  (SCO frame: 30 samples / 3 750 µs)
-//   mSBC  → 16 000 Hz  (SCO frame: 120 samples / 7 500 µs)
+//   CVSD     →  8 000 Hz  (SCO frame: 30 samples / 3 750 µs)
+//   mSBC     → 16 000 Hz  (SCO frame: 120 samples / 7 500 µs)
+//   LC3-SWB  → 32 000 Hz  (SCO frame: 240 samples / 7 500 µs, IDF 6.2+)
 //
 // USING OTHER I2S HARDWARE
 // ------------------------
@@ -96,13 +97,18 @@
 #define PIN_ANSWER_HANGUP 16  // Call control button
 
 // Codec sample rates negotiated by Bluedroid with the phone.
-// CVSD = legacy narrowband (8 kHz); mSBC = wideband (16 kHz, HFP 1.6).
+// CVSD = narrowband (8 kHz); mSBC = wideband (16 kHz, HFP 1.6);
+// LC3-SWB = super-wideband (32 kHz, HFP 1.9, ESP-IDF 6.2+).
+enum class ScoCodec : uint8_t { CVSD, MSBC, LC3 };
+
 constexpr uint32_t kCvsdRateHz = 8000;
 constexpr uint32_t kMsbcRateHz = 16000;
+constexpr uint32_t kLc3RateHz = 32000;
 
 // SCO frame size: samples per HFP SCO packet for each codec.
 constexpr size_t kCvsdFrameSamples = 30;   // 30 × 2 bytes = 60 bytes
 constexpr size_t kMsbcFrameSamples = 120;  // 120 × 2 bytes = 240 bytes
+constexpr size_t kLc3FrameSamples = 240;   // 240 × 2 bytes = 480 bytes, 7.5 ms at 32 kHz
 
 // Number of SCO frames held in adc_ring at any time.  One frame is the
 // theoretical minimum, but in practice the BT stack and the ADC task are
@@ -125,7 +131,7 @@ constexpr uint8_t kMaxBondedDevices = 8;
 constexpr uint32_t kRxLogIntervalMs = 1000;
 
 // Conversion buffers — kept as static globals because BT callbacks have
-// limited stack space.  Sized for the largest SCO frame (mSBC, 120 samples).
+// limited stack space.  Sized for the largest SCO frame (LC3-SWB, 240 samples).
 constexpr size_t kStereoFrames = 256;
 static int32_t tx_stereo[kStereoFrames * 2];  // stereo 32-bit frames → PCM5102A DAC
 static int32_t rx_stereo[kStereoFrames * 2];  // stereo 32-bit frames ← PCM1808 ADC
@@ -147,7 +153,7 @@ volatile bool call_active = false;
 volatile bool call_incoming = false;
 volatile bool have_remote_bda = false;
 volatile bool hf_ready = false;
-volatile bool is_msbc = false;
+volatile ScoCodec sco_codec = ScoCodec::CVSD;
 volatile bool i2s_running = false;
 
 // Peer Bluetooth device address, populated on pairing or first reconnect.
@@ -184,12 +190,67 @@ void logEspCall(const char *what, esp_err_t err) {
   }
 }
 
-size_t scoFrameSamples(bool msbc) {
-  return msbc ? kMsbcFrameSamples : kCvsdFrameSamples;
+size_t scoFrameSamples(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return kMsbcFrameSamples;
+    case ScoCodec::LC3:  return kLc3FrameSamples;
+    case ScoCodec::CVSD: break;
+  }
+  return kCvsdFrameSamples;
 }
 
-size_t scoFrameBytes(bool msbc) {
-  return scoFrameSamples(msbc) * sizeof(int16_t);
+size_t scoFrameBytes(ScoCodec codec) {
+  return scoFrameSamples(codec) * sizeof(int16_t);
+}
+
+uint32_t scoSampleRateHz(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return kMsbcRateHz;
+    case ScoCodec::LC3:  return kLc3RateHz;
+    case ScoCodec::CVSD: break;
+  }
+  return kCvsdRateHz;
+}
+
+const char *scoCodecName(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return "mSBC (16 kHz)";
+    case ScoCodec::LC3:  return "LC3-SWB (32 kHz)";
+    case ScoCodec::CVSD: break;
+  }
+  return "CVSD (8 kHz)";
+}
+
+const char *scoCodecShortName(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return "mSBC";
+    case ScoCodec::LC3:  return "LC3-SWB";
+    case ScoCodec::CVSD: break;
+  }
+  return "CVSD";
+}
+
+// True for an established SCO link. CONNECTED_LC3 must be included: it is not
+// a disconnect, and falling through tears the I2S path down.
+bool scoLinkOpen(esp_hf_client_audio_state_t state) {
+  switch (state) {
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return true;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return true;
+#endif
+    default: return false;
+  }
+}
+
+ScoCodec scoCodecForState(esp_hf_client_audio_state_t state) {
+  switch (state) {
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return ScoCodec::MSBC;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return ScoCodec::LC3;
+#endif
+    default: return ScoCodec::CVSD;
+  }
 }
 
 void resetRxStats() {
@@ -206,12 +267,12 @@ void resetRxStats() {
 // TX → PCM5102A DAC (phone audio to speaker); RX ← PCM1808 ADC (mic to phone).
 // 32-bit slots are required: PCM1808 needs BCK = 64×fs; 16-bit slots give
 // BCK = 32×fs which is too slow and produces silence on the capture path.
-void startI2s(bool msbc) {
+void startI2s(ScoCodec codec) {
   if (i2s_running) {
     return;  // already configured; nothing to do
   }
 
-  const uint32_t fs = msbc ? kMsbcRateHz : kCvsdRateHz;
+  const uint32_t fs = scoSampleRateHz(codec);
 
   i2s.setPins(PIN_I2S_BCK, PIN_I2S_LRCK, PIN_I2S_DOUT, PIN_I2S_DIN, PIN_I2S_SCKI);
   if (!i2s.begin(I2S_MODE_STD, fs, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO)) {
@@ -220,7 +281,7 @@ void startI2s(bool msbc) {
   }
 
   i2s_running = true;
-  Serial.printf("I2S started: %s  fs=%" PRIu32 " Hz\n", msbc ? "mSBC" : "CVSD", fs);
+  Serial.printf("I2S started: %s  fs=%" PRIu32 " Hz\n", scoCodecShortName(codec), fs);
 }
 
 // Stop I2S.  Flag is cleared first so the ADC task stops issuing reads;
@@ -269,6 +330,9 @@ const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTING:     return "CONNECTING";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3:  return "CONNECTED_LC3";
+#endif
   }
   return "UNKNOWN";
 }
@@ -276,7 +340,8 @@ const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
 // Reads I2S ADC frames, converts stereo→mono, and pushes them into adc_ring.
 // Runs as a FreeRTOS task so blocking I2S reads don't stall the BT callbacks.
 void adcCaptureTask(void *) {
-  const size_t n_mono = scoFrameSamples(is_msbc);
+  const ScoCodec codec = sco_codec;
+  const size_t n_mono = scoFrameSamples(codec);
   const size_t stereo_bytes = n_mono * 2 * sizeof(int32_t);
 
   while (adc_task_running) {
@@ -325,14 +390,14 @@ void adcCaptureTask(void *) {
 }
 
 // Start I2S, create the ADC ring buffer, and launch the ADC capture task.
-void startAudioPath(bool msbc) {
+void startAudioPath(ScoCodec codec) {
   if (adc_task || adc_ring) {
     return;
   }
 
-  startI2s(msbc);
+  startI2s(codec);
 
-  const size_t frame_bytes = scoFrameBytes(msbc);
+  const size_t frame_bytes = scoFrameBytes(codec);
   // Second argument is the trigger level: xStreamBufferReceive() will not
   // unblock a waiting task until at least frame_bytes are available, ensuring
   // hfOutgoingDataCb() always gets a complete SCO frame in one call.
@@ -592,7 +657,7 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
         audio_connecting = false;
         call_active = false;
         call_incoming = false;
-        is_msbc = false;
+        sco_codec = ScoCodec::CVSD;
         stopAudioPath();
       }
 
@@ -619,21 +684,23 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
     {
       const auto state = param->audio_stat.state;
 
-      // Update connection flags based on the new state.
+      // LC3-SWB is an open SCO link. Leaving it out of scoLinkOpen() makes
+      // audio_connected false and the else branch below tears the I2S path down.
       audio_connecting = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTING);
-      audio_connected = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED || state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
-      is_msbc = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
+      audio_connected = scoLinkOpen(state);
 
       if (audio_connected) {
         // SCO is open — clear the connecting flag, boost mic, and start the
-        // I2S + ADC capture chain.
+        // I2S + ADC capture chain at the negotiated codec rate.
         audio_connecting = false;
+        const ScoCodec codec = scoCodecForState(state);
+        sco_codec = codec;
         logEspCall("esp_hf_client_volume_update(mic)", esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
-        Serial.printf("Audio connected: %s\n", is_msbc ? "mSBC (16 kHz)" : "CVSD (8 kHz)");
-        startAudioPath(is_msbc);  // starts I2S, ring buffer, and ADC capture task
+        Serial.printf("Audio connected: %s\n", scoCodecName(codec));
+        startAudioPath(codec);  // starts I2S, ring buffer, and ADC capture task
       } else if (!audio_connecting) {
         // SCO is closed (not merely mid-connect) — tear down the audio path.
-        is_msbc = false;
+        sco_codec = ScoCodec::CVSD;
         stopAudioPath();
       }
 

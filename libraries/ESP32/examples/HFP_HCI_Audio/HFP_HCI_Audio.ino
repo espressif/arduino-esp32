@@ -7,7 +7,8 @@
 // WHAT THIS EXAMPLE SHOWS
 // -----------------------
 // The ESP32 acts as a Bluetooth Hands-Free Profile (HFP) client.  When a call
-// is active the stack opens a SCO audio channel (CVSD 8 kHz or mSBC 16 kHz).
+// is active the stack opens a SCO audio channel (CVSD 8 kHz, mSBC 16 kHz, or
+// LC3-SWB 32 kHz on ESP-IDF 6.2+).
 // With CONFIG_BT_HFP_AUDIO_DATA_PATH_HCI=y the PCM samples are routed to the
 // application layer instead of an on-chip codec, giving full software control.
 //
@@ -58,7 +59,7 @@
 // esp_hf_client_outgoing_data_ready().
 // For playback, add a second StreamBuffer filled by hfIncomingDataCb and
 // drained by an I2S DAC task.  Configure the I2S sample rate in the
-// AUDIO_STATE_EVT handler based on the is_msbc flag (8 kHz vs 16 kHz).
+// AUDIO_STATE_EVT handler based on the negotiated codec (8 / 16 / 32 kHz).
 //
 // REQUIRED BUILD CONFIG (defconfig.esp32 / sdkconfig)
 // ----------------------------------------------------
@@ -103,10 +104,79 @@ constexpr float kToneFrequencyHz = 1000.0f;
 constexpr int16_t kToneAmplitude = 10000;  // ~30% of full scale
 
 // -----------------------------------------------------------------------------
-// Codec sample rates
+// Codec sample rates and SCO frame timing
+//
+// CVSD:    8 kHz,  30 samples / 3750 µs (60 bytes)
+// mSBC:   16 kHz, 120 samples / 7500 µs (240 bytes)
+// LC3-SWB: 32 kHz, 240 samples / 7500 µs (480 bytes) — HFP 1.9, IDF 6.2+
 // -----------------------------------------------------------------------------
-constexpr float kCvsdRateHz = 8000.0f;   // CVSD:  8 kHz, 30 samples / 3750 µs
-constexpr float kMsbcRateHz = 16000.0f;  // mSBC: 16 kHz, 120 samples / 7500 µs
+enum class ScoCodec : uint8_t { CVSD, MSBC, LC3 };
+
+constexpr float kCvsdRateHz = 8000.0f;
+constexpr float kMsbcRateHz = 16000.0f;
+constexpr float kLc3RateHz = 32000.0f;
+constexpr uint16_t kCvsdFrameSamples = 30;
+constexpr uint16_t kMsbcFrameSamples = 120;
+constexpr uint16_t kLc3FrameSamples = 240;
+constexpr uint32_t kCvsdIntervalUs = 3750;
+constexpr uint32_t kMsbcIntervalUs = 7500;
+constexpr uint32_t kLc3IntervalUs = 7500;
+
+struct ScoTiming {
+  float rate_hz;
+  uint16_t samples;
+  uint32_t interval_us;
+};
+
+ScoTiming scoTiming(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return {kMsbcRateHz, kMsbcFrameSamples, kMsbcIntervalUs};
+    case ScoCodec::LC3:  return {kLc3RateHz, kLc3FrameSamples, kLc3IntervalUs};
+    case ScoCodec::CVSD: break;
+  }
+  return {kCvsdRateHz, kCvsdFrameSamples, kCvsdIntervalUs};
+}
+
+const char *scoCodecName(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return "mSBC (16 kHz)";
+    case ScoCodec::LC3:  return "LC3-SWB (32 kHz)";
+    case ScoCodec::CVSD: break;
+  }
+  return "CVSD (8 kHz)";
+}
+
+const char *scoCodecTag(ScoCodec codec) {
+  switch (codec) {
+    case ScoCodec::MSBC: return "mSBC/16kHz";
+    case ScoCodec::LC3:  return "LC3/32kHz";
+    case ScoCodec::CVSD: break;
+  }
+  return "CVSD/8kHz";
+}
+
+// True for an established SCO link. CONNECTED_LC3 must be included: it is not
+// a disconnect, and falling through tears the audio path down.
+bool scoLinkOpen(esp_hf_client_audio_state_t state) {
+  switch (state) {
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return true;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return true;
+#endif
+    default: return false;
+  }
+}
+
+ScoCodec scoCodecForState(esp_hf_client_audio_state_t state) {
+  switch (state) {
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return ScoCodec::MSBC;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return ScoCodec::LC3;
+#endif
+    default: return ScoCodec::CVSD;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // BT / reconnect tuning
@@ -124,7 +194,7 @@ bool audio_connecting = false;  // SCO connection attempt in progress
 bool call_active = false;       // phone reports a call in progress (CIND call status)
 bool have_remote_bda = false;   // we know the address of the phone to connect to
 bool hf_ready = false;          // HFP profile stack initialized successfully
-bool is_msbc = false;           // true = mSBC 16 kHz codec; false = CVSD 8 kHz
+ScoCodec sco_codec = ScoCodec::CVSD;  // negotiated SCO codec for the open audio link
 
 esp_bd_addr_t remote_bda = {0};  // Bluetooth address of the remote phone
 
@@ -144,21 +214,20 @@ float phase = 0.0f;  // current sine wave phase in radians [0, 2π)
 // -----------------------------------------------------------------------------
 volatile uint32_t outgoing_cb_count = 0;     // total number of times hfOutgoingDataCb was called
 volatile uint32_t outgoing_cb_bytes = 0;     // total PCM bytes successfully delivered to the stack
-volatile uint32_t outgoing_cb_last_len = 0;  // frame size the stack last requested (60 or 240 bytes)
+volatile uint32_t outgoing_cb_last_len = 0;  // frame size the stack last requested (60, 240, or 480 bytes)
 volatile uint32_t outgoing_cb_underrun = 0;  // times the ring buffer was empty when the callback fired
 
 // -----------------------------------------------------------------------------
 // Audio ring buffer + periodic trigger timer
 //
-// CVSD:  chunk = 60 bytes  (30 samples × 2),  interval = 3750 µs
-// mSBC:  chunk = 240 bytes (120 samples × 2), interval = 7500 µs
+// CVSD:    chunk = 60 bytes  (30 samples × 2),  interval = 3750 µs
+// mSBC:    chunk = 240 bytes (120 samples × 2), interval = 7500 µs
+// LC3-SWB: chunk = 480 bytes (240 samples × 2), interval = 7500 µs
 //
 // kRingBufFrames deep buffer absorbs BTA task scheduling jitter: delayed
 // BTA wakeups cause frames to queue rather than being dropped.
 // -----------------------------------------------------------------------------
-constexpr uint32_t kCvsdIntervalUs = 3750;
-constexpr uint32_t kMsbcIntervalUs = 7500;
-constexpr size_t kRingBufFrames = 8;  // ~60 ms headroom at mSBC rate
+constexpr size_t kRingBufFrames = 8;  // ~60 ms headroom at mSBC / LC3-SWB rate
 
 StreamBufferHandle_t audio_ring = nullptr;  // FreeRTOS StreamBuffer used as the audio ring buffer
 esp_timer_handle_t audio_timer = nullptr;   // high-resolution periodic timer that drives the SCO pull cycle
@@ -188,7 +257,7 @@ void generateToneSamples(int16_t *buf, uint16_t sample_count, float sample_rate_
 // audioTimerCb
 //
 // Periodic timer callback, fired once per SCO frame period (3750 µs for CVSD,
-// 7500 µs for mSBC).  Acts as the audio producer and SCO pull trigger.
+// 7500 µs for mSBC and LC3-SWB).  Acts as the audio producer and SCO pull trigger.
 //
 // In TONE mode: generates one frame of sine-wave PCM and writes it into the
 // ring buffer before triggering the pull.
@@ -205,9 +274,10 @@ void audioTimerCb(void *) {
   if (!audio_ring) {
     return;
   }
-  const uint16_t samples = is_msbc ? 120 : 30;  // number of PCM samples per SCO frame
-  int16_t buf[120];                             // stack-allocated, sized for the largest frame (mSBC)
-  generateToneSamples(buf, samples, is_msbc ? kMsbcRateHz : kCvsdRateHz);
+  const ScoTiming timing = scoTiming(sco_codec);
+  const uint16_t samples = timing.samples;  // PCM samples per SCO frame
+  int16_t buf[kLc3FrameSamples];            // stack-allocated, sized for the largest frame (LC3-SWB)
+  generateToneSamples(buf, samples, timing.rate_hz);
   const size_t frame_bytes = samples * sizeof(int16_t);
   // All-or-nothing write: only send if the full frame fits, to prevent partial
   // writes that would break frame alignment for the consumer.
@@ -226,12 +296,13 @@ void audioTimerCb(void *) {
 // The ring buffer size and timer period are set according to the active codec.
 // Safe to call repeatedly — returns immediately if the timer already exists.
 // -----------------------------------------------------------------------------
-void startAudioTimer(bool msbc) {
+void startAudioTimer(ScoCodec codec) {
   if (audio_timer) {
     return;  // already running; nothing to do
   }
 
-  const size_t chunk_bytes = msbc ? 240 : 60;  // bytes per SCO frame for the active codec
+  const ScoTiming timing = scoTiming(codec);
+  const size_t chunk_bytes = timing.samples * sizeof(int16_t);  // bytes per SCO frame for the active codec
   // trigger_level=chunk_bytes ensures the consumer only unblocks when a full
   // frame is available, preventing partial reads that would break frame alignment.
   audio_ring = xStreamBufferCreate(chunk_bytes * kRingBufFrames, chunk_bytes);
@@ -254,7 +325,7 @@ void startAudioTimer(bool msbc) {
     audio_ring = nullptr;
     return;
   }
-  err = esp_timer_start_periodic(audio_timer, msbc ? kMsbcIntervalUs : kCvsdIntervalUs);
+  err = esp_timer_start_periodic(audio_timer, timing.interval_us);
   if (err != ESP_OK) {
     Serial.printf("esp_timer_start_periodic failed: %s\n", esp_err_to_name(err));
     esp_timer_delete(audio_timer);
@@ -322,13 +393,16 @@ const char *hfConnStateName(esp_hf_client_connection_state_t s) {
 }
 
 // hfAudioStateName — maps HFP audio state enum to a printable string for diagnostics.
-// CONNECTED = CVSD codec (8 kHz); CONNECTED_MSBC = mSBC codec (16 kHz, wideband speech).
+// CONNECTED = CVSD (8 kHz); CONNECTED_MSBC = mSBC (16 kHz); CONNECTED_LC3 = LC3-SWB (32 kHz).
 const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
   switch (s) {
     case ESP_HF_CLIENT_AUDIO_STATE_DISCONNECTED:   return "DISCONNECTED";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTING:     return "CONNECTING";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3:  return "CONNECTED_LC3";
+#endif
   }
   return "UNKNOWN";
 }
@@ -377,9 +451,9 @@ uint32_t hfOutgoingDataCb(uint8_t *buf, uint32_t len) {
 // hfIncomingDataCb
 //
 // Push callback registered with the HFP stack.  The BTA task calls this with
-// each received SCO frame, already decoded to raw 16-bit PCM — the internal
-// Bluedroid codec handles CVSD and mSBC decoding transparently, so the app
-// always receives plain PCM regardless of which codec the phone negotiated.
+// each received SCO frame as raw 16-bit PCM.  Bluedroid decodes CVSD and mSBC
+// before delivery.  An LC3-SWB link is framed here as 32 kHz PCM: 240 samples
+// (480 bytes) every 7.5 ms, matching the SCO packet this ring buffer expects.
 //
 // LOOPBACK mode: the received PCM is written straight into the same ring buffer
 //   that hfOutgoingDataCb drains, creating a loopback: caller hears themselves.
@@ -562,8 +636,8 @@ void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
 //   can be sent.  On disconnect all derived state is cleared.
 //
 // AUDIO_STATE_EVT: SCO audio channel opened or closed.  On open, the codec
-//   type (CVSD or mSBC) is known, so the ring buffer and timer are started
-//   with the correct frame size and period.  On close they are torn down.
+//   type (CVSD, mSBC, or LC3-SWB) is known, so the ring buffer and timer are
+//   started with the correct frame size and period.  On close they are torn down.
 //
 // CIND_CALL_SETUP_EVT: phone is reporting an incoming or outgoing call being
 //   set up.  On incoming, we auto-answer and request the SCO channel.
@@ -594,7 +668,7 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
         audio_connected = false;
         audio_connecting = false;
         call_active = false;
-        is_msbc = false;
+        sco_codec = ScoCodec::CVSD;
       }
       Serial.printf(
         "HFP connection state: %s peer_feat=0x%08lX chld=0x%08lX ", hfConnStateName(param->conn_stat.state),
@@ -614,12 +688,14 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
     {
       const auto state = param->audio_stat.state;
       // Update audio state flags based on the new state.
+      // LC3-SWB is an open SCO link. Leaving it out of scoLinkOpen() makes
+      // audio_connected false and the else branch below tears the path down.
       audio_connecting = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTING);
-      audio_connected = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED || state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
-      is_msbc = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
+      audio_connected = scoLinkOpen(state);
 
       if (audio_connected) {
         audio_connecting = false;
+        sco_codec = scoCodecForState(state);
 
         // Reset per-session diagnostics so the Serial log is clean for this call.
         outgoing_cb_count = 0;
@@ -633,17 +709,17 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
         logEspCall("esp_hf_client_volume_update(mic)", esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
 
         Serial.printf(
-          "Codec: %s  Mode: %s\n", is_msbc ? "mSBC (16 kHz)" : "CVSD (8 kHz)",
+          "Codec: %s  Mode: %s\n", scoCodecName(sco_codec),
 #if AUDIO_MODE == AUDIO_MODE_TONE
           "TONE"
 #else
           "LOOPBACK"
 #endif
         );
-        startAudioTimer(is_msbc);  // create ring buffer and start the periodic SCO pull trigger
+        startAudioTimer(sco_codec);  // create ring buffer and start the periodic SCO pull trigger
       } else if (!audio_connecting) {
         // SCO channel closed (not just mid-connect): tear down the audio pipeline.
-        is_msbc = false;
+        sco_codec = ScoCodec::CVSD;
         stopAudioTimer();
       }
 
@@ -810,7 +886,7 @@ void loop() {
       // Normal: underrun ≈ cb_count/2 (one trailing underrun per trigger cycle).
       // Underrun significantly above cb_count/2 means the producer is falling behind.
       Serial.printf(
-        "Audio [%s]: cb_count=%lu bytes=%lu last_len=%lu underrun=%lu\n", is_msbc ? "mSBC/16kHz" : "CVSD/8kHz", static_cast<unsigned long>(cb_count),
+        "Audio [%s]: cb_count=%lu bytes=%lu last_len=%lu underrun=%lu\n", scoCodecTag(sco_codec), static_cast<unsigned long>(cb_count),
         static_cast<unsigned long>(cb_bytes), static_cast<unsigned long>(cb_last_len), static_cast<unsigned long>(cb_underrun)
       );
       last_audio_debug_ms = now_ms;

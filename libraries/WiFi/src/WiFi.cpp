@@ -40,6 +40,16 @@ extern "C" {
 // ---------------------------------------------------------- Debug ------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+// Helper for getting length of 'nonstring' strings
+static size_t strlenn(const void * str, size_t max_len){
+  size_t i = 0;
+  const uint8_t* s = (const uint8_t *)str;
+  for(i = 0; i < max_len; i++){
+    if(s[i] == 0) break;
+  }
+  return i;
+}
+
 /**
  * Output WiFi settings to an object derived from Print interface (like Serial).
  * @param p Print interface
@@ -72,16 +82,20 @@ void WiFiClass::printDiag(Print &p) {
   esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA, &conf);
 
   const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);
+  size_t ssid_len = strlenn(ssid, 32);
   p.print("SSID (");
-  p.print(strlen(ssid));
+  p.print(ssid_len);
   p.print("): ");
-  p.println(ssid);
+  p.write(ssid, ssid_len);
+  p.println();
 
   const char *passphrase = reinterpret_cast<const char *>(conf.sta.password);
+  size_t passphrase_len = strlenn(passphrase, 64);
   p.print("Passphrase (");
-  p.print(strlen(passphrase));
+  p.print(passphrase_len);
   p.print("): ");
-  p.println(passphrase);
+  p.write(passphrase, passphrase_len);
+  p.println();
 
   p.print("BSSID set: ");
   p.println(conf.sta.bssid_set);
