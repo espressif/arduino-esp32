@@ -53,20 +53,20 @@ enum ZigbeeDoorLockType {
  * @brief User status of a PIN user (Home Assistant / ZHA manage users through the network).
  */
 enum ZigbeeDoorLockUserStatus {
-  DOOR_LOCK_USER_AVAILABLE = 0x00,  /**< The user slot is not used. */
-  DOOR_LOCK_USER_ENABLED = 0x01,    /**< The PIN is valid. */
-  DOOR_LOCK_USER_DISABLED = 0x03,   /**< The PIN is stored but must not be accepted. */
+  DOOR_LOCK_USER_AVAILABLE = 0x00, /**< The user slot is not used. */
+  DOOR_LOCK_USER_ENABLED = 0x01,   /**< The PIN is valid. */
+  DOOR_LOCK_USER_DISABLED = 0x03,  /**< The PIN is stored but must not be accepted. */
 };
 
 /**
  * @brief Source of an operation event, reported with `reportOperationEvent()`.
  */
 enum ZigbeeDoorLockOperationSource {
-  DOOR_LOCK_SOURCE_KEYPAD = 0x00,         /**< Keypad. */
-  DOOR_LOCK_SOURCE_RF = 0x01,             /**< Remote access over the Zigbee network. */
-  DOOR_LOCK_SOURCE_MANUAL = 0x02,         /**< Manual (key or thumb turn). */
-  DOOR_LOCK_SOURCE_RFID = 0x03,           /**< RFID. */
-  DOOR_LOCK_SOURCE_INDETERMINATE = 0xff,  /**< Source unknown. */
+  DOOR_LOCK_SOURCE_KEYPAD = 0x00,        /**< Keypad. */
+  DOOR_LOCK_SOURCE_RF = 0x01,            /**< Remote access over the Zigbee network. */
+  DOOR_LOCK_SOURCE_MANUAL = 0x02,        /**< Manual (key or thumb turn). */
+  DOOR_LOCK_SOURCE_RFID = 0x03,          /**< RFID. */
+  DOOR_LOCK_SOURCE_INDETERMINATE = 0xff, /**< Source unknown. */
 };
 
 /**
@@ -76,22 +76,22 @@ enum ZigbeeDoorLockOperationSource {
  * sources. The value is not the bit position in the *OperationEventMask attributes.
  */
 enum ZigbeeDoorLockEvent {
-  DOOR_LOCK_EVENT_UNKNOWN = 0x00,                          /**< All sources. */
-  DOOR_LOCK_EVENT_LOCK = 0x01,                             /**< All sources. */
-  DOOR_LOCK_EVENT_UNLOCK = 0x02,                           /**< All sources. */
-  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN = 0x03,         /**< Keypad, RF, RFID. */
-  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_SCHEDULE = 0x04,    /**< Keypad, RF, RFID. */
-  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN = 0x05,       /**< Keypad, RF, RFID. */
-  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_SCHEDULE = 0x06,  /**< Keypad, RF, RFID. */
-  DOOR_LOCK_EVENT_ONE_TOUCH_LOCK = 0x07,                   /**< Manual. */
-  DOOR_LOCK_EVENT_KEY_LOCK = 0x08,                         /**< Manual. */
-  DOOR_LOCK_EVENT_KEY_UNLOCK = 0x09,                       /**< Manual. */
-  DOOR_LOCK_EVENT_AUTO_LOCK = 0x0a,                        /**< Manual. */
-  DOOR_LOCK_EVENT_SCHEDULE_LOCK = 0x0b,                    /**< Manual. */
-  DOOR_LOCK_EVENT_SCHEDULE_UNLOCK = 0x0c,                  /**< Manual. */
-  DOOR_LOCK_EVENT_MANUAL_LOCK = 0x0d,                      /**< Manual (key or thumb turn). */
-  DOOR_LOCK_EVENT_MANUAL_UNLOCK = 0x0e,                    /**< Manual (key or thumb turn). */
-  DOOR_LOCK_EVENT_NON_ACCESS_USER = 0x0f,                  /**< Keypad. */
+  DOOR_LOCK_EVENT_UNKNOWN = 0x00,                         /**< All sources. */
+  DOOR_LOCK_EVENT_LOCK = 0x01,                            /**< All sources. */
+  DOOR_LOCK_EVENT_UNLOCK = 0x02,                          /**< All sources. */
+  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_PIN = 0x03,        /**< Keypad, RF, RFID. */
+  DOOR_LOCK_EVENT_LOCK_FAILURE_INVALID_SCHEDULE = 0x04,   /**< Keypad, RF, RFID. */
+  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_PIN = 0x05,      /**< Keypad, RF, RFID. */
+  DOOR_LOCK_EVENT_UNLOCK_FAILURE_INVALID_SCHEDULE = 0x06, /**< Keypad, RF, RFID. */
+  DOOR_LOCK_EVENT_ONE_TOUCH_LOCK = 0x07,                  /**< Manual. */
+  DOOR_LOCK_EVENT_KEY_LOCK = 0x08,                        /**< Manual. */
+  DOOR_LOCK_EVENT_KEY_UNLOCK = 0x09,                      /**< Manual. */
+  DOOR_LOCK_EVENT_AUTO_LOCK = 0x0a,                       /**< Manual. */
+  DOOR_LOCK_EVENT_SCHEDULE_LOCK = 0x0b,                   /**< Manual. */
+  DOOR_LOCK_EVENT_SCHEDULE_UNLOCK = 0x0c,                 /**< Manual. */
+  DOOR_LOCK_EVENT_MANUAL_LOCK = 0x0d,                     /**< Manual (key or thumb turn). */
+  DOOR_LOCK_EVENT_MANUAL_UNLOCK = 0x0e,                   /**< Manual (key or thumb turn). */
+  DOOR_LOCK_EVENT_NON_ACCESS_USER = 0x0f,                 /**< Keypad. */
 };
 
 #define ZB_DOOR_LOCK_MAX_PIN_LENGTH 16      // Maximum number of characters of a PIN code

@@ -48,9 +48,9 @@ typedef struct zbstring_s {
  * @brief Bound-device identity used by endpoint binding lists.
  */
 typedef struct zb_device_params_s {
-  uint8_t ieee_addr[8];  /**< EUI-64 IEEE address. */
-  uint8_t endpoint;      /**< Remote endpoint number. */
-  uint16_t short_addr;   /**< Network short address. */
+  uint8_t ieee_addr[8]; /**< EUI-64 IEEE address. */
+  uint8_t endpoint;     /**< Remote endpoint number. */
+  uint16_t short_addr;  /**< Network short address. */
 } zb_device_params_t;
 
 /**

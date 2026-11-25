@@ -118,8 +118,8 @@
  * @brief Bit flags for multistate clusters added to a ZigbeeMultistate endpoint.
  */
 enum zigbee_multistate_clusters {
-  MULTISTATE_INPUT = 1,  /**< Multistate Input cluster. */
-  MULTISTATE_OUTPUT = 2  /**< Multistate Output cluster. */
+  MULTISTATE_INPUT = 1, /**< Multistate Input cluster. */
+  MULTISTATE_OUTPUT = 2 /**< Multistate Output cluster. */
 };
 
 /**

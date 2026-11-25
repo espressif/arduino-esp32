@@ -42,9 +42,9 @@ typedef ezb_nwk_active_scan_result_t zigbee_scan_result_t;
  * @brief Zigbee device role (values match ezb_nwk_device_type_t).
  */
 typedef enum {
-  ZIGBEE_COORDINATOR = 0,  /**< Network coordinator; forms and manages the network. */
-  ZIGBEE_ROUTER = 1,       /**< Router; extends range and routes messages (use for mains-powered devices). */
-  ZIGBEE_END_DEVICE = 2    /**< End device; typically battery-powered and can sleep. */
+  ZIGBEE_COORDINATOR = 0, /**< Network coordinator; forms and manages the network. */
+  ZIGBEE_ROUTER = 1,      /**< Router; extends range and routes messages (use for mains-powered devices). */
+  ZIGBEE_END_DEVICE = 2   /**< End device; typically battery-powered and can sleep. */
 } zigbee_role_t;
 
 #define ZB_SCAN_RUNNING (-1)

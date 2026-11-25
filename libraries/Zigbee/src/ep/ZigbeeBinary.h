@@ -26,8 +26,8 @@
  * @brief Bit flags for binary clusters added to a ZigbeeBinary endpoint.
  */
 enum zigbee_binary_clusters {
-  BINARY_INPUT = 1,  /**< Binary Input cluster. */
-  BINARY_OUTPUT = 2  /**< Binary Output cluster. */
+  BINARY_INPUT = 1, /**< Binary Input cluster. */
+  BINARY_OUTPUT = 2 /**< Binary Output cluster. */
 };
 
 // HVAC application types for Binary Input (more can be found in Zigbee Cluster Specification 3.14.11.19.4 Binary Inputs (BI) Types)

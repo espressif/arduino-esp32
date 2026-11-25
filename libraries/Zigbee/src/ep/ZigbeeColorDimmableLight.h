@@ -33,9 +33,9 @@ static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP = (1 << 4);      //
  * @brief Active color mode (matching ZCL Color Control cluster).
  */
 enum ZigbeeColorMode {
-  ZIGBEE_COLOR_MODE_HUE_SATURATION = 0x00,  /**< CurrentHue and CurrentSaturation. */
-  ZIGBEE_COLOR_MODE_CURRENT_X_Y = 0x01,     /**< CurrentX and CurrentY. */  // codespell:ignore currenty
-  ZIGBEE_COLOR_MODE_TEMPERATURE = 0x02,     /**< ColorTemperature. */
+  ZIGBEE_COLOR_MODE_HUE_SATURATION = 0x00,                              /**< CurrentHue and CurrentSaturation. */
+  ZIGBEE_COLOR_MODE_CURRENT_X_Y = 0x01, /**< CurrentX and CurrentY. */  // codespell:ignore currenty
+  ZIGBEE_COLOR_MODE_TEMPERATURE = 0x02,                                 /**< ColorTemperature. */
 };
 
 /**

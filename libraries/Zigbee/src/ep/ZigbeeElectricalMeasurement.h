@@ -36,11 +36,11 @@ enum ZIGBEE_DC_MEASUREMENT_TYPE {
  * @brief AC electrical measurement types.
  */
 enum ZIGBEE_AC_MEASUREMENT_TYPE {
-  ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,       /**< AC voltage. */
-  ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT = 0x0002,       /**< AC current. */
-  ZIGBEE_AC_MEASUREMENT_TYPE_POWER = 0x0003,         /**< AC power (signed). */
-  ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR = 0x0004,  /**< AC power factor. */
-  ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY = 0x0005,     /**< AC frequency. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,      /**< AC voltage. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT = 0x0002,      /**< AC current. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_POWER = 0x0003,        /**< AC power (signed). */
+  ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR = 0x0004, /**< AC power factor. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY = 0x0005,    /**< AC frequency. */
 };
 
 /**

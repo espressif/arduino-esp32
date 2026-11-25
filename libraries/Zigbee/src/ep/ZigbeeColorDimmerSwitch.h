@@ -26,8 +26,8 @@
  * @brief Level step direction for `setLightLevelStep` (ZCL Step command: 0 = Up, 1 = Down).
  */
 enum ZigbeeLevelStepDirection {
-  ZIGBEE_LEVEL_STEP_UP = 0,   /**< Increase CurrentLevel. */
-  ZIGBEE_LEVEL_STEP_DOWN = 1  /**< Decrease CurrentLevel. */
+  ZIGBEE_LEVEL_STEP_UP = 0,  /**< Increase CurrentLevel. */
+  ZIGBEE_LEVEL_STEP_DOWN = 1 /**< Decrease CurrentLevel. */
 };
 
 /**

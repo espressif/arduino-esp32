@@ -26,8 +26,8 @@
  * @brief Bit flags for analog clusters added to a ZigbeeAnalog endpoint.
  */
 enum zigbee_analog_clusters {
-  ANALOG_INPUT = 1,  /**< Analog Input cluster. */
-  ANALOG_OUTPUT = 2  /**< Analog Output cluster. */
+  ANALOG_INPUT = 1, /**< Analog Input cluster. */
+  ANALOG_OUTPUT = 2 /**< Analog Output cluster. */
 };
 
 /**
