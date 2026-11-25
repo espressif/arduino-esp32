@@ -176,9 +176,9 @@ function mock_upload_tool_meta {
 }
 
 function mock_upload_result {
-    local tool_label="$1" soc="$2" status="$3"
+    local tool_label="$1" soc="$2" status="$3" detail="${4:-both uploads}"
     if [ "$status" = "PASS" ]; then
-        printf '%s--- [%s] %s: PASS (both uploads) ---%s\n' "$_MOCK_C_PASS" "$tool_label" "$soc" "$_MOCK_C_RESET"
+        printf '%s--- [%s] %s: PASS (%s) ---%s\n' "$_MOCK_C_PASS" "$tool_label" "$soc" "$detail" "$_MOCK_C_RESET"
     else
         printf '%s--- [%s] %s: FAIL (see upload step above) ---%s\n' "$_MOCK_C_FAIL" "$tool_label" "$soc" "$_MOCK_C_RESET" >&2
     fi
@@ -217,9 +217,9 @@ function mock_upload_twice_cli {
         --input-dir "$build_dir" -p "$port" "$sketch" || return 1
 }
 
-function mock_upload_twice_headless {
-    local fqbn="$1" sketch="$2" build_dir="$3" runner="$4" tool_label="$5"
-    shift 5
+function _mock_upload_run_headless {
+    local count="$1" fqbn="$2" sketch="$3" build_dir="$4" runner="$5" tool_label="$6"
+    shift 6
     local -a prefix_args=("$@") args port project_name build_path_pref
 
     port="${MOCK_BOOTLOADER_SERIAL_PORT:-$MOCK_BOOTLOADER_PORT}"
@@ -246,7 +246,7 @@ function mock_upload_twice_headless {
         --upload
         "$sketch"
     )
-    mock_upload_log_step "$tool_label" 1 2 "compile + upload (full flash, IDE 1.x upload path)"
+    mock_upload_log_step "$tool_label" 1 "$count" "compile + upload (full flash, IDE 1.x upload path)"
     if [[ "${OS_IS_WINDOWS:-0}" == "1" ]]; then
         echo "    sketch (staged): $sketch" >&2
         echo "    build.path (pref): $build_path_pref" >&2
@@ -255,11 +255,21 @@ function mock_upload_twice_headless {
         _dump_arduino_app_log
         return 1
     fi
-    mock_upload_log_step "$tool_label" 2 2 "compile + upload again (fast reflash via flasher --diff-with)"
-    if ! run_with_timeout 900 "$runner" "${args[@]}"; then
-        _dump_arduino_app_log
-        return 1
+    if [ "$count" -ge 2 ]; then
+        mock_upload_log_step "$tool_label" 2 "$count" "compile + upload again (fast reflash via flasher --diff-with)"
+        if ! run_with_timeout 900 "$runner" "${args[@]}"; then
+            _dump_arduino_app_log
+            return 1
+        fi
     fi
+}
+
+function mock_upload_twice_headless {
+    _mock_upload_run_headless 2 "$@"
+}
+
+function mock_upload_once_builder {
+    _mock_upload_run_headless 1 "$1" "$2" "$3" run_arduino_builder "arduino-builder"
 }
 
 function mock_upload_twice_builder {
