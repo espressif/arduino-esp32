@@ -17,11 +17,11 @@ First Things First
 ESP32 is a single 2.4 GHz Wi-Fi-and-Bluetooth SoC (System On a Chip) designed by `Espressif Systems`_.
 
 ESP32 is designed for mobile, wearable electronics, and Internet-of-Things (IoT) applications. It features all the state-of-the-art characteristics
-of low-power chips, including fine-grained clock gating, multiple power modes,and dynamic power scaling. For instance, in a low-power IoT sensor
+of low-power chips, including fine-grained clock gating, multiple power modes, and dynamic power scaling. For instance, in a low-power IoT sensor
 hub application scenario, ESP32 is woken-up periodically and only when a specified condition is detected. Low-duty cycle is used to minimize the
 amount of energy that the chip expends.
 
-The output of the power amplifier is also adjustable, thus contributing to an optimal trade-off between communication range, data rate and
+The output of the power amplifier is also adjustable, thus contributing to an optimal trade-off between communication range, data rate,  and
 power consumption.
 
 The ESP32 series is available as a chip or module.
@@ -29,10 +29,10 @@ The ESP32 series is available as a chip or module.
 
 .. _supported_socs:
 
-Supported SoC's
----------------
+Supported SoCs
+--------------
 
-Here are the ESP32 series supported by the Arduino-ESP32 project:
+Here are the ESP32-series SoCs supported by the Arduino-ESP32 project:
 
 ========== ====== =========== =================================
 SoC        Stable Development Datasheet
@@ -61,8 +61,7 @@ See `Boards <boards/boards.html>`_ for more details about ESP32 development boar
 Arduino Core Reference
 ----------------------
 
-This documentation is built on the ESP32 and we are not going to cover the common Arduino API. To see the Arduino reference documentation,
-please consider reading the official documentation.
+This documentation is built on the ESP32 and we are not going to cover the common Arduino API. Please consider reading the official Arduino reference documentation.
 
 Arduino Official Documentation: `Arduino Reference`_.
 
@@ -97,7 +96,7 @@ See `Installing Guides <installing.html>`_ for more details on how to install th
 Support
 -------
 
-This is an open project and it's supported by the community. Fell free to ask for help in one of the community channels.
+This is an open project and it's supported by the community. Feel free to ask for help in one of the community channels.
 
 Community
 ---------
@@ -121,9 +120,9 @@ Before opening a new issue, please read this:
 Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
 
-For more details about creating new Issue, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Issue-report.yml>`_.
+For more details about creating a new issue, see the `Issue Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Issue-report.yml>`_.
 
-If you have any new idea, see the `Feature request Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Feature-request.yml>`_.
+If you have any new ideas, see the `Feature request Template <https://github.com/espressif/arduino-esp32/blob/master/.github/ISSUE_TEMPLATE/Feature-request.yml>`_.
 
 First Steps
 -----------

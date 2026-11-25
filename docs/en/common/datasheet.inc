@@ -1,5 +1,5 @@
-Datasheet
----------
+Datasheets
+----------
 
 * `ESP32`_ (Datasheet)
 * `ESP32-C2`_ (Datasheet)
