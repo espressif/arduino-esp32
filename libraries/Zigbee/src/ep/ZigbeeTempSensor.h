@@ -76,7 +76,7 @@ public:
    * @brief Set the reporting interval for temperature measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum temperature change to trigger a report (in 0.01 °C).
+   * @param delta Minimum temperature change to trigger a report, in degrees Celsius.
    * @return true if successful.
    */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
@@ -107,7 +107,7 @@ public:
    * @brief Set the reporting interval for humidity measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum humidity change to trigger a report (in 0.01%).
+   * @param delta Minimum humidity change to trigger a report, in percent.
    * @return true if successful.
    */
   bool setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);

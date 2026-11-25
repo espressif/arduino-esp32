@@ -37,33 +37,33 @@ public:
 
   /**
    * @brief Set the PM2.5 concentration measurement value.
-   * @param pm25 PM2.5 concentration in 0.1 μg/m³.
+   * @param pm25 PM2.5 concentration in μg/m³.
    * @return true if successful.
    */
   bool setPM25(float pm25);
 
   /**
-   * @brief Set the default (initial) PM2.5 value in 0.1 μg/m³.
+   * @brief Set the default (initial) PM2.5 value in μg/m³.
    *
    * Used as the initial measured value in factory-reset mode. Must be called before
    * adding the endpoint to Zigbee. Only effective before commissioning.
    *
-   * @param defaultValue Default PM2.5 concentration in 0.1 μg/m³.
+   * @param defaultValue Default PM2.5 concentration in μg/m³.
    * @return true if successful.
    */
   bool setDefaultValue(float defaultValue);
 
   /**
    * @brief Set the minimum and maximum measurement values.
-   * @param min Minimum PM2.5 concentration in 0.1 μg/m³.
-   * @param max Maximum PM2.5 concentration in 0.1 μg/m³.
+   * @param min Minimum PM2.5 concentration in μg/m³.
+   * @param max Maximum PM2.5 concentration in μg/m³.
    * @return true if successful.
    */
   bool setMinMaxValue(float min, float max);
 
   /**
    * @brief Set the tolerance value for measurements.
-   * @param tolerance Tolerance in 0.1 μg/m³.
+   * @param tolerance Tolerance in μg/m³.
    * @return true if successful.
    */
   bool setTolerance(float tolerance);
@@ -72,7 +72,7 @@ public:
    * @brief Set the reporting configuration for PM2.5 measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum change required to trigger a report in 0.1 μg/m³.
+   * @param delta Minimum change required to trigger a report in μg/m³.
    * @return true if successful.
    */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);

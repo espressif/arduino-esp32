@@ -36,34 +36,34 @@ public:
   ~ZigbeeFlowSensor() {}
 
   /**
-   * @brief Set the flow rate measurement value.
-   * @param value Flow rate in 0.1 m³/h.
+   * @brief Set the flow rate measurement value in 0.1 m³/h resolution.
+   * @param value Flow rate in m³/h.
    * @return true if successful.
    */
   bool setFlow(float value);
 
   /**
-   * @brief Set the default (initial) flow value in 0.1 m³/h.
+   * @brief Set the default (initial) flow value in 0.1 m³/h resolution.
    *
    * Used as the initial measured value in factory-reset mode. Must be called before
    * adding the endpoint to Zigbee. Only effective before commissioning.
    *
-   * @param defaultValue Default flow rate in 0.1 m³/h.
+   * @param defaultValue Default flow rate in m³/h.
    * @return true if successful.
    */
   bool setDefaultValue(float defaultValue);
 
   /**
    * @brief Set the minimum and maximum measurement values.
-   * @param min Minimum flow rate in 0.1 m³/h.
-   * @param max Maximum flow rate in 0.1 m³/h.
+   * @param min Minimum flow rate in m³/h.
+   * @param max Maximum flow rate in m³/h.
    * @return true if successful.
    */
   bool setMinMaxValue(float min, float max);
 
   /**
    * @brief Set the tolerance value for measurements.
-   * @param tolerance Tolerance in 0.01 m³/h.
+   * @param tolerance Tolerance in m³/h.
    * @return true if successful.
    */
   bool setTolerance(float tolerance);
@@ -72,7 +72,7 @@ public:
    * @brief Set the reporting configuration for flow rate measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum change required to trigger a report in 0.1 m³/h.
+   * @param delta Minimum change required to trigger a report, in m³/h.
    * @return true if successful.
    */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);

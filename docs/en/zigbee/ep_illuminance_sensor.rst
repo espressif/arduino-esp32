@@ -8,7 +8,7 @@ About
 The ``ZigbeeIlluminanceSensor`` class provides an endpoint for illuminance sensors in Zigbee networks. This endpoint implements the Zigbee Home Automation (HA) standard for light level measurement devices, supporting ambient light monitoring.
 
 **Features:**
-* Illuminance measurement in lux
+* Raw ZCL Illuminance Measurement value, not lux. Approximate lux is ``10^((value - 1) / 10000)``
 * Configurable measurement range
 * Tolerance and reporting configuration
 * Automatic reporting capabilities
@@ -36,13 +36,13 @@ API Methods
 setIlluminance
 ^^^^^^^^^^^^^^
 
-Sets the illuminance measurement value.
+Sets the raw ZCL illuminance measurement value. The value is stored as given and is not converted from lux.
 
 .. code-block:: arduino
 
     bool setIlluminance(uint16_t value);
 
-* ``value`` - Illuminance value in lux
+* ``value`` - Raw ZCL illuminance value, not lux
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -55,8 +55,8 @@ Sets the minimum and maximum measurement values.
 
     bool setMinMaxValue(uint16_t min, uint16_t max);
 
-* ``min`` - Minimum illuminance value in lux
-* ``max`` - Maximum illuminance value in lux
+* ``min`` - Minimum raw ZCL illuminance value, not lux
+* ``max`` - Maximum raw ZCL illuminance value, not lux
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -69,7 +69,7 @@ Sets the default (initial) value for the illuminance sensor. This value will be 
 
     bool setDefaultValue(uint16_t defaultValue);
 
-* ``defaultValue`` - Default illuminance value in lux
+* ``defaultValue`` - Raw ZCL illuminance value, not lux
 
 **Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
 
@@ -84,7 +84,7 @@ Sets the tolerance value for measurements.
 
     bool setTolerance(uint16_t tolerance);
 
-* ``tolerance`` - Tolerance value in lux
+* ``tolerance`` - Raw ZCL illuminance tolerance, not lux
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -99,7 +99,7 @@ Sets the reporting configuration for illuminance measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change required to trigger a report in lux
+* ``delta`` - Minimum change in the raw ZCL illuminance value required to report
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

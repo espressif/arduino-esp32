@@ -24,7 +24,10 @@
 #include "ezbee/zcl/cluster/illuminance_measurement_desc.h"
 
 /**
- * @brief Illuminance sensor endpoint for ambient light measurement in lux (Zigbee HA).
+ * @brief Illuminance sensor endpoint (Zigbee HA).
+ *
+ * Values are the raw ZCL Illuminance Measurement attribute, not lux.
+ * Approximate lux is 10^((value - 1) / 10000). The value is stored as given.
  */
 class ZigbeeIlluminanceSensor : public ZigbeeEP {
 public:
@@ -37,7 +40,7 @@ public:
 
   /**
    * @brief Set the illuminance measurement value.
-   * @param value Illuminance in lux.
+   * @param value Raw ZCL illuminance value, not lux.
    * @return true if successful.
    */
   bool setIlluminance(uint16_t value);
@@ -48,22 +51,22 @@ public:
    * Used as the initial measured value in factory-reset mode. Must be called before
    * adding the endpoint to Zigbee. Only effective before commissioning.
    *
-   * @param defaultValue Default illuminance in lux.
+   * @param defaultValue Raw ZCL illuminance value, not lux.
    * @return true if successful.
    */
   bool setDefaultValue(uint16_t defaultValue);
 
   /**
    * @brief Set the minimum and maximum measurement values.
-   * @param min Minimum illuminance in lux.
-   * @param max Maximum illuminance in lux.
+   * @param min Minimum raw ZCL illuminance value, not lux.
+   * @param max Maximum raw ZCL illuminance value, not lux.
    * @return true if successful.
    */
   bool setMinMaxValue(uint16_t min, uint16_t max);
 
   /**
    * @brief Set the tolerance value for measurements.
-   * @param tolerance Tolerance in lux.
+   * @param tolerance Raw ZCL illuminance tolerance, not lux.
    * @return true if successful.
    */
   bool setTolerance(uint16_t tolerance);
@@ -72,7 +75,7 @@ public:
    * @brief Set the reporting configuration for illuminance measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum change required to trigger a report in lux.
+   * @param delta Minimum change in the raw ZCL illuminance value required to report.
    * @return true if successful.
    */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);

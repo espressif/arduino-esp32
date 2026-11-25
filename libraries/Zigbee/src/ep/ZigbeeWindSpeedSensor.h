@@ -36,34 +36,34 @@ public:
   ~ZigbeeWindSpeedSensor() {}
 
   /**
-   * @brief Set the wind speed measurement value.
-   * @param value Wind speed in 0.01 m/s.
+   * @brief Set the wind speed measurement value in 0.01 m/s resolution.
+   * @param value Wind speed in meters per second.
    * @return true if successful.
    */
   bool setWindSpeed(float value);
 
   /**
-   * @brief Set the default (initial) wind speed in 0.01 m/s.
+   * @brief Set the default (initial) wind speed in 0.01 m/s resolution.
    *
    * Used as the initial measured value in factory-reset mode. Must be called before
    * adding the endpoint to Zigbee. Only effective before commissioning.
    *
-   * @param defaultValue Default wind speed in 0.01 m/s.
+   * @param defaultValue Default wind speed in meters per second.
    * @return true if successful.
    */
   bool setDefaultValue(float defaultValue);
 
   /**
    * @brief Set the minimum and maximum measurement values.
-   * @param min Minimum wind speed in 0.01 m/s.
-   * @param max Maximum wind speed in 0.01 m/s.
+   * @param min Minimum wind speed in meters per second.
+   * @param max Maximum wind speed in meters per second.
    * @return true if successful.
    */
   bool setMinMaxValue(float min, float max);
 
   /**
    * @brief Set the tolerance value for measurements.
-   * @param tolerance Tolerance in 0.01 m/s.
+   * @param tolerance Tolerance in meters per second.
    * @return true if successful.
    */
   bool setTolerance(float tolerance);
@@ -72,7 +72,7 @@ public:
    * @brief Set the reporting configuration for wind speed measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum change required to trigger a report in 0.01 m/s.
+   * @param delta Minimum change required to trigger a report, in meters per second.
    * @return true if successful.
    */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);

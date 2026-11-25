@@ -36,7 +36,7 @@ public:
 
   /**
    * @brief Set a callback invoked when the light state or level changes.
-   * @param callback Function called with state (true = on) and level (0-100).
+   * @param callback Function called with state (true = on) and ZCL CurrentLevel (0-255).
    */
   void onLightChange(void (*callback)(bool, uint8_t)) {
     _on_light_change = callback;
@@ -56,14 +56,14 @@ public:
   bool setLightState(bool state);
   /**
    * @brief Set only the brightness level without changing on/off state.
-   * @param level Brightness (0-100, where 0 is off and 100 is full brightness).
+   * @param level ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness).
    * @return true if successful.
    */
   bool setLightLevel(uint8_t level);
   /**
    * @brief Set both the light state and brightness level.
    * @param state true to turn on, false to turn off.
-   * @param level Brightness (0-100).
+   * @param level ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness).
    * @return true if successful.
    */
   bool setLight(bool state, uint8_t level);
@@ -77,7 +77,7 @@ public:
   }
   /**
    * @brief Get the current brightness level.
-   * @return Brightness (0-100).
+   * @return ZCL CurrentLevel (0-255).
    */
   uint8_t getLightLevel() {
     return _current_level;

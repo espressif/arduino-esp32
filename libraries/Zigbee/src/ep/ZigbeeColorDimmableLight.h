@@ -44,7 +44,7 @@ enum ZigbeeColorMode {
  * @param red Red component (0-255).
  * @param green Green component (0-255).
  * @param blue Blue component (0-255).
- * @param level Brightness (0-255).
+ * @param level ZCL CurrentLevel (0-255).
  */
 using ZigbeeColorLightRgbCallback = void (*)(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level);
 /**
@@ -52,13 +52,13 @@ using ZigbeeColorLightRgbCallback = void (*)(bool state, uint8_t red, uint8_t gr
  * @param state Light state (true = on).
  * @param hue Hue (0-254).
  * @param saturation Saturation (0-254).
- * @param value Brightness (0-255).
+ * @param value ZCL CurrentLevel (0-255).
  */
 using ZigbeeColorLightHsvCallback = void (*)(bool state, uint8_t hue, uint8_t saturation, uint8_t value);
 /**
  * @brief Callback for color-temperature mode changes.
  * @param state Light state (true = on).
- * @param level Brightness (0-255).
+ * @param level ZCL CurrentLevel (0-255).
  * @param color_temperature Color temperature in mireds.
  */
 using ZigbeeColorLightTempCallback = void (*)(bool state, uint8_t level, uint16_t color_temperature);
@@ -106,21 +106,21 @@ public:
   }
   /**
    * @brief Set the callback for RGB/XY color mode changes.
-   * @param callback Function called with state, red, green, blue, and level (0-255).
+   * @param callback Function called with state, red, green, blue, and ZCL CurrentLevel (0-255).
    */
   void onLightChangeRgb(ZigbeeColorLightRgbCallback callback) {
     _on_light_change_rgb = callback;
   }
   /**
    * @brief Set the callback for HSV color mode changes.
-   * @param callback Function called with state, hue (0-254), saturation (0-254), and value (0-255).
+   * @param callback Function called with state, hue (0-254), saturation (0-254), and ZCL CurrentLevel (0-255).
    */
   void onLightChangeHsv(ZigbeeColorLightHsvCallback callback) {
     _on_light_change_hsv = callback;
   }
   /**
    * @brief Set the callback for color-temperature mode changes.
-   * @param callback Function called with state, level (0-255), and temperature in mireds.
+   * @param callback Function called with state, ZCL CurrentLevel (0-255), and temperature in mireds.
    */
   void onLightChangeTemp(ZigbeeColorLightTempCallback callback) {
     _on_light_change_temp = callback;
@@ -140,7 +140,7 @@ public:
   bool setLightState(bool state);
   /**
    * @brief Set the light brightness level.
-   * @param level Brightness (0-255, where 0 is off and 255 is full brightness).
+   * @param level ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness).
    * @return true if successful.
    */
   bool setLightLevel(uint8_t level);
@@ -189,7 +189,7 @@ public:
    * Requires `ZIGBEE_COLOR_CAPABILITY_X_Y`. Switches to XY mode.
    *
    * @param state Light state (true/false).
-   * @param level Brightness (0-255).
+   * @param level ZCL CurrentLevel (0-255).
    * @param red Red component (0-255).
    * @param green Green component (0-255).
    * @param blue Blue component (0-255).
@@ -213,7 +213,7 @@ public:
   }
   /**
    * @brief Get the current brightness level.
-   * @return Brightness (0-255).
+   * @return ZCL CurrentLevel (0-255).
    */
   uint8_t getLightLevel() {
     return _current_level;

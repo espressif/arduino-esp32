@@ -128,25 +128,25 @@ public:
 
   /**
    * @brief Set the brightness of bound lights.
-   * @param level Brightness (0-100, where 0 is off and 100 is full brightness).
+   * @param level ZCL CurrentLevel (0-255, sent unchanged; 255 is full brightness).
    */
   void setLightLevel(uint8_t level);
   /**
    * @brief Set the brightness of lights in a group.
-   * @param level Brightness (0-100).
+   * @param level ZCL CurrentLevel (0-255, sent unchanged; 255 is full brightness).
    * @param group_addr Group address to control.
    */
   void setLightLevel(uint8_t level, uint16_t group_addr);
   /**
    * @brief Set the brightness of a light by short address.
-   * @param level Brightness (0-100).
+   * @param level ZCL CurrentLevel (0-255, sent unchanged; 255 is full brightness).
    * @param endpoint Target device endpoint.
    * @param short_addr Target device short address.
    */
   void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
   /**
    * @brief Set the brightness of a light by IEEE address.
-   * @param level Brightness (0-100).
+   * @param level ZCL CurrentLevel (0-255, sent unchanged; 255 is full brightness).
    * @param endpoint Target device endpoint.
    * @param ieee_addr Target device IEEE address.
    */

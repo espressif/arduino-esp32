@@ -94,8 +94,8 @@ typedef enum {
  * @brief Main entry point for Zigbee network operations.
  *
  * Manages the device role, endpoints, network discovery, and stack lifecycle.
- * Implemented as a singleton; use the global `Zigbee` object rather than constructing
- * an instance.
+ * Use the global `Zigbee` object. It is omitted when `NO_GLOBAL_INSTANCES` or
+ * `NO_GLOBAL_ZIGBEE` is defined.
  *
  * Typical lifecycle: `role()` (must be first), configure endpoints, `addEndpoint()`,
  * then `begin()`.
@@ -330,7 +330,8 @@ public:
   /**
    * @brief Open the network for joining after reboot for a specified time.
    *
-   * Coordinator only.
+   * Applied only when the role is coordinator, after the network is formed.
+   * On other roles the stored time is ignored.
    *
    * @param time Time in seconds to keep the network open after reboot.
    */
@@ -338,7 +339,8 @@ public:
   /**
    * @brief Open the network for device joining for a specified time.
    *
-   * Coordinator only.
+   * Calls the stack when it is running. Intended for a coordinator; the call
+   * itself does not check the device role.
    *
    * @param time Time in seconds to keep the network open.
    */
@@ -346,7 +348,8 @@ public:
   /**
    * @brief Close the network to prevent new devices from joining.
    *
-   * Coordinator only.
+   * Calls the stack when it is running. Intended for a coordinator; the call
+   * itself does not check the device role.
    */
   void closeNetwork();
 
@@ -378,8 +381,8 @@ public:
   /**
    * @brief Scan for available Zigbee networks.
    *
-   * Scan duration is time spent on each channel, in units of
-   * `((1 << scan_duration) + 1) * a beacon time` (15.36 microseconds).
+   * Scan duration is the time spent on each channel:
+   * `((1 << scan_duration) + 1) * 15.36 ms` (IEEE 802.15.4 aBaseSuperframeDuration).
    *
    * @param channel_mask Channels to scan (default: all channels).
    * @param scan_duration Scan duration (default: 5).
@@ -408,7 +411,9 @@ public:
 
   /**
    * @brief Perform a factory reset, clearing all network settings.
-   * @param restart true to restart after reset (default: true).
+   *
+   * @param restart true (default) resets and reboots, and does not return.
+   *                false is not supported and does nothing.
    */
   void factoryReset(bool restart = true);
 
