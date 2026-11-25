@@ -29,6 +29,7 @@ on:
       - "tools/flasher.py"
       - "package/package_esp32_index.template.json"
       - ".github/scripts/arduino_headless.sh"
+      - ".github/scripts/build_upload_matrix.py"
       - ".github/scripts/find_boards.sh"
       - ".github/scripts/mock_upload_lib.sh"
       - ".github/scripts/test-mock-upload.sh"
@@ -75,6 +76,7 @@ jobs:
               - tools/flasher.py
               - package/package_esp32_index.template.json
               - .github/scripts/arduino_headless.sh
+              - .github/scripts/build_upload_matrix.py
               - .github/scripts/find_boards.sh
               - .github/scripts/mock_upload_lib.sh
               - .github/scripts/test-mock-upload.sh
@@ -96,98 +98,7 @@ jobs:
           UPLOAD_CHANGED: ${{ steps.changed.outputs.upload_any_changed }}
           INPUT_TOOL: ${{ inputs.tool }}
           INPUT_SOCS: ${{ inputs.socs }}
-        run: |
-          source ./.github/scripts/socs_config.sh
-          export CORE_SOCS_CSV
-          CORE_SOCS_CSV="$(IFS=,; echo "${CORE_SOCS[*]}")"
-
-          python3 - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          event = os.environ.get("EVENT_NAME", "")
-          upload_changed = os.environ.get("UPLOAD_CHANGED", "") == "true"
-          fqbns_raw = os.environ.get("FQBNS", "").strip()
-          input_tool = (os.environ.get("INPUT_TOOL") or "all").strip()
-          input_socs = (os.environ.get("INPUT_SOCS") or "").strip()
-          core_socs = [s for s in os.environ["CORE_SOCS_CSV"].split(",") if s]
-
-          target_socs: list[str] = []
-          if event == "workflow_dispatch" and input_socs:
-              target_socs = [s.strip() for s in input_socs.replace(" ", ",").split(",") if s.strip()]
-              unknown = [s for s in target_socs if s not in core_socs]
-              if unknown:
-                  raise SystemExit(f"Unknown SoC(s) in inputs.socs: {unknown} (valid CORE_SOCS: {core_socs})")
-              reason = f"workflow_dispatch custom SoCs: {target_socs}"
-          elif event != "pull_request":
-              target_socs = core_socs
-              reason = f"Non-PR ({event}); testing all {len(target_socs)} CORE_SOCS"
-          elif upload_changed:
-              target_socs = core_socs
-              reason = f"Upload-related path changed; testing all {len(target_socs)} CORE_SOCS"
-          elif fqbns_raw:
-              parsed = json.loads(fqbns_raw)
-              changed_socs = {item.split(":")[2] for item in parsed.get("fqbn", []) if item.count(":") >= 2}
-              target_socs = [s for s in core_socs if s in changed_socs]
-              reason = f"boards.txt-only PR; testing changed CORE_SOCS: {target_socs}"
-
-          gh_out = Path(os.environ["GITHUB_OUTPUT"])
-          if not target_socs:
-              print("No official CORE_SOCS boards or upload-related paths changed; skipping mock upload")
-              with gh_out.open("a", encoding="utf-8") as fh:
-                  fh.write("should_run=false\n")
-                  fh.write('matrix={"include":[]}\n')
-              raise SystemExit(0)
-
-          print(reason)
-
-          def split_shards(items: list[str], max_shards: int) -> list[list[str]]:
-              n = min(len(items), max_shards)
-              base, extra = divmod(len(items), n)
-              out: list[list[str]] = []
-              idx = 0
-              # Put smaller chunks first so heavier early SoCs (esp32s31/esp32) run in 2-SoC shards.
-              for i in range(n):
-                  size = base + (1 if i >= (n - extra) else 0)
-                  out.append(items[idx : idx + size])
-                  idx += size
-              return out
-
-          def add_shards(include: list[dict[str, str]], os_name: str, tool: str, max_shards: int) -> None:
-              chunks = split_shards(target_socs, max_shards)
-              total = len(chunks)
-              for idx, chunk in enumerate(chunks, 1):
-                  suffix = f" [{idx}/{total}]" if total > 1 else ""
-                  include.append({
-                      "os": os_name,
-                      "tool": tool,
-                      "socs": ",".join(chunk),
-                      "label": f"{os_name} ({tool}{suffix})",
-                  })
-
-          # Keep concurrent macOS runners <= 4 (under GitHub's 5-runner macOS cap) and use
-          # macos-26-intel (required for Arduino IDE v1; also avoids macos-latest arm64 queue starvation):
-          include: list[dict[str, str]] = []
-          if input_tool == "cli":
-              add_shards(include, "ubuntu-latest", "cli", 1)
-              add_shards(include, "windows-latest", "cli", 2)
-              add_shards(include, "macos-26-intel", "cli", 2)
-          elif input_tool == "builder":
-              add_shards(include, "ubuntu-latest", "builder", 2)
-              add_shards(include, "windows-latest", "builder", 3)
-              add_shards(include, "macos-26-intel", "builder", 4)
-          else:
-              add_shards(include, "ubuntu-latest", "all", 2)
-              add_shards(include, "windows-latest", "all", 3)
-              add_shards(include, "macos-26-intel", "all", 4)
-
-          matrix_json = json.dumps({"include": include}, separators=(",", ":"))
-          print(f"Generated {len(include)} matrix jobs: {matrix_json}")
-          with gh_out.open("a", encoding="utf-8") as fh:
-              fh.write("should_run=true\n")
-              fh.write(f"matrix={matrix_json}\n")
-          PY
+        run: python3 .github/scripts/build_upload_matrix.py
 
   mock-upload:
     name: Mock upload on ${{ matrix.label }}

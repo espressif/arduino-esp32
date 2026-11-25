@@ -201,7 +201,7 @@ The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink +
 
 **Conditions:** Skipped when `github.event_name == 'pull_request'` from an in-repo `release/*` branch (avoiding duplicate runs alongside `push`).
 
-**Purpose:** Decide whether mock upload tests are needed and emit a sharded JSON `matrix` scoped to the affected `CORE_SOCS`.
+**Purpose:** Decide whether mock upload tests are needed and emit a sharded JSON `matrix` scoped to the affected `CORE_SOCS` via `.github/scripts/build_upload_matrix.py`.
 
 **Logic:**
 - Non-PR (`push`, `workflow_dispatch`): run all `CORE_SOCS` (or custom `inputs.socs` on `workflow_dispatch`)
