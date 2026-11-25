@@ -76,7 +76,7 @@ always cast-free `impl.member`.
 - **CCCD discovery** on `subscribe()`/`unsubscribe()` resolves `0x2902` via `getDescriptor(0x2902)` within the characteristic's bounded handle range rather than assuming `valHandle + 1`.
 - **Service Changed invalidation** caches and delivers the peer's real four-byte 0x2A05 range, but conservatively detaches the full discovered remote tree before the callback because remote handles do not retain enough range metadata for partial invalidation. The sketch must rediscover before reusing remote handles.
 - **Service removal while connected.** `ble_gatts_reset()` returns `BLE_HS_EBUSY` while GAP is active or a peer is connected; `bleServerRemoveService` falls back to `ble_gatts_svc_set_visibility(startHandle, 0)` + `ble_svc_gatt_changed(startHandle, endHandle)` so runtime removal and Service Changed (`0x2A05`) match Bluedroid.
-- **Audio-owned GATT table.** Between `audio.begin()` and `audio.start()`, the
+- **Audio-owned GATT table.** Between `BLE.begin()` and `audio.begin()`, the
   classic server records its latest service tree through `BLEGattDatabase`.
   The coordinator publishes that tree once immediately before the audio
   engine's single commit, so repeated pre-commit staging cannot duplicate

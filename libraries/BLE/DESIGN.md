@@ -785,6 +785,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 
 - Object mutex on every Impl: **`mtx`** (one name).
 - Callback storage: `on<Event>Cb`; public typedefs: `<Event>Handler`.
+- Lifecycle verbs: `begin()` / `end()` acquire and release a resource (stack, transport, engine); `start()` / `stop()` begin and end an activity or data flow; `startX()` / `stopX()` name a specific activity (`startExtended`, `startPeriodicAdv`, `startSecurity`, `startUnicast`). Do not rename an activity to `begin()` just because it has a paired stop.
 - `connHandle` = stack-agnostic 16-bit connection handle; `connId` = Bluedroid-native GATT id (backend only); `handle` = GATT attribute handle.
 - Stack-specific free functions: `nimble*` / `bluedroid*` prefix. UUID converters: `<stack>Uuid{From,To}Public`. Uniform helpers: `<Component>Internal` namespaces (`BLEIsoInternal`, `BLEServerInternal`, `BLEGattInternal`, `BLEAdvInternal`, `BLEClientInternal`, `BLETask`, `BLECoreInternal`); the four `extern "C"` ISO host hand-over functions stay global because the C LE Audio engine calls them.
 
