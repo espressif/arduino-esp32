@@ -382,6 +382,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeFanControl.cpp
   libraries/Zigbee/src/ep/ZigbeeDoorLock.cpp
   libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
+  libraries/Zigbee/src/ep/ZigbeeHVAC.cpp
   )
 
 set(ARDUINO_LIBRARIES_SRCS)

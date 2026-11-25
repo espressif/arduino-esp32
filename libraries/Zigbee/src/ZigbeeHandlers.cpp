@@ -18,6 +18,8 @@
 
 #if CONFIG_ZB_ENABLED
 
+#include "ezbee/zcl/cluster/thermostat.h"
+
 #include "esp_ota_ops.h"
 #if CONFIG_ZB_DELTA_OTA  // Delta OTA, code is prepared for this feature but not enabled by default
 #include "esp_delta_ota_ops.h"
@@ -128,6 +130,7 @@ static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const ezb_zcl_ias_zone_
 static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_message_t *message);
 static esp_err_t zb_cmd_identify_query_resp_handler(const ezb_zcl_identify_query_rsp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_covering_movement_message_t *message);
+static esp_err_t zb_thermostat_setpoint_handler(const ezb_zcl_thermostat_setpoint_message_t *message);
 static esp_err_t zb_door_lock_cmd_handler(ezb_zcl_door_lock_lock_door_message_t *message, bool lock);
 template<typename T> static void zb_door_lock_user_cmd_handler(T *message, void (ZigbeeEP::*handler)(T *));
 static esp_err_t zb_ota_upgrade_status_handler(ezb_zcl_ota_upgrade_client_progress_message_t *message);
@@ -151,6 +154,7 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_IAS_ZONE_ENROLL_CB_ID:          zb_cmd_ias_zone_enroll_request_handler((ezb_zcl_ias_zone_enroll_req_message_t *)message); break;
     case EZB_ZCL_CORE_IAS_ZONE_ENROLL_RSP_CB_ID:      zb_cmd_ias_zone_enroll_response_handler((ezb_zcl_ias_zone_enroll_rsp_message_t *)message); break;
     case EZB_ZCL_CORE_WINDOW_COVERING_MOVEMENT_CB_ID: zb_window_covering_movement_resp_handler((ezb_zcl_window_covering_movement_message_t *)message); break;
+    case EZB_ZCL_CORE_THERMOSTAT_SETPOINT_CB_ID:      zb_thermostat_setpoint_handler((ezb_zcl_thermostat_setpoint_message_t *)message); break;
     case EZB_ZCL_CORE_DOOR_LOCK_LOCK_DOOR_CB_ID:      zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, true); break;
     case EZB_ZCL_CORE_DOOR_LOCK_UNLOCK_DOOR_CB_ID:    zb_door_lock_cmd_handler((ezb_zcl_door_lock_lock_door_message_t *)message, false); break;
     case EZB_ZCL_CORE_DOOR_LOCK_SET_PIN_CODE_CB_ID:
@@ -428,6 +432,29 @@ static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_c
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
       (*it)->zbWindowCoveringMovementCmd(message);  //method zbWindowCoveringMovementCmd must be implemented in specific EP class
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_thermostat_setpoint_handler(const ezb_zcl_thermostat_setpoint_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != EZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+
+  log_v(
+    "Thermostat setpoint: endpoint(%u), mode(%u), heat(%d), cool(%d)", message->info.dst_ep, message->in.mode, message->in.setpoint_heat,
+    message->in.setpoint_cool
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_ep == (*it)->getEndpoint()) {
+      (*it)->zbThermostatSetpoint(message->in.mode, message->in.setpoint_heat, message->in.setpoint_cool);
     }
   }
   return ESP_OK;
