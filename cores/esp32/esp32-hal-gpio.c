@@ -59,6 +59,11 @@ int8_t digitalPinToTouchChannel(uint8_t pin) {
 #include "soc/adc_periph.h"
 #endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+#include "hal/adc_ll.h"
+#define SOC_ADC_MAX_CHANNEL_NUM ADC_LL_MAX_CHANNEL_NUM
+#endif
+
 int8_t digitalPinToAnalogChannel(uint8_t pin) {
   uint8_t channel = 0;
   if (pin < SOC_GPIO_PIN_COUNT) {

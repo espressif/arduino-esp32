@@ -40,6 +40,16 @@ extern "C" {
 // ---------------------------------------------------------- Debug ------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+// Helper for getting length of 'nonstring' strings
+static size_t strlenn(const void * str, size_t max_len){
+  size_t i = 0;
+  const uint8_t* s = (const uint8_t *)str;
+  for(i = 0; i < max_len; i++){
+    if(s[i] == 0) break;
+  }
+  return i;
+}
+
 /**
  * Output WiFi settings to an object derived from Print interface (like Serial).
  * @param p Print interface
@@ -73,13 +83,13 @@ void WiFiClass::printDiag(Print &p) {
 
   const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);
   p.print("SSID (");
-  p.print(strlen(ssid));
+  p.print(strlenn(ssid, 32));
   p.print("): ");
   p.println(ssid);
 
   const char *passphrase = reinterpret_cast<const char *>(conf.sta.password);
   p.print("Passphrase (");
-  p.print(strlen(passphrase));
+  p.print(strlenn(passphrase, 64));
   p.print("): ");
   p.println(passphrase);
 

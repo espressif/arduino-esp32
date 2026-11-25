@@ -13,8 +13,10 @@
 #include "soc/efuse_reg.h"
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #include "soc/rtc_cntl_reg.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
 #include "soc/usb_struct.h"
 #include "soc/usb_reg.h"
+#endif
 #include "soc/usb_wrap_reg.h"
 #include "soc/usb_wrap_struct.h"
 #include "soc/usb_periph.h"
@@ -708,7 +710,7 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
       REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
     } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
       //DFU Download
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
       // Reset USB Core
       USB0.grstctl |= USB_CSFTRST;
       while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}

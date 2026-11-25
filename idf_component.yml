@@ -50,7 +50,7 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.3,<6.2"
+  idf: ">=5.3,<6.3"
   espressif/mdns:
     version: "^1.11.2"
     require: public

@@ -358,8 +358,11 @@ String APClass::SSID(void) const {
     return String();
   }
   wifi_config_t info;
-  if (!esp_wifi_get_config(WIFI_IF_AP, &info)) {
-    return String(reinterpret_cast<char *>(info.ap.ssid));
+  char ssid[33];
+  if (esp_wifi_get_config(WIFI_IF_AP, &info) == ESP_OK) {
+    memcpy(ssid, info.ap.ssid, 32);
+    ssid[32] = 0;
+    return String(reinterpret_cast<char *>(ssid));
   }
   return String();
 }

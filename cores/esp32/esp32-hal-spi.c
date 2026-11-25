@@ -945,9 +945,15 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   spi->last_clk_src = 0;    // Initialize per-instance storage
 #endif
 #if defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
   spi->dev->dma_conf.tx_seg_trans_clr_en = 1;
   spi->dev->dma_conf.rx_seg_trans_clr_en = 1;
   spi->dev->dma_conf.dma_seg_trans_en = 0;
+#else
+  spi->dev->dma_conf.slv_tx_seg_trans_clr_en = 1;
+  spi->dev->dma_conf.slv_rx_seg_trans_clr_en = 1;
+  spi->dev->dma_conf.dma_slv_seg_trans_en = 0;
+#endif
 #endif
 #endif
 #if defined(ARDUINO_SPI_CLK_SRC) && !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
@@ -992,8 +998,10 @@ void spiWaitReady(spi_t *spi) {
 }
 
 #if CONFIG_IDF_TARGET_ESP32S2
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
 #define usr_mosi_dbitlen usr_mosi_bit_len
 #define usr_miso_dbitlen usr_miso_bit_len
+#endif
 #elif !defined(CONFIG_IDF_TARGET_ESP32)
 #define usr_mosi_dbitlen ms_data_bitlen
 #define usr_miso_dbitlen ms_data_bitlen
