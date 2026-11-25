@@ -98,7 +98,7 @@ public:
    *
    * Use `onLightChangeRgb()` instead.
    *
-   * @param callback Function called with state, red, green, blue, and level.
+   * @param callback Function called with state, red, green, blue, and ZCL CurrentLevel (0-255).
    */
   [[deprecated("Use onLightChangeRgb() instead. This will be removed in a future major version.")]]
   void onLightChange(ZigbeeColorLightRgbCallback callback) {

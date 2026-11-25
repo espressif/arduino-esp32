@@ -329,14 +329,14 @@ public:
   }
   /**
    * @brief Set a callback invoked when a bound light's brightness is reported.
-   * @param callback Function called with the brightness level.
+   * @param callback Function called with ZCL CurrentLevel (0-255).
    */
   void onLightLevelChange(void (*callback)(uint8_t)) {
     _on_light_level_change = callback;
   }
   /**
    * @brief Set a callback invoked when a bound light's brightness is reported, with source info.
-   * @param callback Function called with level, source endpoint, and source address.
+   * @param callback Function called with ZCL CurrentLevel (0-255), source endpoint, and source address.
    */
   void onLightLevelChangeWithSource(void (*callback)(uint8_t, uint8_t, ezb_address_t)) {
     _on_light_level_change_with_source = callback;

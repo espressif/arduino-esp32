@@ -154,7 +154,7 @@ Sets the reporting interval for humidity measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change in humidity to trigger a report, in percent
+* ``delta`` - Minimum change in humidity to trigger a report, in percentage
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

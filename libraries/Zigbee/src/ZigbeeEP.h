@@ -218,7 +218,7 @@ public:
   /**
    * @brief Set the power source type and optional battery status.
    * @param power_source Power source (`ZB_POWER_SOURCE_MAINS`, `ZB_POWER_SOURCE_BATTERY`, etc.).
-   * @param percentage Battery charge in percent (0-100). Only used for a battery
+   * @param percentage Battery charge percentage (0-100). Only used for a battery
    *                   power source. Values above 100, including the default 0xff,
    *                   are clamped to 100 and then stored as percentage * 2 (ZCL 0-200).
    * @param voltage Battery voltage in 100 mV units (e.g. 35 for 3.5 V). Only used for

@@ -89,16 +89,16 @@ public:
 
   /**
    * @brief Add humidity measurement capability to the temperature sensor.
-   * @param min Minimum humidity in percent.
-   * @param max Maximum humidity in percent.
-   * @param tolerance Tolerance in percent.
-   * @param defaultValue Default humidity in percent.
+   * @param min Minimum humidity in percentage.
+   * @param max Maximum humidity in percentage.
+   * @param tolerance Tolerance in percentage.
+   * @param defaultValue Default humidity in percentage.
    */
   void addHumiditySensor(float min = 0.0, float max = 100.0, float tolerance = 0.1, float defaultValue = 0.0);
 
   /**
    * @brief Set the humidity value in 0.01% resolution.
-   * @param value Humidity in percent (0-100).
+   * @param value Humidity in percentage (0-100).
    * @return true if successful.
    */
   bool setHumidity(float value);
@@ -107,7 +107,7 @@ public:
    * @brief Set the reporting interval for humidity measurements.
    * @param min_interval Minimum reporting interval in seconds.
    * @param max_interval Maximum reporting interval in seconds.
-   * @param delta Minimum humidity change to trigger a report, in percent.
+   * @param delta Minimum humidity change to trigger a report, in percentage.
    * @return true if successful.
    */
   bool setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);
