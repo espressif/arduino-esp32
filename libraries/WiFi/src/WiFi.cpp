@@ -82,16 +82,20 @@ void WiFiClass::printDiag(Print &p) {
   esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA, &conf);
 
   const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);
+  size_t ssid_len = strlenn(ssid, 32);
   p.print("SSID (");
-  p.print(strlenn(ssid, 32));
+  p.print(ssid_len);
   p.print("): ");
-  p.println(ssid);
+  p.write(ssid, ssid_len);
+  p.println();
 
   const char *passphrase = reinterpret_cast<const char *>(conf.sta.password);
+  size_t passphrase_len = strlenn(passphrase, 64);
   p.print("Passphrase (");
-  p.print(strlenn(passphrase, 64));
+  p.print(passphrase_len);
   p.print("): ");
-  p.println(passphrase);
+  p.write(passphrase, passphrase_len);
+  p.println();
 
   p.print("BSSID set: ");
   p.println(conf.sta.bssid_set);

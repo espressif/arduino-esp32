@@ -714,6 +714,9 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
       // Reset USB Core
       USB0.grstctl |= USB_CSFTRST;
       while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
+#else
+      USB_DWC.grstctl_reg.csftrst = 1;
+      while (USB_DWC.grstctl_reg.csftrst) {}
 #endif
       chip_usb_set_persist_flags(USBDC_BOOT_DFU);
       REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
