@@ -16,6 +16,8 @@
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
 #include "soc/usb_struct.h"
 #include "soc/usb_reg.h"
+#else
+#include "soc/usb_dwc_struct.h"
 #endif
 #include "soc/usb_wrap_reg.h"
 #include "soc/usb_wrap_struct.h"
