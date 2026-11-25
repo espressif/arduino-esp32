@@ -452,6 +452,28 @@ bool ZigbeeCore::getAllowRejoinsWithWellKnownKey() {
   return ezb_secur_tcpol_get_allow_rejoins_with_well_known_key();
 }
 
+void ZigbeeCore::setDistributedSecurity(bool enable) {
+  if (!_initialized) {
+    log_w("setDistributedSecurity: call after role()");
+    return;
+  }
+  ezb_aps_secur_enable_distributed_security(enable);
+  log_v("Distributed security: %s", enable ? "true" : "false");
+}
+
+bool ZigbeeCore::setGlobalLinkKey(const uint8_t *key) {
+  if (!_initialized) {
+    log_w("setGlobalLinkKey: call after role()");
+    return false;
+  }
+  if (key == nullptr) {
+    log_e("setGlobalLinkKey: key is null");
+    return false;
+  }
+  ezb_secur_set_global_link_key(key);
+  return true;
+}
+
 // Application signal handler (registered via ezb_app_signal_add_handler()).
 // Returns true if the signal was fully handled, false to let the stack continue its default handling.
 bool zb_app_signal_handler(const ezb_app_signal_t *signal) {

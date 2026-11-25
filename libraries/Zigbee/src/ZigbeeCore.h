@@ -199,6 +199,10 @@ public:
   // Coordinator/TC: allow devices to rejoin using the well-known network key.
   void setAllowRejoinsWithWellKnownKey(bool allow);
   bool getAllowRejoinsWithWellKnownKey();
+  // Joiner: distributed security. role() leaves this off. Required for a Philips Hue Bridge.
+  void setDistributedSecurity(bool enable);
+  // Joiner: 16-byte global Trust Center link key. The library does not ship a default key.
+  bool setGlobalLinkKey(const uint8_t *key);
 
   //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
   void scanNetworks(uint32_t channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
