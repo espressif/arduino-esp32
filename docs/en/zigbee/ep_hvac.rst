@@ -36,11 +36,7 @@ ZigbeeHVAC
 
 Call the setters after ``Zigbee.role()``. They work before and after ``Zigbee.addEndpoint()``. Temperatures are degrees Celsius.
 
-Call ``enableReporting()`` after ``Zigbee.role()`` and before ``Zigbee.begin()``. It makes running state reportable. The stack rejects that change once ``begin()`` has registered the device. ``LocalTemperature`` is already reportable. System mode and the occupied setpoints stay unreportable. The stack answers those writes and reports local temperature and running state to the bound coordinator.
-
-.. code-block:: arduino
-
-    bool enableReporting();
+The constructor marks ``ThermostatRunningState`` reportable. ``LocalTemperature`` is already reportable. System mode and the occupied setpoints stay unreportable. The stack answers those writes and reports local temperature and running state to the bound coordinator.
 
 System Mode
 ***********

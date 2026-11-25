@@ -62,10 +62,6 @@ public:
   ZigbeeHVAC(uint8_t endpoint);
   ~ZigbeeHVAC() {}
 
-  // Call after Zigbee.role() and before Zigbee.begin(). Makes running state reportable.
-  // The stack rejects the change once begin() has registered the device.
-  bool enableReporting();
-
   // Send the current values to bound devices. Call from loop(), not from the onHVACChange callback.
   bool report();
   bool reportLocalTemperature();

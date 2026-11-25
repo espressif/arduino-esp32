@@ -261,8 +261,6 @@ void setup() {
   }
 
   zbHVAC.setManufacturerAndModel("Espressif", "ZigbeeHVAC");
-  // After role() and before begin(). Makes ThermostatRunningState reportable.
-  zbHVAC.enableReporting();
   zbHVAC.setControlSequence(HVAC_SEQ_COOLING_AND_HEATING);
   zbHVAC.setSystemMode(HVAC_SYSTEM_MODE_OFF);
   zbHVAC.setLocalTemperature(room_c);

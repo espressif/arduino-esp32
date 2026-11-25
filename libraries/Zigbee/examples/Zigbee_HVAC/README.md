@@ -16,7 +16,7 @@ The example simulates a room instead of reading a sensor. LocalTemperature start
 3. Accept SetpointRaiseOrLower.
 4. Publish the simulated room temperature and running state.
 
-Call ``enableReporting()`` after ``Zigbee.role()`` and before ``Zigbee.begin()``. It makes running state reportable. System mode and the occupied setpoints stay unreportable. The stack answers those writes itself, and it reports local temperature and running state on the interval ZHA configures. ``onHVACChange()`` only stores the new values. ``loop()`` moves the simulated room when the mode changes and updates ``LocalTemperature``. A short BOOT press sends that report immediately. A setpoint write does not move the room.
+The constructor marks running state reportable. ``LocalTemperature`` already is. System mode and the occupied setpoints stay unreportable. The stack answers those writes itself, and it reports local temperature and running state on the interval ZHA configures. ``onHVACChange()`` only stores the new values. ``loop()`` moves the simulated room when the mode changes and updates ``LocalTemperature``. A short BOOT press sends that report immediately. A setpoint write does not move the room.
 
 Occupied cooling is kept at least 2.5°C above occupied heating. Weekly schedule, setback and air-conditioner attributes are not part of this endpoint. Fan Control is a separate cluster and is not on this endpoint.
 

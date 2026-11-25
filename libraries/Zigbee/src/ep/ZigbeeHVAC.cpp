@@ -128,22 +128,8 @@ ZigbeeHVAC::ZigbeeHVAC(uint8_t endpoint) : ZigbeeEP(endpoint) {
   if (ezb_zcl_thermostat_cluster_desc_add_attr(thermostat, EZB_ZCL_ATTR_THERMOSTAT_THERMOSTAT_RUNNING_STATE_ID, &_running_state) != EZB_ERR_NONE) {
     log_e("Failed to add ThermostatRunningState");
   }
-}
-
-bool ZigbeeHVAC::enableReporting() {
-  // ezb_zcl_attr_desc_set_access() reads core globals. Those exist only after Zigbee.role(),
-  // and the call is rejected once begin() registers the device descriptor.
-  if (!Zigbee.initialized()) {
-    log_e("Call Zigbee.role() before ZigbeeHVAC::enableReporting()");
-    return false;
-  }
-  ezb_zcl_cluster_desc_t thermostat = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_THERMOSTAT, EZB_ZCL_CLUSTER_SERVER);
-  if (thermostat == nullptr) {
-    log_e("Thermostat cluster not found on HVAC endpoint");
-    return false;
-  }
   // LocalTemperature is already reportable. System mode and the occupied setpoints are not.
-  return hvac_enable_reporting(thermostat, EZB_ZCL_ATTR_THERMOSTAT_THERMOSTAT_RUNNING_STATE_ID);
+  hvac_enable_reporting(thermostat, EZB_ZCL_ATTR_THERMOSTAT_THERMOSTAT_RUNNING_STATE_ID);
 }
 
 bool ZigbeeHVAC::reportAttr(uint16_t attr_id) {
