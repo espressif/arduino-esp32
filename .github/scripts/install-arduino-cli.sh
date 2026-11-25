@@ -13,7 +13,21 @@ if [ ! -d "$ARDUINO_IDE_PATH" ] || [ ! -f "$ARDUINO_IDE_PATH/arduino-cli" ]; the
         unzip -q arduino-cli.zip -d "$ARDUINO_IDE_PATH"
         rm arduino-cli.zip
     else
-        curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
-            https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$ARDUINO_IDE_PATH" sh
+        install_script="$(mktemp)"
+        rc=0
+        if curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+            -o "$install_script" \
+            https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh; then
+            BINDIR="$ARDUINO_IDE_PATH" sh "$install_script" || rc=$?
+        else
+            rc=$?
+        fi
+        rm -f "$install_script"
+        if [ "$rc" -ne 0 ]; then
+            if (return 0 2>/dev/null); then
+                return "$rc"
+            fi
+            exit "$rc"
+        fi
     fi
 fi
