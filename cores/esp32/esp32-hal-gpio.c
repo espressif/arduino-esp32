@@ -29,8 +29,17 @@
 
 // It fixes lack of pin definition for S3 and for any future SoC
 // this function works for ESP32, ESP32-S2 and ESP32-S3 - including the C3, it will return -1 for any pin
+#if SOC_TOUCH_SENSOR_SUPPORTED && !defined(SOC_TOUCH_SENSOR_NUM)
+// ESP-IDF 6 dropped SOC_TOUCH_SENSOR_NUM; esp32-hal-touch-ng.c derives it the same way.
+#define SOC_TOUCH_SENSOR_NUM (SOC_TOUCH_MAX_CHAN_ID + 1)
+#endif
+
 #if SOC_TOUCH_SENSOR_NUM > 0
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/touch_sensor_periph.h"
+#else
 #include "soc/touch_sensor_periph.h"
+#endif
 
 int8_t digitalPinToTouchChannel(uint8_t pin) {
   if (pin < SOC_GPIO_PIN_COUNT) {
