@@ -710,13 +710,15 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
       REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
     } else if (usb_persist_mode == RESTART_BOOTLOADER_DFU) {
       //DFU Download
-#if CONFIG_IDF_TARGET_ESP32S2 && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
+#if CONFIG_IDF_TARGET_ESP32S2
       // Reset USB Core
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 2, 0)
       USB0.grstctl |= USB_CSFTRST;
       while ((USB0.grstctl & USB_CSFTRST) == USB_CSFTRST) {}
 #else
       USB_DWC.grstctl_reg.csftrst = 1;
       while (USB_DWC.grstctl_reg.csftrst) {}
+#endif
 #endif
       chip_usb_set_persist_flags(USBDC_BOOT_DFU);
       REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
