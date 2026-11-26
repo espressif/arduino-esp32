@@ -42,8 +42,8 @@ uint8_t led = 2;
 #endif
 uint8_t button = BOOT_PIN;
 
-// Replace these bytes with the Philips Hue ZLL Trust Center link key.
-// This placeholder will not join a Hue Bridge.
+// Replace these bytes with a Philips Hue Trust Center link key.
+// See README.md. This placeholder will not join a Hue Bridge.
 static const uint8_t hue_trust_center_key[16] = {
   0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
 };

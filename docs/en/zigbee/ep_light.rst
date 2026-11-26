@@ -93,8 +93,8 @@ Philips Hue Bridge
 
 ``Zigbee_Hue_Light`` is a router on/off light that can join a Philips Hue Bridge. After ``role()``
 the sketch enables distributed security, passes a 16-byte Trust Center link key, and sets the
-endpoint version to 1. Replace the placeholder key in the sketch with the Hue ZLL key. The library
-does not ship that key.
+endpoint version to 1. Replace the placeholder key in the sketch with a Hue Trust Center link key.
+The library does not ship that key. Public copies that work with Hue are available online.
 
 .. literalinclude:: ../../../libraries/Zigbee/examples/Zigbee_Hue_Light/Zigbee_Hue_Light.ino
     :language: arduino

@@ -4,7 +4,9 @@ This example is an on/off light router that can join a Philips Hue Bridge.
 
 The bridge does not accept the stock on/off light. After `Zigbee.role()` the sketch turns on distributed security, sets a 16-byte Trust Center link key, and sets the endpoint device version to 1. Hue caches version 0 and then refuses the device.
 
-The array `hue_trust_center_key` in the sketch is a placeholder. Replace it with the Hue ZLL Trust Center link key before pairing. This library does not include that key.
+The array `hue_trust_center_key` in the sketch is a placeholder. Replace it with a 16-byte Hue Trust Center link key before pairing. This library does not include that key.
+
+Hue does not use the public `ZigbeeAlliance09` key. The Hue app does not show a key either. The same key works for every Hue Bridge, and public copies that work with Hue are available online. Copy those 16 bytes into `hue_trust_center_key`.
 
 The On/Off cluster includes `OnTime`, `OffWaitTime`, and `GlobalSceneControl`, so a Hue Off with effect turns this light off. There is no Level Control cluster, so the LED does not fade.
 
