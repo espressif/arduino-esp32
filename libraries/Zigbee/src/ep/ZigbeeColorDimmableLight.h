@@ -285,6 +285,7 @@ public:
 
 private:
   void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
+  void addOnOffEffectAttributes();
   bool setLightColorMode(uint8_t color_mode);
   bool isColorModeSupported(uint8_t color_mode);
 

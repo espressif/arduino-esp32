@@ -105,6 +105,8 @@ closeNetwork	KEYWORD2
 setRouterRejoinRequired	KEYWORD2
 setAllowRejoinsWithWellKnownKey	KEYWORD2
 getAllowRejoinsWithWellKnownKey	KEYWORD2
+setDistributedSecurity	KEYWORD2
+setGlobalLinkKey	KEYWORD2
 scanNetworks	KEYWORD2
 scanComplete	KEYWORD2
 getScanResult	KEYWORD2

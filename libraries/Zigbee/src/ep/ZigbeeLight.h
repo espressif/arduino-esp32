@@ -63,6 +63,7 @@ public:
 
 private:
   void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
+  void addOnOffEffectAttributes();
   //callback function to be called on light change
   void (*_on_light_change)(bool);
   void lightChanged();

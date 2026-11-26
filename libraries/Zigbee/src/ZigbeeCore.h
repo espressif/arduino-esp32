@@ -377,6 +377,10 @@ public:
    * @return true if well-known-key rejoins are allowed.
    */
   bool getAllowRejoinsWithWellKnownKey();
+  // Joiner: distributed security. role() leaves this off. Required for a Philips Hue Bridge.
+  void setDistributedSecurity(bool enable);
+  // Joiner: 16-byte global Trust Center link key. The library does not ship a default key.
+  bool setGlobalLinkKey(const uint8_t *key);
 
   /**
    * @brief Scan for available Zigbee networks.

@@ -9,6 +9,7 @@ The ``ZigbeeLight`` class provides a simple on/off light endpoint for Zigbee net
 
 **Features:**
 * Simple on/off control
+* ``OnTime``, ``OffWaitTime``, and ``GlobalSceneControl``, so Off with effect turns the light off
 * State change callbacks
 
 API Reference
@@ -85,4 +86,15 @@ Basic Light Implementation
 **************************
 
 .. literalinclude:: ../../../libraries/Zigbee/examples/Zigbee_On_Off_Light/Zigbee_On_Off_Light.ino
+    :language: arduino
+
+Philips Hue Bridge
+******************
+
+``Zigbee_Hue_Light`` is a router on/off light that can join a Philips Hue Bridge. After ``role()``
+the sketch enables distributed security, passes a 16-byte Trust Center link key, and sets the
+endpoint version to 1. Replace the placeholder key in the sketch with a Hue Trust Center link key.
+The library does not ship that key. Public copies that work with Hue are available online.
+
+.. literalinclude:: ../../../libraries/Zigbee/examples/Zigbee_Hue_Light/Zigbee_Hue_Light.ino
     :language: arduino

@@ -56,6 +56,7 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
     log_e("Failed to create color dimmable light endpoint descriptor");
     return;
   }
+  addOnOffEffectAttributes();
 
   // Optional color attributes are not all created from color_cfg; add only if missing.
   addOrSetEpClusterAttr(
@@ -77,6 +78,20 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
   addOrSetEpClusterAttr(
     EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID,
     (void *)&_color_temp_physical_max_mireds, ezb_zcl_color_control_cluster_desc_add_attr
+  );
+}
+
+void ZigbeeColorDimmableLight::addOnOffEffectAttributes() {
+  uint8_t global_scene_control = EZB_ZCL_ON_OFF_GLOBAL_SCENE_CONTROL_DEFAULT_VALUE;
+  uint16_t on_time = EZB_ZCL_ON_OFF_ON_TIME_DEFAULT_VALUE;
+  uint16_t off_wait_time = EZB_ZCL_ON_OFF_OFF_WAIT_TIME_DEFAULT_VALUE;
+
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID, &global_scene_control, ezb_zcl_on_off_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID, &on_time, ezb_zcl_on_off_cluster_desc_add_attr);
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID, &off_wait_time, ezb_zcl_on_off_cluster_desc_add_attr
   );
 }
 
@@ -184,6 +199,9 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_messa
         _current_state = *(bool *)message->in.attribute.data.value;
         lightChangedByMode();
       }
+      return;
+    } else if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID
+               || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID) {
       return;
     } else {
       log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->in.attribute.id);

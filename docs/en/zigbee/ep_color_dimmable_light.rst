@@ -8,7 +8,7 @@ About
 The ``ZigbeeColorDimmableLight`` class provides an endpoint for color dimmable lights in Zigbee networks. This endpoint implements the Zigbee Home Automation (HA) standard for color lighting devices, supporting multiple color modes (RGB/XY, HSV, and Color Temperature), dimming, and scene management.
 
 **Features:**
-* On/off control
+* On/off control, including Off with effect (``OnTime``, ``OffWaitTime``, ``GlobalSceneControl``)
 * Brightness level control (ZCL CurrentLevel, 0-255; passed through unchanged)
 * RGB/XY color control
 * HSV (Hue/Saturation) color support

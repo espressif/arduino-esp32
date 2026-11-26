@@ -334,6 +334,32 @@ Returns the current Trust Center policy for well-known-key rejoins.
 
     bool getAllowRejoinsWithWellKnownKey();
 
+setDistributedSecurity
+^^^^^^^^^^^^^^^^^^^^^^
+
+Enables joining a distributed Zigbee network. ``role()`` leaves distributed security off.
+Call after ``role()`` and before ``begin()``. A Philips Hue Bridge requires this.
+
+.. code-block:: arduino
+
+    void setDistributedSecurity(bool enable);
+
+* ``enable`` - ``true`` to join a distributed network, ``false`` to stay on the centralized default
+
+setGlobalLinkKey
+^^^^^^^^^^^^^^^^
+
+Sets the 16-byte global Trust Center link key used while joining. Call after ``role()`` and before
+``begin()``. The library does not contain a default key. Pass the key from the sketch. A Philips Hue
+Bridge uses its ZLL Trust Center link key, which is not the Zigbee HA default.
+
+.. code-block:: arduino
+
+    bool setGlobalLinkKey(const uint8_t *key);
+
+* ``key`` - Pointer to 16 key bytes. Must not be ``nullptr``
+* Returns ``true`` when the key is accepted
+
 Radio Configuration
 *******************
 

@@ -8,7 +8,7 @@ About
 The ``ZigbeeDimmableLight`` class provides a dimmable light endpoint for Zigbee networks. This endpoint implements the Zigbee Home Automation (HA) standard for dimmable lighting control with both on/off and brightness level control.
 
 **Features:**
-* On/off control
+* On/off control, including Off with effect (``OnTime``, ``OffWaitTime``, ``GlobalSceneControl``)
 * Brightness level control (ZCL CurrentLevel, 0-255; passed through unchanged)
 * State and level change callbacks
 * Integration with common endpoint features (binding, OTA, etc.)

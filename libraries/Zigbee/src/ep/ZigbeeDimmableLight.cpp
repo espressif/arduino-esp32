@@ -32,6 +32,21 @@ ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) 
   _current_level = 255;
   ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
   _ep_desc = ezb_zha_create_dimmable_light(_endpoint, &light_cfg);
+  addOnOffEffectAttributes();
+}
+
+void ZigbeeDimmableLight::addOnOffEffectAttributes() {
+  uint8_t global_scene_control = EZB_ZCL_ON_OFF_GLOBAL_SCENE_CONTROL_DEFAULT_VALUE;
+  uint16_t on_time = EZB_ZCL_ON_OFF_ON_TIME_DEFAULT_VALUE;
+  uint16_t off_wait_time = EZB_ZCL_ON_OFF_OFF_WAIT_TIME_DEFAULT_VALUE;
+
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID, &global_scene_control, ezb_zcl_on_off_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID, &on_time, ezb_zcl_on_off_cluster_desc_add_attr);
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID, &off_wait_time, ezb_zcl_on_off_cluster_desc_add_attr
+  );
 }
 
 // set attribute method -> method overridden in child class
@@ -43,6 +58,9 @@ void ZigbeeDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t 
         _current_state = *(bool *)message->in.attribute.data.value;
         lightChanged();
       }
+      return;
+    } else if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID
+               || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID) {
       return;
     } else {
       log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->in.attribute.id);
