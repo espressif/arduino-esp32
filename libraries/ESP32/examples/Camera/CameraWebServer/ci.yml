@@ -9,6 +9,8 @@ fqbn:
     - espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=custom,FlashMode=qio
     - espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=custom,FlashMode=qio
     - espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=custom,FlashMode=qio
+  esp32s31:
+    - espressif:esp32:esp32s31:USBMode=default,PartitionScheme=custom,FlashMode=qio
 
 requires:
   - CONFIG_CAMERA_TASK_STACK_SIZE=[0-9]+
