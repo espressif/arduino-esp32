@@ -65,7 +65,10 @@ public:
   /** @brief Reset all fields to their default (unset) values. */
   void clear();
 
-  /** @brief Initialize a new complete dataset with sensible random defaults. */
+  /**
+   * @brief Initialize a new complete dataset with sensible random defaults.
+   * @note OpenThread must already be initialized with OpenThread::begin().
+   */
   void initNew();
 
   /** @brief Access the underlying OpenThread dataset structure. */
@@ -73,7 +76,10 @@ public:
 
   // Setters
 
-  /** @brief Set the network name. @param name Null-terminated network name. */
+  /**
+   * @brief Set the network name.
+   * @param name Null-terminated network name (maximum 16 ASCII characters).
+   */
   void setNetworkName(const char *name);
 
   /** @brief Set the Extended PAN ID. @param extPanId 8-byte array. */
@@ -90,24 +96,25 @@ public:
 
   // Getters
 
-  /** @brief Get the network name. */
+  /** @brief Get the network name. @return Pointer to the name, or NULL if not set. */
   const char *getNetworkName() const;
 
-  /** @brief Get the Extended PAN ID (8 bytes). */
+  /** @brief Get the Extended PAN ID (8 bytes). @return Pointer to 8 bytes, or NULL if not set. */
   const uint8_t *getExtendedPanId() const;
 
-  /** @brief Get the network key (16 bytes). */
+  /** @brief Get the network key (16 bytes). @return Pointer to 16 bytes, or NULL if not set. */
   const uint8_t *getNetworkKey() const;
 
-  /** @brief Get the IEEE 802.15.4 channel. */
+  /** @brief Get the IEEE 802.15.4 channel. @return Channel 11..26, or 0 if not set. */
   uint8_t getChannel() const;
 
-  /** @brief Get the PAN ID. */
+  /** @brief Get the PAN ID. @return 16-bit PAN ID, or 0 if not set. */
   uint16_t getPanId() const;
 
   /**
    * @brief Apply this dataset to an OpenThread instance as the active dataset.
    * @param instance Target OpenThread instance.
+   * @note Prefer OpenThread::commitDataSet() from sketches; this is the lower-level hook.
    */
   void apply(otInstance *instance);
 
@@ -134,12 +141,17 @@ public:
   static const char *otGetStringDeviceRole();
 
   /**
-   * @brief Print network information (name, channel, PAN ID, addresses) to a stream.
+   * @brief Print network information to a stream.
+   *
+   * Prints device role, RLOC16, network name, channel, PAN ID, Extended PAN ID,
+   * and network key.
    * @param output Destination stream (e.g. Serial).
    */
   static void otPrintNetworkInformation(Stream &output);
 
+  /** @brief Construct the wrapper. Prefer the global @ref OThread instance. */
   OpenThread();
+  /** @brief Destroy the wrapper and call @ref end(). */
   ~OpenThread();
 
   /** @brief true if the OpenThread stack is running. */
@@ -148,6 +160,10 @@ public:
   /**
    * @brief Initialize the OpenThread stack.
    * @param OThreadAutoStart When true, auto-start Thread using the NVS dataset.
+   *
+   * Blocks until the worker task has finished initializing the stack and reloaded
+   * any persisted Active Operational Dataset from NVS, so @ref hasActiveDataset
+   * can be queried immediately after return.
    *
    * If an OpenThread instance is already running (CHIP / Matter started it),
    * attach to that instance and skip stack init, netif, mainloop and auto-start.
@@ -173,11 +189,15 @@ public:
 
   /**
    * @brief Block until this device is a Thread child, router, or leader.
-   * @return true if attached before timeoutMs.
+   * @param timeoutMs Maximum time to wait, in milliseconds.
+   * @return true if attached before @p timeoutMs.
    */
   static bool waitForAttach(uint32_t timeoutMs);
 
-  /** @brief Start the Thread network (equivalent to CLI "thread start"). */
+  /**
+   * @brief Start the Thread network (equivalent to CLI "thread start").
+   * @note The IPv6 interface must be brought up separately with @ref networkInterfaceUp().
+   */
   void start();
 
   /** @brief Stop the Thread network (equivalent to CLI "thread stop"). */
@@ -186,7 +206,12 @@ public:
   /** @brief Bring up the Thread network interface (equivalent to "ifconfig up"). */
   void networkInterfaceUp();
 
-  /** @brief Bring down the Thread network interface (equivalent to "ifconfig down"). */
+  /**
+   * @brief Bring down the Thread network interface (equivalent to "ifconfig down").
+   *
+   * Also clears the cached unicast/multicast address lists (same as
+   * @ref networkInterfaceUp(), @ref start(), and @ref stop()).
+   */
   void networkInterfaceDown();
 
   /**
@@ -211,7 +236,10 @@ public:
   /** @brief Get the node Extended PAN ID (8 bytes). */
   const uint8_t *getExtendedPanId() const;
 
-  /** @brief Get the node network key (16 bytes). */
+  /**
+   * @brief Get the node network key (16 bytes).
+   * @note The key is stored in static storage and remains valid after this call returns.
+   */
   const uint8_t *getNetworkKey() const;
 
   /** @brief Get the node IEEE 802.15.4 channel. */
@@ -226,17 +254,21 @@ public:
    * Commissioner/Joiner where the full Active Operational Dataset is not built
    * locally (see commitDataSet()/DataSet for the offline path). Stop the Thread
    * protocol before changing these on an already-attached device.
+   *
+   * All return @c OT_ERROR_NONE on success, @c OT_ERROR_INVALID_STATE if the
+   * stack is not initialized, @c OT_ERROR_INVALID_ARGS for a null argument, or
+   * @c OT_ERROR_FAILED if the OpenThread API lock could not be acquired.
    * @{
    */
-  /** @brief Set the IEEE 802.15.4 channel. @param channel Channel 11..26. */
+  /** @brief Set the IEEE 802.15.4 channel. @param channel Channel 11..26. @return OpenThread error. */
   otError setChannel(uint8_t channel);
-  /** @brief Set the PAN ID. @param panid 16-bit PAN ID. */
+  /** @brief Set the PAN ID. @param panid 16-bit PAN ID. @return OpenThread error. */
   otError setPanId(uint16_t panid);
-  /** @brief Set the Extended PAN ID. @param extpanid 8-byte array. */
+  /** @brief Set the Extended PAN ID. @param extpanid 8-byte array. @return OpenThread error. */
   otError setExtendedPanId(const uint8_t *extpanid);
-  /** @brief Set the network key. @param key 16-byte array. */
+  /** @brief Set the network key. @param key 16-byte array. @return OpenThread error. */
   otError setNetworkKey(const uint8_t *key);
-  /** @brief Set the network name. @param name Null-terminated network name. */
+  /** @brief Set the network name. @param name Null-terminated name, up to 16 ASCII characters. @return OpenThread error. */
   otError setNetworkName(const char *name);
   /** @} */
 
@@ -247,10 +279,16 @@ public:
    */
   bool getEui64(uint8_t out[8]) const;
 
-  /** @brief Factory-assigned EUI-64 as a hex String. */
+  /**
+   * @brief Factory-assigned EUI-64 as a 16-character lowercase hex String.
+   * @return Hex string, or empty on failure.
+   */
   String getEui64() const;
 
-  /** @brief Currently configured 802.15.4 extended address (may differ from EUI-64). */
+  /**
+   * @brief Currently configured 802.15.4 extended address (may differ from EUI-64).
+   * @return Pointer into stack-owned storage; valid only transiently.
+   */
   const uint8_t *getExtendedAddress() const;
 
   /** @brief Thread protocol version (e.g. 4 == 1.3). */
@@ -274,14 +312,18 @@ public:
    * (networkInterfaceUp()) and the Thread protocol must NOT be started yet. On
    * success the active dataset is provisioned by the commissioner; call start()
    * afterwards to enable Thread.
-   * @param pskd            Pre-Shared Key for the Device (6..32 base32-thread chars).
+   * @param pskd            Pre-Shared Key for the Device (6..32 base32-thread chars;
+   *                        must not contain I, O, Q, or the digit 0).
    * @param timeoutMs       How long to block before giving up (ms).
    * @param provisioningUrl Optional provisioning URL.
    * @param vendorName      Optional vendor name.
    * @param vendorModel     Optional vendor model.
    * @param vendorSwVersion Optional vendor software version.
    * @param vendorData      Optional vendor-specific data.
-   * @return OT_ERROR_NONE on success, otherwise an OpenThread error.
+   * @return @c OT_ERROR_NONE on success; @c OT_ERROR_SECURITY (PSKd mismatch);
+   *         @c OT_ERROR_NOT_FOUND (no joinable network); @c OT_ERROR_RESPONSE_TIMEOUT
+   *         (commissioner or wrapper timeout — also calls @c otJoinerStop);
+   *         @c OT_ERROR_INVALID_STATE (IPv6 not up, or Thread already enabled).
    */
   otError startJoiner(
     const char *pskd, uint32_t timeoutMs = 30000, const char *provisioningUrl = nullptr, const char *vendorName = nullptr, const char *vendorModel = nullptr,
@@ -291,7 +333,11 @@ public:
   void stopJoiner();
   /** @brief Get the live Joiner state machine state. */
   otJoinerState getJoinerState() const;
-  /** @brief Get the device's Joiner ID (extended address used during commissioning). */
+  /**
+   * @brief Get the device's Joiner ID (extended address used during commissioning).
+   *
+   * By default this is the first 64 bits of SHA-256(EUI-64).
+   */
   const otExtAddress *getJoinerId() const;
 #endif /* CONFIG_OPENTHREAD_JOINER */
 
@@ -304,7 +350,10 @@ public:
    * OT_COMMISSIONER_STATE_ACTIVE is reached or the timeout fires. The device must
    * already be attached to a Thread network (e.g. as Leader).
    * @param timeoutMs How long to block before giving up (ms).
-   * @return OT_ERROR_NONE on success, otherwise an OpenThread error.
+   * @return @c OT_ERROR_NONE when @c OT_COMMISSIONER_STATE_ACTIVE;
+   *         @c OT_ERROR_REJECTED if the petition was denied; @c OT_ERROR_RESPONSE_TIMEOUT
+   *         if it did not resolve in time (wrapper also calls @c otCommissionerStop);
+   *         @c OT_ERROR_INVALID_STATE if the device is not attached.
    */
   otError startCommissioner(uint32_t timeoutMs = 30000);
   /**
@@ -312,7 +361,8 @@ public:
    * @param pskd       Pre-Shared Key for the Device the joiner must present.
    * @param timeoutSec Lifetime of the joiner entry on the commissioner (seconds).
    * @param eui64      Specific joiner EUI-64, or nullptr to accept any joiner.
-   * @return OT_ERROR_NONE on success, otherwise an OpenThread error.
+   * @return @c OT_ERROR_NONE on success; @c OT_ERROR_NO_BUFS if the table is full;
+   *         @c OT_ERROR_INVALID_ARGS or @c OT_ERROR_INVALID_STATE otherwise.
    */
   otError addJoiner(const char *pskd, uint32_t timeoutSec = 120, const otExtAddress *eui64 = nullptr);
   /** @brief Stop acting as Commissioner. */
@@ -321,7 +371,13 @@ public:
   otCommissionerState getCommissionerState() const;
 #endif /* CONFIG_OPENTHREAD_COMMISSIONER */
 
-  /** @brief Get the underlying OpenThread instance for direct native API calls. */
+  /**
+   * @brief Get the underlying OpenThread instance for direct native API calls.
+   *
+   * Wrapper methods acquire the ESP OpenThread stack lock internally. Raw @c ot*
+   * calls made through this pointer are outside that protection and must follow
+   * the ESP-IDF OpenThread locking rules.
+   */
   otInstance *getInstance();
 
   /** @brief Get the current dataset tracked by this instance. */
@@ -344,6 +400,9 @@ public:
 
   /**
    * @name IPv6 address management (cached)
+   * Counts and indexed getters use a cache that is populated on first access.
+   * Call @ref clearUnicastAddressCache() / @ref clearMulticastAddressCache()
+   * (or @ref clearAllAddressCache()) to force a refresh after a role change.
    * @{
    */
   /** @brief Number of unicast addresses on the interface. */
@@ -369,6 +428,11 @@ public:
    */
   /**
    * @brief Subscribe the interface to an IPv6 multicast group.
+   *
+   * Membership is reference-counted: several callers (for example
+   * OThreadUDP::beginMulticast() and OThreadCoAPServer.joinMulticastGroup())
+   * can share the same group. Best practice: subscribe after attach
+   * (Child / Router / Leader).
    * @param group IPv6 multicast address (first byte 0xFF).
    * @return true on success or if already subscribed; false on error or if the
    *         stack is not running / @p group is not an IPv6 multicast address.
@@ -376,6 +440,8 @@ public:
   bool subscribeMulticast(const IPAddress &group);
   /**
    * @brief Unsubscribe the interface from an IPv6 multicast group.
+   *
+   * Drops one reference; OpenThread leaves the group only on the last unsubscribe.
    * @param group IPv6 multicast address previously passed to subscribeMulticast().
    * @return true on success; false on error or if the stack is not running.
    */
@@ -387,11 +453,11 @@ public:
    * Call when the role changes to force address re-resolution.
    * @{
    */
-  /** @brief Clear the cached unicast addresses. */
+  /** @brief Clear the cached unicast addresses (repopulated on the next access). */
   void clearUnicastAddressCache() const;
-  /** @brief Clear the cached multicast addresses. */
+  /** @brief Clear the cached multicast addresses (repopulated on the next access). */
   void clearMulticastAddressCache() const;
-  /** @brief Clear all cached addresses. */
+  /** @brief Clear all cached addresses (repopulated on the next access). */
   void clearAllAddressCache() const;
   /** @} */
 
