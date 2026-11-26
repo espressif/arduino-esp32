@@ -38,12 +38,9 @@ void ZigbeeLight::addOnOffEffectAttributes() {
   uint16_t off_wait_time = EZB_ZCL_ON_OFF_OFF_WAIT_TIME_DEFAULT_VALUE;
 
   addOrSetEpClusterAttr(
-    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID, &global_scene_control,
-    ezb_zcl_on_off_cluster_desc_add_attr
+    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID, &global_scene_control, ezb_zcl_on_off_cluster_desc_add_attr
   );
-  addOrSetEpClusterAttr(
-    EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID, &on_time, ezb_zcl_on_off_cluster_desc_add_attr
-  );
+  addOrSetEpClusterAttr(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID, &on_time, ezb_zcl_on_off_cluster_desc_add_attr);
   addOrSetEpClusterAttr(
     EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID, &off_wait_time, ezb_zcl_on_off_cluster_desc_add_attr
   );
@@ -56,10 +53,8 @@ void ZigbeeLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message
     if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_BOOL) {
       _current_state = *(bool *)message->in.attribute.data.value;
       lightChanged();
-    } else if (
-      message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID ||
-      message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID
-    ) {
+    } else if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL_ID || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_TIME_ID
+               || message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME_ID) {
       return;
     } else {
       log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->in.attribute.id);
