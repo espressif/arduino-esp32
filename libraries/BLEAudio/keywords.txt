@@ -3,10 +3,8 @@
 #######################################
 
 #######################################
-# Library (KEYWORD3)
+# Global Instances (KEYWORD3)
 #######################################
-
-BLEAudio	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
@@ -61,48 +59,6 @@ BLEAudioUnicastServer	KEYWORD1
 BLEAudioVolumeController	KEYWORD1
 BLEAudioVolumeRenderer	KEYWORD1
 BLEHearingAidType	KEYWORD1
-BaseCallback	KEYWORD1
-CallControlCallback	KEYWORD1
-CallStateCallback	KEYWORD1
-Callback	KEYWORD1
-CommandCallback	KEYWORD1
-Direction	KEYWORD1
-DiscoverCallback	KEYWORD1
-DiscoveredCallback	KEYWORD1
-Encryption	KEYWORD1
-ErrorCallback	KEYWORD1
-Feature	KEYWORD1
-HandoverCallback	KEYWORD1
-InputCallback	KEYWORD1
-LinkCallback	KEYWORD1
-LockCallback	KEYWORD1
-LockChangedCallback	KEYWORD1
-MuteCallback	KEYWORD1
-OffsetCallback	KEYWORD1
-Op	KEYWORD1
-Operation	KEYWORD1
-OriginateCallback	KEYWORD1
-PaState	KEYWORD1
-PresetCallback	KEYWORD1
-ReasonCallback	KEYWORD1
-ReceiveCallback	KEYWORD1
-ReceiveStateCallback	KEYWORD1
-RenameCallback	KEYWORD1
-ResultCallback	KEYWORD1
-SelectCallback	KEYWORD1
-SirkAccess	KEYWORD1
-SirkReadCallback	KEYWORD1
-SourceFoundCallback	KEYWORD1
-StateCallback	KEYWORD1
-Status	KEYWORD1
-StatusCallback	KEYWORD1
-Step	KEYWORD1
-StoppedCallback	KEYWORD1
-SwitchCallback	KEYWORD1
-TerminatedCallback	KEYWORD1
-TextCallback	KEYWORD1
-BTAddress	KEYWORD1
-BTStatus	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -352,8 +308,9 @@ Active	LITERAL1
 AddSource	LITERAL1
 Alerting	LITERAL1
 Alerts	LITERAL1
-BLE_AUDIO_CODEC_PRIO	LITERAL1
-BLE_AUDIO_CODEC_STACK	LITERAL1
+BgrMultiplex	LITERAL1
+BgrMultisink	LITERAL1
+Bgs96kbps	LITERAL1
 BLE_AUDIO_RSI_SIZE	LITERAL1
 BLE_AUDIO_SIRK_SIZE	LITERAL1
 BackLeft	LITERAL1
@@ -366,6 +323,8 @@ BroadcastGameReceiver	LITERAL1
 BroadcastGameSender	LITERAL1
 BroadcastMediaReceiver	LITERAL1
 BroadcastMediaSender	LITERAL1
+BroadcastReceptionStart	LITERAL1
+BroadcastReceptionStop	LITERAL1
 CallGateway	LITERAL1
 CallTerminal	LITERAL1
 CodeRequired	LITERAL1
@@ -374,8 +333,10 @@ Connect	LITERAL1
 Conversational	LITERAL1
 Decrypting	LITERAL1
 Dialing	LITERAL1
+DisableMute	LITERAL1
 EmergencyAlarm	LITERAL1
 Enable	LITERAL1
+Encryption	LITERAL1
 Ended	LITERAL1
 Failed	LITERAL1
 FastForward	LITERAL1
@@ -415,6 +376,8 @@ LocallyHeld	LITERAL1
 Lost	LITERAL1
 LowFreqEffects1	LITERAL1
 Media	LITERAL1
+MicGain	LITERAL1
+MicMute	LITERAL1
 ModifySource	LITERAL1
 Monaural	LITERAL1
 Mono	LITERAL1
@@ -437,6 +400,7 @@ PreviousTrack	LITERAL1
 Prohibited	LITERAL1
 Qos	LITERAL1
 ReadMute	LITERAL1
+ReadState	LITERAL1
 Reject	LITERAL1
 RemotelyHeld	LITERAL1
 RemoveSource	LITERAL1
@@ -447,6 +411,9 @@ ScanStart	LITERAL1
 ScanStop	LITERAL1
 Seeking	LITERAL1
 SetInputGain	LITERAL1
+SetOffset	LITERAL1
+SetStep	LITERAL1
+SetVolume	LITERAL1
 SideLeft	LITERAL1
 SideRight	LITERAL1
 SoundEffects	LITERAL1
@@ -457,6 +424,16 @@ SyncInfoRequested	LITERAL1
 Synced	LITERAL1
 Terminate	LITERAL1
 Tx	LITERAL1
+Ugg96kbpsSource	LITERAL1
+UggMultiplex	LITERAL1
+UggMultisink	LITERAL1
+Ugt64kbpsSink	LITERAL1
+Ugt80kbpsSource	LITERAL1
+UgtMultiplex	LITERAL1
+UgtMultisink	LITERAL1
+UgtMultisource	LITERAL1
+UgtSink	LITERAL1
+UgtSource	LITERAL1
 UnicastGameGateway	LITERAL1
 UnicastGameTerminal	LITERAL1
 UnicastMediaReceiver	LITERAL1
@@ -466,3 +443,9 @@ Unmute	LITERAL1
 Unspecified	LITERAL1
 Valid	LITERAL1
 VoiceAssistants	LITERAL1
+Volume	LITERAL1
+VolumeDown	LITERAL1
+VolumeMute	LITERAL1
+VolumeOffset	LITERAL1
+VolumeUp	LITERAL1
+kMaxSubgroups	LITERAL1

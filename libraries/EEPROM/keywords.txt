@@ -1,18 +1,71 @@
 #######################################
-# Syntax Coloring Map For Ultrasound
+# Syntax Coloring Map For EEPROM
 #######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+EEPROM	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-EEPROM	KEYWORD1
 EEPROMClass	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+begin	KEYWORD2
+commit	KEYWORD2
+convert	KEYWORD2
+end	KEYWORD2
+get	KEYWORD2
+getDataPtr	KEYWORD2
+isDirty	KEYWORD2
+length	KEYWORD2
+put	KEYWORD2
+read	KEYWORD2
+readAll	KEYWORD2
+readBool	KEYWORD2
+readByte	KEYWORD2
+readBytes	KEYWORD2
+readChar	KEYWORD2
+readDouble	KEYWORD2
+readFloat	KEYWORD2
+readInt	KEYWORD2
+readLong	KEYWORD2
+readLong64	KEYWORD2
+readShort	KEYWORD2
+readString	KEYWORD2
+readUChar	KEYWORD2
+readUInt	KEYWORD2
+readULong	KEYWORD2
+readULong64	KEYWORD2
+readUShort	KEYWORD2
+write	KEYWORD2
+writeAll	KEYWORD2
+writeBool	KEYWORD2
+writeByte	KEYWORD2
+writeBytes	KEYWORD2
+writeChar	KEYWORD2
+writeDouble	KEYWORD2
+writeFloat	KEYWORD2
+writeInt	KEYWORD2
+writeLong	KEYWORD2
+writeLong64	KEYWORD2
+writeShort	KEYWORD2
+writeString	KEYWORD2
+writeUChar	KEYWORD2
+writeUInt	KEYWORD2
+writeULong	KEYWORD2
+writeULong64	KEYWORD2
+writeUShort	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+EEPROM_FLASH_PARTITION_NAME	LITERAL1

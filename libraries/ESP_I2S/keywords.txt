@@ -3,21 +3,62 @@
 #######################################
 
 #######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+#######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-ESP_I2S	KEYWORD1
+I2SClass	KEYWORD1
+i2s_mode_t	KEYWORD1
+i2s_rx_transform_t	KEYWORD1
+i2s_channel_read_fn	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-onEvent	KEYWORD2
 setPort	KEYWORD2
 getPort	KEYWORD2
+setPins	KEYWORD2
+setInverted	KEYWORD2
+setPinsPdmTx	KEYWORD2
+setPinsPdmRx	KEYWORD2
+setInvertedPdm	KEYWORD2
+begin	KEYWORD2
+configureTX	KEYWORD2
+configureRX	KEYWORD2
+end	KEYWORD2
+readBytes	KEYWORD2
+write	KEYWORD2
+txChan	KEYWORD2
+txSampleRate	KEYWORD2
+txDataWidth	KEYWORD2
+txSlotMode	KEYWORD2
+rxChan	KEYWORD2
+rxSampleRate	KEYWORD2
+rxDataWidth	KEYWORD2
+rxSlotMode	KEYWORD2
+lastError	KEYWORD2
+available	KEYWORD2
+peek	KEYWORD2
+read	KEYWORD2
+recordWAV	KEYWORD2
+playWAV	KEYWORD2
+playMP3	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
-SR_EVENT_WAKEWORD	LITERAL1
+I2S_MODE_STD	LITERAL1
+I2S_MODE_TDM	LITERAL1
+I2S_MODE_PDM_TX	LITERAL1
+I2S_MODE_PDM_RX	LITERAL1
+I2S_MODE_MAX	LITERAL1
+I2S_RX_TRANSFORM_NONE	LITERAL1
+I2S_RX_TRANSFORM_32_TO_16	LITERAL1
+I2S_RX_TRANSFORM_16_STEREO_TO_MONO	LITERAL1
+I2S_RX_TRANSFORM_8_UNPACK	LITERAL1
+I2S_RX_TRANSFORM_MAX	LITERAL1

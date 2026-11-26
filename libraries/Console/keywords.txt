@@ -1,6 +1,12 @@
 #######################################
-# Syntax Coloring Map for Console
+# Syntax Coloring Map For Console
 #######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+Console	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
@@ -39,7 +45,5 @@ isPlainMode	KEYWORD2
 splitArgv	KEYWORD2
 
 #######################################
-# Instances (KEYWORD2)
+# Constants (LITERAL1)
 #######################################
-
-Console	KEYWORD2

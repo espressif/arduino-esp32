@@ -1,0 +1,29 @@
+#######################################
+# Syntax Coloring Map For SPIFFS
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+SPIFFS	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+SPIFFSFS	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+format	KEYWORD2
+totalBytes	KEYWORD2
+usedBytes	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

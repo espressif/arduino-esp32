@@ -1,0 +1,116 @@
+#######################################
+# Syntax Coloring Map For RainMaker
+#######################################
+
+#######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+RMaker	KEYWORD3
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+# Core
+RMakerClass	KEYWORD1
+Node	KEYWORD1
+Device	KEYWORD1
+Param	KEYWORD1
+
+# Standard devices
+Switch	KEYWORD1
+LightBulb	KEYWORD1
+Fan	KEYWORD1
+TemperatureSensor	KEYWORD1
+
+# Types and handles (RMakerType.h)
+node_t	KEYWORD1
+node_info_t	KEYWORD1
+param_val_t	KEYWORD1
+write_ctx_t	KEYWORD1
+read_ctx_t	KEYWORD1
+device_handle_t	KEYWORD1
+param_handle_t	KEYWORD1
+ota_type_t	KEYWORD1
+
+# Device callbacks
+deviceWriteCb	KEYWORD1
+deviceReadCb	KEYWORD1
+RMakerDevicePrivT	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# RMakerClass
+deinitNode	KEYWORD2
+enableOTA	KEYWORD2
+enableSchedule	KEYWORD2
+enableScenes	KEYWORD2
+enableSystemService	KEYWORD2
+enableTZService	KEYWORD2
+initNode	KEYWORD2
+setTimeSync	KEYWORD2
+setTimeZone	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
+
+# Node
+addDevice	KEYWORD2
+addNodeAttr	KEYWORD2
+getNodeHandle	KEYWORD2
+getNodeID	KEYWORD2
+getNodeInfo	KEYWORD2
+removeDevice	KEYWORD2
+
+# Device (base)
+addCb	KEYWORD2
+addDeviceAttr	KEYWORD2
+addParam	KEYWORD2
+assignPrimaryParam	KEYWORD2
+deleteDevice	KEYWORD2
+getDeviceHandle	KEYWORD2
+getDeviceName	KEYWORD2
+getParamByName	KEYWORD2
+updateAndReportParam	KEYWORD2
+
+# Device standard params
+addBrightnessParam	KEYWORD2
+addCCTParam	KEYWORD2
+addDirectionParam	KEYWORD2
+addHueParam	KEYWORD2
+addIntensityParam	KEYWORD2
+addNameParam	KEYWORD2
+addPowerParam	KEYWORD2
+addSaturationParam	KEYWORD2
+addSpeedParam	KEYWORD2
+addTemperatureParam	KEYWORD2
+
+# Standard device helpers
+standardFanDevice	KEYWORD2
+standardLightBulbDevice	KEYWORD2
+standardSwitchDevice	KEYWORD2
+standardTemperatureSensorDevice	KEYWORD2
+
+# Param
+addBounds	KEYWORD2
+addUIType	KEYWORD2
+addValidStrList	KEYWORD2
+getParamHandle	KEYWORD2
+getParamName	KEYWORD2
+updateAndReport	KEYWORD2
+
+# Helpers (RMakerType.h, RMakerQR.h, RMakerUtils.h, AppInsights.h)
+initAppInsights	KEYWORD2
+printQR	KEYWORD2
+RMakerFactoryReset	KEYWORD2
+RMakerWiFiReset	KEYWORD2
+value	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+PROV_QR_VERSION	LITERAL1
+QRCODE_BASE_URL	LITERAL1

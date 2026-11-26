@@ -3,17 +3,22 @@
 #######################################
 
 #######################################
+# Global Instances (KEYWORD3)
+#######################################
+
+
+#######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-ESP32HTTPUpdateServer	KEYWORD1
+HTTPUpdateServer	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-begin	KEYWORD2
 setup	KEYWORD2
+updateCredentials	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

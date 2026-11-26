@@ -1,36 +1,52 @@
 #######################################
-# Syntax Coloring Map For WiFi
+# Syntax Coloring Map For NetworkClientSecure
 #######################################
 
 #######################################
-# Library (KEYWORD3)
+# Global Instances (KEYWORD3)
 #######################################
-
-NetworkClientSecure	KEYWORD3
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
 NetworkClientSecure	KEYWORD1
+WiFiClientSecure	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-connect	KEYWORD2
-write	KEYWORD2
 available	KEYWORD2
-config	KEYWORD2
-read	KEYWORD2
-flush	KEYWORD2
-stop	KEYWORD2
+connect	KEYWORD2
 connected	KEYWORD2
-setCACert	KEYWORD2
-setCertificate	KEYWORD2
-setPrivateKey	KEYWORD2
+fd	KEYWORD2
+flush	KEYWORD2
+getFingerprintSHA256	KEYWORD2
+getPeerCertificate	KEYWORD2
+lastError	KEYWORD2
+loadCACert	KEYWORD2
+loadCertificate	KEYWORD2
+loadPrivateKey	KEYWORD2
+peek	KEYWORD2
+read	KEYWORD2
 setAlpnProtocols	KEYWORD2
+setCACert	KEYWORD2
+setCACertBundle	KEYWORD2
+setCertificate	KEYWORD2
 setCiphers	KEYWORD2
+setHandshakeTimeout	KEYWORD2
+setInsecure	KEYWORD2
+setPlainStart	KEYWORD2
+setPreSharedKey	KEYWORD2
+setPrivateKey	KEYWORD2
+socket	KEYWORD2
+startTLS	KEYWORD2
+stillInPlainStart	KEYWORD2
+stop	KEYWORD2
+useBuiltinCACertBundle	KEYWORD2
+verify	KEYWORD2
+write	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

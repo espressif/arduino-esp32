@@ -3,7 +3,7 @@
 #######################################
 
 #######################################
-# Library (KEYWORD3)
+# Global Instances (KEYWORD3)
 #######################################
 
 BLE	KEYWORD3
@@ -12,10 +12,7 @@ BLE	KEYWORD3
 # Datatypes (KEYWORD1)
 #######################################
 
-BLE	KEYWORD1
-AcceptHandler	KEYWORD1
-AuthCompleteHandler	KEYWORD1
-AuthorizationHandler	KEYWORD1
+BigParams	KEYWORD1
 BLEAdvFlag	KEYWORD1
 BLEAdvType	KEYWORD1
 BLEAdvertisedDevice	KEYWORD1
@@ -48,44 +45,18 @@ BLEService	KEYWORD1
 BLEStream	KEYWORD1
 BLESubscription	KEYWORD1
 BLEUUID	KEYWORD1
-BondStoreOverflowHandler	KEYWORD1
-CompleteHandler	KEYWORD1
-ConfirmPassKeyHandler	KEYWORD1
-ConnParamsHandler	KEYWORD1
-ConnParamsReqHandler	KEYWORD1
-ConnectFailHandler	KEYWORD1
-ConnectHandler	KEYWORD1
-DataHandler	KEYWORD1
-DisconnectHandler	KEYWORD1
+CisParams	KEYWORD1
 FUNCTION_KEY	KEYWORD1
 FrameType	KEYWORD1
 HID_REPORT	KEYWORD1
-IdentityHandler	KEYWORD1
 KEYMAP	KEYWORD1
 KeyDist	KEYWORD1
 MEDIA_KEY	KEYWORD1
 MODIFIER_KEY	KEYWORD1
-MtuChangedHandler	KEYWORD1
-NotifyCallback	KEYWORD1
-NotifyHandler	KEYWORD1
 NotifyStatus	KEYWORD1
-PassKeyDisplayHandler	KEYWORD1
-PassKeyRequestHandler	KEYWORD1
-PeerDataHandler	KEYWORD1
-PeriodicLostHandler	KEYWORD1
-PeriodicReportHandler	KEYWORD1
-PeriodicSyncHandler	KEYWORD1
 Phy	KEYWORD1
-RawEventHandler	KEYWORD1
-ReadHandler	KEYWORD1
-ResultHandler	KEYWORD1
-SecurityRequestHandler	KEYWORD1
+SduInfo	KEYWORD1
 Stack	KEYWORD1
-StatusHandler	KEYWORD1
-SubscribeHandler	KEYWORD1
-WriteHandler	KEYWORD1
-BTAddress	KEYWORD1
-BTStatus	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -95,6 +66,7 @@ addIncludedService	KEYWORD2
 addRaw	KEYWORD2
 addServiceUUID	KEYWORD2
 advertiseOnDisconnect	KEYWORD2
+appendOrReplace	KEYWORD2
 available	KEYWORD2
 batteryService	KEYWORD2
 begin	KEYWORD2
@@ -106,6 +78,7 @@ canBroadcast	KEYWORD2
 canIndicate	KEYWORD2
 canNotify	KEYWORD2
 canRead	KEYWORD2
+canSend	KEYWORD2
 canWrite	KEYWORD2
 canWriteNoResponse	KEYWORD2
 cancelConnect	KEYWORD2
@@ -136,6 +109,7 @@ deleteBond	KEYWORD2
 deviceInfoService	KEYWORD2
 disconnect	KEYWORD2
 discoverServices	KEYWORD2
+dump	KEYWORD2
 end	KEYWORD2
 erase	KEYWORD2
 featureReport	KEYWORD2
@@ -166,6 +140,7 @@ getConnections	KEYWORD2
 getDefaultPhy	KEYWORD2
 getDescriptor	KEYWORD2
 getDescriptors	KEYWORD2
+getDevice	KEYWORD2
 getDeviceName	KEYWORD2
 getDirectedAddress	KEYWORD2
 getEddystoneTLM	KEYWORD2
@@ -302,12 +277,14 @@ onAuthorization	KEYWORD2
 onBondStoreOverflow	KEYWORD2
 onComplete	KEYWORD2
 onConfirmPassKey	KEYWORD2
+onConnected	KEYWORD2
 onConnParamsUpdate	KEYWORD2
 onConnParamsUpdateRequest	KEYWORD2
 onConnect	KEYWORD2
 onConnectFail	KEYWORD2
 onData	KEYWORD2
 onDisconnect	KEYWORD2
+onDisconnected	KEYWORD2
 onIdentity	KEYWORD2
 onMtuChanged	KEYWORD2
 onNotify	KEYWORD2
@@ -318,8 +295,10 @@ onPeriodicLost	KEYWORD2
 onPeriodicReport	KEYWORD2
 onPeriodicSync	KEYWORD2
 onRead	KEYWORD2
+onReceive	KEYWORD2
 onResult	KEYWORD2
 onSecurityRequest	KEYWORD2
+onSent	KEYWORD2
 onStatus	KEYWORD2
 onSubscribe	KEYWORD2
 onWrite	KEYWORD2
@@ -348,6 +327,7 @@ reset	KEYWORD2
 resetCallbacks	KEYWORD2
 resetSecurity	KEYWORD2
 secureConnection	KEYWORD2
+send	KEYWORD2
 serviceUUID	KEYWORD2
 setActiveScan	KEYWORD2
 setAdvertisementData	KEYWORD2
@@ -429,6 +409,8 @@ setUptime	KEYWORD2
 setUserDescription	KEYWORD2
 setValue	KEYWORD2
 setWindow	KEYWORD2
+size	KEYWORD2
+slot	KEYWORD2
 start	KEYWORD2
 startAdvertising	KEYWORD2
 startBlocking	KEYWORD2
@@ -803,8 +785,20 @@ EddystoneTLM	LITERAL1
 EddystoneURL	LITERAL1
 EddystoneUUID	LITERAL1
 EncKey	LITERAL1
+EXTENDED_MAX_PAYLOAD	LITERAL1
 ExtendedProps	LITERAL1
 FEATURE	LITERAL1
+FORMAT_BOOLEAN	LITERAL1
+FORMAT_FLOAT32	LITERAL1
+FORMAT_FLOAT64	LITERAL1
+FORMAT_SINT16	LITERAL1
+FORMAT_SINT32	LITERAL1
+FORMAT_SINT8	LITERAL1
+FORMAT_UINT16	LITERAL1
+FORMAT_UINT32	LITERAL1
+FORMAT_UINT8	LITERAL1
+FORMAT_UTF16	LITERAL1
+FORMAT_UTF8	LITERAL1
 GET_IDLE	LITERAL1
 GET_REPORT	LITERAL1
 GeneralDisc	LITERAL1
@@ -860,6 +854,7 @@ KEY_VOLUME_UP	LITERAL1
 KeyboardDisplay	LITERAL1
 KeyboardOnly	LITERAL1
 LEFT_ARROW	LITERAL1
+LEGACY_MAX_PAYLOAD	LITERAL1
 LOGICAL_MAXIMUM	LITERAL1
 LOGICAL_MINIMUM	LITERAL1
 LimitedDisc	LITERAL1
