@@ -41,11 +41,13 @@ extern "C" {
 // -----------------------------------------------------------------------------------------------------------------------
 
 // Helper for getting length of 'nonstring' strings
-static size_t strlenn(const void * str, size_t max_len){
+static size_t strlenn(const void *str, size_t max_len) {
   size_t i = 0;
-  const uint8_t* s = (const uint8_t *)str;
-  for(i = 0; i < max_len; i++){
-    if(s[i] == 0) break;
+  const uint8_t *s = (const uint8_t *)str;
+  for (i = 0; i < max_len; i++) {
+    if (s[i] == 0) {
+      break;
+    }
   }
   return i;
 }

@@ -99,7 +99,11 @@
 // Codec sample rates negotiated by Bluedroid with the phone.
 // CVSD = narrowband (8 kHz); mSBC = wideband (16 kHz, HFP 1.6);
 // LC3-SWB = super-wideband (32 kHz, HFP 1.9, ESP-IDF 6.2+).
-enum class ScoCodec : uint8_t { CVSD, MSBC, LC3 };
+enum class ScoCodec : uint8_t {
+  CVSD,
+  MSBC,
+  LC3
+};
 
 constexpr uint32_t kCvsdRateHz = 8000;
 constexpr uint32_t kMsbcRateHz = 16000;
@@ -331,7 +335,7 @@ const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
-    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3:  return "CONNECTED_LC3";
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return "CONNECTED_LC3";
 #endif
   }
   return "UNKNOWN";

@@ -110,7 +110,11 @@ constexpr int16_t kToneAmplitude = 10000;  // ~30% of full scale
 // mSBC:   16 kHz, 120 samples / 7500 µs (240 bytes)
 // LC3-SWB: 32 kHz, 240 samples / 7500 µs (480 bytes) — HFP 1.9, IDF 6.2+
 // -----------------------------------------------------------------------------
-enum class ScoCodec : uint8_t { CVSD, MSBC, LC3 };
+enum class ScoCodec : uint8_t {
+  CVSD,
+  MSBC,
+  LC3
+};
 
 constexpr float kCvsdRateHz = 8000.0f;
 constexpr float kMsbcRateHz = 16000.0f;
@@ -188,12 +192,12 @@ constexpr uint32_t kAudioConnectRetryMs = 3000;
 // -----------------------------------------------------------------------------
 // State
 // -----------------------------------------------------------------------------
-bool slc_connected = false;     // Service Level Connection (HFP control channel) established
-bool audio_connected = false;   // SCO audio channel open and ready
-bool audio_connecting = false;  // SCO connection attempt in progress
-bool call_active = false;       // phone reports a call in progress (CIND call status)
-bool have_remote_bda = false;   // we know the address of the phone to connect to
-bool hf_ready = false;          // HFP profile stack initialized successfully
+bool slc_connected = false;           // Service Level Connection (HFP control channel) established
+bool audio_connected = false;         // SCO audio channel open and ready
+bool audio_connecting = false;        // SCO connection attempt in progress
+bool call_active = false;             // phone reports a call in progress (CIND call status)
+bool have_remote_bda = false;         // we know the address of the phone to connect to
+bool hf_ready = false;                // HFP profile stack initialized successfully
 ScoCodec sco_codec = ScoCodec::CVSD;  // negotiated SCO codec for the open audio link
 
 esp_bd_addr_t remote_bda = {0};  // Bluetooth address of the remote phone
@@ -401,7 +405,7 @@ const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
     case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
-    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3:  return "CONNECTED_LC3";
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_LC3: return "CONNECTED_LC3";
 #endif
   }
   return "UNKNOWN";
