@@ -27,17 +27,20 @@ if [ ! -d "$ARDUINO_BUILDER_PATH" ]; then
     archive="arduino.${ARCHIVE_FORMAT}"
     echo "Downloading '${ARDUINO_BUILDER_URL}${OS_NAME}.${ARCHIVE_FORMAT}' ..."
     if [ "$OS_IS_LINUX" == "1" ]; then
-        wget -q -O "$archive" "${ARDUINO_BUILDER_URL}${OS_NAME}.${ARCHIVE_FORMAT}"
+        wget -q --tries=5 --waitretry=2 --timeout=30 -O "$archive" "${ARDUINO_BUILDER_URL}${OS_NAME}.${ARCHIVE_FORMAT}"
         echo "Extracting '$archive' ..."
         tar xf "$archive"
         mv arduino-nightly "$ARDUINO_BUILDER_PATH"
     else
-        curl -fsSL -o "$archive" -L "${ARDUINO_BUILDER_URL}${OS_NAME}.${ARCHIVE_FORMAT}"
+        curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 \
+            -o "$archive" -L "${ARDUINO_BUILDER_URL}${OS_NAME}.${ARCHIVE_FORMAT}"
         echo "Extracting '$archive' ..."
         unzip -q "$archive"
         if [ "$OS_IS_MACOS" == "1" ]; then
             mkdir -p "$HOME/arduino_nightly"
             mv "Arduino.app" "$HOME/arduino_nightly/Arduino.app"
+            # Avoid Gatekeeper / syspolicyd scanning unpacked bundle files on every launch.
+            xattr -cr "$HOME/arduino_nightly/Arduino.app" 2>/dev/null || true
         else
             mv arduino-nightly "$ARDUINO_BUILDER_PATH"
         fi

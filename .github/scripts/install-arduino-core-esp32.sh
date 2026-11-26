@@ -10,10 +10,17 @@ _install_platform_tools() {
         echo "Libs cache hit; skipping get.py archive verification"
         args+=(--skip-verify)
     fi
+    if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${OS_IS_MACOS:-0}" == "1" ]; then
+        # Limit parallel xz extractions on 3-vCPU macOS Intel VMs to avoid starving Runner.Listener heartbeats.
+        args+=(--jobs 2)
+    fi
     if [ "${OS_IS_WINDOWS:-0}" == "1" ]; then
-        (cd "$tools_dir" && ./get.exe "${args[@]}")
+        (cd "$tools_dir" && ./get.exe "${args[@]}") || return 1
     else
-        (cd "$tools_dir" && python get.py "${args[@]}")
+        (cd "$tools_dir" && python get.py "${args[@]}") || return 1
+    fi
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        rm -rf "$tools_dir/dist"
     fi
 }
 
@@ -23,12 +30,16 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     mkdir -p "$ARDUINO_USR_PATH/hardware/espressif"
     cd "$ARDUINO_USR_PATH/hardware/espressif" || exit
 
-    echo "Installing Python Serial ..."
-    pip install pyserial > /dev/null
+    if ! python3 -c "import serial" 2>/dev/null && ! python -c "import serial" 2>/dev/null; then
+        echo "Installing Python Serial ..."
+        pip install pyserial > /dev/null
+    fi
 
     if [ "${OS_IS_WINDOWS:-0}" == "1" ]; then
-        echo "Installing Python Requests ..."
-        pip install requests > /dev/null
+        if ! python -c "import requests" 2>/dev/null; then
+            echo "Installing Python Requests ..."
+            pip install requests > /dev/null
+        fi
     fi
 
     if [ -n "${GITHUB_REPOSITORY:-}" ]; then
