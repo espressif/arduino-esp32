@@ -23,26 +23,63 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/wind_speed_measurement_desc.h"
 
+/**
+ * @brief Wind speed sensor endpoint for measurement in m/s (Zigbee HA).
+ */
 class ZigbeeWindSpeedSensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee wind speed sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeWindSpeedSensor(uint8_t endpoint);
   ~ZigbeeWindSpeedSensor() {}
 
-  // Set the WindSpeed value in 0,01 m/s
+  /**
+   * @brief Set the wind speed measurement value in 0.01 m/s resolution.
+   * @param value Wind speed in meters per second.
+   * @return true if successful.
+   */
   bool setWindSpeed(float value);
 
-  // Set the default (initial) value for the wind speed sensor in 0,01 m/s
-  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  /**
+   * @brief Set the default (initial) wind speed in 0.01 m/s resolution.
+   *
+   * Used as the initial measured value in factory-reset mode. Must be called before
+   * adding the endpoint to Zigbee. Only effective before commissioning.
+   *
+   * @param defaultValue Default wind speed in meters per second.
+   * @return true if successful.
+   */
   bool setDefaultValue(float defaultValue);
 
-  // Set the min and max value for the WindSpeed sensor
+  /**
+   * @brief Set the minimum and maximum measurement values.
+   * @param min Minimum wind speed in meters per second.
+   * @param max Maximum wind speed in meters per second.
+   * @return true if successful.
+   */
   bool setMinMaxValue(float min, float max);
 
-  // Set the tolerance value for the WindSpeed sensor
+  /**
+   * @brief Set the tolerance value for measurements.
+   * @param tolerance Tolerance in meters per second.
+   * @return true if successful.
+   */
   bool setTolerance(float tolerance);
 
-  // Set the reporting interval for WindSpeed measurement in seconds and delta
+  /**
+   * @brief Set the reporting configuration for wind speed measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report, in meters per second.
+   * @return true if successful.
+   */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  /**
+   * @brief Manually report the current wind speed value.
+   * @return true if successful.
+   */
   bool reportWindSpeed();
 
 private:

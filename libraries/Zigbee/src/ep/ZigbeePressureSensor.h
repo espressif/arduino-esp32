@@ -23,28 +23,64 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/pressure_measurement_desc.h"
 
+/**
+ * @brief Pressure sensor endpoint for atmospheric/barometric pressure in hPa (Zigbee HA).
+ */
 class ZigbeePressureSensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee pressure sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeePressureSensor(uint8_t endpoint);
   ~ZigbeePressureSensor() {}
 
-  // Set the pressure value in 1 hPa
+  /**
+   * @brief Set the pressure measurement value.
+   * @param value Pressure in hPa.
+   * @return true if successful.
+   */
   bool setPressure(int16_t value);
 
-  // Set the default (initial) value for the pressure sensor in 1 hPa
-  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  /**
+   * @brief Set the default (initial) pressure value in 1 hPa.
+   *
+   * Used as the initial measured value in factory-reset mode. Must be called before
+   * adding the endpoint to Zigbee. Only effective before commissioning.
+   *
+   * @param defaultValue Default pressure in hPa.
+   * @return true if successful.
+   */
   bool setDefaultValue(int16_t defaultValue);
 
-  // Set the min and max value for the pressure sensor in 1 hPa
+  /**
+   * @brief Set the minimum and maximum measurement values.
+   * @param min Minimum pressure in hPa.
+   * @param max Maximum pressure in hPa.
+   * @return true if successful.
+   */
   bool setMinMaxValue(int16_t min, int16_t max);
 
-  // Set the tolerance value for the pressure sensor in 1 hPa
+  /**
+   * @brief Set the tolerance value for measurements.
+   * @param tolerance Tolerance in hPa.
+   * @return true if successful.
+   */
   bool setTolerance(uint16_t tolerance);
 
-  // Set the reporting interval for pressure measurement in seconds and delta (pressure change in 1 hPa)
+  /**
+   * @brief Set the reporting configuration for pressure measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report in hPa.
+   * @return true if successful.
+   */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
-  // Report the pressure value
+  /**
+   * @brief Manually report the current pressure value.
+   * @return true if successful.
+   */
   bool report();
 
 private:

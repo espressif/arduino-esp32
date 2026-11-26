@@ -114,54 +114,129 @@
 
 #define ZB_MULTISTATE_APPLICATION_TYPE_OTHER_INDEX 0xFFFF
 
-//enum for bits set to check what multistate cluster were added
+/**
+ * @brief Bit flags for multistate clusters added to a ZigbeeMultistate endpoint.
+ */
 enum zigbee_multistate_clusters {
-  MULTISTATE_INPUT = 1,
-  MULTISTATE_OUTPUT = 2
+  MULTISTATE_INPUT = 1, /**< Multistate Input cluster. */
+  MULTISTATE_OUTPUT = 2 /**< Multistate Output cluster. */
 };
 
+/**
+ * @brief Multistate input/output endpoint for discrete states (Zigbee HA).
+ *
+ * Multistate Input (MI) reports sensor states (fan speed, HVAC mode, occupancy).
+ * Multistate Output (MO) is controlled by the coordinator.
+ *
+ * @note Home Assistant ZHA does not support multistate input and output clusters yet.
+ */
 class ZigbeeMultistate : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee multistate endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeMultistate(uint8_t endpoint);
   ~ZigbeeMultistate() {}
 
-  // Add multistate clusters
+  /**
+   * @brief Add the multistate input cluster to the endpoint.
+   * @return true if successful.
+   */
   bool addMultistateInput();
+  /**
+   * @brief Add the multistate output cluster to the endpoint.
+   * @return true if successful.
+   */
   bool addMultistateOutput();
 
-  // Set the application type and description for the multistate input
-  bool setMultistateInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_multistate_input.h for application type values
+  /**
+   * @brief Set the application type for the multistate input.
+   * @param application_type Application type constant (`ZB_MULTISTATE_APPLICATION_TYPE_*_INDEX`).
+   * @return true if successful.
+   */
+  bool setMultistateInputApplication(uint32_t application_type);
+  /**
+   * @brief Set a custom description for the multistate input.
+   * @param description Description string.
+   * @return true if successful.
+   */
   bool setMultistateInputDescription(const char *description);
+  /**
+   * @brief Set the number of states for the multistate input.
+   * @param number_of_states Number of discrete states (1-65535).
+   * @return true if successful.
+   */
   bool setMultistateInputStates(uint16_t number_of_states);
   // bool setMultistateInputStates(const char * const states[], uint16_t states_length);
 
-  // Set the application type and description for the multistate output
-  bool setMultistateOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_multistate_output.h for application type values
+  /**
+   * @brief Set the application type for the multistate output.
+   * @param application_type Application type constant (`ZB_MULTISTATE_APPLICATION_TYPE_*_INDEX`).
+   * @return true if successful.
+   */
+  bool setMultistateOutputApplication(uint32_t application_type);
+  /**
+   * @brief Set a custom description for the multistate output.
+   * @param description Description string.
+   * @return true if successful.
+   */
   bool setMultistateOutputDescription(const char *description);
+  /**
+   * @brief Set the number of states for the multistate output.
+   * @param number_of_states Number of discrete states (1-65535).
+   * @return true if successful.
+   */
   bool setMultistateOutputStates(uint16_t number_of_states);
   // bool setMultistateOutputStates(const char * const states[], uint16_t states_length);
 
-  // Use to set a cb function to be called on multistate output change
+  /**
+   * @brief Set a callback invoked when the multistate output value changes.
+   * @param callback Function called with the new state index.
+   */
   void onMultistateOutputChange(void (*callback)(uint16_t state)) {
     _on_multistate_output_change = callback;
   }
 
-  // Set the Multistate Input/Output value
+  /**
+   * @brief Set the multistate input value.
+   * @param state State index (0 to number_of_states-1).
+   * @return true if successful.
+   */
   bool setMultistateInput(uint16_t state);
+  /**
+   * @brief Set the multistate output value.
+   * @param state State index (0 to number_of_states-1).
+   * @return true if successful.
+   */
   bool setMultistateOutput(uint16_t state);
 
-  // Get the Multistate Input/Output values
+  /**
+   * @brief Get the current multistate input value.
+   * @return Current input state index.
+   */
   uint16_t getMultistateInput() {
     return _input_state;
   }
+  /**
+   * @brief Get the current multistate output value.
+   * @return Current output state index.
+   */
   uint16_t getMultistateOutput() {
     return _output_state;
   }
 
-  // Get state names and length
+  /**
+   * @brief Get the number of state names configured for multistate input.
+   * @return Number of input state names.
+   */
   uint16_t getMultistateInputStateNamesLength() {
     return _input_state_names_length;
   }
+  /**
+   * @brief Get the number of state names configured for multistate output.
+   * @return Number of output state names.
+   */
   uint16_t getMultistateOutputStateNamesLength() {
     return _output_state_names_length;
   }
@@ -172,8 +247,15 @@ public:
   //   return _output_state_names;
   // }
 
-  // Report Multistate Input/Output
+  /**
+   * @brief Manually report the current multistate input value.
+   * @return true if successful.
+   */
   bool reportMultistateInput();
+  /**
+   * @brief Manually report the current multistate output value.
+   * @return true if successful.
+   */
   bool reportMultistateOutput();
 
 private:

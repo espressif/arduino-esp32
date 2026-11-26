@@ -353,7 +353,11 @@ uint32_t __analogReadComparator(uint8_t pin) {
     }
   }
 
-  adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  err = adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  if (err != ESP_OK) {
+    log_e("adc_oneshot_read failed with error: %d", err);
+    return 0;
+  }
   return (uint32_t)value;
 }
 #else
@@ -378,7 +382,11 @@ uint16_t __analogRead(uint8_t pin) {
     }
   }
 
-  adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  err = adc_oneshot_read(adc_handle[adc_unit].adc_oneshot_handle, channel, &value);
+  if (err != ESP_OK) {
+    log_e("adc_oneshot_read failed with error: %d", err);
+    return 0;
+  }
   return mapResolution(value);
 }
 #endif
@@ -389,7 +397,7 @@ int32_t __analogReadMilliVolts(uint8_t pin) {
   adc_unit_t adc_unit;
   esp_err_t err = ESP_OK;
 
-  adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
+  err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
   if (err != ESP_OK) {
     log_e("Pin %u is not ADC pin!", pin);
     return value;

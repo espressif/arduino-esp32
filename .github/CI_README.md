@@ -182,51 +182,56 @@ The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine w
 
 **Trigger:**
 - Push to `master` or `release/*` branches
-- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `find_boards.sh`, etc.)
-- Manual workflow dispatch
+- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `find_boards.sh`, etc.); skipped on `pull_request` when the head branch is an in-repo `release/*` branch because the `push` trigger already covers `release/*`
+- Manual workflow dispatch (optional `tool` and comma-separated `socs` inputs)
 
-**Purpose:** Validate `upload.pattern` → `flasher.py` → esptool on every supported SoC, using a mock bootloader. Each tool uploads the same sketch **twice** per SoC (second flash exercises `--diff-with`).
+**Purpose:** Validate `upload.pattern` → `flasher.py` → esptool on every supported SoC, using a mock bootloader. `arduino-cli` uploads twice per SoC (second flash exercises `--diff-with` without recompiling). `arduino-builder` (headless IDE 1.x) uploads twice on the first SoC in each job to validate IDE 1.x `--diff-with` paths, and once on subsequent SoCs to avoid redundant cold JVM launches (set `MOCK_UPLOAD_BUILDER_TWICE=1` to force two builder uploads on every SoC).
 
 | Tool | Underlying | Install script |
 |------|------------|----------------|
 | `cli` | `arduino-cli` | `install-arduino-cli.sh` |
 | `builder` | arduino-nightly `processing.app.Base --upload` | `install-arduino-builder.sh` |
 
-The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink + `get.py`), not Board Manager.
+The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink + `get.py`), not Board Manager. Only the tool(s) selected for the job are installed.
 
 **Jobs:**
 
 #### `should-run`
 **Runs on:** Ubuntu-latest
 
-**Purpose:** Skip the expensive mock-upload matrix when a PR only changes non-official `boards.txt` entries.
+**Conditions:** Skipped when `github.event_name == 'pull_request'` from an in-repo `release/*` branch (avoiding duplicate runs alongside `push`).
+
+**Purpose:** Decide whether mock upload tests are needed and emit a sharded JSON `matrix` scoped to the affected `CORE_SOCS` via `.github/scripts/build_upload_matrix.py`.
 
 **Logic:**
-- Non-PR (`push`, `workflow_dispatch`): always run
+- Non-PR (`push`, `workflow_dispatch`): run all `CORE_SOCS` (or custom `inputs.socs` on `workflow_dispatch`)
 - PR: `tj-actions/changed-files` with `files_yaml` categories `boards` / `upload`
   - `upload` matches `on.pull_request.paths` minus `boards.txt` (not `**`, so `variants/` and other companion files do not force a run)
   - run `find_boards.sh official` only when `boards_any_changed`
-  - run mock upload if official `CORE_SOCS` boards changed (`FQBNS` non-empty) **or** `upload_any_changed`
+  - if `upload_any_changed`, test all `CORE_SOCS`; if only `boards.txt` changed (`FQBNS` non-empty), test only the changed `CORE_SOCS`; otherwise skip
 
 #### `mock-upload`
 **Conditions:** Only if `should-run.outputs.should_run == 'true'`
 
-**Matrix:** `ubuntu-latest`, `windows-latest`, `macos-26-intel` (3 parallel jobs)
+**Matrix (dynamic shards from `should-run`):**
+- `ubuntu-latest` (`tool: all`, up to 2 SoC shards)
+- `windows-latest` (`tool: all`, up to 3 SoC shards)
+- `macos-26-intel` (`tool: all`, up to 4 SoC shards — Intel macOS required by Arduino IDE v1; total concurrent macOS runners stays ≤ 4, within GitHub's 5-runner macOS limit)
 
-Each job loops all `CORE_SOCS` (8 chips): `start_mock_bootloader` (chip auto-detect by default) → cli twice → builder twice → `stop_mock_bootloader`.
+Each job loops its assigned SoCs: `start_mock_bootloader` → `cli` and/or `builder` → `stop_mock_bootloader`.
 
-**Per-job setup:** Python + pyserial, `pip install esp32-mock-bootloader==$(cat .github/esp32-mock-bootloader-version)` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), libs cache (same key as `push.yml`), xvfb on Linux.
+**Per-job setup:** Python 3.12 + pyserial + `esp32-mock-bootloader` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), `/etc/hosts` local hostname mapping on Intel macOS (prevents Java 8 mDNS timeouts), Linux libs cache (same key as `push.yml`), xvfb on Linux when running `builder`.
 
 The mock listens on TCP and upload tools use `socket://127.0.0.1:9876` on every OS (same as `test_mock_bootloader.py`).
 
-**CI entry script:** `.github/scripts/test-mock-upload.sh` (sources `mock_upload_lib.sh`; no args in GHA).
+**CI entry script:** `.github/scripts/test-mock-upload.sh [cli|builder|all] [soc[,soc2,...] ...]` (sources `mock_upload_lib.sh`).
 
-**Libraries:** `mock_upload_lib.sh` (bootloader, twice-upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
+**Libraries:** `mock_upload_lib.sh` (bootloader, upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a line-buffered grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
 
 **Local commands:**
 
 ```bash
-# Install mock bootloader (see https://github.com/espressif/esp32-mock-bootloader):
+# Install mock bootloader (see https://github.com/lucasssvaz/esp32-mock-bootloader):
 pip install esp32-mock-bootloader
 
 # flasher.py integration only (protocol tests live in esp32-mock-bootloader repo):
@@ -238,8 +243,8 @@ bash .github/scripts/test-mock-upload.sh cli esp32
 # Full matrix locally (all SoCs, cli + builder):
 bash .github/scripts/test-mock-upload.sh
 
-# Filter by tool and/or SoC:
-bash .github/scripts/test-mock-upload.sh cli esp32c3
+# Filter by tool and/or one or more SoCs:
+bash .github/scripts/test-mock-upload.sh cli esp32c3,esp32c6
 bash .github/scripts/test-mock-upload.sh builder esp32s3
 
 # Thin local wrapper (not used by GHA):

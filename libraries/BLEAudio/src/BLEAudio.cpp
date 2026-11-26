@@ -378,7 +378,7 @@ bool BLEAudio::isActive() const {
   return impl.active;
 }
 
-bool BLEAudio::isStarted() const {
+bool BLEAudio::isCommitted() const {
   BLE_CHECK_IMPL(false);
   return impl.started;
 }

@@ -9,7 +9,7 @@ The ``ZigbeeColorDimmableLight`` class provides an endpoint for color dimmable l
 
 **Features:**
 * On/off control
-* Brightness level control (0-255)
+* Brightness level control (ZCL CurrentLevel, 0-255; passed through unchanged)
 * RGB/XY color control
 * HSV (Hue/Saturation) color support
 * Color temperature (mireds) support
@@ -119,7 +119,7 @@ Sets the legacy callback function for light state changes (RGB mode).
   * ``red`` - Red component (0-255)
   * ``green`` - Green component (0-255)
   * ``blue`` - Blue component (0-255)
-  * ``level`` - Brightness level (0-255)
+  * ``level`` - ZCL CurrentLevel (0-255)
 
 .. note::
    This method is deprecated. Please use ``onLightChangeRgb()`` for RGB/XY mode callbacks.
@@ -141,7 +141,7 @@ Sets the callback function for RGB/XY color mode changes.
   * ``red`` - Red component (0-255)
   * ``green`` - Green component (0-255)
   * ``blue`` - Blue component (0-255)
-  * ``level`` - Brightness level (0-255)
+  * ``level`` - ZCL CurrentLevel (0-255)
 
 onLightChangeHsv
 ^^^^^^^^^^^^^^^^
@@ -159,7 +159,7 @@ Sets the callback function for HSV (Hue/Saturation) color mode changes.
   * ``state`` - Light state (true = on, false = off)
   * ``hue`` - Hue component (0-254)
   * ``saturation`` - Saturation component (0-254)
-  * ``value`` - Value/brightness component (0-255)
+  * ``value`` - ZCL CurrentLevel (0-255)
 
 onLightChangeTemp
 ^^^^^^^^^^^^^^^^^
@@ -175,7 +175,7 @@ Sets the callback function for color temperature mode changes.
 * ``callback`` - Function pointer to the temperature light change callback (state, level, temperature_mireds)
 
   * ``state`` - Light state (true = on, false = off)
-  * ``level`` - Brightness level (0-255)
+  * ``level`` - ZCL CurrentLevel (0-255)
   * ``temperature_mireds`` - Color temperature in mireds (inverse of Kelvin)
 
 Control Methods
@@ -203,7 +203,7 @@ Sets the light brightness level.
 
     bool setLightLevel(uint8_t level);
 
-* ``level`` - Brightness level (0-255, where 0 is off, 255 is full brightness)
+* ``level`` - ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -295,7 +295,7 @@ Sets all light parameters at once (RGB mode). Requires ``ZIGBEE_COLOR_CAPABILITY
     bool setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue);
 
 * ``state`` - Light state (true/false)
-* ``level`` - Brightness level (0-255)
+* ``level`` - ZCL CurrentLevel (0-255)
 * ``red`` - Red component (0-255)
 * ``green`` - Green component (0-255)
 * ``blue`` - Blue component (0-255)
@@ -325,7 +325,7 @@ Gets the current brightness level.
 
     uint8_t getLightLevel();
 
-This function will return current brightness level (0-255).
+This function will return the current ZCL CurrentLevel (0-255).
 
 getLightColor
 ^^^^^^^^^^^^^

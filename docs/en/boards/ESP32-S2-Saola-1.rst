@@ -114,7 +114,7 @@ Pin Layout
 Strapping Pins
 --------------
 
-Some of the GPIO's have important features during the booting process. Here is the list of the strapping pins on the `ESP32-S2`_.
+Some of the GPIOs have important features during the booting process. Here is the list of the strapping pins on the `ESP32-S2`_.
 
 ====  =========  =====================================================================  ============  ==============
 GPIO   Default    Function                                                               Pull-up       Pull-down
@@ -127,10 +127,10 @@ IO46  Pull-up    Enabling/Disabling Log Print During Booting and Timing of SDIO 
 
 For more detailed information, see the `ESP32-S2`_ datasheet.
 
-Restricted Usage GPIOS
+Restricted Usage GPIOs
 ----------------------
 
-Some of the GPIO's are used for the external flash and PSRAM. These GPIO's cannot be used:
+Some of the GPIOs are used for the external flash and PSRAM. These GPIOs cannot be used:
 
 ====  ===================
 GPIO   Shared Function
@@ -138,7 +138,7 @@ GPIO   Shared Function
 IO26  Connected to PSRAM
 ====  ===================
 
-Other GPIO's are `INPUT ONLY` and cannot be used as output pin:
+Other GPIOs are `INPUT ONLY` and cannot be used as output pins:
 
 ====  ===========================
 GPIO   Function

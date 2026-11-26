@@ -102,7 +102,7 @@ Pin Layout
 Strapping Pins
 --------------
 
-Some of the GPIO's have important features during the booting process. Here is the list of the strapping pins on the `ESP32-C3`_.
+Some of the GPIOs have important features during the booting process. Here is the list of the strapping pins on the `ESP32-C3`_.
 
 ====  =========  =====================================================================  ================  =================
 GPIO   Default    Function                                                               Pull-up          Pull-down

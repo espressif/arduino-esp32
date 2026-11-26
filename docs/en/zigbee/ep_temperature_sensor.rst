@@ -99,7 +99,7 @@ Sets the reporting interval for temperature measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change in temperature to trigger report (in 0.01°C)
+* ``delta`` - Minimum change in temperature to trigger a report, in degrees Celsius
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -154,7 +154,7 @@ Sets the reporting interval for humidity measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change in humidity to trigger report (in 0.01%)
+* ``delta`` - Minimum change in humidity to trigger a report, in percentage
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

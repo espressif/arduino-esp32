@@ -1,6 +1,6 @@
 #!/bin/bash
-# PR/push mock upload CI entry: arduino-cli and arduino-nightly builder, twice per SoC.
-# Usage: test-mock-upload.sh [cli|builder|all] [soc]
+# PR/push mock upload CI entry: arduino-cli and arduino-nightly builder.
+# Usage: test-mock-upload.sh [cli|builder|all] [soc[,soc2,...] ...]
 # Default: all tools, all CORE_SOCS.
 
 set -eo pipefail
@@ -15,7 +15,28 @@ printf '%s=== Mock upload test setup (%s/%s) ===%s\n' \
 SKETCH_UTILS="${SCRIPTS_DIR}/sketch_utils.sh"
 
 TOOL_FILTER="${1:-all}"
-SOC_FILTER="${2:-}"
+shift $(( $# > 0 ? 1 : 0 ))
+
+case "$TOOL_FILTER" in
+    cli|builder|all) ;;
+    *)
+        echo "Usage: $0 [cli|builder|all] [soc[,soc2,...] ...]" >&2
+        exit 1
+        ;;
+esac
+
+declare -a SOCS_TO_RUN=()
+if [ "$#" -gt 0 ]; then
+    for raw_arg in "$@"; do
+        IFS=', ' read -r -a parsed_socs <<< "$raw_arg"
+        for s in "${parsed_socs[@]}"; do
+            [ -n "$s" ] && SOCS_TO_RUN+=("$s")
+        done
+    done
+fi
+if [ "${#SOCS_TO_RUN[@]}" -eq 0 ]; then
+    SOCS_TO_RUN=("${CORE_SOCS[@]}")
+fi
 
 GITHUB_WORKSPACE="${GITHUB_WORKSPACE:-$(pwd)}"
 SKETCH="$GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
@@ -25,6 +46,7 @@ fi
 
 declare -a TEST_RESULTS=()
 TEST_FAILURES=0
+BUILDER_DIFF_TESTED=0
 
 if [[ "${OS_IS_WINDOWS:-0}" == "1" ]]; then
     export PATH="$HOME/bin:$PATH"
@@ -32,13 +54,17 @@ else
     export PATH="/home/runner/bin:$HOME/bin:$PATH"
 fi
 
-echo "Installing arduino-cli ..."
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
-echo "Installing arduino-nightly builder ..."
-source "${SCRIPTS_DIR}/install-arduino-builder.sh"
+if [ "$TOOL_FILTER" = "cli" ] || [ "$TOOL_FILTER" = "all" ]; then
+    echo "Installing arduino-cli ..."
+    source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+fi
+if [ "$TOOL_FILTER" = "builder" ] || [ "$TOOL_FILTER" = "all" ]; then
+    echo "Installing arduino-nightly builder ..."
+    source "${SCRIPTS_DIR}/install-arduino-builder.sh"
+fi
 echo "Installing ESP32 core (symlink + tools) ..."
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
-echo "Setup complete. Sketch: $SKETCH"
+echo "Setup complete. Sketch: $SKETCH | Tool: $TOOL_FILTER | SoCs: ${SOCS_TO_RUN[*]}"
 
 record_test() {
     TEST_RESULTS+=("$1|$2")
@@ -49,7 +75,7 @@ record_test() {
 run_soc_tool_test() {
     local tool="$1" soc="$2" fqbn="$3"
     local name="${tool}:${soc}"
-    local build_dir rc=0 tool_label
+    local build_dir rc=0 tool_label pass_detail="both uploads"
 
     case "$tool" in
         cli) tool_label="arduino-cli" ;;
@@ -72,7 +98,16 @@ run_soc_tool_test() {
             mock_upload_twice_cli "$fqbn" "$SKETCH" "$build_dir" || rc=$?
             ;;
         builder)
-            mock_upload_twice_builder "$fqbn" "$SKETCH" "$build_dir" || rc=$?
+            # Exercise IDE 1.x second-upload (--diff-with) on the first SoC in the run
+            # (or all SoCs when MOCK_UPLOAD_BUILDER_TWICE=1); subsequent SoCs run once
+            # to avoid redundant cold JVM startups while still validating upload.pattern.
+            if [ "${MOCK_UPLOAD_BUILDER_TWICE:-0}" = "1" ] || [ "$BUILDER_DIFF_TESTED" -eq 0 ]; then
+                mock_upload_twice_builder "$fqbn" "$SKETCH" "$build_dir" || rc=$?
+                [ "$rc" -eq 0 ] && BUILDER_DIFF_TESTED=1
+            else
+                pass_detail="single upload"
+                mock_upload_once_builder "$fqbn" "$SKETCH" "$build_dir" || rc=$?
+            fi
             ;;
     esac
     rm -rf "$build_dir"
@@ -82,7 +117,7 @@ run_soc_tool_test() {
     fi
 
     if [ "$rc" -eq 0 ]; then
-        mock_upload_result "$tool_label" "$soc" PASS
+        mock_upload_result "$tool_label" "$soc" PASS "$pass_detail"
         record_test PASS "$name"
     else
         mock_upload_result "$tool_label" "$soc" FAIL
@@ -117,22 +152,8 @@ print_summary() {
     fi
 }
 
-case "$TOOL_FILTER" in
-    cli|builder|all) ;;
-    *)
-        echo "Usage: $0 [cli|builder|all] [soc]" >&2
-        exit 1
-        ;;
-esac
-
-declare -a SOCS_TO_RUN=()
-if [ -n "$SOC_FILTER" ]; then
-    SOCS_TO_RUN=("$SOC_FILTER")
-else
-    SOCS_TO_RUN=("${CORE_SOCS[@]}")
-fi
-
 finish_tests() {
+    stop_mock_bootloader
     print_summary
     exit $((TEST_FAILURES > 0 ? 1 : 0))
 }

@@ -23,28 +23,64 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/pm2_5_measurement_desc.h"
 
+/**
+ * @brief PM2.5 air quality sensor endpoint (Zigbee HA particulate matter measurement).
+ */
 class ZigbeePM25Sensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee PM2.5 sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeePM25Sensor(uint8_t endpoint);
   ~ZigbeePM25Sensor() {}
 
-  // Set the PM2.5 value in 0.1 µg/m³
+  /**
+   * @brief Set the PM2.5 concentration measurement value.
+   * @param pm25 PM2.5 concentration in μg/m³.
+   * @return true if successful.
+   */
   bool setPM25(float pm25);
 
-  // Set the default (initial) value for the PM2.5 sensor in 0.1 µg/m³
-  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  /**
+   * @brief Set the default (initial) PM2.5 value in μg/m³.
+   *
+   * Used as the initial measured value in factory-reset mode. Must be called before
+   * adding the endpoint to Zigbee. Only effective before commissioning.
+   *
+   * @param defaultValue Default PM2.5 concentration in μg/m³.
+   * @return true if successful.
+   */
   bool setDefaultValue(float defaultValue);
 
-  // Set the min and max value for the PM2.5 sensor in 0.1 µg/m³
+  /**
+   * @brief Set the minimum and maximum measurement values.
+   * @param min Minimum PM2.5 concentration in μg/m³.
+   * @param max Maximum PM2.5 concentration in μg/m³.
+   * @return true if successful.
+   */
   bool setMinMaxValue(float min, float max);
 
-  // Set the tolerance value for the PM2.5 sensor in 0.1 µg/m³
+  /**
+   * @brief Set the tolerance value for measurements.
+   * @param tolerance Tolerance in μg/m³.
+   * @return true if successful.
+   */
   bool setTolerance(float tolerance);
 
-  // Set the reporting interval for PM2.5 measurement in seconds and delta (PM2.5 change in 0.1 µg/m³)
+  /**
+   * @brief Set the reporting configuration for PM2.5 measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report in μg/m³.
+   * @return true if successful.
+   */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
-  // Report the PM2.5 value
+  /**
+   * @brief Manually report the current PM2.5 concentration value.
+   * @return true if successful.
+   */
   bool report();
 
 private:

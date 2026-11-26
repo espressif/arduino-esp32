@@ -275,7 +275,8 @@ table. See [`../BLE/DESIGN.md`](../BLE/DESIGN.md#service-staging-and-startup).
 
 The `libraries/BLEAudio/examples/` sketches are grouped by **real,
 ESP32-sized products** (unicast speaker, wireless microphone, Auracast
-transmitter, Auracast speaker), not one sketch per API role:
+transmitter, Auracast speaker, and the USB receiver/transmitter pair), not one
+sketch per API role:
 
 - `BLEAudioUnicastServer::configureMediaSink()` — one stereo-capable sink ASE,
   media + conversational contexts, front-left/front-right locations.
@@ -316,6 +317,12 @@ BLE.getAdvertising().start();                // 5. advertise
 audio.end();                                 // 6. common_deinit (host stays up)
 BLE.end();                                   // 7. host teardown (also runs audio.end())
 ```
+
+Lifecycle verbs follow the BLE convention: `begin()` / `end()` acquire and release a
+resource (the engine in `BLEAudio`, the I2S/PCM transport in `BLEAudioPlayer` /
+`BLEAudioRecorder`), while `start()` / `stop()` begin and end an activity or data flow
+(`startUnicast()`, `startBroadcast()`, `startRemoteScan()`, `startPlayback()`), and
+`startX()` / `stopX()` name a specific activity.
 
 Invariants:
 

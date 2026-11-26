@@ -5,10 +5,10 @@ Boards
 Development Boards
 ------------------
 
-You will need a development board or a custom board with the ESP32 (see Supported SoC's) to start playing.
-There is a bunch of different types and models widely available on the Internet. You need to choose one that covers all your requirements.
+You will need a development board or a custom board with the ESP32 (see Supported SoCs) to start playing.
+There are a bunch of different types and models widely available. You need to choose one that covers all your requirements.
 
-To help you on this selection, we point out some facts about choosing the proper boards to help you to save money and time.
+To help you on this selection, here are some facts about choosing the proper boards to help you to save money and time.
 
 **One ESP32 to rule them all!**
 
@@ -54,14 +54,14 @@ modules from the same family use the same SoC.
 
 **For example:**
 
-The SoC partnumber is the ESP32-D0WD-V3 and it's the same SoC used inside of the ESP32-WROVER (with PSRAM) and ESP32-WROOM modules. This means that the
+The SoC partnumber ESP32-D0WD-V3 is the same SoC used inside of the ESP32-WROVER (with PSRAM) and ESP32-WROOM modules. This means that the
 same characteristics are present in both modules' core.
 
-For more detailed information regarding the SoC's and modules, see the `Espressif Product Selector`_.
+For more detailed information regarding the SoCs and modules, see the `Espressif Product Selector`_.
 
 Now that you know that the module can be different but the heart is the same, you can choose your development board.
 
-Before buying: Keep in mind that for some "must have" features when choosing the best board for your needs:
+Before buying: Keep in mind some "must have" features when choosing the best board for your needs:
 
 - Embedded USB-to-Serial
     - This is very convenient for programming and monitoring the logs with the terminal via USB.
@@ -126,7 +126,7 @@ Generic Vendor
     Generic Board Name <generic>
 
 .. note::
-    Create one file per board or one file with multiple boards. Do not add board information/description on this file.
+    Create one file per board or one file with multiple boards. Do not add board information/description in this file.
 
 .. include:: ../common/datasheet.inc
 

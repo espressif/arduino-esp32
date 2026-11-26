@@ -22,8 +22,15 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief Range extender endpoint that repeats Zigbee traffic to extend network coverage.
+ */
 class ZigbeeRangeExtender : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee range extender endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeRangeExtender(uint8_t endpoint);
   ~ZigbeeRangeExtender() {}
 };
