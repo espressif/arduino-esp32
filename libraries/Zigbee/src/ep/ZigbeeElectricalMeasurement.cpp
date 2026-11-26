@@ -552,6 +552,16 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
       }
       break;
 
+    case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
+      // Frequency min/max are not phase specific.
+      if (phase_type != ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC) {
+        log_e("Invalid phase type");
+        return false;
+      }
+      attr_min_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MIN_VALUE_ID;
+      attr_max_id = EZB_ZCL_ATTR_ELECTRICAL_MEASUREMENT_AC_FREQUENCY_MAX_VALUE_ID;
+      break;
+
     default: log_e("Invalid measurement type"); return false;
   }
 

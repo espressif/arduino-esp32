@@ -225,6 +225,11 @@ static bool register_all_zigbee_endpoints(void) {
   if (!epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE) || !epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT)) {
     return false;
   }
+  // AC voltage is phase-specific. Frequency is not, so it is added as non-specific.
+  if (!epElectrical.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A)
+      || !epElectrical.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC)) {
+    return false;
+  }
   epElectrical.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 250);
   epElectrical.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 0, 100);
   epElectrical.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 1, 10);
