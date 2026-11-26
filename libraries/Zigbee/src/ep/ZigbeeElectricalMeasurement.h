@@ -23,65 +23,160 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/electrical_measurement_desc.h"
 
+/**
+ * @brief DC electrical measurement types.
+ */
 enum ZIGBEE_DC_MEASUREMENT_TYPE {
-  ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,
-  ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT = 0x0002,
-  ZIGBEE_DC_MEASUREMENT_TYPE_POWER = 0x0003,
+  ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE = 0x0001, /**< DC voltage. */
+  ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT = 0x0002, /**< DC current. */
+  ZIGBEE_DC_MEASUREMENT_TYPE_POWER = 0x0003,   /**< DC power. */
 };
 
+/**
+ * @brief AC electrical measurement types.
+ */
 enum ZIGBEE_AC_MEASUREMENT_TYPE {
-  ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,
-  ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT = 0x0002,
-  ZIGBEE_AC_MEASUREMENT_TYPE_POWER = 0x0003,
-  ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR = 0x0004,
-  ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY = 0x0005,
+  ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE = 0x0001,      /**< AC voltage. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT = 0x0002,      /**< AC current. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_POWER = 0x0003,        /**< AC power (signed). */
+  ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR = 0x0004, /**< AC power factor. */
+  ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY = 0x0005,    /**< AC frequency. */
 };
 
+/**
+ * @brief AC phase selection for multi-phase measurements.
+ */
 enum ZIGBEE_AC_PHASE_TYPE {
-  ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC = 0x0000,
-  ZIGBEE_AC_PHASE_TYPE_A = 0x0001,
-  ZIGBEE_AC_PHASE_TYPE_B = 0x0002,
-  ZIGBEE_AC_PHASE_TYPE_C = 0x0003,
+  ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC = 0x0000, /**< Phase not specified. */
+  ZIGBEE_AC_PHASE_TYPE_A = 0x0001,            /**< Phase A. */
+  ZIGBEE_AC_PHASE_TYPE_B = 0x0002,            /**< Phase B. */
+  ZIGBEE_AC_PHASE_TYPE_C = 0x0003,            /**< Phase C. */
 };
 
+/**
+ * @brief Electrical measurement endpoint for AC/DC voltage, current, and power (Zigbee HA).
+ */
 class ZigbeeElectricalMeasurement : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee electrical measurement endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeElectricalMeasurement(uint8_t endpoint);
   ~ZigbeeElectricalMeasurement() {}
 
   /**
-   * @brief DC measurement methods
+   * @brief Add a DC measurement type to the endpoint.
+   * @param measurement_type DC measurement type (`ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE`,
+   *                         `ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT`, or `ZIGBEE_DC_MEASUREMENT_TYPE_POWER`).
+   * @return true if successful.
    */
-  // Add a DC measurement type
   bool addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type);
-  // Set the DC measurement value for the given measurement type
+  /**
+   * @brief Set the DC measurement value for a measurement type.
+   * @param measurement_type DC measurement type.
+   * @param value Measurement value.
+   * @return true if successful.
+   */
   bool setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, int16_t value);
-  // Set the DC min and max value for the given measurement type
+  /**
+   * @brief Set the minimum and maximum values for a DC measurement type.
+   * @param measurement_type DC measurement type.
+   * @param min Minimum value.
+   * @param max Maximum value.
+   * @return true if successful.
+   */
   bool setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, int16_t min, int16_t max);
-  // Set the DC multiplier and divisor for the given measurement type
+  /**
+   * @brief Set the multiplier and divisor for scaling DC measurements.
+   * @param measurement_type DC measurement type.
+   * @param multiplier Multiplier value.
+   * @param divisor Divisor value.
+   * @return true if successful.
+   */
   bool setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor);
-  // Set the DC reporting interval for the given measurement type in seconds and delta (measurement change)
+  /**
+   * @brief Set the reporting configuration for DC measurements.
+   * @param measurement_type DC measurement type.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report.
+   * @return true if successful.
+   */
   bool setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type, uint16_t min_interval, uint16_t max_interval, int16_t delta);
-  // Report the DC measurement value for the given measurement type
+  /**
+   * @brief Manually report a DC measurement value.
+   * @param measurement_type DC measurement type.
+   * @return true if successful.
+   */
   bool reportDC(ZIGBEE_DC_MEASUREMENT_TYPE measurement_type);
 
   /**
-   * @brief AC measurement methods
+   * @brief Add an AC measurement type for a specific phase.
+   * @param measurement_type AC measurement type (voltage, current, power, power factor, or frequency).
+   * @param phase_type Phase (`ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC`, `_A`, `_B`, or `_C`).
+   * @return true if successful.
    */
-  // Add an AC measurement type for selected phase type
   bool addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type);
-  // Set the AC measurement value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int16_t for power)
+  /**
+   * @brief Set the AC measurement value for a measurement type and phase.
+   *
+   * For power (`ZIGBEE_AC_MEASUREMENT_TYPE_POWER`) the value is `int16_t`; for other
+   * types (voltage, current, power factor, frequency) it is `uint16_t`.
+   *
+   * @param measurement_type AC measurement type.
+   * @param phase_type Phase type.
+   * @param value Measurement value.
+   * @return true if successful.
+   */
   bool setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, int32_t value);
-  // Set the AC min and max value for the given measurement type and phase type (uint16_t for voltage, current and frequency, int16_t for power)
+  /**
+   * @brief Set the minimum and maximum values for an AC measurement type and phase.
+   *
+   * For power, min/max are `int16_t`; for other types they are `uint16_t`.
+   *
+   * @param measurement_type AC measurement type.
+   * @param phase_type Phase type.
+   * @param min Minimum value.
+   * @param max Maximum value.
+   * @return true if successful.
+   */
   bool setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, int32_t min, int32_t max);
-  // Set the AC multiplier and divisor for the given measurement type (common for all phases)
+  /**
+   * @brief Set the multiplier and divisor for scaling AC measurements (common for all phases).
+   * @param measurement_type AC measurement type.
+   * @param multiplier Multiplier value.
+   * @param divisor Divisor value.
+   * @return true if successful.
+   */
   bool setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor);
-  // Set the AC power factor for the given phase type (-100 to 100 %)
+  /**
+   * @brief Set the power factor for a specific phase.
+   * @param phase_type Phase type.
+   * @param power_factor Power factor (-100 to 100).
+   * @return true if successful.
+   */
   bool setACPowerFactor(ZIGBEE_AC_PHASE_TYPE phase_type, int8_t power_factor);
-  // Set the AC reporting interval for the given measurement type and phase type in seconds and delta (measurement change - uint16_t for voltage, current and frequency, int16_t for power)
+  /**
+   * @brief Set the reporting configuration for AC measurements.
+   *
+   * For power, delta is `int16_t`; for other types it is `uint16_t`.
+   *
+   * @param measurement_type AC measurement type.
+   * @param phase_type Phase type.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report.
+   * @return true if successful.
+   */
   bool
     setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, uint16_t min_interval, uint16_t max_interval, int32_t delta);
-  // Report the AC measurement value for the given measurement type and phase type
+  /**
+   * @brief Manually report an AC measurement value.
+   * @param measurement_type AC measurement type.
+   * @param phase_type Phase type.
+   * @return true if successful.
+   */
   bool reportAC(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type);
 
 private:

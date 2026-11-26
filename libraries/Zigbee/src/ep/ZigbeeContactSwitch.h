@@ -23,30 +23,72 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/ias_zone_desc.h"
 
+/**
+ * @brief Contact switch endpoint for door/window sensors and other binary contacts.
+ *
+ * Implements the Zigbee HA IAS Zone cluster for open/closed contact detection.
+ */
 class ZigbeeContactSwitch : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee contact switch endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeContactSwitch(uint8_t endpoint);
   ~ZigbeeContactSwitch() {}
 
-  // Set the IAS Client endpoint number (default is 1)
+  /**
+   * @brief Set the IAS Client endpoint number (default is 1).
+   * @param ep_number IAS Client endpoint number.
+   */
   void setIASClientEndpoint(uint8_t ep_number);
 
-  // Set the contact switch value to closed
+  /**
+   * @brief Set the contact switch to closed state.
+   * @return true if successful.
+   */
   bool setClosed();
 
-  // Set the contact switch value to open
+  /**
+   * @brief Set the contact switch to open state.
+   * @return true if successful.
+   */
   bool setOpen();
 
-  // Report the contact switch value, done automatically after setting the position
+  /**
+   * @brief Manually report the current contact state.
+   *
+   * Reporting is also done automatically after setting the position.
+   *
+   * @return true if successful.
+   */
   bool report();
 
-  // Request a new IAS zone enroll, can be called to enroll a new device or to re-enroll an already enrolled device
+  /**
+   * @brief Request a new IAS Zone enrollment.
+   *
+   * Can enroll a new device or re-enroll an already enrolled device. Check
+   * `enrolled()` after waiting for the enrollment response.
+   *
+   * @return true if the enrollment request was sent.
+   */
   bool requestIASZoneEnroll();
 
-  // Sync enroll from persisted ZoneState / CIE / ZoneId (call after Zigbee.begin())
+  /**
+   * @brief Restore IAS Zone enrollment from stored attributes.
+   *
+   * Call after rebooting an already enrolled device. Restores zone ID and IAS CIE
+   * address from flash, which is faster for sleepy devices than a new enrollment.
+   * Call after `Zigbee.begin()`.
+   *
+   * @return true if enrollment was restored (stored attributes must be present).
+   */
   bool restoreIASZoneEnroll();
 
-  // Check if the device is enrolled in the IAS Zone
+  /**
+   * @brief Check whether the device is currently enrolled in the IAS Zone.
+   * @return true if enrolled.
+   */
   bool enrolled() {
     return _enrolled;
   }

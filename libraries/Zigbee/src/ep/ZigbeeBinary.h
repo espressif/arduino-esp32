@@ -22,10 +22,12 @@
 
 #include "ZigbeeEP.h"
 
-//enum for bits set to check what analog cluster were added
+/**
+ * @brief Bit flags for binary clusters added to a ZigbeeBinary endpoint.
+ */
 enum zigbee_binary_clusters {
-  BINARY_INPUT = 1,
-  BINARY_OUTPUT = 2
+  BINARY_INPUT = 1, /**< Binary Input cluster. */
+  BINARY_OUTPUT = 2 /**< Binary Output cluster. */
 };
 
 // HVAC application types for Binary Input (more can be found in Zigbee Cluster Specification 3.14.11.19.4 Binary Inputs (BI) Types)
@@ -67,39 +69,96 @@ enum zigbee_binary_clusters {
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ACCESS_CONTROL     0x01000003  // Type 0x01, Index 0x0003
 #define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_OTHER              0x0100FFFF  // Type 0x01, Index 0xFFFF
 
+/**
+ * @brief Binary input/output endpoint (Zigbee HA binary sensors and actuators).
+ *
+ * Binary Input (BI) reports sensor states (door, motion, etc.). Binary Output (BO)
+ * controls relays, switches, or other on/off actuators.
+ */
 class ZigbeeBinary : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee binary sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeBinary(uint8_t endpoint);
   ~ZigbeeBinary() {}
 
-  // Add binary cluster
+  /**
+   * @brief Add a binary input cluster to the endpoint.
+   * @return true if successful.
+   */
   bool addBinaryInput();
+  /**
+   * @brief Add a binary output cluster to the endpoint.
+   * @return true if successful.
+   */
   bool addBinaryOutput();
 
-  // Set the application type and description for the binary input
-  bool setBinaryInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_input.h for application type values
+  /**
+   * @brief Set the application type for the binary input.
+   * @param application_type Application type constant (see HVAC/security defines above).
+   * @return true if successful.
+   */
+  bool setBinaryInputApplication(uint32_t application_type);
+  /**
+   * @brief Set a custom description for the binary input.
+   * @param description Description string.
+   * @return true if successful.
+   */
   bool setBinaryInputDescription(const char *description);
 
-  // Set the application type and description for the binary output
-  bool setBinaryOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_output.h for application type values
+  /**
+   * @brief Set the application type for the binary output.
+   * @param application_type Application type constant (see HVAC/security defines above).
+   * @return true if successful.
+   */
+  bool setBinaryOutputApplication(uint32_t application_type);
+  /**
+   * @brief Set a custom description for the binary output.
+   * @param description Description string.
+   * @return true if successful.
+   */
   bool setBinaryOutputDescription(const char *description);
 
-  // Use to set a cb function to be called on binary output change
+  /**
+   * @brief Set a callback invoked when the binary output value changes.
+   * @param callback Function that receives the new binary output value.
+   */
   void onBinaryOutputChange(void (*callback)(bool binary_output)) {
     _on_binary_output_change = callback;
   }
 
-  // Set the binary input/output value
+  /**
+   * @brief Set the binary input value.
+   * @param input Binary value (true/false).
+   * @return true if successful.
+   */
   bool setBinaryInput(bool input);
+  /**
+   * @brief Set the binary output value.
+   * @param output Binary value (true/false).
+   * @return true if successful.
+   */
   bool setBinaryOutput(bool output);
 
-  // Get the Binary Output value
+  /**
+   * @brief Get the current binary output value.
+   * @return Current binary output state.
+   */
   bool getBinaryOutput() {
     return _output_state;
   }
 
-  // Report Binary Input/Output value
+  /**
+   * @brief Manually report the current binary input value.
+   * @return true if successful.
+   */
   bool reportBinaryInput();
+  /**
+   * @brief Manually report the current binary output value.
+   * @return true if successful.
+   */
   bool reportBinaryOutput();
 
 private:

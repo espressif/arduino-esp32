@@ -223,7 +223,7 @@ Scans for available Zigbee networks.
     void scanNetworks(uint32_t channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
 
 * ``channel_mask`` - Channels to scan (default: all channels)
-* ``scan_duration`` - Scan duration (default: 5)
+* ``scan_duration`` - Time spent on each channel, ``((1 << scan_duration) + 1) * 15.36 ms`` (default: 5)
 
 scanComplete
 ^^^^^^^^^^^^
@@ -263,13 +263,13 @@ Deletes the scan results from memory.
 
     void scanDelete();
 
-Network Management (Coordinator only)
-*************************************
+Network Management
+******************
 
 setRebootOpenNetwork
 ^^^^^^^^^^^^^^^^^^^^
 
-Opens the network for joining after reboot for a specified time.
+Stores how long a coordinator keeps the network open for joining after the network is formed. On other roles the stored time is ignored.
 
 .. code-block:: arduino
 
@@ -280,7 +280,7 @@ Opens the network for joining after reboot for a specified time.
 openNetwork
 ^^^^^^^^^^^
 
-Opens the network for device joining for a specified time.
+Opens the network for joining when the stack is running. Intended for a coordinator; the call does not check the device role.
 
 .. code-block:: arduino
 
@@ -291,7 +291,7 @@ Opens the network for device joining for a specified time.
 closeNetwork
 ^^^^^^^^^^^^
 
-Closes the network to prevent new devices from joining.
+Closes the network when the stack is running. Intended for a coordinator; the call does not check the device role.
 
 .. code-block:: arduino
 
@@ -393,7 +393,7 @@ Performs a factory reset, clearing all network settings.
 
     void factoryReset(bool restart = true);
 
-* ``restart`` - ``true`` to restart after reset (default: ``true``)
+* ``restart`` - ``true`` (default) resets and reboots, and does not return. ``false`` is not supported and does nothing.
 
 onGlobalDefaultResponse
 ^^^^^^^^^^^^^^^^^^^^^^^
