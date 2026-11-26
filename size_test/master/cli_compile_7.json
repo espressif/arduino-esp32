@@ -18,6 +18,14 @@
                         "ram_percentage": 9
                         }]
                 },
+{"name": "libraries/BLE/examples/ISO_BigReceiver",
+                "sizes": [{
+                        "flash_bytes": 981898,
+                        "flash_percentage": 31,
+                        "ram_bytes": 28772,
+                        "ram_percentage": 9
+                        }]
+                },
 {"name": "libraries/ESP32/examples/FreeRTOS/BasicMultiThreading",
                 "sizes": [{
                         "flash_bytes": 343794,
@@ -98,43 +106,43 @@
                         "ram_percentage": 46
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1114746,
+                        "flash_bytes": 1115488,
                         "flash_percentage": 85,
                         "ram_bytes": 68452,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1019530,
+                        "flash_bytes": 1019656,
                         "flash_percentage": 78,
                         "ram_bytes": 68508,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1053750,
-                        "flash_percentage": 80,
-                        "ram_bytes": 69536,
+                        "flash_bytes": 1016218,
+                        "flash_percentage": 78,
+                        "ram_bytes": 67892,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
+{"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 444556,
-                        "flash_percentage": 34,
-                        "ram_bytes": 25236,
-                        "ram_percentage": 8
+                        "flash_bytes": 387230,
+                        "flash_percentage": 30,
+                        "ram_bytes": 72384,
+                        "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/USBSerial",
                 "sizes": [{
-                        "flash_bytes": 390766,
-                        "flash_percentage": 30,
-                        "ram_bytes": 72728,
+                        "flash_bytes": 385868,
+                        "flash_percentage": 29,
+                        "ram_bytes": 72072,
                         "ram_percentage": 22
                         }]
                 },
@@ -194,11 +202,11 @@
                         "ram_percentage": 10
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Vibration_Sensor",
                 "sizes": [{
-                        "flash_bytes": 633196,
+                        "flash_bytes": 632408,
                         "flash_percentage": 48,
-                        "ram_bytes": 34340,
+                        "ram_bytes": 34388,
                         "ram_percentage": 10
                         }]
                 }
@@ -215,11 +223,11 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/BluetoothSerial/examples/BondManagement",
+{"name": "libraries/BluetoothSerial/examples/MasterConnect",
                 "sizes": [{
-                        "flash_bytes": 1093029,
+                        "flash_bytes": 1092205,
                         "flash_percentage": 83,
-                        "ram_bytes": 42080,
+                        "ram_bytes": 42096,
                         "ram_percentage": 13
                         }]
                 },
@@ -301,22 +309,6 @@
                         "flash_percentage": 52,
                         "ram_bytes": 109780,
                         "ram_percentage": 34
-                        }]
-                },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
-                "sizes": [{
-                        "flash_bytes": 399663,
-                        "flash_percentage": 30,
-                        "ram_bytes": 24468,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/SimpleBLE/examples/SimpleBleDevice",
-                "sizes": [{
-                        "flash_bytes": 1085641,
-                        "flash_percentage": 83,
-                        "ram_bytes": 42056,
-                        "ram_percentage": 13
                         }]
                 },
 {"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
@@ -617,28 +609,28 @@
                         "ram_percentage": 35
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1217151,
+                        "flash_bytes": 1217975,
                         "flash_percentage": 93,
                         "ram_bytes": 64088,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1110785,
+                        "flash_bytes": 1110921,
                         "flash_percentage": 85,
                         "ram_bytes": 64144,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1137037,
-                        "flash_percentage": 87,
-                        "ram_bytes": 64716,
-                        "ram_percentage": 20
+                        "flash_bytes": 1107109,
+                        "flash_percentage": 84,
+                        "ram_bytes": 63528,
+                        "ram_percentage": 19
                         }]
                 },
 {"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
@@ -697,11 +689,11 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Vibration_Sensor",
                 "sizes": [{
-                        "flash_bytes": 694519,
+                        "flash_bytes": 692641,
                         "flash_percentage": 53,
-                        "ram_bytes": 29936,
+                        "ram_bytes": 29968,
                         "ram_percentage": 9
                         }]
                 }
@@ -806,27 +798,27 @@
                         "ram_percentage": 43
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1175133,
+                        "flash_bytes": 1175969,
                         "flash_percentage": 90,
                         "ram_bytes": 59828,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1068355,
+                        "flash_bytes": 1068487,
                         "flash_percentage": 82,
                         "ram_bytes": 59884,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1094643,
-                        "flash_percentage": 84,
-                        "ram_bytes": 60464,
+                        "flash_bytes": 1064747,
+                        "flash_percentage": 81,
+                        "ram_bytes": 59268,
                         "ram_percentage": 18
                         }]
                 },
@@ -886,11 +878,11 @@
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Vibration_Sensor",
                 "sizes": [{
-                        "flash_bytes": 640335,
+                        "flash_bytes": 638443,
                         "flash_percentage": 49,
-                        "ram_bytes": 25716,
+                        "ram_bytes": 25740,
                         "ram_percentage": 8
                         }]
                 }
@@ -979,28 +971,28 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/CLI/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1179831,
+                        "flash_bytes": 1180667,
                         "flash_percentage": 90,
                         "ram_bytes": 57828,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet/client",
                 "sizes": [{
-                        "flash_bytes": 1073041,
+                        "flash_bytes": 1073173,
                         "flash_percentage": 82,
                         "ram_bytes": 57876,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async",
                 "sizes": [{
-                        "flash_bytes": 1099299,
-                        "flash_percentage": 84,
-                        "ram_bytes": 58440,
-                        "ram_percentage": 18
+                        "flash_bytes": 1069429,
+                        "flash_percentage": 82,
+                        "ram_bytes": 57252,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Color_Dimmer_Switch",
@@ -1019,11 +1011,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Wind_Speed_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Vibration_Sensor",
                 "sizes": [{
-                        "flash_bytes": 644259,
+                        "flash_bytes": 642129,
                         "flash_percentage": 49,
-                        "ram_bytes": 23692,
+                        "ram_bytes": 23724,
                         "ram_percentage": 7
                         }]
                 }
@@ -1072,9 +1064,17 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP_Video/examples/mipi_csi_camera",
+                "sizes": [{
+                        "flash_bytes": 1057114,
+                        "flash_percentage": 34,
+                        "ram_bytes": 24760,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                 "sizes": [{
-                        "flash_bytes": 631990,
+                        "flash_bytes": 632006,
                         "flash_percentage": 20,
                         "ram_bytes": 29212,
                         "ram_percentage": 9
@@ -1096,19 +1096,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
-                "sizes": [{
-                        "flash_bytes": 462502,
-                        "flash_percentage": 35,
-                        "ram_bytes": 24068,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
                         "ram_bytes": 23004,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/USB/examples/USBSerial",
+                "sizes": [{
+                        "flash_bytes": 317926,
+                        "flash_percentage": 24,
+                        "ram_bytes": 22724,
                         "ram_percentage": 7
                         }]
                 },
@@ -1221,11 +1221,19 @@
                         "ram_percentage": 32
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 330549,
+                        "flash_bytes": 325745,
                         "flash_percentage": 25,
-                        "ram_bytes": 50576,
+                        "ram_bytes": 50176,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/USB/examples/USBSerial",
+                "sizes": [{
+                        "flash_bytes": 322773,
+                        "flash_percentage": 25,
+                        "ram_bytes": 49856,
                         "ram_percentage": 15
                         }]
                 },
@@ -1370,19 +1378,19 @@
                         "ram_percentage": 33
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
+{"name": "libraries/USB/examples/MIDI/MidiInterface",
                 "sizes": [{
-                        "flash_bytes": 410913,
-                        "flash_percentage": 31,
-                        "ram_bytes": 24092,
-                        "ram_percentage": 7
+                        "flash_bytes": 393357,
+                        "flash_percentage": 30,
+                        "ram_bytes": 56252,
+                        "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/USBSerial",
                 "sizes": [{
-                        "flash_bytes": 393437,
+                        "flash_bytes": 390201,
                         "flash_percentage": 30,
-                        "ram_bytes": 56268,
+                        "ram_bytes": 55948,
                         "ram_percentage": 17
                         }]
                 },

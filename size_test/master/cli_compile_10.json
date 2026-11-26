@@ -18,6 +18,14 @@
                         "ram_percentage": 9
                         }]
                 },
+{"name": "libraries/BLEAudio/examples/UnicastSpeaker",
+                "sizes": [{
+                        "flash_bytes": 1556952,
+                        "flash_percentage": 49,
+                        "ram_bytes": 43308,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
                 "sizes": [{
                         "flash_bytes": 381436,
@@ -66,12 +74,20 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
+{"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 331568,
+                        "flash_bytes": 331380,
                         "flash_percentage": 25,
-                        "ram_bytes": 24152,
+                        "ram_bytes": 24144,
                         "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
+                "sizes": [{
+                        "flash_bytes": 476104,
+                        "flash_percentage": 36,
+                        "ram_bytes": 24912,
+                        "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Serial",
@@ -122,28 +138,20 @@
                         "ram_percentage": 46
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_client",
                 "sizes": [{
-                        "flash_bytes": 1030478,
+                        "flash_bytes": 1034254,
                         "flash_percentage": 79,
-                        "ram_bytes": 68516,
+                        "ram_bytes": 68540,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise",
                 "sizes": [{
-                        "flash_bytes": 1024326,
+                        "flash_bytes": 1018018,
                         "flash_percentage": 78,
-                        "ram_bytes": 68420,
+                        "ram_bytes": 67916,
                         "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
-                "sizes": [{
-                        "flash_bytes": 1043838,
-                        "flash_percentage": 80,
-                        "ram_bytes": 87028,
-                        "ram_percentage": 27
                         }]
                 },
 {"name": "libraries/SD/examples/SD_time",
@@ -154,27 +162,19 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCard",
+{"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 437888,
-                        "flash_percentage": 33,
-                        "ram_bytes": 74052,
-                        "ram_percentage": 23
-                        }]
-                },
-{"name": "libraries/USB/examples/FirmwareMSC",
-                "sizes": [{
-                        "flash_bytes": 404144,
-                        "flash_percentage": 31,
-                        "ram_bytes": 72216,
+                        "flash_bytes": 394898,
+                        "flash_percentage": 30,
+                        "ram_bytes": 72816,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 449620,
-                        "flash_percentage": 34,
-                        "ram_bytes": 71928,
+                        "flash_bytes": 398408,
+                        "flash_percentage": 30,
+                        "ram_bytes": 71832,
                         "ram_percentage": 22
                         }]
                 },
@@ -202,12 +202,20 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
+{"name": "libraries/Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
                 "sizes": [{
-                        "flash_bytes": 669956,
-                        "flash_percentage": 51,
-                        "ram_bytes": 35024,
+                        "flash_bytes": 635188,
+                        "flash_percentage": 48,
+                        "ram_bytes": 34596,
                         "ram_percentage": 11
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1341208,
+                        "flash_percentage": 39,
+                        "ram_bytes": 63328,
+                        "ram_percentage": 19
                         }]
                 }
 ]
@@ -247,22 +255,6 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1123595,
-                        "flash_percentage": 7,
-                        "ram_bytes": 72716,
-                        "ram_percentage": 22
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1136195,
-                        "flash_percentage": 7,
-                        "ram_bytes": 72796,
-                        "ram_percentage": 22
-                        }]
-                },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
                 "sizes": [{
                         "flash_bytes": 306025,
@@ -287,11 +279,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
+{"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 316001,
+                        "flash_bytes": 315829,
                         "flash_percentage": 24,
-                        "ram_bytes": 23568,
+                        "ram_bytes": 23560,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
+                "sizes": [{
+                        "flash_bytes": 423367,
+                        "flash_percentage": 32,
+                        "ram_bytes": 24092,
                         "ram_percentage": 7
                         }]
                 },
@@ -641,28 +641,20 @@
                         "ram_percentage": 35
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_client",
                 "sizes": [{
-                        "flash_bytes": 1123079,
+                        "flash_bytes": 1126539,
                         "flash_percentage": 86,
-                        "ram_bytes": 64152,
+                        "ram_bytes": 64176,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise",
                 "sizes": [{
-                        "flash_bytes": 1115877,
+                        "flash_bytes": 1109187,
                         "flash_percentage": 85,
-                        "ram_bytes": 64040,
-                        "ram_percentage": 20
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
-                "sizes": [{
-                        "flash_bytes": 1135827,
-                        "flash_percentage": 87,
-                        "ram_bytes": 82664,
-                        "ram_percentage": 25
+                        "ram_bytes": 63552,
+                        "ram_percentage": 19
                         }]
                 },
 {"name": "libraries/SD/examples/SD_time",
@@ -697,12 +689,20 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
+{"name": "libraries/Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
                 "sizes": [{
-                        "flash_bytes": 722665,
-                        "flash_percentage": 55,
-                        "ram_bytes": 30172,
+                        "flash_bytes": 696493,
+                        "flash_percentage": 53,
+                        "ram_bytes": 30200,
                         "ram_percentage": 9
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1475967,
+                        "flash_percentage": 43,
+                        "ram_bytes": 60348,
+                        "ram_percentage": 18
                         }]
                 }
 ]
@@ -822,28 +822,20 @@
                         "ram_percentage": 43
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_client",
                 "sizes": [{
-                        "flash_bytes": 1080725,
-                        "flash_percentage": 82,
-                        "ram_bytes": 59892,
+                        "flash_bytes": 1087263,
+                        "flash_percentage": 83,
+                        "ram_bytes": 59916,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise",
                 "sizes": [{
-                        "flash_bytes": 1073435,
-                        "flash_percentage": 82,
-                        "ram_bytes": 59796,
+                        "flash_bytes": 1066763,
+                        "flash_percentage": 81,
+                        "ram_bytes": 59292,
                         "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
-                "sizes": [{
-                        "flash_bytes": 1075561,
-                        "flash_percentage": 82,
-                        "ram_bytes": 78404,
-                        "ram_percentage": 24
                         }]
                 },
 {"name": "libraries/SD/examples/SD_time",
@@ -878,12 +870,20 @@
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
+{"name": "libraries/Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
                 "sizes": [{
-                        "flash_bytes": 668471,
-                        "flash_percentage": 51,
-                        "ram_bytes": 25952,
+                        "flash_bytes": 642319,
+                        "flash_percentage": 49,
+                        "ram_bytes": 25964,
                         "ram_percentage": 8
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_WiFi_Weather",
+                "sizes": [{
+                        "flash_bytes": 1431401,
+                        "flash_percentage": 42,
+                        "ram_bytes": 52908,
+                        "ram_percentage": 16
                         }]
                 }
 ]
@@ -971,28 +971,20 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_client",
                 "sizes": [{
-                        "flash_bytes": 1085411,
+                        "flash_bytes": 1088875,
                         "flash_percentage": 83,
-                        "ram_bytes": 57884,
+                        "ram_bytes": 57900,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise",
                 "sizes": [{
-                        "flash_bytes": 1078851,
+                        "flash_bytes": 1071447,
                         "flash_percentage": 82,
-                        "ram_bytes": 57764,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_collector",
-                "sizes": [{
-                        "flash_bytes": 1098233,
-                        "flash_percentage": 84,
-                        "ram_bytes": 76396,
-                        "ram_percentage": 23
+                        "ram_bytes": 57276,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Fan_Control",
@@ -1003,11 +995,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
+{"name": "libraries/Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
                 "sizes": [{
-                        "flash_bytes": 672139,
-                        "flash_percentage": 51,
-                        "ram_bytes": 23928,
+                        "flash_bytes": 646233,
+                        "flash_percentage": 49,
+                        "ram_bytes": 23948,
                         "ram_percentage": 7
                         }]
                 }
@@ -1080,11 +1072,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
+{"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 369786,
+                        "flash_bytes": 369588,
                         "flash_percentage": 28,
-                        "ram_bytes": 23636,
+                        "ram_bytes": 23628,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
+                "sizes": [{
+                        "flash_bytes": 498310,
+                        "flash_percentage": 38,
+                        "ram_bytes": 23824,
                         "ram_percentage": 7
                         }]
                 },
@@ -1112,27 +1112,19 @@
                         "ram_percentage": 10
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCard",
+{"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 484404,
-                        "flash_percentage": 37,
-                        "ram_bytes": 75136,
-                        "ram_percentage": 23
-                        }]
-                },
-{"name": "libraries/USB/examples/FirmwareMSC",
-                "sizes": [{
-                        "flash_bytes": 317926,
-                        "flash_percentage": 24,
-                        "ram_bytes": 22724,
+                        "flash_bytes": 321608,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23004,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 502954,
-                        "flash_percentage": 38,
-                        "ram_bytes": 73132,
+                        "flash_bytes": 447380,
+                        "flash_percentage": 34,
+                        "ram_bytes": 73068,
                         "ram_percentage": 22
                         }]
                 },
@@ -1181,22 +1173,6 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1058806,
-                        "flash_percentage": 6,
-                        "ram_bytes": 67536,
-                        "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1062630,
-                        "flash_percentage": 6,
-                        "ram_bytes": 67552,
-                        "ram_percentage": 21
-                        }]
-                },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
                 "sizes": [{
                         "flash_bytes": 256197,
@@ -1221,9 +1197,9 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
+{"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 267329,
+                        "flash_bytes": 267201,
                         "flash_percentage": 20,
                         "ram_bytes": 17936,
                         "ram_percentage": 5
@@ -1285,27 +1261,19 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCard",
+{"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 357053,
-                        "flash_percentage": 27,
-                        "ram_bytes": 51696,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/USB/examples/FirmwareMSC",
-                "sizes": [{
-                        "flash_bytes": 341213,
-                        "flash_percentage": 26,
-                        "ram_bytes": 50000,
+                        "flash_bytes": 333993,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50656,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 381425,
-                        "flash_percentage": 29,
-                        "ram_bytes": 49664,
+                        "flash_bytes": 331557,
+                        "flash_percentage": 25,
+                        "ram_bytes": 49584,
                         "ram_percentage": 15
                         }]
                 },
@@ -1378,30 +1346,6 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1086218,
-                        "flash_percentage": 6,
-                        "ram_bytes": 70220,
-                        "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1089128,
-                        "flash_percentage": 6,
-                        "ram_bytes": 70300,
-                        "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                "sizes": [{
-                        "flash_bytes": 1091402,
-                        "flash_percentage": 7,
-                        "ram_bytes": 70704,
-                        "ram_percentage": 22
-                        }]
-                },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
                 "sizes": [{
                         "flash_bytes": 292405,
@@ -1426,11 +1370,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/Touch/TouchButton",
+{"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 303965,
+                        "flash_bytes": 303841,
                         "flash_percentage": 23,
-                        "ram_bytes": 23260,
+                        "ram_bytes": 23244,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
+                "sizes": [{
+                        "flash_bytes": 436633,
+                        "flash_percentage": 33,
+                        "ram_bytes": 23596,
                         "ram_percentage": 7
                         }]
                 },
@@ -1490,27 +1442,19 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCard",
+{"name": "libraries/USB/examples/HIDVendor",
                 "sizes": [{
-                        "flash_bytes": 429737,
-                        "flash_percentage": 33,
-                        "ram_bytes": 57420,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/USB/examples/FirmwareMSC",
-                "sizes": [{
-                        "flash_bytes": 409325,
-                        "flash_percentage": 31,
-                        "ram_bytes": 56076,
+                        "flash_bytes": 396837,
+                        "flash_percentage": 30,
+                        "ram_bytes": 56380,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostCDC_MSC_HID",
+{"name": "libraries/USB/examples/USBHostHIDCombo",
                 "sizes": [{
-                        "flash_bytes": 449605,
-                        "flash_percentage": 34,
-                        "ram_bytes": 55772,
+                        "flash_bytes": 399177,
+                        "flash_percentage": 30,
+                        "ram_bytes": 55676,
                         "ram_percentage": 17
                         }]
                 },

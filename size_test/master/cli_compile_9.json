@@ -18,6 +18,14 @@
                         "ram_percentage": 9
                         }]
                 },
+{"name": "libraries/BLEAudio/examples/AuracastSource",
+                "sizes": [{
+                        "flash_bytes": 1531900,
+                        "flash_percentage": 49,
+                        "ram_bytes": 41464,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
                 "sizes": [{
                         "flash_bytes": 322974,
@@ -26,35 +34,35 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
+                "sizes": [{
+                        "flash_bytes": 345410,
+                        "flash_percentage": 26,
+                        "ram_bytes": 24928,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                 "sizes": [{
-                        "flash_bytes": 319598,
-                        "flash_percentage": 10,
+                        "flash_bytes": 319574,
+                        "flash_percentage": 24,
                         "ram_bytes": 24536,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo",
                 "sizes": [{
-                        "flash_bytes": 316566,
-                        "flash_percentage": 10,
+                        "flash_bytes": 316542,
+                        "flash_percentage": 24,
                         "ram_bytes": 23472,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 322610,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23816,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                "sizes": [{
-                        "flash_bytes": 331490,
+                        "flash_bytes": 322586,
                         "flash_percentage": 25,
-                        "ram_bytes": 24152,
+                        "ram_bytes": 23816,
                         "ram_percentage": 7
                         }]
                 },
@@ -106,27 +114,27 @@
                         "ram_percentage": 46
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_server",
+{"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1027608,
-                        "flash_percentage": 78,
-                        "ram_bytes": 67932,
+                        "flash_bytes": 1114040,
+                        "flash_percentage": 85,
+                        "ram_bytes": 68428,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+{"name": "libraries/OpenThread/examples/Native/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1024312,
+                        "flash_bytes": 1028308,
                         "flash_percentage": 78,
-                        "ram_bytes": 67956,
+                        "ram_bytes": 68580,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_node",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
                 "sizes": [{
-                        "flash_bytes": 1048684,
-                        "flash_percentage": 80,
-                        "ram_bytes": 68652,
+                        "flash_bytes": 1060046,
+                        "flash_percentage": 81,
+                        "ram_bytes": 69576,
                         "ram_percentage": 21
                         }]
                 },
@@ -138,27 +146,27 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCardMultiRate",
+{"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 435776,
+                        "flash_bytes": 437888,
                         "flash_percentage": 33,
-                        "ram_bytes": 72732,
+                        "ram_bytes": 74052,
+                        "ram_percentage": 23
+                        }]
+                },
+{"name": "libraries/USB/examples/CustomHIDDevice",
+                "sizes": [{
+                        "flash_bytes": 391366,
+                        "flash_percentage": 30,
+                        "ram_bytes": 72728,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 391736,
-                        "flash_percentage": 30,
-                        "ram_bytes": 72736,
-                        "ram_percentage": 22
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostGamepad",
-                "sizes": [{
-                        "flash_bytes": 389086,
-                        "flash_percentage": 30,
-                        "ram_bytes": 71632,
+                        "flash_bytes": 360152,
+                        "flash_percentage": 27,
+                        "ram_bytes": 72312,
                         "ram_percentage": 22
                         }]
                 },
@@ -196,18 +204,18 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 673244,
+                        "flash_bytes": 673256,
                         "flash_percentage": 51,
                         "ram_bytes": 35704,
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
+{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
                 "sizes": [{
-                        "flash_bytes": 611244,
-                        "flash_percentage": 47,
-                        "ram_bytes": 33740,
-                        "ram_percentage": 10
+                        "flash_bytes": 670276,
+                        "flash_percentage": 51,
+                        "ram_bytes": 35024,
+                        "ram_percentage": 11
                         }]
                 }
 ]
@@ -231,11 +239,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/DeepSleep/ExternalWakeUp",
+{"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
                 "sizes": [{
-                        "flash_bytes": 311504,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23544,
+                        "flash_bytes": 326556,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23792,
                         "ram_percentage": 7
                         }]
                 },
@@ -260,14 +268,6 @@
                         "flash_bytes": 309485,
                         "flash_percentage": 24,
                         "ram_bytes": 23328,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                "sizes": [{
-                        "flash_bytes": 315885,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23568,
                         "ram_percentage": 7
                         }]
                 },
@@ -361,7 +361,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 669201,
+                        "flash_bytes": 669217,
                         "flash_percentage": 51,
                         "ram_bytes": 31312,
                         "ram_percentage": 10
@@ -510,7 +510,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 702145,
+                        "flash_bytes": 702157,
                         "flash_percentage": 54,
                         "ram_bytes": 23052,
                         "ram_percentage": 7
@@ -617,27 +617,27 @@
                         "ram_percentage": 35
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_server",
+{"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1119821,
-                        "flash_percentage": 85,
-                        "ram_bytes": 63568,
-                        "ram_percentage": 19
+                        "flash_bytes": 1216373,
+                        "flash_percentage": 93,
+                        "ram_bytes": 64064,
+                        "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+{"name": "libraries/OpenThread/examples/Native/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1116241,
+                        "flash_bytes": 1120591,
                         "flash_percentage": 85,
-                        "ram_bytes": 63592,
-                        "ram_percentage": 19
+                        "ram_bytes": 64216,
+                        "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_node",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
                 "sizes": [{
-                        "flash_bytes": 1141425,
+                        "flash_bytes": 1144093,
                         "flash_percentage": 87,
-                        "ram_bytes": 64280,
+                        "ram_bytes": 64764,
                         "ram_percentage": 20
                         }]
                 },
@@ -683,17 +683,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 737779,
+                        "flash_bytes": 737791,
                         "flash_percentage": 56,
                         "ram_bytes": 30268,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
+{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
                 "sizes": [{
-                        "flash_bytes": 669105,
-                        "flash_percentage": 51,
-                        "ram_bytes": 29360,
+                        "flash_bytes": 723043,
+                        "flash_percentage": 55,
+                        "ram_bytes": 30172,
                         "ram_percentage": 9
                         }]
                 }
@@ -798,27 +798,27 @@
                         "ram_percentage": 43
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_server",
+{"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1077427,
-                        "flash_percentage": 82,
-                        "ram_bytes": 59308,
+                        "flash_bytes": 1174361,
+                        "flash_percentage": 90,
+                        "ram_bytes": 59804,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+{"name": "libraries/OpenThread/examples/Native/StackShutdown",
                 "sizes": [{
-                        "flash_bytes": 1073903,
+                        "flash_bytes": 1078217,
                         "flash_percentage": 82,
-                        "ram_bytes": 59348,
+                        "ram_bytes": 59956,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_node",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
                 "sizes": [{
-                        "flash_bytes": 1081223,
-                        "flash_percentage": 82,
-                        "ram_bytes": 60028,
+                        "flash_bytes": 1101709,
+                        "flash_percentage": 84,
+                        "ram_bytes": 60504,
                         "ram_percentage": 18
                         }]
                 },
@@ -864,17 +864,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 684599,
+                        "flash_bytes": 684611,
                         "flash_percentage": 52,
                         "ram_bytes": 26080,
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
+{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
                 "sizes": [{
-                        "flash_bytes": 614955,
-                        "flash_percentage": 47,
-                        "ram_bytes": 25108,
+                        "flash_bytes": 668847,
+                        "flash_percentage": 51,
+                        "ram_bytes": 25952,
                         "ram_percentage": 8
                         }]
                 }
@@ -963,27 +963,27 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD/notes_server",
+{"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1082089,
+                        "flash_bytes": 1179069,
+                        "flash_percentage": 90,
+                        "ram_bytes": 57796,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/StackShutdown",
+                "sizes": [{
+                        "flash_bytes": 1082879,
                         "flash_percentage": 83,
-                        "ram_bytes": 57300,
-                        "ram_percentage": 17
+                        "ram_bytes": 57948,
+                        "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/switch",
                 "sizes": [{
-                        "flash_bytes": 1078659,
-                        "flash_percentage": 82,
-                        "ram_bytes": 57316,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork/sensor_node",
-                "sizes": [{
-                        "flash_bytes": 1103983,
+                        "flash_bytes": 1107177,
                         "flash_percentage": 84,
-                        "ram_bytes": 58012,
+                        "ram_bytes": 58488,
                         "ram_percentage": 18
                         }]
                 },
@@ -997,17 +997,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 687813,
+                        "flash_bytes": 687825,
                         "flash_percentage": 52,
                         "ram_bytes": 24008,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
+{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
                 "sizes": [{
-                        "flash_bytes": 617895,
-                        "flash_percentage": 47,
-                        "ram_bytes": 23092,
+                        "flash_bytes": 672515,
+                        "flash_percentage": 51,
+                        "ram_bytes": 23928,
                         "ram_percentage": 7
                         }]
                 }
@@ -1040,35 +1040,35 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
+                "sizes": [{
+                        "flash_bytes": 382052,
+                        "flash_percentage": 29,
+                        "ram_bytes": 24408,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                 "sizes": [{
-                        "flash_bytes": 355608,
-                        "flash_percentage": 11,
+                        "flash_bytes": 355584,
+                        "flash_percentage": 27,
                         "ram_bytes": 23908,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo",
                 "sizes": [{
-                        "flash_bytes": 355680,
-                        "flash_percentage": 11,
+                        "flash_bytes": 355656,
+                        "flash_percentage": 27,
                         "ram_bytes": 23244,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
-                        "flash_bytes": 358828,
-                        "flash_percentage": 11,
+                        "flash_bytes": 358804,
+                        "flash_percentage": 27,
                         "ram_bytes": 23268,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                "sizes": [{
-                        "flash_bytes": 369712,
-                        "flash_percentage": 28,
-                        "ram_bytes": 23636,
                         "ram_percentage": 7
                         }]
                 },
@@ -1096,15 +1096,15 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCardMultiRate",
+{"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 485460,
+                        "flash_bytes": 484404,
                         "flash_percentage": 37,
-                        "ram_bytes": 74080,
+                        "ram_bytes": 75136,
                         "ram_percentage": 23
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples/CustomHIDDevice",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1112,12 +1112,12 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostGamepad",
+{"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 437510,
-                        "flash_percentage": 33,
-                        "ram_bytes": 72868,
-                        "ram_percentage": 22
+                        "flash_bytes": 321608,
+                        "flash_percentage": 25,
+                        "ram_bytes": 23004,
+                        "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
@@ -1165,12 +1165,12 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/DeepSleep/ExternalWakeUp",
+{"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
                 "sizes": [{
-                        "flash_bytes": 258004,
-                        "flash_percentage": 20,
-                        "ram_bytes": 17436,
-                        "ram_percentage": 5
+                        "flash_bytes": 274988,
+                        "flash_percentage": 21,
+                        "ram_bytes": 18140,
+                        "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
@@ -1194,14 +1194,6 @@
                         "flash_bytes": 259901,
                         "flash_percentage": 20,
                         "ram_bytes": 17568,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                "sizes": [{
-                        "flash_bytes": 267217,
-                        "flash_percentage": 20,
-                        "ram_bytes": 17936,
                         "ram_percentage": 5
                         }]
                 },
@@ -1261,27 +1253,27 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCardMultiRate",
+{"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 375177,
-                        "flash_percentage": 29,
-                        "ram_bytes": 50352,
+                        "flash_bytes": 357053,
+                        "flash_percentage": 27,
+                        "ram_bytes": 51696,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/USB/examples/CustomHIDDevice",
+                "sizes": [{
+                        "flash_bytes": 331037,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50576,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 331613,
-                        "flash_percentage": 25,
-                        "ram_bytes": 50592,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostGamepad",
-                "sizes": [{
-                        "flash_bytes": 323569,
-                        "flash_percentage": 25,
-                        "ram_bytes": 49392,
+                        "flash_bytes": 305353,
+                        "flash_percentage": 23,
+                        "ram_bytes": 50252,
                         "ram_percentage": 15
                         }]
                 },
@@ -1319,7 +1311,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 624257,
+                        "flash_bytes": 624277,
                         "flash_percentage": 48,
                         "ram_bytes": 26128,
                         "ram_percentage": 8
@@ -1354,11 +1346,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/DeepSleep/ExternalWakeUp",
+{"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
                 "sizes": [{
-                        "flash_bytes": 295864,
-                        "flash_percentage": 23,
-                        "ram_bytes": 22796,
+                        "flash_bytes": 313532,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23516,
                         "ram_percentage": 7
                         }]
                 },
@@ -1383,14 +1375,6 @@
                         "flash_bytes": 295833,
                         "flash_percentage": 23,
                         "ram_bytes": 22908,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                "sizes": [{
-                        "flash_bytes": 303853,
-                        "flash_percentage": 23,
-                        "ram_bytes": 23260,
                         "ram_percentage": 7
                         }]
                 },
@@ -1450,27 +1434,27 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/AudioCardMultiRate",
+{"name": "libraries/USB/examples/AudioCard",
                 "sizes": [{
-                        "flash_bytes": 452429,
-                        "flash_percentage": 35,
-                        "ram_bytes": 56428,
+                        "flash_bytes": 429737,
+                        "flash_percentage": 33,
+                        "ram_bytes": 57420,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/USB/examples/CustomHIDDevice",
+                "sizes": [{
+                        "flash_bytes": 393941,
+                        "flash_percentage": 30,
+                        "ram_bytes": 56284,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples/SystemControl",
                 "sizes": [{
-                        "flash_bytes": 394517,
-                        "flash_percentage": 30,
-                        "ram_bytes": 56300,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/USB/examples/USBHostGamepad",
-                "sizes": [{
-                        "flash_bytes": 391061,
-                        "flash_percentage": 30,
-                        "ram_bytes": 55484,
+                        "flash_bytes": 370621,
+                        "flash_percentage": 28,
+                        "ram_bytes": 56028,
                         "ram_percentage": 17
                         }]
                 },
@@ -1508,7 +1492,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                 "sizes": [{
-                        "flash_bytes": 658053,
+                        "flash_bytes": 658073,
                         "flash_percentage": 50,
                         "ram_bytes": 31548,
                         "ram_percentage": 10

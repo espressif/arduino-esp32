@@ -18,11 +18,11 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/BLEAudio/examples/AuracastSource",
+{"name": "libraries/BLEAudio/examples/AuracastSink",
                 "sizes": [{
-                        "flash_bytes": 1531900,
+                        "flash_bytes": 1556628,
                         "flash_percentage": 49,
-                        "ram_bytes": 41464,
+                        "ram_bytes": 42804,
                         "ram_percentage": 13
                         }]
                 },
@@ -66,26 +66,18 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Ethernet/examples/ETH_TLK110",
-                "sizes": [{
-                        "flash_bytes": 528818,
-                        "flash_percentage": 40,
-                        "ram_bytes": 29196,
-                        "ram_percentage": 9
-                        }]
-                },
 {"name": "libraries/FFat/examples/FFat_Test",
                 "sizes": [{
-                        "flash_bytes": 373414,
-                        "flash_percentage": 28,
+                        "flash_bytes": 373438,
+                        "flash_percentage": 12,
                         "ram_bytes": 24208,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Hash/examples/HEX",
                 "sizes": [{
-                        "flash_bytes": 315208,
-                        "flash_percentage": 24,
+                        "flash_bytes": 315232,
+                        "flash_percentage": 10,
                         "ram_bytes": 23448,
                         "ram_percentage": 7
                         }]
@@ -122,25 +114,25 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1117686,
-                        "flash_percentage": 85,
-                        "ram_bytes": 68460,
+                        "flash_bytes": 1145694,
+                        "flash_percentage": 87,
+                        "ram_bytes": 69488,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
                 "sizes": [{
-                        "flash_bytes": 1019502,
-                        "flash_percentage": 78,
-                        "ram_bytes": 67924,
+                        "flash_bytes": 1057396,
+                        "flash_percentage": 81,
+                        "ram_bytes": 68904,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
                 "sizes": [{
-                        "flash_bytes": 1019298,
+                        "flash_bytes": 1025138,
                         "flash_percentage": 78,
                         "ram_bytes": 67916,
                         "ram_percentage": 21
@@ -162,19 +154,27 @@
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/SD_MMC/examples/SD2USBMSC",
                 "sizes": [{
-                        "flash_bytes": 393006,
-                        "flash_percentage": 30,
-                        "ram_bytes": 72776,
+                        "flash_bytes": 509336,
+                        "flash_percentage": 39,
+                        "ram_bytes": 73452,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 388714,
-                        "flash_percentage": 30,
-                        "ram_bytes": 71504,
+                        "flash_bytes": 361928,
+                        "flash_percentage": 28,
+                        "ram_bytes": 72336,
+                        "ram_percentage": 22
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostMSC_Test",
+                "sizes": [{
+                        "flash_bytes": 440712,
+                        "flash_percentage": 34,
+                        "ram_bytes": 72208,
                         "ram_percentage": 22
                         }]
                 },
@@ -202,12 +202,12 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
                 "sizes": [{
-                        "flash_bytes": 666756,
-                        "flash_percentage": 51,
-                        "ram_bytes": 35000,
-                        "ram_percentage": 11
+                        "flash_bytes": 629148,
+                        "flash_percentage": 48,
+                        "ram_bytes": 34348,
+                        "ram_percentage": 10
                         }]
                 }
 ]
@@ -271,20 +271,12 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 308333,
-                        "flash_percentage": 24,
-                        "ram_bytes": 23304,
+                        "flash_bytes": 307841,
+                        "flash_percentage": 23,
+                        "ram_bytes": 23296,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_TLK110",
-                "sizes": [{
-                        "flash_bytes": 520513,
-                        "flash_percentage": 40,
-                        "ram_bytes": 28672,
-                        "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/FFat/examples/FFat_Test",
@@ -428,9 +420,9 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 294269,
+                        "flash_bytes": 293777,
                         "flash_percentage": 22,
                         "ram_bytes": 14120,
                         "ram_percentage": 4
@@ -633,25 +625,25 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1220539,
-                        "flash_percentage": 93,
-                        "ram_bytes": 64088,
+                        "flash_bytes": 1239731,
+                        "flash_percentage": 95,
+                        "ram_bytes": 64668,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
                 "sizes": [{
-                        "flash_bytes": 1110823,
-                        "flash_percentage": 85,
-                        "ram_bytes": 63560,
-                        "ram_percentage": 19
+                        "flash_bytes": 1141071,
+                        "flash_percentage": 87,
+                        "ram_bytes": 64092,
+                        "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
                 "sizes": [{
-                        "flash_bytes": 1110469,
+                        "flash_bytes": 1117641,
                         "flash_percentage": 85,
                         "ram_bytes": 63552,
                         "ram_percentage": 19
@@ -697,11 +689,11 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
                 "sizes": [{
-                        "flash_bytes": 719169,
-                        "flash_percentage": 55,
-                        "ram_bytes": 30156,
+                        "flash_bytes": 688985,
+                        "flash_percentage": 53,
+                        "ram_bytes": 29928,
                         "ram_percentage": 9
                         }]
                 }
@@ -766,11 +758,11 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 273472,
+                        "flash_bytes": 272982,
                         "flash_percentage": 21,
-                        "ram_bytes": 14556,
+                        "ram_bytes": 14548,
                         "ram_percentage": 4
                         }]
                 },
@@ -822,26 +814,26 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1178533,
-                        "flash_percentage": 90,
-                        "ram_bytes": 59828,
+                        "flash_bytes": 1197629,
+                        "flash_percentage": 91,
+                        "ram_bytes": 60408,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
                 "sizes": [{
-                        "flash_bytes": 1068401,
+                        "flash_bytes": 1098703,
+                        "flash_percentage": 84,
+                        "ram_bytes": 59840,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
+                "sizes": [{
+                        "flash_bytes": 1075277,
                         "flash_percentage": 82,
-                        "ram_bytes": 59300,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove",
-                "sizes": [{
-                        "flash_bytes": 1068045,
-                        "flash_percentage": 81,
                         "ram_bytes": 59292,
                         "ram_percentage": 18
                         }]
@@ -886,11 +878,11 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
                 "sizes": [{
-                        "flash_bytes": 664965,
-                        "flash_percentage": 51,
-                        "ram_bytes": 25928,
+                        "flash_bytes": 634777,
+                        "flash_percentage": 48,
+                        "ram_bytes": 25700,
                         "ram_percentage": 8
                         }]
                 }
@@ -947,11 +939,11 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 297822,
+                        "flash_bytes": 297320,
                         "flash_percentage": 23,
-                        "ram_bytes": 14184,
+                        "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
                 },
@@ -995,25 +987,25 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1183231,
-                        "flash_percentage": 90,
-                        "ram_bytes": 57820,
+                        "flash_bytes": 1203047,
+                        "flash_percentage": 92,
+                        "ram_bytes": 58400,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_server",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/light",
                 "sizes": [{
-                        "flash_bytes": 1073087,
-                        "flash_percentage": 82,
-                        "ram_bytes": 57284,
-                        "ram_percentage": 17
+                        "flash_bytes": 1103339,
+                        "flash_percentage": 84,
+                        "ram_bytes": 57816,
+                        "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Remove",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query",
                 "sizes": [{
-                        "flash_bytes": 1072727,
+                        "flash_bytes": 1079957,
                         "flash_percentage": 82,
                         "ram_bytes": 57276,
                         "ram_percentage": 17
@@ -1027,11 +1019,11 @@
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_On_Off_Light",
+{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
                 "sizes": [{
-                        "flash_bytes": 668647,
-                        "flash_percentage": 51,
-                        "ram_bytes": 23904,
+                        "flash_bytes": 638449,
+                        "flash_percentage": 49,
+                        "ram_bytes": 23684,
                         "ram_percentage": 7
                         }]
                 }
@@ -1096,20 +1088,12 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 359180,
+                        "flash_bytes": 358440,
                         "flash_percentage": 27,
-                        "ram_bytes": 23252,
+                        "ram_bytes": 23244,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_TLK110",
-                "sizes": [{
-                        "flash_bytes": 583744,
-                        "flash_percentage": 45,
-                        "ram_bytes": 29112,
-                        "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/FFat/examples/FFat_Test",
@@ -1144,7 +1128,15 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/SD_MMC/examples/SD2USBMSC",
+                "sizes": [{
+                        "flash_bytes": 535822,
+                        "flash_percentage": 41,
+                        "ram_bytes": 73788,
+                        "ram_percentage": 23
+                        }]
+                },
+{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1152,11 +1144,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostSerial",
+{"name": "libraries/USB/examples/USBHostMSC_Test",
                 "sizes": [{
-                        "flash_bytes": 437134,
-                        "flash_percentage": 33,
-                        "ram_bytes": 72740,
+                        "flash_bytes": 493580,
+                        "flash_percentage": 38,
+                        "ram_bytes": 73444,
                         "ram_percentage": 22
                         }]
                 },
@@ -1237,10 +1229,10 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 255893,
-                        "flash_percentage": 20,
+                        "flash_bytes": 255181,
+                        "flash_percentage": 19,
                         "ram_bytes": 17184,
                         "ram_percentage": 5
                         }]
@@ -1309,19 +1301,19 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 332489,
-                        "flash_percentage": 25,
-                        "ram_bytes": 50624,
+                        "flash_bytes": 307005,
+                        "flash_percentage": 23,
+                        "ram_bytes": 50284,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostSerial",
+{"name": "libraries/USB/examples/USBHostMSC_Test",
                 "sizes": [{
-                        "flash_bytes": 323645,
-                        "flash_percentage": 25,
-                        "ram_bytes": 49264,
+                        "flash_bytes": 373141,
+                        "flash_percentage": 28,
+                        "ram_bytes": 49952,
                         "ram_percentage": 15
                         }]
                 },
@@ -1410,9 +1402,9 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
                 "sizes": [{
-                        "flash_bytes": 291801,
+                        "flash_bytes": 291225,
                         "flash_percentage": 22,
                         "ram_bytes": 22492,
                         "ram_percentage": 7
@@ -1482,19 +1474,27 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/SD_MMC/examples/SD2USBMSC",
                 "sizes": [{
-                        "flash_bytes": 395397,
-                        "flash_percentage": 30,
-                        "ram_bytes": 56332,
+                        "flash_bytes": 478101,
+                        "flash_percentage": 36,
+                        "ram_bytes": 56380,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                 "sizes": [{
-                        "flash_bytes": 391029,
-                        "flash_percentage": 30,
-                        "ram_bytes": 55356,
+                        "flash_bytes": 372297,
+                        "flash_percentage": 28,
+                        "ram_bytes": 56060,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostMSC_Test",
+                "sizes": [{
+                        "flash_bytes": 441509,
+                        "flash_percentage": 34,
+                        "ram_bytes": 56060,
                         "ram_percentage": 17
                         }]
                 },

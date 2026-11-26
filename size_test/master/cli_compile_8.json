@@ -34,28 +34,28 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 280734,
-                        "flash_percentage": 21,
-                        "ram_bytes": 23032,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 340612,
-                        "flash_percentage": 26,
+                        "flash_bytes": 340636,
+                        "flash_percentage": 11,
                         "ram_bytes": 27476,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 314630,
-                        "flash_percentage": 24,
+                        "flash_bytes": 314654,
+                        "flash_percentage": 10,
                         "ram_bytes": 23456,
                         "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 1023212,
+                        "flash_percentage": 78,
+                        "ram_bytes": 55084,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -66,26 +66,18 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
-                "sizes": [{
-                        "flash_bytes": 419046,
-                        "flash_percentage": 13,
-                        "ram_bytes": 23744,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                 "sizes": [{
-                        "flash_bytes": 605314,
-                        "flash_percentage": 19,
+                        "flash_bytes": 605274,
+                        "flash_percentage": 46,
                         "ram_bytes": 29900,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA1",
                 "sizes": [{
-                        "flash_bytes": 319594,
-                        "flash_percentage": 10,
+                        "flash_bytes": 319554,
+                        "flash_percentage": 24,
                         "ram_bytes": 23448,
                         "ram_percentage": 7
                         }]
@@ -122,27 +114,27 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1114114,
+                        "flash_bytes": 1114746,
                         "flash_percentage": 85,
-                        "ram_bytes": 68428,
+                        "ram_bytes": 68452,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1052410,
-                        "flash_percentage": 80,
-                        "ram_bytes": 69464,
-                        "ram_percentage": 21
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost",
-                "sizes": [{
-                        "flash_bytes": 1020084,
+                        "flash_bytes": 1019530,
                         "flash_percentage": 78,
-                        "ram_bytes": 67916,
+                        "ram_bytes": 68508,
+                        "ram_percentage": 21
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1053750,
+                        "flash_percentage": 80,
+                        "ram_bytes": 69536,
                         "ram_percentage": 21
                         }]
                 },
@@ -154,19 +146,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 362184,
-                        "flash_percentage": 28,
-                        "ram_bytes": 72336,
+                        "flash_bytes": 393006,
+                        "flash_percentage": 30,
+                        "ram_bytes": 72776,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouse",
+{"name": "libraries/USB/examples/USBHostSerial",
                 "sizes": [{
-                        "flash_bytes": 389068,
+                        "flash_bytes": 388714,
                         "flash_percentage": 30,
-                        "ram_bytes": 71552,
+                        "ram_bytes": 71504,
                         "ram_percentage": 22
                         }]
                 },
@@ -204,18 +196,18 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 673564,
+                        "flash_bytes": 673576,
                         "flash_percentage": 51,
                         "ram_bytes": 35704,
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
                 "sizes": [{
-                        "flash_bytes": 674584,
-                        "flash_percentage": 51,
-                        "ram_bytes": 35032,
-                        "ram_percentage": 11
+                        "flash_bytes": 637912,
+                        "flash_percentage": 49,
+                        "ram_bytes": 34340,
+                        "ram_percentage": 10
                         }]
                 }
 ]
@@ -231,28 +223,44 @@
                         "ram_percentage": 13
                         }]
                 },
+{"name": "libraries/BluetoothSerial/examples/BondManagement",
+                "sizes": [{
+                        "flash_bytes": 1093029,
+                        "flash_percentage": 83,
+                        "ram_bytes": 42080,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/ESP32/examples/ChipID/GetChipID",
                 "sizes": [{
-                        "flash_bytes": 304181,
-                        "flash_percentage": 10,
+                        "flash_bytes": 304149,
+                        "flash_percentage": 23,
                         "ram_bytes": 23320,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 315884,
-                        "flash_percentage": 10,
+                        "flash_bytes": 315852,
+                        "flash_percentage": 24,
                         "ram_bytes": 26476,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 302493,
-                        "flash_percentage": 10,
+                        "flash_bytes": 302477,
+                        "flash_percentage": 23,
                         "ram_bytes": 23280,
                         "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 993330,
+                        "flash_percentage": 76,
+                        "ram_bytes": 51332,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -353,7 +361,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 669617,
+                        "flash_bytes": 669633,
                         "flash_percentage": 51,
                         "ram_bytes": 31312,
                         "ram_percentage": 10
@@ -388,28 +396,28 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 320945,
-                        "flash_percentage": 24,
-                        "ram_bytes": 14852,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 306723,
-                        "flash_percentage": 23,
+                        "flash_bytes": 306755,
+                        "flash_percentage": 10,
                         "ram_bytes": 17684,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 289527,
-                        "flash_percentage": 22,
+                        "flash_bytes": 289559,
+                        "flash_percentage": 9,
                         "ram_bytes": 14112,
                         "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 1031947,
+                        "flash_percentage": 79,
+                        "ram_bytes": 38976,
+                        "ram_percentage": 12
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -510,7 +518,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 702523,
+                        "flash_bytes": 702535,
                         "flash_percentage": 54,
                         "ram_bytes": 23052,
                         "ram_percentage": 7
@@ -545,28 +553,28 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 337776,
-                        "flash_percentage": 26,
-                        "ram_bytes": 18480,
-                        "ram_percentage": 6
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 323572,
-                        "flash_percentage": 25,
+                        "flash_bytes": 323596,
+                        "flash_percentage": 10,
                         "ram_bytes": 21320,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 306612,
-                        "flash_percentage": 23,
+                        "flash_bytes": 306636,
+                        "flash_percentage": 10,
                         "ram_bytes": 17724,
                         "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 1107783,
+                        "flash_percentage": 85,
+                        "ram_bytes": 52104,
+                        "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -625,28 +633,28 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1216479,
+                        "flash_bytes": 1217151,
                         "flash_percentage": 93,
-                        "ram_bytes": 64064,
+                        "ram_bytes": 64088,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1135591,
-                        "flash_percentage": 87,
-                        "ram_bytes": 64652,
-                        "ram_percentage": 20
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost",
-                "sizes": [{
-                        "flash_bytes": 1111611,
+                        "flash_bytes": 1110785,
                         "flash_percentage": 85,
-                        "ram_bytes": 63552,
-                        "ram_percentage": 19
+                        "ram_bytes": 64144,
+                        "ram_percentage": 20
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1137037,
+                        "flash_percentage": 87,
+                        "ram_bytes": 64716,
+                        "ram_percentage": 20
                         }]
                 },
 {"name": "libraries/Ticker/examples/TickerParameter",
@@ -691,17 +699,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 738155,
+                        "flash_bytes": 738167,
                         "flash_percentage": 56,
                         "ram_bytes": 30268,
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
                 "sizes": [{
-                        "flash_bytes": 728013,
-                        "flash_percentage": 56,
-                        "ram_bytes": 30180,
+                        "flash_bytes": 710039,
+                        "flash_percentage": 54,
+                        "ram_bytes": 30208,
                         "ram_percentage": 9
                         }]
                 }
@@ -734,28 +742,28 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 299812,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15296,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 285646,
-                        "flash_percentage": 22,
+                        "flash_bytes": 285670,
+                        "flash_percentage": 9,
                         "ram_bytes": 18128,
                         "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 268670,
-                        "flash_percentage": 20,
+                        "flash_bytes": 268694,
+                        "flash_percentage": 9,
                         "ram_bytes": 14540,
                         "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 1050171,
+                        "flash_percentage": 80,
+                        "ram_bytes": 44688,
+                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -814,27 +822,27 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1174475,
+                        "flash_bytes": 1175133,
                         "flash_percentage": 90,
-                        "ram_bytes": 59804,
+                        "ram_bytes": 59828,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1093167,
-                        "flash_percentage": 83,
-                        "ram_bytes": 60400,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost",
-                "sizes": [{
-                        "flash_bytes": 1069197,
+                        "flash_bytes": 1068355,
                         "flash_percentage": 82,
-                        "ram_bytes": 59292,
+                        "ram_bytes": 59884,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1094643,
+                        "flash_percentage": 84,
+                        "ram_bytes": 60464,
                         "ram_percentage": 18
                         }]
                 },
@@ -880,17 +888,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 684985,
+                        "flash_bytes": 684997,
                         "flash_percentage": 52,
                         "ram_bytes": 26080,
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
                 "sizes": [{
-                        "flash_bytes": 673839,
-                        "flash_percentage": 51,
-                        "ram_bytes": 25952,
+                        "flash_bytes": 656915,
+                        "flash_percentage": 50,
+                        "ram_bytes": 26012,
                         "ram_percentage": 8
                         }]
                 }
@@ -923,42 +931,34 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 324950,
-                        "flash_percentage": 25,
-                        "ram_bytes": 14940,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 310058,
-                        "flash_percentage": 24,
+                        "flash_bytes": 310082,
+                        "flash_percentage": 10,
                         "ram_bytes": 17756,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 293080,
-                        "flash_percentage": 22,
+                        "flash_bytes": 293104,
+                        "flash_percentage": 9,
                         "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                 "sizes": [{
-                        "flash_bytes": 600228,
-                        "flash_percentage": 46,
+                        "flash_bytes": 600252,
+                        "flash_percentage": 19,
                         "ram_bytes": 20100,
                         "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA1",
                 "sizes": [{
-                        "flash_bytes": 299808,
-                        "flash_percentage": 23,
+                        "flash_bytes": 299832,
+                        "flash_percentage": 10,
                         "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
@@ -987,28 +987,28 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1179175,
+                        "flash_bytes": 1179831,
                         "flash_percentage": 90,
-                        "ram_bytes": 57796,
+                        "ram_bytes": 57828,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch/switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor/sensor_client",
                 "sizes": [{
-                        "flash_bytes": 1098565,
-                        "flash_percentage": 84,
-                        "ram_bytes": 58376,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_QueryHost",
-                "sizes": [{
-                        "flash_bytes": 1073879,
+                        "flash_bytes": 1073041,
                         "flash_percentage": 82,
-                        "ram_bytes": 57276,
-                        "ram_percentage": 17
+                        "ram_bytes": 57876,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_UDP_Light/light",
+                "sizes": [{
+                        "flash_bytes": 1099299,
+                        "flash_percentage": 84,
+                        "ram_bytes": 58440,
+                        "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/Ticker/examples/TickerParameter",
@@ -1029,17 +1029,17 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 688201,
+                        "flash_bytes": 688213,
                         "flash_percentage": 53,
                         "ram_bytes": 24008,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+{"name": "libraries/Zigbee/examples/Zigbee_Illuminance_Sensor",
                 "sizes": [{
-                        "flash_bytes": 677507,
-                        "flash_percentage": 52,
-                        "ram_bytes": 23928,
+                        "flash_bytes": 660093,
+                        "flash_percentage": 50,
+                        "ram_bytes": 23948,
                         "ram_percentage": 7
                         }]
                 }
@@ -1072,50 +1072,42 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 364228,
-                        "flash_percentage": 28,
-                        "ram_bytes": 23492,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
-                        "flash_bytes": 381192,
-                        "flash_percentage": 29,
+                        "flash_bytes": 381216,
+                        "flash_percentage": 12,
                         "ram_bytes": 27248,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                 "sizes": [{
-                        "flash_bytes": 353690,
-                        "flash_percentage": 27,
+                        "flash_bytes": 353714,
+                        "flash_percentage": 11,
                         "ram_bytes": 23228,
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
                 "sizes": [{
-                        "flash_bytes": 1057770,
-                        "flash_percentage": 34,
-                        "ram_bytes": 24760,
-                        "ram_percentage": 8
+                        "flash_bytes": 880348,
+                        "flash_percentage": 67,
+                        "ram_bytes": 31188,
+                        "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                 "sizes": [{
-                        "flash_bytes": 633890,
-                        "flash_percentage": 20,
+                        "flash_bytes": 633850,
+                        "flash_percentage": 48,
                         "ram_bytes": 29212,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA1",
                 "sizes": [{
-                        "flash_bytes": 358806,
-                        "flash_percentage": 11,
+                        "flash_bytes": 358766,
+                        "flash_percentage": 27,
                         "ram_bytes": 23220,
                         "ram_percentage": 7
                         }]
@@ -1136,7 +1128,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1144,11 +1136,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouse",
+{"name": "libraries/USB/examples/USBHostSerial",
                 "sizes": [{
-                        "flash_bytes": 437530,
+                        "flash_bytes": 437134,
                         "flash_percentage": 33,
-                        "ram_bytes": 72804,
+                        "ram_bytes": 72740,
                         "ram_percentage": 22
                         }]
                 },
@@ -1211,6 +1203,14 @@
                         "flash_percentage": 19,
                         "ram_bytes": 17184,
                         "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 920416,
+                        "flash_percentage": 70,
+                        "ram_bytes": 44944,
+                        "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
@@ -1277,19 +1277,19 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 307121,
-                        "flash_percentage": 23,
-                        "ram_bytes": 50268,
+                        "flash_bytes": 332489,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50624,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouse",
+{"name": "libraries/USB/examples/USBHostSerial",
                 "sizes": [{
-                        "flash_bytes": 323709,
+                        "flash_bytes": 323645,
                         "flash_percentage": 25,
-                        "ram_bytes": 49312,
+                        "ram_bytes": 49264,
                         "ram_percentage": 15
                         }]
                 },
@@ -1327,7 +1327,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 624661,
+                        "flash_bytes": 624681,
                         "flash_percentage": 48,
                         "ram_bytes": 26128,
                         "ram_percentage": 8
@@ -1362,14 +1362,6 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                "sizes": [{
-                        "flash_bytes": 320681,
-                        "flash_percentage": 10,
-                        "ram_bytes": 23024,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                 "sizes": [{
                         "flash_bytes": 312353,
@@ -1386,6 +1378,14 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                "sizes": [{
+                        "flash_bytes": 954828,
+                        "flash_percentage": 73,
+                        "ram_bytes": 48060,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                 "sizes": [{
                         "flash_bytes": 932012,
@@ -1394,26 +1394,18 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/ESP_Video/examples/dvp_camera",
-                "sizes": [{
-                        "flash_bytes": 388625,
-                        "flash_percentage": 12,
-                        "ram_bytes": 22796,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                 "sizes": [{
-                        "flash_bytes": 569253,
-                        "flash_percentage": 18,
+                        "flash_bytes": 569221,
+                        "flash_percentage": 43,
                         "ram_bytes": 28720,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA1",
                 "sizes": [{
-                        "flash_bytes": 292373,
-                        "flash_percentage": 9,
+                        "flash_bytes": 292325,
+                        "flash_percentage": 22,
                         "ram_bytes": 22476,
                         "ram_percentage": 7
                         }]
@@ -1458,19 +1450,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/KeyboardAndMouseControl",
                 "sizes": [{
-                        "flash_bytes": 372409,
-                        "flash_percentage": 28,
-                        "ram_bytes": 56060,
+                        "flash_bytes": 395397,
+                        "flash_percentage": 30,
+                        "ram_bytes": 56332,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouse",
+{"name": "libraries/USB/examples/USBHostSerial",
                 "sizes": [{
-                        "flash_bytes": 391105,
+                        "flash_bytes": 391029,
                         "flash_percentage": 30,
-                        "ram_bytes": 55404,
+                        "ram_bytes": 55356,
                         "ram_percentage": 17
                         }]
                 },
@@ -1508,7 +1500,7 @@
                 },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
-                        "flash_bytes": 658457,
+                        "flash_bytes": 658477,
                         "flash_percentage": 50,
                         "ram_bytes": 31548,
                         "ram_percentage": 10

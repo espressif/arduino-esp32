@@ -18,6 +18,14 @@
                         "ram_percentage": 9
                         }]
                 },
+{"name": "libraries/BLE/examples/ISO_CisPeripheral",
+                "sizes": [{
+                        "flash_bytes": 1006700,
+                        "flash_percentage": 32,
+                        "ram_bytes": 28948,
+                        "ram_percentage": 9
+                        }]
+                },
 {"name": "libraries/BLE/examples/Notify",
                 "sizes": [{
                         "flash_bytes": 977360,
@@ -34,34 +42,26 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                "sizes": [{
-                        "flash_bytes": 333264,
-                        "flash_percentage": 25,
-                        "ram_bytes": 23716,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                 "sizes": [{
-                        "flash_bytes": 314070,
-                        "flash_percentage": 24,
+                        "flash_bytes": 314094,
+                        "flash_percentage": 10,
                         "ram_bytes": 23448,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
                 "sizes": [{
-                        "flash_bytes": 343682,
-                        "flash_percentage": 26,
+                        "flash_bytes": 343706,
+                        "flash_percentage": 11,
                         "ram_bytes": 24516,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
                 "sizes": [{
-                        "flash_bytes": 314030,
-                        "flash_percentage": 24,
+                        "flash_bytes": 314054,
+                        "flash_percentage": 10,
                         "ram_bytes": 23472,
                         "ram_percentage": 7
                         }]
@@ -72,14 +72,6 @@
                         "flash_percentage": 79,
                         "ram_bytes": 56116,
                         "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/Ethernet/examples/ETH_LAN8720",
-                "sizes": [{
-                        "flash_bytes": 528818,
-                        "flash_percentage": 40,
-                        "ram_bytes": 29196,
-                        "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/HTTPClient/examples/BasicHttpClient",
@@ -122,28 +114,36 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1139608,
+                        "flash_bytes": 1138470,
                         "flash_percentage": 87,
-                        "ram_bytes": 68740,
-                        "ram_percentage": 21
+                        "ram_bytes": 90228,
+                        "ram_percentage": 28
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1016596,
+                        "flash_bytes": 1019230,
                         "flash_percentage": 78,
                         "ram_bytes": 68076,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover",
                 "sizes": [{
-                        "flash_bytes": 1052694,
-                        "flash_percentage": 80,
-                        "ram_bytes": 69560,
+                        "flash_bytes": 1016268,
+                        "flash_percentage": 78,
+                        "ram_bytes": 67892,
                         "ram_percentage": 21
+                        }]
+                },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 1124746,
+                        "flash_percentage": 86,
+                        "ram_bytes": 55912,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
@@ -154,19 +154,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/ConsumerControl",
+{"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 360136,
-                        "flash_percentage": 27,
-                        "ram_bytes": 72312,
+                        "flash_bytes": 428128,
+                        "flash_percentage": 33,
+                        "ram_bytes": 73176,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 360588,
-                        "flash_percentage": 28,
-                        "ram_bytes": 72344,
+                        "flash_bytes": 388398,
+                        "flash_percentage": 30,
+                        "ram_bytes": 72384,
                         "ram_percentage": 22
                         }]
                 },
@@ -210,11 +210,11 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                 "sizes": [{
-                        "flash_bytes": 661898,
+                        "flash_bytes": 651892,
                         "flash_percentage": 50,
-                        "ram_bytes": 34540,
+                        "ram_bytes": 35216,
                         "ram_percentage": 11
                         }]
                 }
@@ -247,9 +247,9 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/BluetoothSerial/examples/SSPPairing",
+{"name": "libraries/BluetoothSerial/examples/PasskeyEntry",
                 "sizes": [{
-                        "flash_bytes": 1092181,
+                        "flash_bytes": 1093589,
                         "flash_percentage": 83,
                         "ram_bytes": 42080,
                         "ram_percentage": 13
@@ -295,14 +295,6 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Ethernet/examples/ETH_LAN8720",
-                "sizes": [{
-                        "flash_bytes": 520513,
-                        "flash_percentage": 40,
-                        "ram_bytes": 28672,
-                        "ram_percentage": 9
-                        }]
-                },
 {"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
                         "flash_bytes": 1133521,
@@ -340,6 +332,14 @@
                         "flash_bytes": 1063941,
                         "flash_percentage": 81,
                         "ram_bytes": 50264,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 1064763,
+                        "flash_percentage": 81,
+                        "ram_bytes": 50692,
                         "ram_percentage": 15
                         }]
                 },
@@ -569,34 +569,26 @@
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                "sizes": [{
-                        "flash_bytes": 325570,
-                        "flash_percentage": 25,
-                        "ram_bytes": 17976,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                 "sizes": [{
-                        "flash_bytes": 305920,
-                        "flash_percentage": 23,
+                        "flash_bytes": 305944,
+                        "flash_percentage": 10,
                         "ram_bytes": 17732,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
                 "sizes": [{
-                        "flash_bytes": 326762,
-                        "flash_percentage": 25,
+                        "flash_bytes": 326786,
+                        "flash_percentage": 10,
                         "ram_bytes": 18352,
                         "ram_percentage": 6
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
                 "sizes": [{
-                        "flash_bytes": 305894,
-                        "flash_percentage": 23,
+                        "flash_bytes": 305918,
+                        "flash_percentage": 10,
                         "ram_bytes": 17756,
                         "ram_percentage": 5
                         }]
@@ -649,28 +641,28 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1242877,
+                        "flash_bytes": 1241445,
                         "flash_percentage": 95,
-                        "ram_bytes": 64360,
-                        "ram_percentage": 20
+                        "ram_bytes": 85864,
+                        "ram_percentage": 26
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1107463,
-                        "flash_percentage": 84,
+                        "flash_bytes": 1110431,
+                        "flash_percentage": 85,
                         "ram_bytes": 63712,
                         "ram_percentage": 19
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover",
                 "sizes": [{
-                        "flash_bytes": 1135783,
-                        "flash_percentage": 87,
-                        "ram_bytes": 64748,
-                        "ram_percentage": 20
+                        "flash_bytes": 1107135,
+                        "flash_percentage": 84,
+                        "ram_bytes": 63528,
+                        "ram_percentage": 19
                         }]
                 },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
@@ -721,11 +713,11 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                 "sizes": [{
-                        "flash_bytes": 723689,
-                        "flash_percentage": 55,
-                        "ram_bytes": 30128,
+                        "flash_bytes": 710277,
+                        "flash_percentage": 54,
+                        "ram_bytes": 30340,
                         "ram_percentage": 9
                         }]
                 }
@@ -766,34 +758,26 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                "sizes": [{
-                        "flash_bytes": 287676,
-                        "flash_percentage": 22,
-                        "ram_bytes": 14756,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                 "sizes": [{
-                        "flash_bytes": 267978,
-                        "flash_percentage": 20,
+                        "flash_bytes": 268010,
+                        "flash_percentage": 9,
                         "ram_bytes": 14540,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
                 "sizes": [{
-                        "flash_bytes": 288836,
-                        "flash_percentage": 22,
+                        "flash_bytes": 288860,
+                        "flash_percentage": 9,
                         "ram_bytes": 15160,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
                 "sizes": [{
-                        "flash_bytes": 267962,
-                        "flash_percentage": 20,
+                        "flash_bytes": 267986,
+                        "flash_percentage": 9,
                         "ram_bytes": 14564,
                         "ram_percentage": 4
                         }]
@@ -846,27 +830,27 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1183011,
+                        "flash_bytes": 1181533,
                         "flash_percentage": 90,
-                        "ram_bytes": 60108,
-                        "ram_percentage": 18
+                        "ram_bytes": 81604,
+                        "ram_percentage": 25
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1065041,
+                        "flash_bytes": 1068037,
                         "flash_percentage": 81,
                         "ram_bytes": 59452,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover",
                 "sizes": [{
-                        "flash_bytes": 1093433,
-                        "flash_percentage": 83,
-                        "ram_bytes": 60496,
+                        "flash_bytes": 1064761,
+                        "flash_percentage": 81,
+                        "ram_bytes": 59268,
                         "ram_percentage": 18
                         }]
                 },
@@ -918,11 +902,11 @@
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                 "sizes": [{
-                        "flash_bytes": 653279,
+                        "flash_bytes": 654939,
                         "flash_percentage": 50,
-                        "ram_bytes": 25908,
+                        "ram_bytes": 26032,
                         "ram_percentage": 8
                         }]
                 }
@@ -955,42 +939,34 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                "sizes": [{
-                        "flash_bytes": 312234,
-                        "flash_percentage": 24,
-                        "ram_bytes": 14392,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                 "sizes": [{
-                        "flash_bytes": 292400,
-                        "flash_percentage": 22,
+                        "flash_bytes": 292424,
+                        "flash_percentage": 9,
                         "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
                 "sizes": [{
-                        "flash_bytes": 313258,
-                        "flash_percentage": 24,
+                        "flash_bytes": 313290,
+                        "flash_percentage": 10,
                         "ram_bytes": 14788,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
                 "sizes": [{
-                        "flash_bytes": 292374,
-                        "flash_percentage": 22,
+                        "flash_bytes": 292406,
+                        "flash_percentage": 9,
                         "ram_bytes": 14200,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA3Stream",
                 "sizes": [{
-                        "flash_bytes": 297564,
-                        "flash_percentage": 23,
+                        "flash_bytes": 297596,
+                        "flash_percentage": 9,
                         "ram_bytes": 14192,
                         "ram_percentage": 4
                         }]
@@ -1011,28 +987,28 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1205777,
+                        "flash_bytes": 1204205,
                         "flash_percentage": 92,
-                        "ram_bytes": 58108,
-                        "ram_percentage": 18
+                        "ram_bytes": 79596,
+                        "ram_percentage": 24
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1069727,
+                        "flash_bytes": 1072723,
                         "flash_percentage": 82,
-                        "ram_bytes": 57436,
+                        "ram_bytes": 57444,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover",
                 "sizes": [{
-                        "flash_bytes": 1098093,
-                        "flash_percentage": 84,
-                        "ram_bytes": 58472,
-                        "ram_percentage": 18
+                        "flash_bytes": 1069445,
+                        "flash_percentage": 82,
+                        "ram_bytes": 57252,
+                        "ram_percentage": 17
                         }]
                 },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
@@ -1059,11 +1035,11 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Temperature_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                 "sizes": [{
-                        "flash_bytes": 673533,
-                        "flash_percentage": 51,
-                        "ram_bytes": 23892,
+                        "flash_bytes": 658691,
+                        "flash_percentage": 50,
+                        "ram_bytes": 23924,
                         "ram_percentage": 7
                         }]
                 }
@@ -1104,34 +1080,26 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                "sizes": [{
-                        "flash_bytes": 372586,
-                        "flash_percentage": 28,
-                        "ram_bytes": 23488,
-                        "ram_percentage": 7
-                        }]
-                },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                 "sizes": [{
-                        "flash_bytes": 352980,
-                        "flash_percentage": 27,
+                        "flash_bytes": 353004,
+                        "flash_percentage": 11,
                         "ram_bytes": 23228,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
                 "sizes": [{
-                        "flash_bytes": 384390,
-                        "flash_percentage": 29,
+                        "flash_bytes": 384414,
+                        "flash_percentage": 12,
                         "ram_bytes": 24280,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
                 "sizes": [{
-                        "flash_bytes": 352950,
-                        "flash_percentage": 27,
+                        "flash_bytes": 352974,
+                        "flash_percentage": 11,
                         "ram_bytes": 23244,
                         "ram_percentage": 7
                         }]
@@ -1168,6 +1136,14 @@
                         "ram_percentage": 10
                         }]
                 },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 925210,
+                        "flash_percentage": 71,
+                        "ram_bytes": 31380,
+                        "ram_percentage": 10
+                        }]
+                },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
                 "sizes": [{
                         "flash_bytes": 394414,
@@ -1176,7 +1152,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/ConsumerControl",
+{"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1184,7 +1160,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1317,19 +1293,19 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/USB/examples/ConsumerControl",
+{"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 305341,
-                        "flash_percentage": 23,
-                        "ram_bytes": 50252,
-                        "ram_percentage": 15
+                        "flash_bytes": 365737,
+                        "flash_percentage": 28,
+                        "ram_bytes": 51008,
+                        "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 305777,
-                        "flash_percentage": 23,
-                        "ram_bytes": 50268,
+                        "flash_bytes": 326665,
+                        "flash_percentage": 25,
+                        "ram_bytes": 50176,
                         "ram_percentage": 15
                         }]
                 },
@@ -1436,7 +1412,7 @@
                 },
 {"name": "libraries/HTTPClient/examples/BasicHttpClient",
                 "sizes": [{
-                        "flash_bytes": 1092344,
+                        "flash_bytes": 1092360,
                         "flash_percentage": 83,
                         "ram_bytes": 48396,
                         "ram_percentage": 15
@@ -1474,6 +1450,14 @@
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                "sizes": [{
+                        "flash_bytes": 1049732,
+                        "flash_percentage": 80,
+                        "ram_bytes": 48700,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
                 "sizes": [{
                         "flash_bytes": 321121,
@@ -1482,19 +1466,19 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/ConsumerControl",
+{"name": "libraries/USB/examples/CompositeDevice",
                 "sizes": [{
-                        "flash_bytes": 370617,
-                        "flash_percentage": 28,
-                        "ram_bytes": 56028,
+                        "flash_bytes": 429245,
+                        "flash_percentage": 33,
+                        "ram_bytes": 56732,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
                 "sizes": [{
-                        "flash_bytes": 371069,
-                        "flash_percentage": 28,
-                        "ram_bytes": 56076,
+                        "flash_bytes": 394281,
+                        "flash_percentage": 30,
+                        "ram_bytes": 56252,
                         "ram_percentage": 17
                         }]
                 },

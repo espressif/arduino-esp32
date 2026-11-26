@@ -18,12 +18,12 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/BLEAudio/examples/UnicastMic",
+{"name": "libraries/BLEAudio/examples/UnicastUSBTransmitter",
                 "sizes": [{
-                        "flash_bytes": 1562726,
-                        "flash_percentage": 50,
-                        "ram_bytes": 41504,
-                        "ram_percentage": 13
+                        "flash_bytes": 1625094,
+                        "flash_percentage": 52,
+                        "ram_bytes": 121608,
+                        "ram_percentage": 37
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleManual",
@@ -50,18 +50,26 @@
                         "ram_percentage": 8
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 280734,
+                        "flash_percentage": 21,
+                        "ram_bytes": 23032,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 280758,
-                        "flash_percentage": 9,
+                        "flash_bytes": 280734,
+                        "flash_percentage": 21,
                         "ram_bytes": 23032,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 315244,
-                        "flash_percentage": 10,
+                        "flash_bytes": 315220,
+                        "flash_percentage": 24,
                         "ram_bytes": 23464,
                         "ram_percentage": 7
                         }]
@@ -98,25 +106,25 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1114508,
-                        "flash_percentage": 85,
-                        "ram_bytes": 68452,
+                        "flash_bytes": 1143986,
+                        "flash_percentage": 87,
+                        "ram_bytes": 69504,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_server",
                 "sizes": [{
-                        "flash_bytes": 1023406,
-                        "flash_percentage": 78,
+                        "flash_bytes": 1031730,
+                        "flash_percentage": 79,
                         "ram_bytes": 67956,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback",
                 "sizes": [{
-                        "flash_bytes": 1026924,
+                        "flash_bytes": 1018000,
                         "flash_percentage": 78,
                         "ram_bytes": 67940,
                         "ram_percentage": 21
@@ -146,19 +154,27 @@
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 388576,
-                        "flash_percentage": 30,
-                        "ram_bytes": 72424,
+                        "flash_bytes": 361688,
+                        "flash_percentage": 28,
+                        "ram_bytes": 72336,
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouseCallback",
+{"name": "libraries/USB/examples/USBHostIDF",
                 "sizes": [{
-                        "flash_bytes": 388832,
+                        "flash_bytes": 376216,
+                        "flash_percentage": 29,
+                        "ram_bytes": 23904,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostKeyboard",
+                "sizes": [{
+                        "flash_bytes": 393798,
                         "flash_percentage": 30,
-                        "ram_bytes": 71552,
+                        "ram_bytes": 71584,
                         "ram_percentage": 22
                         }]
                 },
@@ -194,12 +210,12 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
                 "sizes": [{
-                        "flash_bytes": 629148,
-                        "flash_percentage": 48,
-                        "ram_bytes": 34348,
-                        "ram_percentage": 10
+                        "flash_bytes": 674904,
+                        "flash_percentage": 51,
+                        "ram_bytes": 35032,
+                        "ram_percentage": 11
                         }]
                 }
 ]
@@ -260,14 +276,6 @@
                         "flash_bytes": 303125,
                         "flash_percentage": 10,
                         "ram_bytes": 23288,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 307841,
-                        "flash_percentage": 23,
-                        "ram_bytes": 23296,
                         "ram_percentage": 7
                         }]
                 },
@@ -396,25 +404,25 @@
                         "ram_percentage": 4
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 320945,
+                        "flash_percentage": 24,
+                        "ram_bytes": 14852,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 258285,
-                        "flash_percentage": 8,
+                        "flash_bytes": 258253,
+                        "flash_percentage": 20,
                         "ram_bytes": 13800,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 290149,
-                        "flash_percentage": 9,
-                        "ram_bytes": 14120,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 293777,
+                        "flash_bytes": 290117,
                         "flash_percentage": 22,
                         "ram_bytes": 14120,
                         "ram_percentage": 4
@@ -553,18 +561,26 @@
                         "ram_percentage": 6
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 337776,
+                        "flash_percentage": 26,
+                        "ram_bytes": 18480,
+                        "ram_percentage": 6
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 272726,
-                        "flash_percentage": 9,
+                        "flash_bytes": 272702,
+                        "flash_percentage": 21,
                         "ram_bytes": 17308,
                         "ram_percentage": 5
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 307224,
-                        "flash_percentage": 10,
+                        "flash_bytes": 307200,
+                        "flash_percentage": 23,
                         "ram_bytes": 17732,
                         "ram_percentage": 5
                         }]
@@ -601,27 +617,27 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1216925,
-                        "flash_percentage": 93,
-                        "ram_bytes": 64088,
+                        "flash_bytes": 1237847,
+                        "flash_percentage": 94,
+                        "ram_bytes": 64692,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_server",
                 "sizes": [{
-                        "flash_bytes": 1115213,
-                        "flash_percentage": 85,
-                        "ram_bytes": 63592,
+                        "flash_bytes": 1124527,
+                        "flash_percentage": 86,
+                        "ram_bytes": 63576,
                         "ram_percentage": 19
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback",
                 "sizes": [{
-                        "flash_bytes": 1119613,
+                        "flash_bytes": 1109111,
                         "flash_percentage": 85,
-                        "ram_bytes": 63576,
+                        "ram_bytes": 63568,
                         "ram_percentage": 19
                         }]
                 },
@@ -681,11 +697,11 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
                 "sizes": [{
-                        "flash_bytes": 688985,
-                        "flash_percentage": 53,
-                        "ram_bytes": 29928,
+                        "flash_bytes": 728393,
+                        "flash_percentage": 56,
+                        "ram_bytes": 30180,
                         "ram_percentage": 9
                         }]
                 }
@@ -734,25 +750,25 @@
                         "ram_percentage": 5
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 299812,
+                        "flash_percentage": 23,
+                        "ram_bytes": 15296,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 234722,
-                        "flash_percentage": 7,
+                        "flash_bytes": 234690,
+                        "flash_percentage": 18,
                         "ram_bytes": 14100,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 269282,
-                        "flash_percentage": 9,
-                        "ram_bytes": 14548,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 272982,
+                        "flash_bytes": 269258,
                         "flash_percentage": 21,
                         "ram_bytes": 14548,
                         "ram_percentage": 4
@@ -790,27 +806,27 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1174919,
-                        "flash_percentage": 90,
-                        "ram_bytes": 59828,
+                        "flash_bytes": 1195811,
+                        "flash_percentage": 91,
+                        "ram_bytes": 60432,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_server",
                 "sizes": [{
-                        "flash_bytes": 1072873,
-                        "flash_percentage": 82,
-                        "ram_bytes": 59332,
-                        "ram_percentage": 18
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback",
-                "sizes": [{
-                        "flash_bytes": 1077251,
-                        "flash_percentage": 82,
+                        "flash_bytes": 1082173,
+                        "flash_percentage": 83,
                         "ram_bytes": 59316,
+                        "ram_percentage": 18
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback",
+                "sizes": [{
+                        "flash_bytes": 1066687,
+                        "flash_percentage": 81,
+                        "ram_bytes": 59308,
                         "ram_percentage": 18
                         }]
                 },
@@ -870,11 +886,11 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
                 "sizes": [{
-                        "flash_bytes": 634777,
-                        "flash_percentage": 48,
-                        "ram_bytes": 25700,
+                        "flash_bytes": 674217,
+                        "flash_percentage": 51,
+                        "ram_bytes": 25952,
                         "ram_percentage": 8
                         }]
                 }
@@ -915,27 +931,27 @@
                         "ram_percentage": 4
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 324950,
+                        "flash_percentage": 25,
+                        "ram_bytes": 14940,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 261122,
-                        "flash_percentage": 8,
+                        "flash_bytes": 261098,
+                        "flash_percentage": 20,
                         "ram_bytes": 13856,
                         "ram_percentage": 4
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 293694,
-                        "flash_percentage": 9,
+                        "flash_bytes": 293670,
+                        "flash_percentage": 22,
                         "ram_bytes": 14184,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 297320,
-                        "flash_percentage": 23,
-                        "ram_bytes": 14176,
                         "ram_percentage": 4
                         }]
                 },
@@ -963,35 +979,35 @@
                         "ram_percentage": 31
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1179619,
-                        "flash_percentage": 90,
-                        "ram_bytes": 57820,
+                        "flash_bytes": 1200503,
+                        "flash_percentage": 92,
+                        "ram_bytes": 58424,
                         "ram_percentage": 18
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/secure_client",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse/greenhouse_server",
                 "sizes": [{
-                        "flash_bytes": 1077559,
-                        "flash_percentage": 82,
-                        "ram_bytes": 57324,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Query_Callback",
-                "sizes": [{
-                        "flash_bytes": 1081927,
+                        "flash_bytes": 1086811,
                         "flash_percentage": 83,
-                        "ram_bytes": 57308,
+                        "ram_bytes": 57300,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/Zigbee/examples/Zigbee_Occupancy_Sensor",
+{"name": "libraries/OpenThread/examples/Native/ThreadDNSSD/ThreadDNSSD_Advertise_Callback",
                 "sizes": [{
-                        "flash_bytes": 638449,
-                        "flash_percentage": 49,
-                        "ram_bytes": 23684,
+                        "flash_bytes": 1071369,
+                        "flash_percentage": 82,
+                        "ram_bytes": 57300,
+                        "ram_percentage": 17
+                        }]
+                },
+{"name": "libraries/Zigbee/examples/Zigbee_OTA_Client",
+                "sizes": [{
+                        "flash_bytes": 677885,
+                        "flash_percentage": 52,
+                        "ram_bytes": 23928,
                         "ram_percentage": 7
                         }]
                 }
@@ -1040,36 +1056,28 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 364228,
+                        "flash_percentage": 28,
+                        "ram_bytes": 23492,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
-                        "flash_bytes": 317950,
-                        "flash_percentage": 10,
+                        "flash_bytes": 317926,
+                        "flash_percentage": 24,
                         "ram_bytes": 22724,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
                 "sizes": [{
-                        "flash_bytes": 354306,
-                        "flash_percentage": 11,
+                        "flash_bytes": 354282,
+                        "flash_percentage": 27,
                         "ram_bytes": 23236,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 358440,
-                        "flash_percentage": 27,
-                        "ram_bytes": 23244,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP_SR/examples/Basic",
-                "sizes": [{
-                        "flash_bytes": 1898308,
-                        "flash_percentage": 45,
-                        "ram_bytes": 59720,
-                        "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
@@ -1096,7 +1104,7 @@
                         "ram_percentage": 9
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
                         "flash_bytes": 321608,
                         "flash_percentage": 25,
@@ -1104,10 +1112,18 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouseCallback",
+{"name": "libraries/USB/examples/USBHostIDF",
                 "sizes": [{
-                        "flash_bytes": 437272,
-                        "flash_percentage": 33,
+                        "flash_bytes": 420646,
+                        "flash_percentage": 32,
+                        "ram_bytes": 23676,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostKeyboard",
+                "sizes": [{
+                        "flash_bytes": 442342,
+                        "flash_percentage": 34,
                         "ram_bytes": 72804,
                         "ram_percentage": 22
                         }]
@@ -1189,14 +1205,6 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 255181,
-                        "flash_percentage": 19,
-                        "ram_bytes": 17184,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet",
                 "sizes": [{
                         "flash_bytes": 1663029,
@@ -1253,19 +1261,19 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 326897,
-                        "flash_percentage": 25,
-                        "ram_bytes": 50224,
+                        "flash_bytes": 306665,
+                        "flash_percentage": 23,
+                        "ram_bytes": 50268,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouseCallback",
+{"name": "libraries/USB/examples/USBHostKeyboard",
                 "sizes": [{
-                        "flash_bytes": 323553,
+                        "flash_bytes": 327465,
                         "flash_percentage": 25,
-                        "ram_bytes": 49312,
+                        "ram_bytes": 49328,
                         "ram_percentage": 15
                         }]
                 },
@@ -1346,6 +1354,14 @@
                         "ram_percentage": 7
                         }]
                 },
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                "sizes": [{
+                        "flash_bytes": 320681,
+                        "flash_percentage": 10,
+                        "ram_bytes": 23024,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                 "sizes": [{
                         "flash_bytes": 259057,
@@ -1360,22 +1376,6 @@
                         "flash_percentage": 9,
                         "ram_bytes": 22492,
                         "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 291225,
-                        "flash_percentage": 22,
-                        "ram_bytes": 22492,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/ESP_SR/examples/Basic",
-                "sizes": [{
-                        "flash_bytes": 1762537,
-                        "flash_percentage": 56,
-                        "ram_bytes": 60112,
-                        "ram_percentage": 18
                         }]
                 },
 {"name": "libraries/Matter/examples/Commissioning/MatterOnNetworkEthernet",
@@ -1434,19 +1434,27 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
                 "sizes": [{
-                        "flash_bytes": 394525,
-                        "flash_percentage": 30,
-                        "ram_bytes": 56300,
+                        "flash_bytes": 371969,
+                        "flash_percentage": 28,
+                        "ram_bytes": 56060,
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/USBHostMouseCallback",
+{"name": "libraries/USB/examples/USBHostIDF",
                 "sizes": [{
-                        "flash_bytes": 390949,
+                        "flash_bytes": 344965,
+                        "flash_percentage": 26,
+                        "ram_bytes": 22940,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/USB/examples/USBHostKeyboard",
+                "sizes": [{
+                        "flash_bytes": 394897,
                         "flash_percentage": 30,
-                        "ram_bytes": 55404,
+                        "ram_bytes": 55420,
                         "ram_percentage": 17
                         }]
                 },
