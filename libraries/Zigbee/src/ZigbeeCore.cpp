@@ -139,6 +139,36 @@ static void comm_retry_timer_cb(void *arg) {
   }
 }
 
+// Mgmt_Bind must not be sent from the APS indication callback. A one-shot timer
+// runs after that callback returns, then takes the stack lock and reads the table.
+static esp_timer_handle_t s_bind_refresh_timer = NULL;
+
+void bind_refresh_timer_cb(void *arg) {
+  (void)arg;
+  if (esp_zigbee_lock_acquire(portMAX_DELAY)) {
+    Zigbee.searchBindings();
+    esp_zigbee_lock_release();
+  }
+}
+
+static void scheduleBindingRefresh() {
+  if (!s_bind_refresh_timer) {
+    const esp_timer_create_args_t args = {
+      .callback = bind_refresh_timer_cb,
+      .arg = nullptr,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "zb_bind_refresh",
+      .skip_unhandled_events = false,
+    };
+    if (esp_timer_create(&args, &s_bind_refresh_timer) != ESP_OK) {
+      log_e("Failed to create binding refresh timer");
+      return;
+    }
+  }
+  esp_timer_stop(s_bind_refresh_timer);
+  esp_timer_start_once(s_bind_refresh_timer, 50 * 1000);
+}
+
 static void scheduleCommissioning(uint8_t mode, uint32_t delay_ms) {
   s_comm_retry_mode = mode;
   if (!s_comm_retry_timer) {
@@ -524,7 +554,7 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
             Zigbee.setNVRAMChannelMask(1 << ezb_get_current_channel());
             Zigbee._connected = true;  // Coordinator is always connected
           }
-          Zigbee.searchBindings();
+          scheduleBindingRefresh();
         }
       } else {
         /* commissioning failed */
@@ -571,7 +601,7 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
             extended_pan_id.u8[1], extended_pan_id.u8[0], ezb_get_panid(), ezb_get_current_channel(), ezb_get_short_address()
           );
           Zigbee._connected = true;
-          // Set channel mask, so that the device will re-join the network faster after reboot (scan only on the current channel)
+          // Keep the next scan/rejoin on this channel instead of walking 11-26.
           Zigbee.setNVRAMChannelMask(1 << ezb_get_current_channel());
         } else {
           log_i("Network steering was not successful (status: %u)", bdb ? bdb->status : 0xFF);
@@ -700,9 +730,9 @@ bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind) {
     );
   }
   if (ind->status == 0x00) {
-    // Catch bind/unbind requests to update the bound devices list
+    // Bind/unbind: refresh the binding table after this indication returns.
     if (ind->cluster_id == 0x21 || ind->cluster_id == 0x22) {
-      Zigbee.searchBindings();
+      scheduleBindingRefresh();
     }
   } else {
     log_e("APSDE INDICATION - Invalid status of APSDE-DATA indication, error code: %u", ind->status);

@@ -488,6 +488,7 @@ public:
   // Friend function declarations to allow access to private members.
   friend bool zb_app_signal_handler(const ezb_app_signal_t *signal);
   friend bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
+  friend void bind_refresh_timer_cb(void *arg);
 
   /**
    * @brief Format an IEEE address for display.
