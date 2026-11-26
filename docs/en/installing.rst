@@ -26,7 +26,7 @@ Installing using Arduino IDE
 This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 .. note::
-   For overview of SoC's support, take a look on `Supported Soc's table <https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s>`_ where you can find if the particular chip is under stable or development release.
+   For overview of SoCs support, take a look at the `Supported SoCs table <https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s>`_ where you can find if the particular chip is under a stable or development release.
 
 - Stable release link::
 
@@ -48,12 +48,12 @@ Users in China might have troubles with connection and download speeds using the
    https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_dev_index_cn.json
 
 .. note::
-   Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform
+   Starting with Arduino IDE version 1.6.4, Arduino allows installation of third-party platform
    packages using Boards Manager. We have packages available for Windows, macOS, and Linux.
 
 To start the installation process using the Boards Manager, follow these steps:
 
--  Install the current upstream Arduino IDE at the 1.8 level or later. The current version is at the `arduino.cc`_ website.
+-  Install the current upstream Arduino IDE version 1.8 or later. The current version is at the `arduino.cc`_ website.
 
 -  Start Arduino and open the Preferences window.
 
@@ -83,7 +83,7 @@ To start the installation process using the Boards Manager, follow these steps:
 Windows (manual installation)
 -----------------------------
 
-.. warning:: Arduino ESP32 core v2.x.x cannot be used on Windows 8.x x86 (32 bits), Windows 7 or earlier. The Windows 32 bits OS is no longer supported by this toolchain.
+.. warning:: Arduino ESP32 core v2.x.x cannot be used on Windows 8.x x86 (32 bits), Windows 7, or earlier. All Windows 32 bit operating systems are no longer supported by this toolchain.
 
    The Arduino ESP32 v1.0.6 still works on WIN32. You might want to install python 3.8.x because it is the latest release supported by Windows 7.
 
@@ -91,8 +91,8 @@ Steps to install Arduino ESP32 support on Windows:
 
 **Step 1**
 
-1. Download and install the latest Arduino IDE ``Windows Installer`` from [arduino.cc](https://www.arduino.cc/en/Main/Software)
-2. Download and install Git from [git-scm.com](https://git-scm.com/download/win)
+1. Download and install the latest Arduino IDE ``Windows Installer`` from `arduino.cc <https://www.arduino.cc/en/Main/Software>`_
+2. Download and install Git from `git-scm.com <https://git-scm.com/download/win>`_
 3. Start ``Git GUI`` and do the following steps:
 
 - Select ``Clone Existing Repository``
@@ -120,7 +120,7 @@ Steps to install Arduino ESP32 support on Windows:
    :align: center
    :figclass: align-center
 
-- open a `Git Bash` session pointing to ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32`` and execute ```git submodule update --init --recursive```
+- Open a `Git Bash` session pointing to ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32`` and execute ```git submodule update --init --recursive```
 - Open ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32/tools`` and double-click ``get.exe``
 
 **Step 4**
@@ -129,7 +129,7 @@ Steps to install Arduino ESP32 support on Windows:
    :align: center
    :figclass: align-center
 
-- When ```get.exe``` finishes, you should see the following files in the directory
+- When ``get.exe`` finishes, you should see the following files in the directory
 
 **Step 5**
 
@@ -141,7 +141,7 @@ Steps to install Arduino ESP32 support on Windows:
 2. Start Arduino IDE
 3. Select your board in ``Tools > Board`` menu
 4. Select the COM port that the board is attached to
-5. Compile and upload (You might need to hold the boot button while uploading)
+5. Compile and upload. You might need to hold the boot button while uploading
 
 .. figure:: ../_static/arduino-ide.png
    :align: center
@@ -150,7 +150,7 @@ Steps to install Arduino ESP32 support on Windows:
 How to update to the latest code
 ********************************
 
-1. Start ``Git GUI`` and you should see the repository under ``Open Recent Repository``. Click on it!
+1. Start ``Git GUI`` and you should see the repository under ``Open Recent Repository``. Click on it
 
 .. figure:: ../_static/win-gui-update-1.png
    :align: center

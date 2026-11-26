@@ -42,7 +42,7 @@ Sets the PM2.5 concentration measurement value.
 
     bool setPM25(float pm25);
 
-* ``pm25`` - PM2.5 concentration value in 0.1 μg/m³
+* ``pm25`` - PM2.5 concentration value in μg/m³
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -55,21 +55,21 @@ Sets the minimum and maximum measurement values.
 
     bool setMinMaxValue(float min, float max);
 
-* ``min`` - Minimum PM2.5 concentration value in 0.1 μg/m³
-* ``max`` - Maximum PM2.5 concentration value in 0.1 μg/m³
+* ``min`` - Minimum PM2.5 concentration value in μg/m³
+* ``max`` - Maximum PM2.5 concentration value in μg/m³
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 setDefaultValue
 ^^^^^^^^^^^^^^^
 
-Sets the default (initial) value for the PM2.5 sensor in 0.1 μg/m³. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
+Sets the default (initial) value for the PM2.5 sensor in μg/m³. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
 
 .. code-block:: arduino
 
     bool setDefaultValue(float defaultValue);
 
-* ``defaultValue`` - Default PM2.5 concentration value in 0.1 μg/m³
+* ``defaultValue`` - Default PM2.5 concentration value in μg/m³
 
 **Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
 
@@ -84,7 +84,7 @@ Sets the tolerance value for measurements.
 
     bool setTolerance(float tolerance);
 
-* ``tolerance`` - Tolerance value in 0.1 μg/m³
+* ``tolerance`` - Tolerance value in μg/m³
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -99,7 +99,7 @@ Sets the reporting configuration for PM2.5 measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change required to trigger a report in 0.1 μg/m³
+* ``delta`` - Minimum change required to trigger a report in μg/m³
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

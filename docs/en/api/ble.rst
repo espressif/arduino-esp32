@@ -257,6 +257,17 @@ isInitialized
 
 Returns ``true`` if ``begin()`` was called successfully and ``end()`` has not been called.
 
+isEnding
+^^^^^^^^
+
+.. code-block:: cpp
+
+    bool isEnding() const;
+
+Returns ``true`` once shutdown has claimed the current BLE session. Retained
+subsystem handles use it to reject native operations during callback-deferred
+teardown while ``end()`` completes on its worker.
+
 operator bool
 ^^^^^^^^^^^^^
 
@@ -319,11 +330,14 @@ Connections
 
 .. code-block:: cpp
 
+    uint16_t getConnHandle(const BTAddress &peerAddress) const;
     std::vector<uint16_t> getConnHandles(const BTAddress &peerAddress) const;
     std::vector<BLEConnInfo> getConnections(const BTAddress &peerAddress) const;
     BLEConnInfo getConnInfo(const BTAddress &peerAddress) const;
 
 Look up live connections by peer address (OTA, or the identity address on NimBLE).
+``getConnHandle()`` returns the handle used by ``BLEClient::getHandle()`` and the
+connection-scoped APIs, or ``0xFFFF`` when the peer is not connected.
 The address lookup normalizes volatile fields (PHY/RSSI); an ambiguous raw handle
 matching links to different peers is refused with ``NotConnected`` — use the owning
 ``BLEClient``/``BLEServer`` handle for a specific GATT application.
@@ -386,6 +400,18 @@ getAudioController
 Returns the LE Audio controller handle (declared here so the core builds without the audio
 library; include ``<BLEAudio.h>`` before using it). The audio subsystem is documented
 separately in :doc:`ble_audio`.
+
+getIsoController
+^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    BLEIso getIsoController();
+
+Returns the isochronous transport controller handle. See the BLEIso section under
+Specialty Features for the CIS/BIS roles. The method is declared only when
+``BLE_ISO_SUPPORTED`` is set (see ``core/BLEGuards.h``), so guard calls with the
+same macro.
 
 Power
 *****
@@ -599,7 +625,7 @@ start
 
 Register all services with the stack and start the GATT server. Call after creating services and
 characteristics. Returns ``InvalidState`` after LE Audio has committed the shared GATT table
-(the audio freeze): restage classic services before ``audio.start()``, not after.
+(the audio freeze): restage classic services before ``audio.begin()``, not after.
 
 isStarted
 """""""""
@@ -728,8 +754,11 @@ getConnections
 .. code-block:: cpp
 
     std::vector<BLEConnInfo> getConnections() const;
+    BLEConnInfo getConnInfo(uint16_t connHandle) const;
 
-Returns connection information for all connected clients.
+Returns connection information for all connected clients, or for a single
+client identified by its connection handle (a null/default ``BLEConnInfo``
+when the handle is not connected).
 
 disconnect
 """"""""""
@@ -1728,8 +1757,9 @@ start
 
     BTStatus start(uint32_t durationMs, bool appendToExistingResults = false);
 
-Start scanning for ``durationMs`` milliseconds (non-blocking). Set ``appendToExistingResults`` to ``true`` to
-append to existing results instead of clearing them.
+Start scanning for ``durationMs`` milliseconds (non-blocking); ``0`` scans
+indefinitely. Set ``appendToExistingResults`` to ``true`` to append to existing
+results instead of clearing them.
 
 startBlocking
 """""""""""""
@@ -1820,14 +1850,30 @@ Periodic Sync (BLE 5.0)
 
     BTStatus createPeriodicSync(const BTAddress &addr, uint8_t sid,
                                 uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
-    BTStatus cancelPeriodicSyncCreate();
-    BTStatus stopPeriodicSyncReceive(uint16_t syncHandle);
+    BTStatus receivePeriodicSync(uint16_t connHandle,
+                                 uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
+    BTStatus receivePeriodicSync(const BLEConnInfo &peer,
+                                 uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
+    BTStatus stopPeriodicSyncReceive(uint16_t connHandle);
     BTStatus stopPeriodicSyncReceive(const BLEConnInfo &peer);
+    BTStatus cancelPeriodicSyncCreate();
     BTStatus terminatePeriodicSync(uint16_t syncHandle);
 
 Synchronize to a periodic advertiser identified by address and advertising SID.
-``cancelPeriodicSyncCreate()`` aborts a pending create; the ``stopPeriodicSyncReceive()``
-overloads stop an established sync (by handle, or by peer).
+``cancelPeriodicSyncCreate()`` aborts a pending create, and
+``terminatePeriodicSync()`` tears down an established sync.
+
+``receivePeriodicSync()`` enables **Periodic Advertising Sync Transfer (PAST)
+receive** on a connection: a connected Broadcast Assistant (BASS) typically
+pushes the PA sync via PAST instead of asking the Scan Delegator to scan. Both
+backends accept the handle reported by ``BLEClient::getHandle()`` or
+``BLEConnInfo::getHandle()`` and return ``BTStatus::NotConnected`` when no live
+link matches. The ``BLEConnInfo`` overload is the role-aware variant for
+simultaneous GATT client and server links; on Bluedroid it uses the
+descriptor's address directly so a numeric handle collision between roles
+cannot pick the wrong link. The ``stopPeriodicSyncReceive()`` overloads disable
+PAST receive again (Bluedroid has no dedicated disable command, so it restores
+the default no-sync receive parameters).
 
 Periodic Sync Callbacks
 """""""""""""""""""""""
@@ -2038,6 +2084,8 @@ Configuration
     void setName(const String &name);
     void setScanResponse(bool enable);
     void setType(BLEAdvType type);
+    void setDirectedAddress(const BTAddress &address);
+    BTAddress getDirectedAddress() const;
     void setInterval(uint16_t minMs, uint16_t maxMs);
     void setMinPreferred(uint16_t minPreferred);
     void setMaxPreferred(uint16_t maxPreferred);
@@ -2061,6 +2109,15 @@ Configuration
     (a zero side copies the other). Connection parameters are still negotiated
     post-connect via L2CAP; the AD is only a hint to centrals.
 
+.. note::
+
+    ``setDirectedAddress`` sets the peer address used as InitA in directed
+    advertising PDUs (``BLEAdvType::DirectedHighDuty``, ``DirectedLowDuty``, or
+    ``ConnectableDirected``). Such types require a non-zero address before
+    ``start()``; a zero address clears the stored peer. Use
+    ``getDirectedAddress()`` to read the stored InitA (a zero address when none
+    was set).
+
 Custom Advertisement Data
 """""""""""""""""""""""""
 
@@ -2078,7 +2135,14 @@ Start / Stop
     BTStatus stop();
     bool isAdvertising() const;
 
-Pass ``durationMs = 0`` for indefinite advertising.
+Pass ``durationMs = 0`` for indefinite advertising. Finite durations above the
+HCI 16-bit 10 ms unit field (about 655.35 s) return ``BTStatus::InvalidParam``.
+High-duty directed advertising is limited to 1.28 s, and directed types started
+with a zero ``setDirectedAddress()`` also return ``InvalidParam``.
+
+``isAdvertising()`` is true when the legacy set is running **or** when any
+extended advertising instance is running. ``stop()`` still stops only the
+legacy set; use ``stopExtended()`` for a specific extended instance.
 
 Extended Advertising (BLE 5.0)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

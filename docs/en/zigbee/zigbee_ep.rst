@@ -220,8 +220,8 @@ Sets the power source type for the endpoint.
     bool setPowerSource(uint8_t source, uint8_t percentage = 0xff, uint8_t voltage = 0xff);
 
 * ``source`` - Power source type (``ZB_POWER_SOURCE_MAINS``, ``ZB_POWER_SOURCE_BATTERY``, etc.)
-* ``percentage`` - Battery percentage (0-100, default: 0xff)
-* ``voltage`` - Battery voltage in 100 mV units (default: 0xff)
+* ``percentage`` - Battery charge percentage (0-100). Only used for a battery power source. Values above 100, including the default ``0xff``, are clamped to 100 and then stored as ``percentage * 2`` (ZCL range 0-200).
+* ``voltage`` - Battery voltage in 100 mV units (for example 35 for 3.5 V). Only used for a battery power source. The default ``0xff`` is stored as given.
 
 This function will return ``true`` if set successfully, ``false`` otherwise.
 

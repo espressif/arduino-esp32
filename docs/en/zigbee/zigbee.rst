@@ -71,7 +71,7 @@ The ``ZigbeeCore`` class is the main entry point for all Zigbee operations. It s
 * **OTA Updates**: Managing over-the-air firmware updates
 * **Power Management**: Configuring sleep modes for battery-powered devices
 
-The ``ZigbeeCore`` class is implemented as a singleton, meaning there's only one instance available globally. You access it directly as ``Zigbee`` without creating an instance.
+Use the global ``Zigbee`` object. It is omitted when ``NO_GLOBAL_INSTANCES`` or ``NO_GLOBAL_ZIGBEE`` is defined.
 
 .. toctree::
     :maxdepth: 3
@@ -157,7 +157,7 @@ If you have problems with connecting to the network, you can try to factory rese
 
 .. code-block:: arduino
 
-    Zigbee.factoryReset(true); // true = restart after reset
+    Zigbee.factoryReset(true); // true = reset and reboot; false is not supported and does nothing
 
 Debug Mode
 **********
