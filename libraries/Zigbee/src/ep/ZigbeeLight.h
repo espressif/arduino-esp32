@@ -22,22 +22,41 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief Simple on/off light endpoint (Zigbee HA basic lighting control).
+ */
 class ZigbeeLight : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee light endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeLight(uint8_t endpoint);
   ~ZigbeeLight() {}
 
-  // Use to set a cb function to be called on light change
+  /**
+   * @brief Set a callback invoked when the light state changes.
+   * @param callback Function called with the new light state (true = on).
+   */
   void onLightChange(void (*callback)(bool)) {
     _on_light_change = callback;
   }
-  // Use to restore light state
+  /**
+   * @brief Restore the light state and trigger any registered callbacks.
+   */
   void restoreLight() {
     lightChanged();
   }
-  // Use to control light state
+  /**
+   * @brief Set the light state (on or off).
+   * @param state true to turn on, false to turn off.
+   * @return true if successful.
+   */
   bool setLight(bool state);
-  // Use to get light state
+  /**
+   * @brief Get the current light state.
+   * @return true if on, false if off.
+   */
   bool getLightState() {
     return _current_state;
   }

@@ -9,7 +9,7 @@ The ``ZigbeeDimmableLight`` class provides a dimmable light endpoint for Zigbee 
 
 **Features:**
 * On/off control
-* Brightness level control (0-100%)
+* Brightness level control (ZCL CurrentLevel, 0-255; passed through unchanged)
 * State and level change callbacks
 * Integration with common endpoint features (binding, OTA, etc.)
 * Zigbee HA standard compliance
@@ -55,13 +55,13 @@ This function will return ``true`` if successful, ``false`` otherwise.
 setLightLevel
 ^^^^^^^^^^^^^
 
-Sets only the brightness level (0-100) without changing the on/off state.
+Sets only the brightness level without changing the on/off state. The value is the ZCL CurrentLevel and is stored unchanged.
 
 .. code-block:: arduino
 
     bool setLightLevel(uint8_t level);
 
-* ``level`` - Brightness level (0-100, where 0 is off, 100 is full brightness)
+* ``level`` - ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -75,7 +75,7 @@ Sets both the light state and brightness level simultaneously.
     bool setLight(bool state, uint8_t level);
 
 * ``state`` - ``true`` to turn on, ``false`` to turn off
-* ``level`` - Brightness level (0-100)
+* ``level`` - ZCL CurrentLevel (0-255, passed through unchanged; 255 is full brightness)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -99,7 +99,7 @@ Gets the current brightness level.
 
     uint8_t getLightLevel();
 
-This function will return current brightness level (0-100).
+This function will return the current ZCL CurrentLevel (0-255).
 
 restoreLight
 ^^^^^^^^^^^^
@@ -126,7 +126,7 @@ Sets a callback function to be called when the light state or level changes.
 
 **Callback Parameters:**
 * ``bool state`` - New light state (true = on, false = off)
-* ``uint8_t level`` - New brightness level (0-100)
+* ``uint8_t level`` - New ZCL CurrentLevel (0-255)
 
 Example
 -------

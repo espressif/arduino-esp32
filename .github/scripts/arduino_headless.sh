@@ -37,7 +37,7 @@ function _arduino_headless_log_filter_enabled {
 
 function _filter_arduino_headless_log_noise {
     # arduino-nightly mDNS (jmdns) spams WARN + hex dumps on cloud VM hostnames; not actionable in CI.
-    LC_ALL=C grep -aEv \
+    LC_ALL=C grep --line-buffered -aEv \
         -e '^(DEBUG|TRACE|INFO) StatusLogger' \
         -e '^Picked up JAVA_TOOL_OPTIONS:' \
         -e 'Arduino\[[0-9]+:[0-9]+\] ' \
@@ -61,7 +61,7 @@ function _filter_arduino_headless_log_noise {
         -e '^[[:space:]]*\[[[:space:]]*DNSQuestion@' \
         -e '^[[:space:]]*[0-9a-fA-F]+: [0-9a-fA-F ]' \
         -e '\]\]' \
-    | LC_ALL=C grep -a '^[[:print:][:space:]]*$'
+    | LC_ALL=C grep --line-buffered -a '^[[:print:][:space:]]*$'
 }
 
 function _run_arduino_headless_filtered {
@@ -106,7 +106,7 @@ function _run_arduino_headless {
     [ -d "$appdir" ] || { echo "ERROR: Arduino tree not found at $appdir" >&2; return 1; }
 
     jul_config="$(_arduino_headless_jul_config || true)"
-    java_props=(-Djava.awt.headless=true)
+    java_props=(-Djava.awt.headless=true -Djava.net.preferIPv4Stack=true)
     [ -n "$jul_config" ] && java_props+=("-Djava.util.logging.config.file=$jul_config")
     export JAVA_TOOL_OPTIONS="${java_props[*]}"
 

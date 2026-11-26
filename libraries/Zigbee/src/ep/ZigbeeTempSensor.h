@@ -23,42 +23,105 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/temperature_measurement_desc.h"
 
+/**
+ * @brief Temperature and humidity sensor endpoint (Zigbee HA environmental monitoring).
+ *
+ * Supports temperature measurement with optional humidity, configurable reporting
+ * intervals, and min/max/tolerance settings.
+ */
 class ZigbeeTempSensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee temperature sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeTempSensor(uint8_t endpoint);
   ~ZigbeeTempSensor() {}
 
-  // Set the temperature value in 0,01°C
+  /**
+   * @brief Set the temperature value in 0.01 °C resolution.
+   * @param value Temperature in degrees Celsius.
+   * @return true if successful.
+   */
   bool setTemperature(float value);
 
-  // Set the default (initial) value for the temperature sensor in 0,01°C
+  /**
+   * @brief Set the default (initial) temperature in 0.01 °C resolution.
+   *
+   * Used as the initial measured value in factory-reset mode before the sensor
+   * provides actual readings. Must be called before adding the endpoint to Zigbee.
+   * Only effective before commissioning/joining a network.
+   *
+   * @param defaultValue Default temperature in degrees Celsius.
+   * @return true if successful.
+   */
   bool setDefaultValue(float defaultValue);
 
-  // Set the min and max value for the temperature sensor in 0,01°C
+  /**
+   * @brief Set the minimum and maximum temperature values.
+   * @param min Minimum temperature in degrees Celsius.
+   * @param max Maximum temperature in degrees Celsius.
+   * @return true if successful.
+   */
   bool setMinMaxValue(float min, float max);
 
-  // Set the tolerance value for the temperature sensor in 0,01°C
+  /**
+   * @brief Set the tolerance value for temperature reporting.
+   * @param tolerance Tolerance in degrees Celsius.
+   * @return true if successful.
+   */
   bool setTolerance(float tolerance);
 
-  // Set the reporting interval for temperature measurement in seconds and delta (temp change in 0,01 °C)
+  /**
+   * @brief Set the reporting interval for temperature measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum temperature change to trigger a report, in degrees Celsius.
+   * @return true if successful.
+   */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
-  // Report the temperature value
+  /**
+   * @brief Manually report the current temperature value.
+   * @return true if successful.
+   */
   bool reportTemperature();
 
-  // Add humidity cluster to the temperature sensor device
+  /**
+   * @brief Add humidity measurement capability to the temperature sensor.
+   * @param min Minimum humidity in percentage.
+   * @param max Maximum humidity in percentage.
+   * @param tolerance Tolerance in percentage.
+   * @param defaultValue Default humidity in percentage.
+   */
   void addHumiditySensor(float min = 0.0, float max = 100.0, float tolerance = 0.1, float defaultValue = 0.0);
 
-  // Set the humidity value in 0,01%
+  /**
+   * @brief Set the humidity value in 0.01% resolution.
+   * @param value Humidity in percentage (0-100).
+   * @return true if successful.
+   */
   bool setHumidity(float value);
 
-  // Set the reporting interval for humidity measurement in seconds and delta (humidity change in 0,01%)
+  /**
+   * @brief Set the reporting interval for humidity measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum humidity change to trigger a report, in percentage.
+   * @return true if successful.
+   */
   bool setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
-  // Report the humidity value
+  /**
+   * @brief Manually report the current humidity value.
+   * @return true if successful.
+   */
   bool reportHumidity();
 
-  // Report the temperature and humidity values if humidity sensor is added
+  /**
+   * @brief Report temperature and humidity (humidity only if that sensor was added).
+   * @return true if successful.
+   */
   bool report();
 
 private:

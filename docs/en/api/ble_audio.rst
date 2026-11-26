@@ -251,7 +251,7 @@ CAP: sets, commander, handover
   carrying audio as BIS); ``handoverToUnicast()`` moves it back. A failed handover also
   stops unicast so ``startUnicast()`` can rebuild it.
 * **Coordinated sets**: the CSIP coordinator reads the set (``onDiscovered`` reports the
-  set size), then ``lock()``/``release()`` serialize access across members.
+  set size), then ``lock()``/``unlock()`` serialize access across members.
 
 Control profiles: VCP / MICP / MCP / CCP
 ----------------------------------------
@@ -366,8 +366,9 @@ codec task instead, paced to the stream frame rate.
 Examples
 --------
 
-The ``BLEAudio`` examples are grouped by product, not by API role, and are written for
-the ESP32-S31 Function CoreBoard 1 (ES8311 DAC/ADC + NS4150B amplifier):
+The ``BLEAudio`` examples are grouped by product, not by API role. The I2S examples
+are written for the ESP32-S31 Function CoreBoard 1 (ES8311 DAC/ADC + NS4150B
+amplifier), while the USB examples need no I2S hardware:
 
 * ``UnicastSpeaker`` — CAP acceptor, stereo-capable unicast sink, VCP volume,
   LC3 player to I2S DAC.
@@ -375,9 +376,17 @@ the ESP32-S31 Function CoreBoard 1 (ES8311 DAC/ADC + NS4150B amplifier):
 * ``AuracastSource`` — broadcast source, Public Broadcast Announcement, LC3
   recorder from an I2S input.
 * ``AuracastSink`` — broadcast sink, BASS Scan Delegator, LC3 player to I2S DAC.
+* ``UnicastUSBReceiver`` — unicast sink like the speaker, but LC3 decodes to a
+  PCM callback and the audio reaches the PC as a USB microphone (no I2S).
+* ``UnicastUSBTransmitter`` — unicast client like the wireless mic, but the LC3
+  recorder is fed from a USB speaker instead of an I2S mic (no I2S).
 
-Typical pairs: WirelessMic → UnicastSpeaker, AuracastSource → AuracastSink, or a
-phone/PC with LE Audio ↔ UnicastSpeaker and a phone/PC with Auracast ↔ AuracastSink.
+Typical pairs: ``UnicastMic`` → ``UnicastSpeaker``, ``AuracastSource`` →
+``AuracastSink``, a phone/PC with LE Audio ↔ ``UnicastSpeaker`` or
+``UnicastUSBReceiver``, a phone/PC with Auracast ↔ ``AuracastSink``, and
+``UnicastUSBTransmitter`` → ``UnicastUSBReceiver`` for an all-USB end-to-end
+test (two boards, no I2S hardware).
+
 Advanced uses (raw BAP roles, phone-side client + initiator, HAS, encrypted broadcasts,
 custom QoS, no-I2S operation) are covered by the ``Advanced uses`` section of the
 library README and the per-role headers.
@@ -425,7 +434,9 @@ assistant additionally accept creation after the commit.
     BLEAudio audio = BLE.getAudioController();
     explicit operator bool() const;
     bool isActive() const;    // engine up, end() not called
-    bool isStarted() const;   // begin() committed the GATT table
+    bool isCommitted() const; // begin() committed the GATT table
+
+``isStarted()`` is kept as a deprecated alias for ``isCommitted()``.
 
 Lifecycle:
 
@@ -1154,6 +1165,11 @@ Controllers bind one peer (``discover()`` replaces it); commands return
 ``OK`` once queued and complete in the matching callback.
 
 Media player (GMCS server) and controller:
+
+``play()``, ``pause()``, ``stop()``, ``nextTrack()`` and ``previousTrack()`` send the
+corresponding MCC command to the remote player. They are media commands, not object
+lifecycle; local audio is controlled by ``BLEAudioPlayer::startPlayback()`` /
+``stopPlayback()``.
 
 .. code-block:: cpp
 

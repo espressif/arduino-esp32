@@ -141,7 +141,7 @@ BTStatus stageServer(BLEServer::Impl &impl) {
   // Do not call ble_gatts_add_svcs here. NimBLE retains that call's svc_def
   // pointer, so rebuilding our vectors on a second start() would dangle the
   // first pointer and adding the complete tree again would duplicate services.
-  // Keep only the contributor; audio.start() publishes its latest tree once.
+  // Keep only the contributor; audio.begin() publishes its latest tree once.
   auto services = snapshotServices(impl);
   if (!validateServices(impl, services)) {
     return BTStatus::InvalidState;

@@ -16,7 +16,9 @@
 
 #include "esp_zigbee.h"
 
-// Foundation Command Types (ZCL spec IDs 0x00-0x16)
+/**
+ * @brief ZCL foundation command types (spec IDs 0x00-0x16).
+ */
 typedef enum {
   ZB_CMD_READ_ATTRIBUTE = 0x00U,                        /*!< Read attributes command */
   ZB_CMD_READ_ATTRIBUTE_RESPONSE = 0x01U,               /*!< Read attributes response command */
