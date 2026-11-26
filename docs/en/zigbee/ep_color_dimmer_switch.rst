@@ -9,7 +9,7 @@ The ``ZigbeeColorDimmerSwitch`` class provides a color dimmer switch endpoint fo
 
 **Features:**
 * On/off control for bound lights
-* Brightness level control (0-100%)
+* Brightness level control (ZCL CurrentLevel, 0-255; sent unchanged)
 * Color control (RGB, HSV)
 * Color temperature control
 * Scene and group support
@@ -110,7 +110,7 @@ Sets the brightness level of bound lights.
     void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
     void setLightLevel(uint8_t level, uint8_t endpoint, const uint8_t *ieee_addr);
 
-* ``level`` - Brightness level (0-100, where 0 is off, 100 is full brightness)
+* ``level`` - ZCL CurrentLevel (0-255, sent unchanged; 255 is full brightness)
 * ``group_addr`` - Group address to control (optional)
 * ``endpoint`` - Target device endpoint (optional)
 * ``short_addr`` - Target device short address (optional)

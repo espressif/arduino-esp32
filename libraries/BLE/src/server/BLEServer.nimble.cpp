@@ -169,12 +169,12 @@ void nimbleResetReAdvertiseEvent() {
  */
 static BTStatus nimbleRebuildGattDatabase(BLEServer::Impl &impl) {
   if (BLEGattDatabase::audioModeFrozen()) {
-    log_w("Server: services cannot be staged after audio.start(); end/begin the audio engine first");
+    log_w("Server: services cannot be staged after audio.begin(); end/begin the audio engine first");
     return BTStatus::InvalidState;
   }
   if (BLEGattDatabase::audioModeActive()) {
     // The engine owns the single ble_gatts_start; the classic server only
-    // stages its services between audio.begin() and audio.start().
+    // stages its services between BLE.begin() and audio.begin().
     return BLEGattDatabase::stageServer(impl);
   }
   return BLEGattDatabase::commitServerStandalone(impl);

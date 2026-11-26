@@ -187,7 +187,12 @@ public:
   /** @brief Whether the engine is initialized and end() has not been called (false on a null handle). */
   bool isActive() const;
   /** @brief Whether begin() committed the roles and the GATT table (false on a null handle). */
-  bool isStarted() const;
+  bool isCommitted() const;
+  /** @brief Deprecated alias for isCommitted(). */
+  [[deprecated("Use isCommitted() instead")]]
+  bool isStarted() const {
+    return isCommitted();
+  }
 
   /**
    * @brief Connect to a unicast server / CAP acceptor as central (non-blocking).

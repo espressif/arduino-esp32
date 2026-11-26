@@ -52,7 +52,7 @@ Sets the flow rate measurement value.
 
     bool setFlow(float value);
 
-* ``value`` - Flow rate value in 0.1 m³/h
+* ``value`` - Flow rate in m³/h. Stored at 0.1 m³/h resolution.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -65,21 +65,21 @@ Sets the minimum and maximum measurement values.
 
     bool setMinMaxValue(float min, float max);
 
-* ``min`` - Minimum flow rate value in 0.1 m³/h
-* ``max`` - Maximum flow rate value in 0.1 m³/h
+* ``min`` - Minimum flow rate in m³/h
+* ``max`` - Maximum flow rate in m³/h
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 setDefaultValue
 ^^^^^^^^^^^^^^^
 
-Sets the default (initial) value for the flow sensor in 0.1 m³/h. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
+Sets the default (initial) flow rate in m³/h (stored at 0.1 m³/h resolution). This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
 
 .. code-block:: arduino
 
     bool setDefaultValue(float defaultValue);
 
-* ``defaultValue`` - Default flow rate value in 0.1 m³/h
+* ``defaultValue`` - Default flow rate in m³/h
 
 **Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
 
@@ -94,7 +94,7 @@ Sets the tolerance value for measurements.
 
     bool setTolerance(float tolerance);
 
-* ``tolerance`` - Tolerance value in 0.01 m³/h
+* ``tolerance`` - Tolerance in m³/h
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -109,7 +109,7 @@ Sets the reporting configuration for flow rate measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change required to trigger a report in 0.1 m³/h
+* ``delta`` - Minimum change required to trigger a report, in m³/h
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

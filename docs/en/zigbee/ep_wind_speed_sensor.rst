@@ -52,7 +52,7 @@ Sets the wind speed measurement value.
 
     bool setWindSpeed(float value);
 
-* ``value`` - Wind speed value in 0.01 m/s
+* ``value`` - Wind speed in meters per second. Stored at 0.01 m/s resolution.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -65,21 +65,21 @@ Sets the minimum and maximum measurement values.
 
     bool setMinMaxValue(float min, float max);
 
-* ``min`` - Minimum wind speed value in 0.01 m/s
-* ``max`` - Maximum wind speed value in 0.01 m/s
+* ``min`` - Minimum wind speed in meters per second
+* ``max`` - Maximum wind speed in meters per second
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
 setDefaultValue
 ^^^^^^^^^^^^^^^
 
-Sets the default (initial) value for the wind speed sensor in 0.01 m/s. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
+Sets the default (initial) wind speed in meters per second (stored at 0.01 m/s resolution). This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
 
 .. code-block:: arduino
 
     bool setDefaultValue(float defaultValue);
 
-* ``defaultValue`` - Default wind speed value in 0.01 m/s
+* ``defaultValue`` - Default wind speed in meters per second
 
 **Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
 
@@ -94,7 +94,7 @@ Sets the tolerance value for measurements.
 
     bool setTolerance(float tolerance);
 
-* ``tolerance`` - Tolerance value in 0.01 m/s
+* ``tolerance`` - Tolerance in meters per second
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -109,7 +109,7 @@ Sets the reporting configuration for wind speed measurements.
 
 * ``min_interval`` - Minimum reporting interval in seconds
 * ``max_interval`` - Maximum reporting interval in seconds
-* ``delta`` - Minimum change required to trigger a report in 0.01 m/s
+* ``delta`` - Minimum change required to trigger a report, in meters per second
 
 This function will return ``true`` if successful, ``false`` otherwise.
 

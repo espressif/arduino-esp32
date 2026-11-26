@@ -303,7 +303,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 9. **Replace security setup:**
    - `new BLESecurity()` → `BLE.getSecurity()`
-   - `BLEDevice::setSecurityCallbacks(...)` → `sec.onConfirmPasskey(...)`, `sec.onAuthenticationComplete(...)`, etc.
+   - `BLEDevice::setSecurityCallbacks(...)` → `sec.onConfirmPassKey(...)`, `sec.onAuthenticationComplete(...)`, etc.
    - `setStaticPIN(pin)` → `setStaticPassKey(pin)`
 
 10. **Handle BTStatus returns** -- check return values of `begin()`, `connect()`, `writeValue()`, etc.
@@ -1182,7 +1182,7 @@ These features are new and were not available in v3.x:
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
 | L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` — see `examples/L2CAP_Server` + `examples/L2CAP_Client` |
 | Isochronous channels (raw CIS / BIS) | `BLEIso iso = BLE.getIsoController()`, then `iso.begin()` and `iso.connectCis(connHandle, qos)` / `iso.listenCis(qos)` (CIS, optionally bidirectional via `returnSduSize`) or `iso.createBig(advHandle, qos)` / `iso.syncBig(bisIndex, qos)` (BIS). Channels are shared handles returned by value: copies share the channel, and a handle outliving its channel (disconnect, `end()`, slot reuse) becomes a detached shell whose operations fail safe. Channels: `send(sdu, len)` with automatic sequence numbers, `onReceive()`, `disconnect()`. See `examples/ISO_CisCentral` + `ISO_CisPeripheral` and `ISO_BigBroadcaster` + `ISO_BigReceiver`. |
-| LE Audio (GAF) | Include `<BLEAudio.h>` from the separate `BLEAudio` library (in addition to `<BLE.h>`). `BLE.getAudioController()` → `audio.begin()`, `audio.create*()` role handles, `audio.start()`; `audio.connect(addr)` + `audio.onLinkReady()` for central links (required on Bluedroid). Roles: BAP unicast server/client (multi-stream), broadcast source/sink (1–2 BIS, Scan Delegator), Broadcast Assistant; CAP acceptor/initiator/commander incl. unicast↔broadcast handover; CSIP; VCP/MICP/MCP (GMCS)/CCP (GTBS); TMAP/GMAP/HAS/PBP. Audio flows through `BLEAudioStream` handles (`write()`, `onReceive()`); LC3 via `BLEAudioPlayer`/`BLEAudioRecorder` attached to streams (I2S or PCM callback). See the `libraries/BLEAudio/examples/*` sketches and [BLEAudio/DESIGN.md](../BLEAudio/DESIGN.md). |
+| LE Audio (GAF) | Include `<BLEAudio.h>` from the separate `BLEAudio` library (in addition to `<BLE.h>`). `BLE.getAudioController()` → `audio.create*()` role handles → `audio.begin()`; `audio.connect(addr)` + `audio.onLinkReady()` for central links (required on Bluedroid). Roles: BAP unicast server/client (multi-stream), broadcast source/sink (1–2 BIS, Scan Delegator), Broadcast Assistant; CAP acceptor/initiator/commander incl. unicast↔broadcast handover; CSIP; VCP/MICP/MCP (GMCS)/CCP (GTBS); TMAP/GMAP/HAS/PBP. Audio flows through `BLEAudioStream` handles (`write()`, `onReceive()`); LC3 via `BLEAudioPlayer`/`BLEAudioRecorder` attached to streams (I2S or PCM callback). See the `libraries/BLEAudio/examples/*` sketches and [BLEAudio/DESIGN.md](../BLEAudio/DESIGN.md). |
 | BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Server mode accepts multiple centrals; `write()` broadcasts, `read()` merges RX. Per-peer: `peerCount()`, `peers()`, `writeTo()`, `onPeerData()`. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
@@ -1223,10 +1223,10 @@ These features are new and were not available in v3.x:
 
 15. **Do not call blocking GATT operations inside `subscribe()` callbacks** -- `BLERemoteCharacteristic::NotifyCallback` runs on the BLE stack task. Calling blocking GATT operations (`readValue()`, confirmed `writeValue()`, `subscribe()`) on the characteristic from inside the callback waits for a response delivered by that same task and will time out (and `readValue()` replaces the buffer `data` points into). Defer such work to another task or `loop()`.
 
-16. **Stage classic GATT before `audio.start()`** -- On NimBLE, LE Audio and
+16. **Stage classic GATT before `audio.begin()`** -- On NimBLE, LE Audio and
 classic `BLEServer` services share one coordinated table. Create the audio
 roles and classic services first, call `server.start()` to stage them, then
-call `audio.start()` once. Late additions return `InvalidState`; removing a
+call `audio.begin()` once. Late additions return `InvalidState`; removing a
 previously committed classic service remains supported through visibility plus
 Service Changed.
 

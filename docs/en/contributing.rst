@@ -7,19 +7,18 @@ We welcome contributions to the Arduino ESP32 project!
 How to Contribute
 -----------------
 
-Contributions to the Arduino ESP32 (fixing bugs, adding features, adding documentation) are welcome.
-We accept contributions via `Github Pull Requests <https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests>`_.
+Contributions to the Arduino ESP32 project (fixing bugs, adding features, adding documentation) are welcome.
+We accept contributions via `GitHub Pull Requests <https://docs.github.com/en/pull-requests/reference/pull-requests>`_.
 
 Before Contributing
 -------------------
 
-Before sending us a Pull Request, please consider this:
+Before sending us a Pull Request, please ask yourself these questions:
 
-* All contributions must be written in English to ensure effective communication and support.
-  Pull Requests written in other languages will be closed, with a request to rewrite them in English.
+* Is the contribution written in English? All contributions must be written in English to ensure effective communication and support. We will close Pull Requests written in other languages, with a request to rewrite them in English.
 
 * Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License?
-  If not, cannot accept it.
+  If not, we cannot accept it.
 
 * Is the code adequately commented and can people understand how it is structured?
 
@@ -27,21 +26,21 @@ Before sending us a Pull Request, please consider this:
 
 * Are comments and documentation written in clear English, with no spelling or grammar errors?
 
-* Example contributions are also welcome.
-
-  * If you are contributing by adding a new example, please use the `Arduino style guide`_ and the example guideline below.
-
 * If the contribution contains multiple commits, are they grouped together into logical changes (one major change per pull request)?
   Are any commits with names like "fixed typo" `squashed into previous commits <https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit/>`_?
+
+Example contributions are also welcome.
+
+* If you are contributing by adding a new example, please use the `Arduino style guide`_ and the guideline for examples below.
 
 If you're unsure about any of these points, please open the Pull Request anyhow and then ask us for feedback.
 
 Pull Request Process
 --------------------
 
-After you open the Pull Request, there will probably be some discussion in the comments field of the request itself.
+After you open the Pull Request, there will probably be some discussion in the comments of the request itself.
 
-Once the Pull Request is ready to merge, it will first be merged into our internal git system for "in-house" automated testing.
+Once the Pull Request is ready to merge, it will first be merged into our internal git system for in-house automated testing.
 
 If this process passes, it will be merged into the public GitHub repository.
 
@@ -51,7 +50,7 @@ Example Contribution Guideline
 Checklist
 *********
 
-* Check if your example proposal has no similarities to the project (**already existing examples**)
+* Check if your example proposal has no similarities to the project's already existing examples
 * Use the `Arduino style guide`_
 * Add the header to all source files
 * Add the ``README.md`` file
@@ -61,10 +60,10 @@ Checklist
 Header
 ******
 
-All the source files must include the header with the example name and license, if applicable. You can change this header as you wish,
+All the source files must include a header with the example name and license, if applicable. You can change this header as you wish,
 but it will be reviewed by the community and may not be accepted.
 
-Ideally, you can add some description about the example, links to the documentation, or the author's name.
+You could also add a description about the example, links to the documentation, and the author's name.
 Just have in mind to keep it simple and short.
 
 **Header Example**
@@ -84,7 +83,7 @@ Just have in mind to keep it simple and short.
 README file
 ***********
 
-The ``README.md`` file should contain the example details.
+The ``README.md`` file should contain details of the example.
 
 Please see the recommended ``README.md`` file in the `example template folder <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Template/ExampleTemplate>`_.
 
@@ -93,16 +92,16 @@ Inline Comments
 
 Inline comments are important if the example contains complex algorithms or specific configurations that the user needs to change.
 
-Brief and clear inline comments are really helpful for the example understanding and it's fast usage.
+Brief and clear inline comments are really helpful for understanding the example and its usage.
 
-See the `FTM example <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/FTM/FTM_Initiator/FTM_Initiator.ino>`_
+See these lines from `FTM example <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/FTM/FTM_Initiator/FTM_Initiator.ino>`_
 as a reference:
 
 .. code-block:: arduino
 
     // Number of FTM frames requested in terms of 4 or 8 bursts (allowed values - 0 (No pref), 16, 24, 32, 64)
 
-Also:
+And:
 
 .. code-block:: arduino
 
@@ -112,14 +111,14 @@ Also:
 Testing
 *******
 
-Be sure you have tested the example in all the supported targets. If the example some specific hardware requirements,
+Be sure you have tested the example on all the supported targets. If the example has some specific hardware requirements,
 edit/add the ``ci.yml`` in the same folder as the sketch to specify the regular expression for the
 required configurations from ``sdkconfig``.
 This will ensure that the CI system will run the test only on the targets that have the required configurations.
 
 You can check the available configurations in the ``sdkconfig`` file in the ``tools/esp32-arduino-libs/<target>`` folder.
 
-Here is an example of the ``ci.yml`` file where the example requires Wi-Fi to work properly:
+This is a ``ci.yml`` file where the example requires Wi-Fi to work properly:
 
 .. code-block:: yaml
 
@@ -128,17 +127,17 @@ Here is an example of the ``ci.yml`` file where the example requires Wi-Fi to wo
 
 .. note::
 
-    The list of configurations will be checked against the ``sdkconfig`` file in the target folder. If the configuration is not present in the ``sdkconfig``,
+    The list of configurations will be checked against the ``sdkconfig`` file in the target folder. If the configuration is not present in ``sdkconfig``,
     the test will be skipped for that target. That means that the test will only run on the targets that have **ALL** the required configurations.
 
     Also, by default, the "match start of line" character (``^``) will be added to the beginning of each configuration.
     That means that the configuration must be at the beginning of the line in the ``sdkconfig`` file.
 
-Sometimes, the example might not be supported by some target, even if the target has the required configurations
-(like resources limitations or requiring a specific SoC). To avoid compilation errors, you can add the target to the ``ci.yml``
-file so the CI system will force to skip the test on that target.
+Sometimes, the example might not be supported by a target, even if the target has the required configurations. This can happen if the example requires a specific SoC, or if a target has resource limitations.
+To avoid compilation errors, you can add the targets to avoid to a list in the ``ci.yml``
+file, which will force the CI system to skip the test on that target.
 
-Here is an example of the ``ci.yml`` file where the example is requires Wi-Fi to work properly but is also not supported by the ESP32-S2 target:
+For example, here is a ``ci.yml`` file where the example requires Wi-Fi to work properly but is also not supported by the ESP32-S2 target:
 
 .. code-block:: yaml
 
@@ -147,7 +146,7 @@ Here is an example of the ``ci.yml`` file where the example is requires Wi-Fi to
     targets:
       esp32s2: false
 
-You also need to add this information in the ``README.md`` file, on the **Supported Targets**, and in the example code as an inline comment.
+You also need to add this information in the ``README.md`` file in a **Supported Targets** list, and in the example code as an inline comment.
 For example, in the sketch:
 
 .. code-block:: arduino
@@ -178,9 +177,9 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c5:PSRAM=enabled``
 * ``espressif:esp32:esp32s31:USBMode=default``
 
-There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
+You can alter the FQBNs used to compile the sketches by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
-If you just want to append a string to the default FQBNs, you can use the ``fqbn_append`` field. For example, to add the ``DebugLevel=debug`` to the FQBNs, you would use:
+If you just want to append a string to the default FQBNs, you can use the ``fqbn_append`` field. For example, to add ``DebugLevel=debug`` to the FQBNs, you would use:
 
 .. code-block:: yaml
 
@@ -199,7 +198,7 @@ Do not set ``CDCOnBoot`` in ``ci.yml``.
 
 When the options differ per target, ``fqbn_append`` can be a dictionary instead. The ``default`` entry is applied to every target and the entry
 matching the target is merged on top of it, so only the difference has to be spelled out. This is needed for options that do not exist on every
-target: ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu and would fail to compile if they were given ``PSRAM=disabled``.
+target: ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM option and would fail to compile if they were given ``PSRAM=disabled``.
 
 .. code-block:: yaml
 
@@ -208,8 +207,10 @@ target: ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu and would fail to com
       esp32: PSRAM=disabled
       esp32s3: PSRAM=disabled
 
-The options are applied lowest priority first: the default FQBN for the target, then ``fqbn_append``, then the debug level passed on the
-command line. If you want to override the default FQBNs entirely, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
+The options are applied with the lowest priority first: the default FQBN for the target, then ``fqbn_append``, then the debug level passed on the
+command line.
+
+If you want to override the default FQBNs entirely, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
 The FQBNs in the list will be used in sequence to compile the sketch. For example, to compile a sketch for ESP32-S2 with and without PSRAM enabled, you would use:
 
 .. code-block:: yaml
@@ -236,19 +237,8 @@ Documentation
 If you are contributing to the documentation, please follow the instructions described in the
 `documentation guidelines <guides/docs_contributing.html>`_ to properly format and test your changes.
 
-Testing and CI
+Manual Testing
 --------------
-
-In our repository, we have a Continuous Integration (CI) system that runs tests and code formatting fixes on every Pull Request.
-This system will run the tests on all supported targets and check if everything is working as expected.
-
-We have many types of tests and checks, including:
-
-* Compilation tests;
-* Runtime tests;
-* Documentation checks;
-* Code style checks;
-* And more.
 
 After you have made your changes, you should test them. You can do this in different ways depending on the type of change you have made.
 
@@ -256,7 +246,7 @@ Examples
 ********
 
 The easiest way to test an example is to load it into the Arduino IDE and run it on your board. If you have multiple boards,
-you should test it on all of them to ensure that the example works on all supported targets.
+you should test it on all of them to ensure that the example works on all supported targets. Make sure to set ``Compiler Warnings`` to ``All`` in the Arduino IDE to catch any potential issues.
 
 You can refer to the `Example Contribution Guideline`_ section for more information on how to write and test examples.
 
@@ -265,20 +255,20 @@ Library Changes
 
 If you have made changes to a library, you should test it on all supported targets. You can do this by loading the library examples (or creating new ones)
 into the Arduino IDE and running them on your board. If you have multiple boards, you should test it on all of them to ensure that the library
-works as expected on all targets.
+works as expected on all targets. Make sure to set ``Compiler Warnings`` to ``All`` in the Arduino IDE to catch any potential issues.
 
 You can also add a new test suite to automatically check the library. You can refer to the `Adding a New Test Suite`_ section for more information.
 
 Core Changes
 ************
 
-If you have made changes to the core, it is important to ensure that the changes do not break the existing functionality. You can do this by running the
+If you have made changes to the core, it is important to ensure that the changes do not break any existing functionality. You can do this by running the
 tests on all supported targets. You can refer to the `Runtime Tests`_ section for more information.
 
 CI
 **
 
-In our repository, we have a Continuous Integration (CI) system that runs tests and fixes on every Pull Request. This system will run the tests
+In our repository, we have a Continuous Integration (CI) system that runs tests and code formatting fixes on every Pull Request. This system will run the tests
 on all supported targets and check if everything is working as expected.
 You can read a more technical explanation in the `CI README <https://github.com/espressif/arduino-esp32/blob/master/.github/CI_README.md>`_.
 
@@ -299,12 +289,8 @@ The compilation tests are the first type of tests in the CI system. They check i
 If the code does not compile, the CI system will fail the test and the Pull Request will not be merged.
 This is important to ensure that the code is compatible with all supported targets and no broken code is merged.
 
-It will go through all the sketches in the repository and check if they compile on all supported targets. This process is automated and controlled
+The CI will go through all the sketches in the repository and check if they compile on all supported targets. This process is automated and controlled
 by GitHub Actions. The CI system will run the ``arduino-cli`` tool to compile the sketches on all supported targets.
-
-Testing it locally using the CI scripts would be too time consuming, so we recommend running the tests locally using the Arduino IDE with
-a sketch that uses the changes you made (you can also add the sketch as an example if your change is not covered by the existing ones).
-Make sure to set ``Compiler Warnings`` to ``All`` in the Arduino IDE to catch any potential issues.
 
 Runtime Tests
 *************
@@ -328,8 +314,7 @@ The tests are divided into two categories inside the ``tests`` folder:
 .. note::
 
     Keep in mind that to run the CI scripts locally, you need to have the Go-based ``yq`` from `mikefarah/yq <https://github.com/mikefarah/yq>`_
-    installed and not the Python-based ``yq`` from PyPI or `kislyuk/yq <https://github.com/kislyuk/yq>`_.
-    The syntax is slightly different and will not work with the CI scripts.
+    installed and not the Python-based ``yq`` from PyPI or `kislyuk/yq <https://github.com/kislyuk/yq>`_ which uses a slightly different syntax.
     You can install the Go-based ``yq`` through ``brew``, ``chocolatey`` or downloading the binary directly from the `releases page <https://github.com/mikefarah/yq/releases>`_.
 
 To run the runtime tests locally, first install the required dependencies by running:
@@ -338,7 +323,7 @@ To run the runtime tests locally, first install the required dependencies by run
 
     pip install -U -r tests/requirements.txt
 
-Before running the test, we need to build it by running:
+Before running the test, you need to build it by running:
 
 .. code-block:: bash
 
@@ -354,7 +339,7 @@ ESP32-C3 target, you would run:
 
 You should see the output of the build process and the test binary should be generated in the ``~/.arduino/tests/<target_chip>/<test_name>/build.tmp`` folder.
 
-Now that the test is built, you can run it in the target board. Connect the target board to your computer and run:
+Now that the test is built, you can run it on the target board. Connect the target board to your computer and run:
 
 .. code-block:: bash
 
@@ -396,7 +381,7 @@ After the test is finished, you can check the output in the terminal and the gen
 Additionally, for performance tests, you can check the generated JSON file in the same folder.
 
 You can also run the tests in `Wokwi <https://docs.wokwi.com/>`_ or `Espressif's QEMU <https://github.com/espressif/esp-toolchain-docs/tree/main/qemu>`_
-by using the ``-W`` and ``-Q`` flags respectively. You will need to have the Wokwi and/or QEMU installed in your system
+by using the ``-W`` and ``-Q`` flags respectively. You will need to have Wokwi and/or QEMU installed in your system
 and set the ``WOKWI_CLI_TOKEN`` and/or ``QEMU_PATH`` environment variables. The ``WOKWI_CLI_TOKEN`` is the CI token that can be obtained from the
 `Wokwi website <https://wokwi.com/dashboard/ci>`_ and the ``QEMU_PATH`` is the path to the QEMU binary.
 
@@ -425,8 +410,8 @@ You can use the ``hello_world`` test suite as a starting point and the other tes
 
 A test suite contains the following files:
 
-* ``test_<test_name>.py``: Is the test file that contains the test cases. Required.
-* ``<test_name>.ino``: This is the sketch that will be tested. Required.
+* ``test_<test_name>.py``: The test file that contains the test cases. Required.
+* ``<test_name>.ino``: The sketch that will be tested. Required.
 * ``ci.yml``: The file that specifies how the test suite will be run in the CI system. Optional.
 * ``diagram.<target>.json``: The diagram file that specifies the connections between the components in Wokwi. Optional.
 * Any other files that are needed for the test suite.
@@ -688,4 +673,4 @@ Legal Part
 Before a contribution can be accepted, you will need to sign our contributor agreement. You will be prompted for this automatically as part of
 the Pull Request process.
 
-.. _Arduino style guide: https://docs.arduino.cc/learn/contributions/arduino-writing-style-guide
+.. _Arduino style guide: https://docs.arduino.cc/learn/contributions/arduino-writing-style-guide/

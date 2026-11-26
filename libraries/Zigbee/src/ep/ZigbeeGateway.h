@@ -22,8 +22,15 @@
 
 #include "ZigbeeEP.h"
 
+/**
+ * @brief Gateway endpoint for bridging a Zigbee network to other networks (Wi-Fi, Ethernet, etc.).
+ */
 class ZigbeeGateway : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee gateway endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeGateway(uint8_t endpoint);
   ~ZigbeeGateway() {}
 };

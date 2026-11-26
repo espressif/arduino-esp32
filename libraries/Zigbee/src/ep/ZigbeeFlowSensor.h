@@ -23,28 +23,64 @@
 #include "ZigbeeEP.h"
 #include "ezbee/zcl/cluster/flow_measurement_desc.h"
 
+/**
+ * @brief Flow sensor endpoint for liquid and gas flow measurement (Zigbee HA).
+ */
 class ZigbeeFlowSensor : public ZigbeeEP {
 public:
+  /**
+   * @brief Create a Zigbee flow sensor endpoint.
+   * @param endpoint Endpoint number (1-254).
+   */
   ZigbeeFlowSensor(uint8_t endpoint);
   ~ZigbeeFlowSensor() {}
 
-  // Set the flow value in 0,1 m3/h
+  /**
+   * @brief Set the flow rate measurement value in 0.1 m³/h resolution.
+   * @param value Flow rate in m³/h.
+   * @return true if successful.
+   */
   bool setFlow(float value);
 
-  // Set the default (initial) value for the flow sensor in 0,1 m3/h
-  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  /**
+   * @brief Set the default (initial) flow value in 0.1 m³/h resolution.
+   *
+   * Used as the initial measured value in factory-reset mode. Must be called before
+   * adding the endpoint to Zigbee. Only effective before commissioning.
+   *
+   * @param defaultValue Default flow rate in m³/h.
+   * @return true if successful.
+   */
   bool setDefaultValue(float defaultValue);
 
-  // Set the min and max value for the flow sensor in 0,1 m3/h
+  /**
+   * @brief Set the minimum and maximum measurement values.
+   * @param min Minimum flow rate in m³/h.
+   * @param max Maximum flow rate in m³/h.
+   * @return true if successful.
+   */
   bool setMinMaxValue(float min, float max);
 
-  // Set the tolerance value for the flow sensor in 0,01 m3/h
+  /**
+   * @brief Set the tolerance value for measurements.
+   * @param tolerance Tolerance in m³/h.
+   * @return true if successful.
+   */
   bool setTolerance(float tolerance);
 
-  // Set the reporting interval for flow measurement in seconds and delta (temp change in 0,1 m3/h)
+  /**
+   * @brief Set the reporting configuration for flow rate measurements.
+   * @param min_interval Minimum reporting interval in seconds.
+   * @param max_interval Maximum reporting interval in seconds.
+   * @param delta Minimum change required to trigger a report, in m³/h.
+   * @return true if successful.
+   */
   bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
-  // Report the flow value
+  /**
+   * @brief Manually report the current flow rate value.
+   * @return true if successful.
+   */
   bool report();
 
 private:
