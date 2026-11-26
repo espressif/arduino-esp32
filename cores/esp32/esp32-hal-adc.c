@@ -397,7 +397,7 @@ int32_t __analogReadMilliVolts(uint8_t pin) {
   adc_unit_t adc_unit;
   esp_err_t err = ESP_OK;
 
-  adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
+  err = adc_oneshot_io_to_channel(pin, &adc_unit, &channel);
   if (err != ESP_OK) {
     log_e("Pin %u is not ADC pin!", pin);
     return value;

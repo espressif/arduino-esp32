@@ -45,6 +45,10 @@ void test_adc_resolution(void) {
   TEST_ASSERT_LESS_OR_EQUAL(4095, val12);
 }
 
+void test_adc_millivolts_invalid_pin(void) {
+  TEST_ASSERT_EQUAL_INT32(0, analogReadMilliVolts(UINT8_MAX));
+}
+
 void test_adc_millivolts(void) {
   analogReadResolution(12);
   uint32_t mv = analogReadMilliVolts(ADC_PIN);
@@ -229,6 +233,7 @@ void setup() {
   UNITY_BEGIN();
 
 #if SOC_ADC_SUPPORTED
+  RUN_TEST(test_adc_millivolts_invalid_pin);
   RUN_TEST(test_adc_read_basic);
   RUN_TEST(test_adc_resolution);
   RUN_TEST(test_adc_millivolts);
