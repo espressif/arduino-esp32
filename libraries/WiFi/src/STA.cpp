@@ -667,8 +667,11 @@ String STAClass::SSID() const {
     return String();
   }
   wifi_config_t conf;
+  char ssid[33];
   if (esp_wifi_get_config(WIFI_IF_STA, &conf) == ESP_OK) {
-    return String(reinterpret_cast<char *>(conf.sta.ssid));
+    memcpy(ssid, conf.sta.ssid, 32);
+    ssid[32] = 0;
+    return String(reinterpret_cast<char *>(ssid));
   }
   return String();
 }
@@ -678,8 +681,13 @@ String STAClass::psk() const {
     return String();
   }
   wifi_config_t conf;
-  esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf);
-  return String(reinterpret_cast<char *>(conf.sta.password));
+  char pass[65];
+  if (esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf) == ESP_OK) {
+    memcpy(pass, conf.sta.password, 64);
+    pass[64] = 0;
+    return String(reinterpret_cast<char *>(pass));
+  }
+  return String();
 }
 
 uint8_t *STAClass::BSSID(uint8_t *buff) {

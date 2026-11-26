@@ -59,6 +59,16 @@ __attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_cal_voltage(uint32_t atte
 #define SOC_ADC_DIGI_DATA_BYTES_PER_CONV (4)
 #endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 2, 0)
+#include "hal/adc_ll.h"
+#define SOC_ADC_MAX_CHANNEL_NUM        ADC_LL_MAX_CHANNEL_NUM
+#define SOC_ADC_CHANNEL_NUM(unit_id)   ADC_LL_CHANNEL_NUM(unit_id)
+#define SOC_ADC_RTC_MIN_BITWIDTH       ADC_LL_RTC_MIN_BITWIDTH
+#define SOC_ADC_RTC_MAX_BITWIDTH       ADC_LL_RTC_MAX_BITWIDTH
+#define SOC_ADC_SAMPLE_FREQ_THRES_LOW  ADC_LL_SAMPLE_FREQ_THRES_LOW
+#define SOC_ADC_SAMPLE_FREQ_THRES_HIGH ADC_LL_SAMPLE_FREQ_THRES_HIGH
+#endif
+
 static uint8_t __analogAttenuation = ADC_11db;
 static uint8_t __analogWidth = SOC_ADC_RTC_MAX_BITWIDTH;
 static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH;
