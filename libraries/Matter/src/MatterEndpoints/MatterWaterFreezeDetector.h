@@ -19,32 +19,79 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter water freeze detector endpoint (detected / not detected).
+ *
+ * Read-only Boolean State. Fabric StateValue starts false (not detected). Call
+ * @ref setFreeze after endpoint @c begin(); a value set before @c Matter.begin()
+ * is cached and applied when the cluster is created.
+ */
 class MatterWaterFreezeDetector : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter water freeze detector endpoint.
+   */
   MatterWaterFreezeDetector();
+  /**
+   * @brief Destroy the water freeze detector endpoint object.
+   */
   ~MatterWaterFreezeDetector();
-  // begin Matter Water Freeze Detector endpoint. Fabric StateValue starts false.
+  /**
+   * @brief Initialize the Matter water freeze detector endpoint.
+   *
+   * Fabric StateValue starts false (not detected). Call @ref setFreeze after this.
+   *
+   * @return true if successful, false otherwise.
+   */
   bool begin();
-  // this will just stop processing Water Freeze Detector Matter events
+  /**
+   * @brief Stop processing Matter water freeze detector events.
+   */
   void end();
 
-  // set the freeze state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
+  /**
+   * @brief Set the water freeze detection state. Call after the endpoint @c begin().
+   *
+   * Before @c Matter.begin() the value is cached and applied when the cluster is created.
+   *
+   * @param _freezeState true = detected, false = not detected.
+   * @return true if successful, false otherwise.
+   */
   bool setFreeze(bool _freezeState);
-  // returns the freeze state
+  /**
+   * @brief Get the current water freeze detection state.
+   * @return true if water freeze is detected, false if not detected.
+   */
   bool getFreeze() {
     return freezeState;
   }
 
-  // bool conversion operator
+  /**
+   * @brief Assignment — set freeze state (same as @ref setFreeze).
+   * @param _freezeState true = detected, false = not detected.
+   */
   void operator=(bool _freezeState) {
     setFreeze(_freezeState);
   }
-  // bool conversion operator
+  /**
+   * @brief Boolean conversion — current freeze detection state.
+   * @return true if detected.
+   */
   operator bool() {
     return getFreeze();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

@@ -22,50 +22,94 @@
 
 using namespace chip::app::Clusters;
 
+/**
+ * @brief Matter thermostat endpoint with temperature control, setpoints, and operating modes.
+ *
+ * Supports heating and cooling setpoints, local temperature reporting, deadband
+ * control for AUTO mode, and callbacks for mode/temperature/setpoint changes.
+ * Compatible with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterThermostat : public MatterEndPoint {
 public:
   // clang-format off
+  /**
+   * @brief Control Sequence of Operation set at @ref begin.
+   */
   enum ControlSequenceOfOperation_t {
-    THERMOSTAT_SEQ_OP_COOLING                = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingOnly,
-    THERMOSTAT_SEQ_OP_COOLING_REHEAT         = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingWithReheat,
-    THERMOSTAT_SEQ_OP_HEATING                = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kHeatingOnly,
-    THERMOSTAT_SEQ_OP_HEATING_REHEAT         = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kHeatingWithReheat,
-    THERMOSTAT_SEQ_OP_COOLING_HEATING        = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeating,
-    THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeatingWithReheat,
+    THERMOSTAT_SEQ_OP_COOLING                = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingOnly,              ///< Cooling only.
+    THERMOSTAT_SEQ_OP_COOLING_REHEAT         = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingWithReheat,         ///< Cooling with reheat.
+    THERMOSTAT_SEQ_OP_HEATING                = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kHeatingOnly,               ///< Heating only.
+    THERMOSTAT_SEQ_OP_HEATING_REHEAT         = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kHeatingWithReheat,         ///< Heating with reheat.
+    THERMOSTAT_SEQ_OP_COOLING_HEATING        = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeating,         ///< Cooling and heating.
+    THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeatingWithReheat, ///< Cooling and heating with reheat.
   };
 
+  /**
+   * @brief Thermostat SystemMode values.
+   */
   enum ThermostatMode_t {
-    THERMOSTAT_MODE_OFF            = (uint8_t) Thermostat::SystemModeEnum::kOff,
-    THERMOSTAT_MODE_AUTO           = (uint8_t) Thermostat::SystemModeEnum::kAuto,
-    THERMOSTAT_MODE_COOL           = (uint8_t) Thermostat::SystemModeEnum::kCool,
-    THERMOSTAT_MODE_HEAT           = (uint8_t) Thermostat::SystemModeEnum::kHeat,
-    THERMOSTAT_MODE_EMERGENCY_HEAT = (uint8_t) Thermostat::SystemModeEnum::kEmergencyHeat,
-    THERMOSTAT_MODE_PRECOOLING     = (uint8_t) Thermostat::SystemModeEnum::kPrecooling,
-    THERMOSTAT_MODE_FAN_ONLY       = (uint8_t) Thermostat::SystemModeEnum::kFanOnly,
-    THERMOSTAT_MODE_DRY            = (uint8_t) Thermostat::SystemModeEnum::kDry,
-    THERMOSTAT_MODE_SLEEP          = (uint8_t) Thermostat::SystemModeEnum::kSleep
+    THERMOSTAT_MODE_OFF            = (uint8_t) Thermostat::SystemModeEnum::kOff,           ///< Off.
+    THERMOSTAT_MODE_AUTO           = (uint8_t) Thermostat::SystemModeEnum::kAuto,          ///< Auto mode.
+    THERMOSTAT_MODE_COOL           = (uint8_t) Thermostat::SystemModeEnum::kCool,          ///< Cooling mode.
+    THERMOSTAT_MODE_HEAT           = (uint8_t) Thermostat::SystemModeEnum::kHeat,          ///< Heating mode.
+    THERMOSTAT_MODE_EMERGENCY_HEAT = (uint8_t) Thermostat::SystemModeEnum::kEmergencyHeat, ///< Emergency heat.
+    THERMOSTAT_MODE_PRECOOLING     = (uint8_t) Thermostat::SystemModeEnum::kPrecooling,    ///< Precooling.
+    THERMOSTAT_MODE_FAN_ONLY       = (uint8_t) Thermostat::SystemModeEnum::kFanOnly,       ///< Fan only.
+    THERMOSTAT_MODE_DRY            = (uint8_t) Thermostat::SystemModeEnum::kDry,           ///< Dry mode.
+    THERMOSTAT_MODE_SLEEP          = (uint8_t) Thermostat::SystemModeEnum::kSleep          ///< Sleep mode.
   };
 
+  /**
+   * @brief Whether Auto mode is enabled at @ref begin.
+   */
   enum ThermostatAutoMode_t {
-    THERMOSTAT_AUTO_MODE_DISABLED = (uint8_t) Thermostat::SystemModeEnum::kOff,
-    THERMOSTAT_AUTO_MODE_ENABLED  = (uint8_t) Thermostat::SystemModeEnum::kAuto,
+    THERMOSTAT_AUTO_MODE_DISABLED = (uint8_t) Thermostat::SystemModeEnum::kOff,   ///< Auto mode disabled.
+    THERMOSTAT_AUTO_MODE_ENABLED  = (uint8_t) Thermostat::SystemModeEnum::kAuto,  ///< Auto mode enabled.
   };
   // clang-format on
 
+  /**
+   * @brief Create a new Matter thermostat endpoint.
+   */
   MatterThermostat();
+  /**
+   * @brief Destroy the thermostat endpoint object.
+   */
   ~MatterThermostat();
-  // begin Matter Thermostat endpoint with initial Operation Mode
+  /**
+   * @brief Initialize the Matter thermostat endpoint.
+   * @param controlSequence Control sequence of operation (default cooling only).
+   * @param autoMode Auto mode enabled/disabled (default disabled).
+   * @return true if successful, false otherwise.
+   */
   bool begin(ControlSequenceOfOperation_t controlSequence = THERMOSTAT_SEQ_OP_COOLING, ThermostatAutoMode_t autoMode = THERMOSTAT_AUTO_MODE_DISABLED);
-  // this will stop processing Thermostat Matter events
+  /**
+   * @brief Stop processing Matter thermostat events.
+   */
   void end();
 
-  // set the Thermostat Mode
+  /**
+   * @brief Set the thermostat mode.
+   * @param mode Thermostat SystemMode to set.
+   * @return true if successful, false otherwise.
+   */
   bool setMode(ThermostatMode_t mode);
-  // get the Thermostat Mode
+  /**
+   * @brief Get the current thermostat mode.
+   * @return Current SystemMode.
+   */
   ThermostatMode_t getMode() {
     return currentMode;
   }
-  // returns a friendly string for the Thermostat SystemMode (unknown if out of range)
+  /**
+   * @brief Get a friendly string for a thermostat SystemMode value.
+   *
+   * Includes EMERGENCY_HEAT, PRECOOLING, FAN_ONLY, DRY, and SLEEP.
+   * Returns "UNKNOWN" for unused enum value 2 and any out-of-range mode.
+   *
+   * @param mode SystemMode value.
+   * @return Mode name, or "UNKNOWN".
+   */
   static const char *getThermostatModeString(uint8_t mode) {
     if (mode >= (sizeof(thermostatModeString) / sizeof(thermostatModeString[0]))) {
       return "UNKNOWN";
@@ -73,98 +117,197 @@ public:
     return thermostatModeString[mode];
   }
 
-  // get the Thermostat Control Sequence of Operation
+  /**
+   * @brief Get the Control Sequence of Operation set at @ref begin.
+   * @return Control sequence.
+   */
   ControlSequenceOfOperation_t getControlSequence() {
     return controlSequence;
   }
 
-  // get the minimum heating setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the minimum heating setpoint limit in Celsius.
+   * @return Minimum heating setpoint (°C).
+   */
   float getMinHeatSetpoint() {
     return (float)kDefaultMinHeatSetpointLimit / 100.00;
   }
-  // get the maximum heating setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the maximum heating setpoint limit in Celsius.
+   * @return Maximum heating setpoint (°C).
+   */
   float getMaxHeatSetpoint() {
     return (float)kDefaultMaxHeatSetpointLimit / 100.00;
   }
-  // get the minimum cooling setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the minimum cooling setpoint limit in Celsius.
+   * @return Minimum cooling setpoint (°C).
+   */
   float getMinCoolSetpoint() {
     return (float)kDefaultMinCoolSetpointLimit / 100.00;
   }
-  // get the maximum cooling setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the maximum cooling setpoint limit in Celsius.
+   * @return Maximum cooling setpoint (°C).
+   */
   float getMaxCoolSetpoint() {
     return (float)kDefaultMaxCoolSetpointLimit / 100.00;
   }
-  // AUTO MinSetpointDeadBand in Celsius (cluster value is 1/10 °C). Falls back to 2.5 °C.
+  /**
+   * @brief Get AUTO MinSetpointDeadBand in Celsius (cluster stores tenths of a degree).
+   *
+   * Reads the attribute when Auto is enabled; otherwise returns the default 2.5 °C.
+   *
+   * @return Deadband in Celsius.
+   */
   float getDeadBand();
 
-  // generic function for setting the cooling and heating setpoints - checks if the setpoints are valid
-  // it can be used to set both setpoints at the same time or only one of them, by setting the other to (float)0xffff
-  // Heating Setpoint must be lower than Cooling Setpoint
-  // When using AUTO mode the Cooling Setpoint must be higher than Heating Setpoint by at least the 2.5C (deadband)
-  // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification
+  /**
+   * @brief Set both cooling and heating setpoints.
+   *
+   * Heating setpoint must be lower than cooling setpoint. In AUTO mode, cooling
+   * setpoint must be at least 2.5 °C higher than heating setpoint (deadband).
+   * The Thermostat Matter Server enforces those rules and the max/min limits.
+   *
+   * @param _setpointHeatingTemperature Heating setpoint in Celsius, or 0xffff to keep current.
+   * @param _setpointCoolingTemperature Cooling setpoint in Celsius, or 0xffff to keep current.
+   * @return true if successful, false otherwise.
+   */
   bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature);
 
-  // set the heating setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Set the heating setpoint in Celsius.
+   * @param _setpointHeatingTemperature Heating setpoint in Celsius.
+   * @return true if successful, false otherwise.
+   */
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {
     return setCoolingHeatingSetpoints(_setpointHeatingTemperature, (double)0xffff);
   }
-  // get the heating setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the heating setpoint in Celsius.
+   * @return Heating setpoint (°C) with 1/100th degree precision.
+   */
   double getHeatingSetpoint() {
     return heatingSetpointTemperature / 100.0;
   }
-  // set the cooling setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Set the cooling setpoint in Celsius.
+   * @param _setpointCoolingTemperature Cooling setpoint in Celsius.
+   * @return true if successful, false otherwise.
+   */
   bool setCoolingSetpoint(double _setpointCoolingTemperature) {
     return setCoolingHeatingSetpoints((double)0xffff, _setpointCoolingTemperature);
   }
-  // get the cooling setpoint in 1/100th of a Celsio degree
+  /**
+   * @brief Get the cooling setpoint in Celsius.
+   * @return Cooling setpoint (°C) with 1/100th degree precision.
+   */
   double getCoolingSetpoint() {
     return coolingSetpointTemperature / 100.0;
   }
 
-  // set the local Thermostat temperature in  Celsio degrees
+  /**
+   * @brief Set the local thermostat temperature in Celsius.
+   * @param temperature Temperature in Celsius.
+   * @return true if successful, false otherwise.
+   */
   bool setLocalTemperature(double temperature) {
     // stores up to 1/100th of a Celsio degree precision
     int16_t rawValue = static_cast<int16_t>(temperature * 100.0f);
     return setRawTemperature(rawValue, Thermostat::Attributes::LocalTemperature::Id, &localTemperature);
   }
-  // returns the local Thermostat float temperature with 1/100th of a Celsio degree precision
+  /**
+   * @brief Get the current local temperature in Celsius.
+   * @return Temperature (°C) with 1/100th degree precision.
+   */
   double getLocalTemperature() {
     return (double)localTemperature / 100.0;
   }
 
-  // User Callback for whenever the Thermostat Mode is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when thermostat mode changes.
+   * @param mode New thermostat mode.
+   * @return true if the change was handled successfully.
+   */
   using EndPointModeCB = std::function<bool(ThermostatMode_t)>;
+  /**
+   * @brief Register a callback for mode changes from the Matter controller.
+   * @param onChangeCB Function to call when mode changes.
+   */
   void onChangeMode(EndPointModeCB onChangeCB) {
     _onChangeModeCB = onChangeCB;
   }
 
-  // User Callback for whenever the Local Temperature is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when local temperature changes.
+   * @param temperature New local temperature in Celsius.
+   * @return true if the change was handled successfully.
+   */
   using EndPointTemperatureCB = std::function<bool(float)>;
+  /**
+   * @brief Register a callback for local temperature changes from the Matter controller.
+   * @param onChangeCB Function to call when local temperature changes.
+   */
   void onChangeLocalTemperature(EndPointTemperatureCB onChangeCB) {
     _onChangeTemperatureCB = onChangeCB;
   }
 
-  // User Callback for whenever the Cooling or Heating Setpoint is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the cooling setpoint changes.
+   * @param setpoint New cooling setpoint in Celsius.
+   * @return true if the change was handled successfully.
+   */
   using EndPointCoolingSetpointCB = std::function<bool(double)>;
+  /**
+   * @brief Register a callback for cooling setpoint changes from the Matter controller.
+   * @param onChangeCB Function to call when cooling setpoint changes.
+   */
   void onChangeCoolingSetpoint(EndPointCoolingSetpointCB onChangeCB) {
     _onChangeCoolingSetpointCB = onChangeCB;
   }
 
-  // User Callback for whenever the Cooling or Heating Setpoint is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the heating setpoint changes.
+   * @param setpoint New heating setpoint in Celsius.
+   * @return true if the change was handled successfully.
+   */
   using EndPointHeatingSetpointCB = std::function<bool(double)>;
+  /**
+   * @brief Register a callback for heating setpoint changes from the Matter controller.
+   * @param onChangeCB Function to call when heating setpoint changes.
+   */
   void onChangeHeatingSetpoint(EndPointHeatingSetpointCB onChangeCB) {
     _onChangeHeatingSetpointCB = onChangeCB;
   }
 
-  // User Callback for whenever any parameter is changed by the Matter Controller
-  // Main parameters are Thermostat Mode, Local Temperature, Cooling Setpoint and Heating Setpoint
-  // Those can be obtained using getMode(), getLocalTemperature(), getCoolingSetpoint() and getHeatingSetpoint()
+  /**
+   * @brief Callback invoked when any thermostat parameter changes.
+   *
+   * Read current values with getMode(), getLocalTemperature(), getCoolingSetpoint(),
+   * and getHeatingSetpoint().
+   *
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(void)>;
+  /**
+   * @brief Register a callback for any parameter change from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

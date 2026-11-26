@@ -20,11 +20,26 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter illuminance sensor endpoint (read-only reporting, 1 lx to 3.576 Mlx).
+ *
+ * Compatible with Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterLightSensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter light sensor endpoint.
+   */
   MatterLightSensor();
+  /**
+   * @brief Destroy the light sensor endpoint object.
+   */
   ~MatterLightSensor();
-  // begin Matter Light Sensor endpoint with initial float illuminance value
+  /**
+   * @brief Initialize the Matter light sensor endpoint.
+   * @param illuminance Initial illuminance (1 lx to 3.576 Mlx, default 1.00).
+   * @return true if successful, false otherwise.
+   */
   bool begin(double illuminance = 1.00) {
     if (illuminance < 1.0 || illuminance > 3576000.0) {
       log_e("Light illuminance value out of range [1..3576000].");
@@ -37,10 +52,16 @@ public:
     }
     return begin(static_cast<uint16_t>(rawValue));
   }
-  // this will just stop processing Light Sensor Matter events
+  /**
+   * @brief Stop processing Matter light sensor events.
+   */
   void end();
 
-  // set the illuminance
+  /**
+   * @brief Set the reported illuminance value.
+   * @param illuminance Illuminance to report (1 lx to 3.576 Mlx).
+   * @return true if successful, false otherwise.
+   */
   bool setIlluminance(double illuminance) {
     if (illuminance < 1.0 || illuminance > 3576000.0) {
       log_e("Light illuminance value out of range [1..3576000].");
@@ -53,20 +74,39 @@ public:
     }
     return setRawIlluminance(static_cast<uint16_t>(rawValue));
   }
-  // returns the reported float illuminance value
+  /**
+   * @brief Get the current reported illuminance value.
+   * @return Illuminance in lux.
+   */
   double getIlluminance() {
     return (double)pow(10, (rawIlluminance - 1) / 10000.0);
   }
-  // double conversion operator
+  /**
+   * @brief Assignment — set the reported illuminance.
+   * @param illuminance Illuminance in lux (1 lx to 3.576 Mlx).
+   */
   void operator=(double illuminance) {
     setIlluminance(illuminance);
   }
-  // double conversion operator
+  /**
+   * @brief Conversion — current reported illuminance.
+   * @return Illuminance in lux.
+   */
   operator double() {
     return (double)getIlluminance();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

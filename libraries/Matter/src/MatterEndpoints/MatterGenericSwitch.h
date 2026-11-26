@@ -19,41 +19,105 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
-// Matter Generic Switch Endpoint — momentary smart button with optional gesture features
+/**
+ * @brief Matter generic switch endpoint — momentary smart button with optional gesture features.
+ *
+ * Implements the Matter Switch cluster and reports press gestures to the controller.
+ * Sibling switches of the same device type should use @ref MatterEndPoint::setTagList
+ * so a controller can tell them apart. Compatible with Home Assistant, Apple Home,
+ * Amazon Alexa, and Google Home.
+ *
+ * @note FEATURE_LONG_PRESS and FEATURE_MULTI_PRESS each require FEATURE_RELEASE.
+ */
 class MatterGenericSwitch : public MatterEndPoint {
 public:
-  // Switch cluster FeatureMap bits (Matter Switch cluster specification)
-  static constexpr uint32_t FEATURE_MOMENTARY = 0x02;
-  static constexpr uint32_t FEATURE_RELEASE = 0x04;
-  static constexpr uint32_t FEATURE_LONG_PRESS = 0x08;
-  static constexpr uint32_t FEATURE_MULTI_PRESS = 0x10;
+  static constexpr uint32_t FEATURE_MOMENTARY = 0x02;    ///< FeatureMap bit 0x02: InitialPress.
+  static constexpr uint32_t FEATURE_RELEASE = 0x04;      ///< FeatureMap bit 0x04: ShortRelease.
+  static constexpr uint32_t FEATURE_LONG_PRESS = 0x08;   ///< FeatureMap bit 0x08: LongPress, LongRelease. Requires FEATURE_RELEASE.
+  static constexpr uint32_t FEATURE_MULTI_PRESS = 0x10;  ///< FeatureMap bit 0x10: MultiPressOngoing, MultiPressComplete. Requires FEATURE_RELEASE.
 
-  // Short click: InitialPress + ShortRelease
+  /**
+   * @brief Short click: InitialPress + ShortRelease (default).
+   */
   static constexpr uint32_t FEATURE_SIMPLE = FEATURE_MOMENTARY | FEATURE_RELEASE;
-  // All momentary gestures supported by this class
+  /**
+   * @brief All momentary gesture features supported by this class.
+   */
   static constexpr uint32_t FEATURE_ALL = FEATURE_SIMPLE | FEATURE_LONG_PRESS | FEATURE_MULTI_PRESS;
 
+  /**
+   * @brief Create a new Matter generic switch endpoint.
+   */
   MatterGenericSwitch();
+  /**
+   * @brief Destroy the generic switch endpoint object.
+   */
   ~MatterGenericSwitch();
 
-  // featureFlags: FEATURE_SIMPLE (default) or FEATURE_ALL; multiPressMax used when FEATURE_MULTI_PRESS is set (2–255)
+  /**
+   * @brief Initialize the Matter generic switch endpoint.
+   * @param featureFlags Switch cluster features at endpoint creation (default FEATURE_SIMPLE).
+   * @param multiPressMax Maximum press count for multi-press (2–255). Used only when FEATURE_MULTI_PRESS is set.
+   * @return true on success, false otherwise.
+   */
   virtual bool begin(uint32_t featureFlags = FEATURE_SIMPLE, uint8_t multiPressMax = 5);
-  void end();  // this will just stop processing Matter events
+  /**
+   * @brief Stop processing Matter switch events.
+   */
+  void end();
 
+  /**
+   * @brief Whether the given feature bit is enabled.
+   * @param feature Feature bit (e.g. FEATURE_LONG_PRESS).
+   * @return true if enabled.
+   */
   bool hasFeature(uint32_t feature) const;
 
-  // Matter Switch cluster events — call from your button driver
-  void press();                            // InitialPress
-  void release();                          // ShortRelease
-  void longPress();                        // LongPress
-  void longRelease();                      // LongRelease
-  void multiPressOngoing(uint8_t count);   // MultiPressOngoing
-  void multiPressComplete(uint8_t count);  // MultiPressComplete
+  /**
+   * @brief Send InitialPress (button pressed down). Call from the button driver.
+   */
+  void press();
+  /**
+   * @brief Send ShortRelease (button released after a short press). Call from the button driver.
+   */
+  void release();
+  /**
+   * @brief Send LongPress (button held past the long-press threshold). Call from the button driver.
+   */
+  void longPress();
+  /**
+   * @brief Send LongRelease (button released after a long press). Call from the button driver.
+   */
+  void longRelease();
+  /**
+   * @brief Send MultiPressOngoing when an additional press starts within the multi-press window.
+   * @param count Current press count (e.g. 2 for the second press).
+   */
+  void multiPressOngoing(uint8_t count);
+  /**
+   * @brief Send MultiPressComplete when the multi-press window expires after the last release.
+   * @param count Total press count.
+   */
+  void multiPressComplete(uint8_t count);
 
-  // Convenience: InitialPress then ShortRelease (when FEATURE_RELEASE) in one Matter-task lambda
+  /**
+   * @brief Convenience helper: InitialPress then ShortRelease when FEATURE_RELEASE is enabled.
+   *
+   * Both events run in one Matter-task lambda so ShortRelease cannot be processed before InitialPress.
+   */
   void click();
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

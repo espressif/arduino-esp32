@@ -19,11 +19,28 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter humidity sensor endpoint (read-only reporting, 0–100%).
+ *
+ * Stores humidity with 1/100th percent precision. Compatible with Home
+ * Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterHumiditySensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter humidity sensor endpoint.
+   */
   MatterHumiditySensor();
+  /**
+   * @brief Destroy the humidity sensor endpoint object.
+   */
   ~MatterHumiditySensor();
-  // begin Matter Humidity Sensor endpoint with initial float humidity percent
+  /**
+   * @brief Initialize the Matter humidity sensor endpoint.
+   * @param humidityPercent Initial humidity percentage (0.0–100.0, default 0.00).
+   * @return true if successful, false otherwise.
+   * @note The implementation stores humidity with 1/100th percent precision internally.
+   */
   bool begin(double humidityPercent = 0.00) {
     if (humidityPercent < 0.0 || humidityPercent > 100.0) {
       log_e("Humidity Sensor Percentage value out of range [0..100].");
@@ -31,10 +48,17 @@ public:
     }
     return begin(static_cast<uint16_t>(humidityPercent * 100.0f));
   }
-  // this will just stop processing Humidity Sensor Matter events
+  /**
+   * @brief Stop processing Matter humidity sensor events.
+   */
   void end();
 
-  // set the humidity percent with 1/100th of a percent precision
+  /**
+   * @brief Set the reported humidity percentage.
+   * @param humidityPercent Humidity percentage (0.0–100.0).
+   * @return true if successful, false otherwise (values outside 0.0–100.0 are rejected).
+   * @note Humidity is stored with 1/100th percent precision.
+   */
   bool setHumidity(double humidityPercent) {
     if (humidityPercent < 0.0 || humidityPercent > 100.0) {
       log_e("Humidity Sensor Percentage value out of range [0..100].");
@@ -42,20 +66,39 @@ public:
     }
     return setRawHumidity(static_cast<uint16_t>(humidityPercent * 100.0f));
   }
-  // returns the reported float humidity percent with 1/100th of precision
+  /**
+   * @brief Get the current reported humidity percentage.
+   * @return Humidity percentage with 1/100th percent precision.
+   */
   double getHumidity() {
     return (double)rawHumidity / 100.0;
   }
-  // double conversion operator
+  /**
+   * @brief Assignment — set the reported humidity percentage.
+   * @param humidityPercent Humidity percentage (0.0–100.0).
+   */
   void operator=(double humidityPercent) {
     setHumidity(humidityPercent);
   }
-  // double conversion operator
+  /**
+   * @brief Conversion — current reported humidity percentage.
+   * @return Humidity percentage.
+   */
   operator double() {
     return (double)getHumidity();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

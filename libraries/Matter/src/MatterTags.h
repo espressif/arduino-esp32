@@ -19,81 +19,120 @@
 #include <MatterEndPoint.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
-// Named Matter semantic tags for use with MatterEndPoint::setTagList(), so sketches don't need to
-// hardcode namespace/tag numbers from the Matter "Standard Namespaces" specification:
-// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
-// Any endpoint accepts any of these tags — they're presets, not a gate tied to a specific device type.
-// Use MatterTags::createTag() for a tag outside these namespaces, or a custom label.
-// For the Switches Custom tag, use MatterTags::Switches::createCustomTag(label).
-// For Position Row/Column (non-empty label required), use MatterTags::Position::createRowTag() / createColumnTag().
-// Position and Location tag values use CHIP Globals::PositionTag / LocationTag (same pattern as
-// MatterFan's FanModeEnum). Number, Switches, and namespace IDs have no CHIP constants in this SDK.
+/**
+ * @brief Named Matter semantic tags for @ref MatterEndPoint::setTagList.
+ *
+ * Presets so sketches do not hardcode namespace/tag numbers from the Matter
+ * Standard Namespaces specification. Any endpoint accepts any of these tags —
+ * they are not gated to a specific device type.
+ *
+ * Use @ref createTag for a tag outside these namespaces, or a custom label.
+ * For the Switches Custom tag, use @ref Switches::createCustomTag. For Position
+ * Row/Column (non-empty label required), use @ref Position::createRowTag /
+ * @ref Position::createColumnTag.
+ */
 namespace MatterTags {
 
-// Creates a custom MatterTag from a namespace ID, tag value and optional label.
+/**
+ * @brief Create a custom MatterTag from a namespace ID, tag value, and optional label.
+ * @param namespaceId Matter namespace identifier.
+ * @param tag Tag value within that namespace.
+ * @param label Optional label; not copied, must outlive the endpoint. nullptr means no label.
+ * @return MatterTag suitable for @ref MatterEndPoint::setTagList.
+ */
 constexpr MatterTag createTag(uint8_t namespaceId, uint8_t tag, const char *label = nullptr) {
   return MatterTag{namespaceId, tag, label};
 }
 
+/**
+ * @brief Position namespace (0x08): Left, Right, Top, Bottom, Middle, Row, Column.
+ */
 namespace Position {
+/**
+ * @brief CHIP Globals::PositionTag (same values as the Position presets).
+ */
 using PositionTag = chip::app::Clusters::Globals::PositionTag;
-static constexpr uint8_t NS = 0x08;
-static constexpr MatterTag Left = {NS, (uint8_t)PositionTag::kLeft};
-static constexpr MatterTag Right = {NS, (uint8_t)PositionTag::kRight};
-static constexpr MatterTag Top = {NS, (uint8_t)PositionTag::kTop};
-static constexpr MatterTag Bottom = {NS, (uint8_t)PositionTag::kBottom};
-static constexpr MatterTag Middle = {NS, (uint8_t)PositionTag::kMiddle};
-// Row and Column require a non-empty label (Matter spec: Arabic numeral, first row/column is "1");
-// the string must outlive the endpoint.
-static constexpr uint8_t Row = (uint8_t)PositionTag::kRow;
-static constexpr uint8_t Column = (uint8_t)PositionTag::kColumn;
+static constexpr uint8_t NS = 0x08;  ///< Position namespace ID.
+static constexpr MatterTag Left = {NS, (uint8_t)PositionTag::kLeft};      ///< Position Left.
+static constexpr MatterTag Right = {NS, (uint8_t)PositionTag::kRight};    ///< Position Right.
+static constexpr MatterTag Top = {NS, (uint8_t)PositionTag::kTop};        ///< Position Top.
+static constexpr MatterTag Bottom = {NS, (uint8_t)PositionTag::kBottom};  ///< Position Bottom.
+static constexpr MatterTag Middle = {NS, (uint8_t)PositionTag::kMiddle};  ///< Position Middle.
+static constexpr uint8_t Row = (uint8_t)PositionTag::kRow;        ///< Row tag value; requires a non-empty label.
+static constexpr uint8_t Column = (uint8_t)PositionTag::kColumn;  ///< Column tag value; requires a non-empty label.
+/**
+ * @brief Create a Position Row tag. The Matter spec uses an Arabic numeral such as "1" for the first row.
+ * @param label Non-empty label; must outlive the endpoint (a string literal is fine).
+ * @return MatterTag for setTagList().
+ */
 constexpr MatterTag createRowTag(const char *label) {
   return MatterTag{NS, Row, label};
 }
+/**
+ * @brief Create a Position Column tag. The Matter spec uses an Arabic numeral such as "1" for the first column.
+ * @param label Non-empty label; must outlive the endpoint (a string literal is fine).
+ * @return MatterTag for setTagList().
+ */
 constexpr MatterTag createColumnTag(const char *label) {
   return MatterTag{NS, Column, label};
 }
 }  // namespace Position
 
+/**
+ * @brief Number namespace (0x07): Zero through Ten.
+ */
 namespace Number {
-static constexpr uint8_t NS = 0x07;
-static constexpr MatterTag Zero = {NS, 0};
-static constexpr MatterTag One = {NS, 1};
-static constexpr MatterTag Two = {NS, 2};
-static constexpr MatterTag Three = {NS, 3};
-static constexpr MatterTag Four = {NS, 4};
-static constexpr MatterTag Five = {NS, 5};
-static constexpr MatterTag Six = {NS, 6};
-static constexpr MatterTag Seven = {NS, 7};
-static constexpr MatterTag Eight = {NS, 8};
-static constexpr MatterTag Nine = {NS, 9};
-static constexpr MatterTag Ten = {NS, 0x0A};
+static constexpr uint8_t NS = 0x07;  ///< Number namespace ID.
+static constexpr MatterTag Zero = {NS, 0};     ///< Number 0.
+static constexpr MatterTag One = {NS, 1};      ///< Number 1.
+static constexpr MatterTag Two = {NS, 2};      ///< Number 2.
+static constexpr MatterTag Three = {NS, 3};    ///< Number 3.
+static constexpr MatterTag Four = {NS, 4};     ///< Number 4.
+static constexpr MatterTag Five = {NS, 5};     ///< Number 5.
+static constexpr MatterTag Six = {NS, 6};      ///< Number 6.
+static constexpr MatterTag Seven = {NS, 7};    ///< Number 7.
+static constexpr MatterTag Eight = {NS, 8};    ///< Number 8.
+static constexpr MatterTag Nine = {NS, 9};     ///< Number 9.
+static constexpr MatterTag Ten = {NS, 0x0A};   ///< Number 10.
 }  // namespace Number
 
+/**
+ * @brief Switches namespace (0x43): On, Off, Toggle, Up, Down, Next, Previous, Select, Custom.
+ */
 namespace Switches {
-static constexpr uint8_t NS = 0x43;
-static constexpr uint8_t Custom = 8;  // requires a non-empty label
-static constexpr MatterTag On = {NS, 0};
-static constexpr MatterTag Off = {NS, 1};
-static constexpr MatterTag Toggle = {NS, 2};
-static constexpr MatterTag Up = {NS, 3};
-static constexpr MatterTag Down = {NS, 4};
-static constexpr MatterTag Next = {NS, 5};
-static constexpr MatterTag Previous = {NS, 6};
-static constexpr MatterTag Select = {NS, 7};  // spec name: Enter/OK/Select
-// The string must outlive the endpoint (a literal is fine).
+static constexpr uint8_t NS = 0x43;     ///< Switches namespace ID.
+static constexpr uint8_t Custom = 8;    ///< Custom tag value; requires a non-empty label.
+static constexpr MatterTag On = {NS, 0};         ///< Switches On.
+static constexpr MatterTag Off = {NS, 1};        ///< Switches Off.
+static constexpr MatterTag Toggle = {NS, 2};     ///< Switches Toggle.
+static constexpr MatterTag Up = {NS, 3};         ///< Switches Up.
+static constexpr MatterTag Down = {NS, 4};       ///< Switches Down.
+static constexpr MatterTag Next = {NS, 5};       ///< Switches Next.
+static constexpr MatterTag Previous = {NS, 6};   ///< Switches Previous.
+static constexpr MatterTag Select = {NS, 7};     ///< Spec name: Enter/OK/Select.
+/**
+ * @brief Create a Switches Custom tag with a user-visible label.
+ * @param label Non-empty label; must outlive the endpoint (a string literal is fine).
+ * @return MatterTag for setTagList().
+ */
 constexpr MatterTag createCustomTag(const char *label) {
   return MatterTag{NS, Custom, label};
 }
 }  // namespace Switches
 
+/**
+ * @brief Location namespace (0x06): Indoor, Outdoor, Inside, Outside.
+ */
 namespace Location {
+/**
+ * @brief CHIP Globals::LocationTag (same values as the Location presets).
+ */
 using LocationTag = chip::app::Clusters::Globals::LocationTag;
-static constexpr uint8_t NS = 0x06;
-static constexpr MatterTag Indoor = {NS, (uint8_t)LocationTag::kIndoor};
-static constexpr MatterTag Outdoor = {NS, (uint8_t)LocationTag::kOutdoor};
-static constexpr MatterTag Inside = {NS, (uint8_t)LocationTag::kInside};
-static constexpr MatterTag Outside = {NS, (uint8_t)LocationTag::kOutside};
+static constexpr uint8_t NS = 0x06;  ///< Location namespace ID.
+static constexpr MatterTag Indoor = {NS, (uint8_t)LocationTag::kIndoor};    ///< Location Indoor.
+static constexpr MatterTag Outdoor = {NS, (uint8_t)LocationTag::kOutdoor};  ///< Location Outdoor.
+static constexpr MatterTag Inside = {NS, (uint8_t)LocationTag::kInside};    ///< Location Inside.
+static constexpr MatterTag Outside = {NS, (uint8_t)LocationTag::kOutside};  ///< Location Outside.
 }  // namespace Location
 
 }  // namespace MatterTags

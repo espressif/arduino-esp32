@@ -19,50 +19,143 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter dimmable light endpoint with on/off and brightness control.
+ *
+ * Arduino brightness input is 0–255; Matter CurrentLevel is 1–254 (255 is the
+ * nullable null sentinel). Compatible with Home Assistant, Apple Home, Amazon
+ * Alexa, and Google Home.
+ */
 class MatterDimmableLight : public MatterEndPoint {
 public:
-  // Arduino full-scale input (0–255). Matter CurrentLevel is 1–254; 0 and 255 are clamped.
+  /**
+   * @brief Arduino full-scale brightness input (255). Matter stores this as 254.
+   */
   static const uint8_t MAX_BRIGHTNESS = 255;
 
+  /**
+   * @brief Create a new Matter dimmable light endpoint.
+   */
   MatterDimmableLight();
+  /**
+   * @brief Destroy the dimmable light endpoint object.
+   */
   ~MatterDimmableLight();
-  // default initial state is off and brightness is 64 (25%)
+  /**
+   * @brief Initialize the Matter dimmable light endpoint.
+   * @param initialState Initial on/off state (true = on, false = off, default false).
+   * @param brightness Initial brightness (0–255, default 64 = 25%). 0 is stored as 1; 255 is stored as 254.
+   * @return true if successful, false otherwise.
+   */
   virtual bool begin(bool initialState = false, uint8_t brightness = 64);
-  // this will just stop processing Light Matter events
+  /**
+   * @brief Stop processing Matter light events.
+   */
   void end();
 
-  bool setOnOff(bool newState);  // returns true if successful
-  bool getOnOff();               // returns current light state
-  bool toggle();                 // returns true if successful
+  /**
+   * @brief Set the on/off state of the light.
+   * @param newState New state (true = on, false = off).
+   * @return true if successful, false otherwise.
+   */
+  bool setOnOff(bool newState);
+  /**
+   * @brief Get the current on/off state of the light.
+   * @return true if the light is on, false if off.
+   */
+  bool getOnOff();
+  /**
+   * @brief Toggle the on/off state of the light.
+   * @return true if successful, false otherwise.
+   */
+  bool toggle();
 
-  bool setBrightness(uint8_t newBrightness);  // returns true if successful
-  uint8_t getBrightness();                    // returns current brightness
+  /**
+   * @brief Set the brightness level of the light.
+   *
+   * On/off is a separate attribute. 0 clamps to 1 and 255 clamps to 254.
+   *
+   * @param newBrightness Brightness (0–255).
+   * @return true if successful, false otherwise.
+   */
+  bool setBrightness(uint8_t newBrightness);
+  /**
+   * @brief Get the current brightness level of the light.
+   * @return Brightness level (1–254).
+   */
+  uint8_t getBrightness();
 
-  // User Callback for whenever the Light On/Off state is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when the on/off state changes.
+   * @param newState New on/off state.
+   * @return true if the change was handled successfully.
+   */
   using EndPointOnOffCB = std::function<bool(bool)>;
+  /**
+   * @brief Register a callback for on/off state changes from the Matter controller.
+   * @param onChangeCB Function to call when on/off state changes.
+   */
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
   }
 
-  // User Callback for whenever the Light brightness value [1..254] is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when brightness changes.
+   * @param newBrightness New brightness level (1–254).
+   * @return true if the change was handled successfully.
+   */
   using EndPointBrightnessCB = std::function<bool(uint8_t)>;
+  /**
+   * @brief Register a callback for brightness changes from the Matter controller.
+   * @param onChangeCB Function to call when brightness changes.
+   */
   void onChangeBrightness(EndPointBrightnessCB onChangeCB) {
     _onChangeBrightnessCB = onChangeCB;
   }
 
-  // User Callback for whenever any parameter is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when any light parameter changes.
+   * @param newState New on/off state.
+   * @param newBrightness New brightness level (1–254).
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(bool, uint8_t)>;
+  /**
+   * @brief Register a callback for any parameter change from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // used to update the state of the light using the current Matter Light internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical light state
+  /**
+   * @brief Apply the current Matter Light internal state to the accessory.
+   *
+   * Set a user callback with @ref onChange to handle the physical light.
+   */
   void updateAccessory();
 
-  operator bool();             // returns current on/off light state
-  void operator=(bool state);  // turns light on or off
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Boolean conversion — current on/off state of the light.
+   * @return true if the light is on.
+   */
+  operator bool();
+  /**
+   * @brief Assignment — turn the light on or off.
+   * @param state true to turn on, false to turn off.
+   */
+  void operator=(bool state);
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

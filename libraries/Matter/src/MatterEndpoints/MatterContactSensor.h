@@ -19,32 +19,79 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+/**
+ * @brief Matter contact sensor endpoint (open/closed, e.g. doors and windows).
+ *
+ * Read-only Boolean State. Fabric StateValue starts false (open). Call
+ * @ref setContact after endpoint @c begin(); a value set before @c Matter.begin()
+ * is cached and applied when the cluster is created.
+ */
 class MatterContactSensor : public MatterEndPoint {
 public:
+  /**
+   * @brief Create a new Matter contact sensor endpoint.
+   */
   MatterContactSensor();
+  /**
+   * @brief Destroy the contact sensor endpoint object.
+   */
   ~MatterContactSensor();
-  // begin Matter Contact Sensor endpoint. Fabric StateValue starts false (open).
+  /**
+   * @brief Initialize the Matter contact sensor endpoint.
+   *
+   * Fabric StateValue starts false (open). Call @ref setContact after this.
+   *
+   * @return true if successful, false otherwise.
+   */
   bool begin();
-  // this will just stop processing Contact Sensor Matter events
+  /**
+   * @brief Stop processing Matter contact sensor events.
+   */
   void end();
 
-  // set the contact state after endpoint begin(). Cached until Matter.begin() if the cluster is not live yet.
+  /**
+   * @brief Set the contact state. Call after the endpoint @c begin().
+   *
+   * Before @c Matter.begin() the value is cached and applied when the cluster is created.
+   *
+   * @param _contactState Contact state (true = closed, false = open).
+   * @return true if successful, false otherwise.
+   */
   bool setContact(bool _contactState);
-  // returns the contact state
+  /**
+   * @brief Get the current contact state.
+   * @return true if closed, false if open.
+   */
   bool getContact() {
     return contactState;
   }
 
-  // bool conversion operator
+  /**
+   * @brief Assignment — set the contact state (same as @ref setContact).
+   * @param _contactState true = closed, false = open.
+   */
   void operator=(bool _contactState) {
     setContact(_contactState);
   }
-  // bool conversion operator
+  /**
+   * @brief Boolean conversion — current contact state.
+   * @return true if closed, false if open.
+   */
   operator bool() {
     return getContact();
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

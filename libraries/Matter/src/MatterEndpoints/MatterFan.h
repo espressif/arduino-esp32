@@ -22,43 +22,82 @@
 
 using namespace chip::app::Clusters::FanControl;
 
-// Matter Fan endpoint with On/Off, Mode and Speed control
-
+/**
+ * @brief Matter fan endpoint with on/off, speed (0–100%), and mode control.
+ *
+ * @c FAN_MODE_ON and @c FAN_MODE_SMART are remapped, not stored. Compatible with
+ * Home Assistant, Apple Home, Amazon Alexa, and Google Home.
+ */
 class MatterFan : public MatterEndPoint {
 public:
-  // Fan feature constants
-  static const uint8_t MAX_SPEED = 100;  // maximum High speed
-  static const uint8_t MIN_SPEED = 1;    // minimum Low speed
-  static const uint8_t OFF_SPEED = 0;    // speed set by Matter when FAN_MODE_OFF
+  /**
+   * @brief Maximum speed value (100%).
+   */
+  static const uint8_t MAX_SPEED = 100;
+  /**
+   * @brief Minimum speed value (1%).
+   */
+  static const uint8_t MIN_SPEED = 1;
+  /**
+   * @brief Speed value when the fan is off (0%).
+   */
+  static const uint8_t OFF_SPEED = 0;
 
-  // Matter FanModeSequence never stores On or Smart. setMode() remaps them:
-  // On → High; Smart → Auto if the sequence includes Auto, otherwise High.
+  /**
+   * @brief Fan mode. Matter FanModeSequence never stores On or Smart.
+   *
+   * @c FAN_MODE_ON is stored as HIGH. @c FAN_MODE_SMART is stored as AUTO if the
+   * sequence includes Auto, otherwise HIGH. CHIP remaps those writes the same way.
+   */
   enum FanMode_t {
-    FAN_MODE_OFF = (uint8_t)FanModeEnum::kOff,
-    FAN_MODE_LOW = (uint8_t)FanModeEnum::kLow,
-    FAN_MODE_MEDIUM = (uint8_t)FanModeEnum::kMedium,
-    FAN_MODE_HIGH = (uint8_t)FanModeEnum::kHigh,
-    FAN_MODE_ON = (uint8_t)FanModeEnum::kOn,
-    FAN_MODE_AUTO = (uint8_t)FanModeEnum::kAuto,
-    FAN_MODE_SMART = (uint8_t)FanModeEnum::kSmart
+    FAN_MODE_OFF = (uint8_t)FanModeEnum::kOff,       ///< Fan is off.
+    FAN_MODE_LOW = (uint8_t)FanModeEnum::kLow,       ///< Low speed.
+    FAN_MODE_MEDIUM = (uint8_t)FanModeEnum::kMedium, ///< Medium speed.
+    FAN_MODE_HIGH = (uint8_t)FanModeEnum::kHigh,     ///< High speed.
+    FAN_MODE_ON = (uint8_t)FanModeEnum::kOn,         ///< Alias: stored as FAN_MODE_HIGH.
+    FAN_MODE_AUTO = (uint8_t)FanModeEnum::kAuto,     ///< Auto mode (only valid in an Auto sequence).
+    FAN_MODE_SMART = (uint8_t)FanModeEnum::kSmart    ///< Alias: stored as AUTO if the sequence includes Auto, otherwise HIGH.
   };
 
-  // Sequences are Off plus High, and optionally Low / Medium / Auto.
+  /**
+   * @brief Fan mode sequence advertised at @ref begin. Sequences are Off plus High, and optionally Low / Medium / Auto.
+   */
   enum FanModeSequence_t {
-    FAN_MODE_SEQ_OFF_LOW_MED_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowMedHigh,
-    FAN_MODE_SEQ_OFF_LOW_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowHigh,
-    FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowMedHighAuto,
-    FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowHighAuto,
-    FAN_MODE_SEQ_OFF_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffHighAuto,
-    FAN_MODE_SEQ_OFF_HIGH = (uint8_t)FanModeSequenceEnum::kOffHigh
+    FAN_MODE_SEQ_OFF_LOW_MED_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowMedHigh,           ///< OFF, LOW, MEDIUM, HIGH.
+    FAN_MODE_SEQ_OFF_LOW_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowHigh,                   ///< OFF, LOW, HIGH.
+    FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowMedHighAuto,   ///< OFF, LOW, MEDIUM, HIGH, AUTO.
+    FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowHighAuto,          ///< OFF, LOW, HIGH, AUTO.
+    FAN_MODE_SEQ_OFF_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffHighAuto,                 ///< OFF, HIGH, AUTO.
+    FAN_MODE_SEQ_OFF_HIGH = (uint8_t)FanModeSequenceEnum::kOffHigh                           ///< OFF, HIGH.
   };
 
+  /**
+   * @brief Create a new Matter fan endpoint.
+   */
   MatterFan();
+  /**
+   * @brief Destroy the fan endpoint object.
+   */
   ~MatterFan();
+  /**
+   * @brief Initialize the Matter fan endpoint.
+   * @param percent Initial speed percentage (0–100, default 0). Forced to 0 when fanMode is OFF.
+   *                In Auto, this is PercentCurrent only; PercentSetting is null.
+   * @param fanMode Initial fan mode (default OFF).
+   * @param fanModeSeq Fan mode sequence (default OFF_HIGH).
+   * @return true if successful, false otherwise.
+   */
   virtual bool begin(uint8_t percent = 0, FanMode_t fanMode = FAN_MODE_OFF, FanModeSequence_t fanModeSeq = FAN_MODE_SEQ_OFF_HIGH);
-  void end();  // this will just stop processing Matter events
+  /**
+   * @brief Stop processing Matter fan events.
+   */
+  void end();
 
-  // returns a friendly string for the Fan Mode
+  /**
+   * @brief Get a friendly string for a fan mode value.
+   * @param mode Fan mode (see @ref FanMode_t).
+   * @return Mode name, or "Unknown" if out of range.
+   */
   static const char *getFanModeString(uint8_t mode) {
     if (mode >= (sizeof(fanModeString) / sizeof(fanModeString[0]))) {
       return "Unknown";
@@ -66,63 +105,147 @@ public:
     return fanModeString[mode];
   }
 
-  // Fan Control of current On/Off state
+  /**
+   * @brief Set the on/off state of the fan.
+   * @param newState New state (true = on, false = off).
+   * @param performUpdate Perform update after setting (default true).
+   * @return true if successful, false otherwise.
+   */
+  bool setOnOff(bool newState, bool performUpdate = true);
+  /**
+   * @brief Get the current on/off state.
+   * @return true if the fan is on.
+   */
+  bool getOnOff();
+  /**
+   * @brief Toggle the on/off state.
+   * @param performUpdate Perform update after setting (default true).
+   * @return true if successful, false otherwise.
+   */
+  bool toggle(bool performUpdate = true);
 
-  bool setOnOff(bool newState, bool performUpdate = true);  // sets Fan On/Off state
-  bool getOnOff();                                          // returns current Fan state
-  bool toggle(bool performUpdate = true);                   // toggle Fun On/Off state
-
-  // Fan Control of current speed percent
-
-  bool setSpeedPercent(uint8_t newPercent, bool performUpdate = true);  // returns true if successful
-  uint8_t getSpeedPercent() {                                           // returns current Fan Speed Percent
+  /**
+   * @brief Set the fan speed percentage.
+   *
+   * Writes nullable PercentSetting and non-nullable PercentCurrent separately.
+   * In FAN_MODE_AUTO this updates PercentCurrent only so PercentSetting stays null.
+   * After Matter.begin(), a non-zero setting while Off turns the cluster on;
+   * 0 turns it Off. PercentCurrent stays 0–100.
+   *
+   * @param newPercent Speed percentage (0–100).
+   * @param performUpdate Perform update after setting (default true).
+   * @return true if successful, false otherwise.
+   */
+  bool setSpeedPercent(uint8_t newPercent, bool performUpdate = true);
+  /**
+   * @brief Get the current speed percentage.
+   * @return Speed percentage (0–100).
+   */
+  uint8_t getSpeedPercent() {
     return currentPercent;
   }
 
-  // Fan Control of current Fan Mode
-
-  bool setMode(FanMode_t newMode, bool performUpdate = true);  // returns true if successful
-  FanMode_t getMode() {                                        // returns current Fan Mode
+  /**
+   * @brief Set the fan mode.
+   *
+   * FAN_MODE_ON and FAN_MODE_SMART are remapped as described under @ref FanMode_t.
+   * OFF sets PercentSetting and PercentCurrent to 0; AUTO nulls PercentSetting
+   * and leaves PercentCurrent as the actual speed.
+   *
+   * @param newMode Fan mode to set.
+   * @param performUpdate Perform update after setting (default true).
+   * @return true if successful, false if the remapped mode is not in the sequence passed to begin().
+   */
+  bool setMode(FanMode_t newMode, bool performUpdate = true);
+  /**
+   * @brief Get the current fan mode.
+   * @return Current fan mode.
+   */
+  FanMode_t getMode() {
     return currentFanMode;
   }
-  // used to update the state of the Fan using the current Matter Fan internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical Fan motor state
 
+  /**
+   * @brief Apply the current Matter Fan internal state to the accessory.
+   *
+   * Set a user callback with @ref onChange to handle the physical fan motor.
+   */
   void updateAccessory() {
     if (_onChangeCB != NULL) {
       _onChangeCB(currentFanMode, currentPercent);
     }
   }
 
-  // returns current Fan speed percent
+  /**
+   * @brief Conversion — current fan speed percentage.
+   * @return Speed percentage (0–100).
+   */
   operator uint8_t() {
     return getSpeedPercent();
   }
 
-  // User Callback for whenever the Fan Mode (state) is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when fan mode changes.
+   * @param newMode New fan mode.
+   * @return true if the change was handled successfully.
+   */
   using EndPointModeCB = std::function<bool(FanMode_t)>;
+  /**
+   * @brief Register a callback for mode changes from the Matter controller.
+   * @param onChangeCB Function to call when mode changes.
+   */
   void onChangeMode(EndPointModeCB onChangeCB) {
     _onChangeModeCB = onChangeCB;
   }
 
-  // User Callback for whenever the Fan Speed Percentage value [0..100] is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when fan speed percentage changes.
+   * @param newPercent New speed percentage (0–100).
+   * @return true if the change was handled successfully.
+   */
   using EndPointSpeedCB = std::function<bool(uint8_t)>;
+  /**
+   * @brief Register a callback for speed changes from the Matter controller.
+   * @param onChangeCB Function to call when speed changes.
+   */
   void onChangeSpeedPercent(EndPointSpeedCB onChangeCB) {
     _onChangeSpeedCB = onChangeCB;
   }
 
-  // User Callback for whenever any parameter is changed by the Matter Controller
+  /**
+   * @brief Callback invoked when any fan parameter changes.
+   * @param newMode New fan mode.
+   * @param newPercent New speed percentage (0–100).
+   * @return true if the change was handled successfully.
+   */
   using EndPointCB = std::function<bool(FanMode_t, uint8_t)>;
+  /**
+   * @brief Register a callback for any parameter change from the Matter controller.
+   * @param onChangeCB Function to call when state changes.
+   */
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
-  // sets Fan speed percent
+  /**
+   * @brief Assignment — set the speed percentage.
+   * @param speedPercent Speed percentage (0–100).
+   */
   void operator=(uint8_t speedPercent) {
     setSpeedPercent(speedPercent);
   }
 
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  /**
+   * @brief Called by the Matter internal event processor when an attribute changes.
+   *
+   * Can be overridden by the application if necessary.
+   *
+   * @param endpoint_id Endpoint ID where the attribute changed.
+   * @param cluster_id Cluster ID of the changed attribute.
+   * @param attribute_id Attribute ID that changed.
+   * @param val Pointer to the new attribute value.
+   * @return true if the change was handled successfully.
+   */
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:

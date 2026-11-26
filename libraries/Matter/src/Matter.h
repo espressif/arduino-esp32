@@ -47,251 +47,515 @@
 #include <MatterEndpoints/MatterWaterHeater.h>
 #include <MatterEndpoints/MatterWaterValve.h>
 
-// Matter Event types used when there is a user callback for Matter Events
+/**
+ * @brief Matter device-layer events delivered to @ref ArduinoMatter::onEvent.
+ *
+ * Public CHIP events start at 0x8000 (CHIPDeviceEvent.h). ESP-Matter platform
+ * events follow, then ESP32-specific events from CHIPDevicePlatformEvent.h.
+ * The accompanying ChipDeviceEvent pointer is valid only during the callback.
+ */
 enum matterEvent_t {
   // Starting from 0x8000, these events are public and can be used by applications.
   // Defined in CHIPDeviceEvent.h
 
-  // Wi-Fi Connectivity Change: Signals a change in connectivity of the device's Wi-Fi station interface.
+  //! Signals a change in connectivity of the device's Wi-Fi station interface.
   MATTER_WIFI_CONNECTIVITY_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kWiFiConnectivityChange,
 
-  // Thread Connectivity Change: Signals a change in connectivity of the device's Thread interface.
+  //! Signals a change in connectivity of the device's Thread interface.
   MATTER_THREAD_CONNECTIVITY_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kThreadConnectivityChange,
 
-  // Internet Connectivity Change: Signals a change in the device's ability to communicate via the Internet.
+  //! Signals a change in the device's ability to communicate via the Internet.
   MATTER_INTERNET_CONNECTIVITY_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kInternetConnectivityChange,
 
-  // Service Connectivity Change: Signals a change in the device's ability to communicate with a chip-enabled service.
+  //! Signals a change in the device's ability to communicate with a chip-enabled service.
   MATTER_SERVICE_CONNECTIVITY_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kServiceConnectivityChange,
 
-  // Service Provisioning Change: Signals a change to the device's service provisioning state.
+  //! Signals a change to the device's service provisioning state.
   MATTER_SERVICE_PROVISIONING_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kServiceProvisioningChange,
 
-  // Time Sync Change: Signals a change to the device's real time clock synchronization state.
+  //! Signals a change to the device's real time clock synchronization state.
   MATTER_TIME_SYNC_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kTimeSyncChange,
 
-  // CHIPoBLE Connection Established: Signals that an external entity has established a new
-  // CHIPoBLE connection with the device.
+  //! Signals that an external entity has established a new CHIPoBLE connection with the device.
   MATTER_CHIPOBLE_CONNECTION_ESTABLISHED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCHIPoBLEConnectionEstablished,
 
-  // CHIPoBLE Connection Closed: Signals that an external entity has closed existing CHIPoBLE
-  // connection with the device.
+  //! Signals that an external entity has closed an existing CHIPoBLE connection with the device.
   MATTER_CHIPOBLE_CONNECTION_CLOSED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCHIPoBLEConnectionClosed,
 
-  // Request BLE connections to be closed. This is used in the supportsConcurrentConnection = False case.
+  //! Request BLE connections to be closed. Used when supportsConcurrentConnection is false.
   MATTER_CLOSE_ALL_BLE_CONNECTIONS = (uint16_t)chip::DeviceLayer::DeviceEventType::kCloseAllBleConnections,
 
-  // Wi-Fi Device Available: When supportsConcurrentConnection = False, the ConnectNetwork
-  // command cannot start until the BLE device is closed and the Operation Network device (e.g. Wi-Fi) has been started.
+  //! When supportsConcurrentConnection is false, ConnectNetwork waits until BLE is closed and the operational network (e.g. Wi-Fi) has started.
   MATTER_WIFI_DEVICE_AVAILABLE = (uint16_t)chip::DeviceLayer::DeviceEventType::kWiFiDeviceAvailable,
 
+  //! Signals that the operational network has started.
   MATTER_OPERATIONAL_NETWORK_STARTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kOperationalNetworkStarted,
 
-  // Thread State Change: Signals that a state change has occurred in the Thread stack.
+  //! Signals that a state change has occurred in the Thread stack.
   MATTER_THREAD_STATE_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kThreadStateChange,
 
-  // Thread Interface State Change: Signals that the state of the Thread network interface has changed.
+  //! Signals that the state of the Thread network interface has changed.
   MATTER_THREAD_INTERFACE_STATE_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kThreadInterfaceStateChange,
 
-  // CHIPoBLE Advertising Change: Signals that the state of CHIPoBLE advertising has changed.
+  //! Signals that the state of CHIPoBLE advertising has changed.
   MATTER_CHIPOBLE_ADVERTISING_CHANGE = (uint16_t)chip::DeviceLayer::DeviceEventType::kCHIPoBLEAdvertisingChange,
 
-  // Interface IP Address Changed: IP address availability - either ipv4 or ipv6
-  // addresses assigned to the underlying wifi/ethernet interface.
+  //! IP address availability — IPv4 or IPv6 addresses assigned to the underlying Wi-Fi/Ethernet interface.
   MATTER_INTERFACE_IP_ADDRESS_CHANGED = (uint16_t)chip::DeviceLayer::DeviceEventType::kInterfaceIpAddressChanged,
 
-  // Commissioning Complete: Commissioning has completed by a call to the general
-  // commissioning cluster command.
+  //! Commissioning has completed by a call to the general commissioning cluster command.
   MATTER_COMMISSIONING_COMPLETE = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningComplete,
 
-  // Fail Safe Timer Expired: Signals that the fail-safe timer expired before
-  // the CommissioningComplete command was successfully invoked.
+  //! Signals that the fail-safe timer expired before the CommissioningComplete command was successfully invoked.
   MATTER_FAIL_SAFE_TIMER_EXPIRED = (uint16_t)chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired,
 
-  // Operational Network Enabled.
+  //! Operational network enabled.
   MATTER_OPERATIONAL_NETWORK_ENABLED = (uint16_t)chip::DeviceLayer::DeviceEventType::kOperationalNetworkEnabled,
 
-  // DNS-SD Initialized: Signals that DNS-SD has been initialized and is ready to operate.
+  //! Signals that DNS-SD has been initialized and is ready to operate.
   MATTER_DNSSD_INITIALIZED = (uint16_t)chip::DeviceLayer::DeviceEventType::kDnssdInitialized,
 
-  // DNS-SD Restart Needed: Signals that DNS-SD backend was restarted and services must be published again.
+  //! Signals that the DNS-SD backend was restarted and services must be published again.
   MATTER_DNSSD_RESTART_NEEDED = (uint16_t)chip::DeviceLayer::DeviceEventType::kDnssdRestartNeeded,
 
-  // Bindings Changed Via Cluster: Signals that bindings were updated.
+  //! Signals that bindings were updated.
   MATTER_BINDINGS_CHANGED_VIA_CLUSTER = (uint16_t)chip::DeviceLayer::DeviceEventType::kBindingsChangedViaCluster,
 
-  // OTA State Changed: Signals that the state of the OTA engine changed.
+  //! Signals that the state of the OTA engine changed.
   MATTER_OTA_STATE_CHANGED = (uint16_t)chip::DeviceLayer::DeviceEventType::kOtaStateChanged,
 
-  // Server Ready: Server initialization has completed. Signals that all server components have been initialized
-  // and the node is ready to establish connections with other nodes. This event can be used to trigger on-boot actions
-  // that require sending messages to other nodes.
+  //! Server initialization has completed. All server components are initialized and the node is ready to establish connections.
   MATTER_SERVER_READY = (uint16_t)chip::DeviceLayer::DeviceEventType::kServerReady,
 
-  // BLE Deinitialized: Signals that BLE stack is deinitialized and memory reclaimed
+  //! Signals that the BLE stack is deinitialized and memory has been reclaimed.
   MATTER_BLE_DEINITIALIZED = (uint16_t)chip::DeviceLayer::DeviceEventType::kBLEDeinitialized,
 
-  // Secure Session Established: Signals that a secure session (PASE or CASE) is established.  // codespell:ignore
+  //! Signals that a secure session (PASE or CASE) is established.  // codespell:ignore
   MATTER_SECURE_SESSION_ESTABLISHED = (uint16_t)chip::DeviceLayer::DeviceEventType::kSecureSessionEstablished,
 
-  // Factory Reset: Signals that factory reset has started.
+  //! Signals that factory reset has started.
   MATTER_FACTORY_RESET = (uint16_t)chip::DeviceLayer::DeviceEventType::kFactoryReset,
 
   // ESP-Matter platform specific events, from kRange_PublicPlatformSpecific + 0x1000.
   // Defined in esp_matter.h
 
-  // Commissioning Session Started: Signals that Commissioning session has started
+  //! Signals that a commissioning session has started.
   MATTER_COMMISSIONING_SESSION_STARTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted,
 
-  // Commissioning Session Stopped: Signals that Commissioning session has stopped
+  //! Signals that a commissioning session has stopped.
   MATTER_COMMISSIONING_SESSION_STOPPED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped,
 
-  // Commissioning Window Opened: Signals that Commissioning window is now opened
+  //! Signals that the commissioning window is now opened.
   MATTER_COMMISSIONING_WINDOW_OPEN = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened,
 
-  // Commissioning Window Closed: Signals that Commissioning window is now closed
+  //! Signals that the commissioning window is now closed.
   MATTER_COMMISSIONING_WINDOW_CLOSED = (uint16_t)chip::DeviceLayer::DeviceEventType::kCommissioningWindowClosed,
 
-  // Fabric Will Be Removed: Signals that a fabric is about to be deleted. This allows actions to be taken that need the
-  // fabric to still be around before we delete it
+  //! Signals that a fabric is about to be deleted. Allows actions that still need the fabric present.
   MATTER_FABRIC_WILL_BE_REMOVED = (uint16_t)chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved,
 
-  // Fabric Has Been Removed: Signals that a fabric is effectively deleted
+  //! Signals that a fabric is effectively deleted.
   MATTER_FABRIC_REMOVED = (uint16_t)chip::DeviceLayer::DeviceEventType::kFabricRemoved,
 
-  // Fabric Has Been Committed: Signals that a fabric in Fabric Table is persisted to storage, by CommitPendingFabricData
+  //! Signals that a fabric in the Fabric Table is persisted to storage by CommitPendingFabricData.
   MATTER_FABRIC_COMMITTED = (uint16_t)chip::DeviceLayer::DeviceEventType::kFabricCommitted,
 
-  // Fabric Has Been Updated: Signals that operational credentials are changed, which may not be persistent.
-  // Can be used to affect what is needed for UpdateNOC prior to commit
+  //! Signals that operational credentials changed, which may not be persistent.
   MATTER_FABRIC_UPDATED = (uint16_t)chip::DeviceLayer::DeviceEventType::kFabricUpdated,
 
-  // ESP32 Matter Events: These are custom ESP32 Matter events as defined in CHIPDevicePlatformEvent.h.
+  //! ESP32 Matter events as defined in CHIPDevicePlatformEvent.h.
   MATTER_ESP32_PUBLIC_SPECIFIC_EVENT = (uint16_t)chip::DeviceLayer::DeviceEventType::kRange_PublicPlatformSpecific,  // ESPSystemEvent
   MATTER_ESP32_SPECIFIC_EVENT = MATTER_ESP32_PUBLIC_SPECIFIC_EVENT,
 };
 
-// Runtime network selection. NONE is the default: existing sketches are unchanged.
+/**
+ * @brief Runtime network selection for Arduino Matter.
+ *
+ * @c MATTER_NETWORK_NONE is the default: existing sketches are unchanged.
+ * Call @ref ArduinoMatter::selectNetwork before any accessory @c begin().
+ * Records intent only; it does not start Wi-Fi, Thread, or Ethernet.
+ */
 enum matterNetwork_t {
-  MATTER_NETWORK_NONE = 0,
-  MATTER_NETWORK_WIFI,
-  MATTER_NETWORK_THREAD,
-  MATTER_NETWORK_ETHERNET
+  MATTER_NETWORK_NONE = 0,  ///< No selection; wait-for-network accepts any interface.
+  MATTER_NETWORK_WIFI,      ///< Wi-Fi station (Network Commissioning on endpoint 0).
+  MATTER_NETWORK_THREAD,    ///< Matter-over-Thread (Network Commissioning on endpoint 0).
+  MATTER_NETWORK_ETHERNET   ///< Ethernet (no Network Commissioning cluster; CHIPoBLE off).
 };
 
 using namespace esp_matter;
 
+/**
+ * @brief Global Matter singleton — the entry point for commissioning, identity, and network APIs.
+ *
+ * There is only one instance; sketches use the global @c Matter object. It handles device
+ * commissioning (QR / manual pairing code), network connectivity, event callbacks, identity
+ * (Basic Information), CHIPoBLE policy, and factory reset.
+ *
+ * Call identity and network setters before @ref begin. Start accessory endpoints first, then
+ * @ref begin. Pairing-code getters are empty until @ref isStackStarted is true.
+ *
+ * Sketch helpers such as @c matterWaitUntilReady() live in MatterHelpers.h (pulled in by
+ * Matter.h) and are not members of this class.
+ *
+ * @note Do not use the Arduino BLE library (@c BLE.h) in the same sketch. Matter owns CHIPoBLE.
+ */
 class ArduinoMatter {
 public:
-  // Matter Event Callback type
+  /**
+   * @brief Callback invoked for Matter device-layer events.
+   * @param event Event type.
+   * @param eventData CHIP event payload; valid only during this call — do not store it.
+   */
   using matterEventCB = std::function<void(matterEvent_t, const chip::DeviceLayer::ChipDeviceEvent *)>;
-  // Matter Event Callback
   static matterEventCB _matterEventCB;
-  // set the Matter Event Callback. The ChipDeviceEvent pointer is only valid
-  // during this call; do not store it.
+  /**
+   * @brief Register a callback for Matter events.
+   *
+   * The ChipDeviceEvent pointer is only valid during the callback; do not store it.
+   *
+   * @param cb Handler to invoke, or an empty function to clear.
+   */
   static void onEvent(matterEventCB cb) {
     _matterEventCB = cb;
   }
 
-  // Called after CHIPoBLE BLE RAM has been returned to the heap (CHIP kBLEDeinitialized).
-  // Register before Matter.begin(). Runs on the CHIP task: do not block; set a flag and
-  // allocate large buffers from loop(). May never run if CHIPoBLE is off or release is disabled.
+  /**
+   * @brief Callback invoked when CHIPoBLE BLE RAM has been returned to the heap.
+   *
+   * Fires at the same moment as @c MATTER_BLE_DEINITIALIZED. Register before @ref begin.
+   * Runs on the CHIP task: do not block; set a flag and allocate large buffers from @c loop().
+   * May never run if CHIPoBLE is off or BLE memory release is disabled.
+   */
   using bleMemoryReleasedCB = std::function<void()>;
   static bleMemoryReleasedCB _bleMemoryReleasedCB;
+  /**
+   * @brief Register a callback for CHIPoBLE BLE RAM reclaim.
+   *
+   * Register before @ref begin. Runs on the CHIP task.
+   *
+   * @param cb Handler to invoke, or an empty function to clear.
+   */
   static void onBLEMemoryReleased(bleMemoryReleasedCB cb) {
     _bleMemoryReleasedCB = cb;
   }
 
-  // Generated after a successful Matter.begin() from CommissionableDataProvider.
-  // Before begin() or if begin() failed these log a warning and return an empty String.
+  /**
+   * @brief Get the manual pairing code for commissioning.
+   *
+   * Generated after a successful @ref begin from CommissionableDataProvider.
+   * Before @ref begin, or if @ref begin failed, logs a warning and returns an empty String.
+   *
+   * @return Manual pairing code, or an empty String if the stack is not started.
+   */
   static String getManualPairingCode();
+  /**
+   * @brief Get the onboarding QR code URL for commissioning.
+   *
+   * Generated after a successful @ref begin. Empty and a warning before @ref begin
+   * or if @ref begin failed.
+   *
+   * @return QR code URL, or an empty String if the stack is not started.
+   */
   static String getOnboardingQRCodeUrl();
-  // Creates the Matter node (root endpoint 0) if not already created. Idempotent.
-  // Normally called from MatterEndPoint::ensureMatterNode() inside endpoint begin().
-  // Sketches rarely call this directly.
+  /**
+   * @brief Create the Matter node (root endpoint 0) if it does not already exist.
+   *
+   * Idempotent. Normally called from @c MatterEndPoint::ensureMatterNode() inside
+   * endpoint @c begin(); sketches rarely call this directly.
+   *
+   * @return true if the node exists or was created, false otherwise.
+   */
   static bool initNode();
 
-  // Starts the Matter stack. On Wi-Fi station builds with no Thread/Ethernet
-  // selection, initializes Wi-Fi first with reduced RX/TX buffers so CHIP
-  // inherits those counts (first esp_wifi_init wins).
+  /**
+   * @brief Start the Matter stack.
+   *
+   * Call after at least one accessory endpoint exists on the node (endpoint id ≠ 0).
+   * On Wi-Fi station builds with no Thread/Ethernet selection, initializes Wi-Fi first
+   * with reduced RX/TX buffers so CHIP inherits those counts (first @c esp_wifi_init wins),
+   * unless the sketch already called @c matterConnectWiFi() / @c WiFi.begin() / @c WiFi.mode().
+   */
   static void begin();
 
-  // Node identity (Basic Information on endpoint 0). Call before Matter.begin().
-  // String setters copy into internal storage; the argument need not outlive the call.
+  /**
+   * @brief Set Basic Information VendorName. Call before @ref begin.
+   *
+   * The string is copied; the argument need not outlive the call. Maximum 32 characters.
+   *
+   * @param name Vendor name.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setVendorName(const char *name);
+  /**
+   * @brief Set Basic Information ProductName. Call before @ref begin.
+   *
+   * The string is copied; the argument need not outlive the call. Maximum 32 characters.
+   *
+   * @param name Product name.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setProductName(const char *name);
-  static bool setDeviceName(const char *name);  // writes NodeLabel
+  /**
+   * @brief Set Basic Information NodeLabel (device name). Call before @ref begin.
+   *
+   * The string is copied; the argument need not outlive the call. Maximum 32 characters.
+   * On a single-endpoint node, controllers often use this as the accessory title.
+   *
+   * @param name Device / node label.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
+  static bool setDeviceName(const char *name);
+  /**
+   * @brief Set Basic Information SerialNumber. Call before @ref begin.
+   *
+   * The string is copied; the argument need not outlive the call. Maximum 32 characters.
+   *
+   * @param value Serial number.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setSerialNumber(const char *value);
+  /**
+   * @brief Set Basic Information HardwareVersion. Call before @ref begin.
+   * @param version Hardware version number.
+   * @return true if stored, false after @ref begin.
+   */
   static bool setHardwareVersion(uint16_t version);
+  /**
+   * @brief Set Basic Information HardwareVersionString. Call before @ref begin.
+   *
+   * The string is copied; the argument need not outlive the call. Maximum 64 characters.
+   *
+   * @param value Hardware version string.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setHardwareVersionString(const char *value);
-  // SoftwareVersion is Basic Information (ConfigurationManager), not HardwareVersion.
-  // In-memory only; CHIP StoreSoftwareVersion is unsupported on ESP32.
+  /**
+   * @brief Set Basic Information SoftwareVersion. Call before @ref begin.
+   *
+   * Firmware version shown by controllers. In-memory only; CHIP StoreSoftwareVersion
+   * is unsupported on ESP32.
+   *
+   * @param version Software version number.
+   * @return true if stored, false after @ref begin.
+   */
   static bool setSoftwareVersion(uint32_t version);
+  /**
+   * @brief Set Basic Information SoftwareVersionString. Call before @ref begin.
+   *
+   * Maximum 64 characters. Default is the IDF app version.
+   *
+   * @param value Software version string.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setSoftwareVersionString(const char *value);
+  /**
+   * @brief Get Basic Information SoftwareVersion.
+   *
+   * May be called after @ref begin. Without a setter, returns @c CONFIG_DEVICE_SOFTWARE_VERSION_NUMBER.
+   *
+   * @return Software version number.
+   */
   static uint32_t getSoftwareVersion();
+  /**
+   * @brief Get Basic Information SoftwareVersionString.
+   *
+   * May be called after @ref begin. Without a setter, returns the IDF app version.
+   *
+   * @return Software version string.
+   */
   static String getSoftwareVersionString();
 
-  // Commissioning codes. Call before Matter.begin(). Test defaults are 0xF00 / 20202021.
+  /**
+   * @brief Set the commissioning setup discriminator. Call before @ref begin.
+   *
+   * Range 0–0xFFF. Arduino test default is 0xF00.
+   *
+   * @param discriminator Setup discriminator.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setSetupDiscriminator(uint16_t discriminator);
+  /**
+   * @brief Set the commissioning setup passcode (PIN). Call before @ref begin.
+   *
+   * Arduino test default is 20202021. Changing the PIN regenerates the SPAKE2+ verifier.
+   *
+   * @param passcode Valid setup PIN.
+   * @return true if stored, false after @ref begin or on invalid input.
+   */
   static bool setSetupPasscode(uint32_t passcode);
 
-  // CHIPoBLE on/off. Call before Matter.begin(). Default is true only when CONFIG_ENABLE_CHIPOBLE.
-  // false forces on-network commissioning (Wi-Fi/Ethernet first). BLE RAM is
-  // released after Matter.begin(), not at this call.
-  // Do not use the Arduino BLE library (BLE.h) in a Matter sketch.
+  /**
+   * @brief Enable or disable CHIPoBLE commissioning. Call before @ref begin.
+   *
+   * Default is true only when @c CONFIG_ENABLE_CHIPOBLE is set. @c false forces
+   * on-network commissioning (connect Wi-Fi or Ethernet first). BLE RAM is released
+   * after @ref begin, not at this call. Commissioning sketches typically use
+   * @ref selectNetwork with @c disableBLECommissioning true instead of this setter.
+   *
+   * @param enabled true to leave CHIPoBLE on, false to disable it.
+   * @return true if the flag was stored, false if CHIPoBLE is compiled out or called too late.
+   * @note Do not use the Arduino BLE library (@c BLE.h) in a Matter sketch.
+   */
   static bool setBLECommissioningEnabled(bool enabled);
 
-  // After CHIPoBLE commissioning, release BLE RAM. Call before Matter.begin(). Default true.
-  // Only takes effect when CONFIG_ENABLE_CHIPOBLE is set and CHIPoBLE commissioning is enabled.
-  // No effect if CHIPoBLE is compiled out (no BT, ESP32-S2, or Arduino IDE ESP32 prebuild
-  // which uses Bluedroid without CHIPoBLE). Arduino-as-IDF-component ESP32 can enable NimBLE
-  // and CONFIG_ENABLE_CHIPOBLE; then this API applies. To keep BLE after commission, those
-  // builds also need CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n.
+  /**
+   * @brief After CHIPoBLE commissioning, release BLE RAM. Call before @ref begin.
+   *
+   * Default true. Only takes effect when @c CONFIG_ENABLE_CHIPOBLE is set and CHIPoBLE
+   * commissioning is enabled. No effect if CHIPoBLE is compiled out. Arduino-as-IDF-component
+   * builds that keep BLE must also set @c CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=n.
+   *
+   * @param enabled true to reclaim BLE RAM after commissioning, false to keep NimBLE.
+   * @return true if the flag was stored, false otherwise.
+   */
   static bool setBLEMemoryReleaseEnabled(bool enabled);
 
-  // Compile-time capability (Kconfig / SOC). Not "the interface is up".
-  static bool isWiFiStationEnabled();       // CONFIG_ENABLE_WIFI_STATION (false on H2)
-  static bool isWiFiAccessPointEnabled();   // CONFIG_ENABLE_WIFI_AP
-  static bool isThreadEnabled();            // CONFIG_ENABLE_MATTER_OVER_THREAD (C6/H2; C5 Tools → Matter Network → Thread)
-  static bool isEthernetEnabled();          // CONFIG_ETH_ENABLED: ETH library builds; not "cable present"
-  static bool isBLECommissioningEnabled();  // CHIPoBLE compiled in and still enabled
-  static bool isBLEMemoryReleaseEnabled();  // CHIPoBLE on and BLE RAM will be released after commission
+  /**
+   * @brief Whether Wi-Fi Station mode is compiled in (@c CONFIG_ENABLE_WIFI_STATION).
+   *
+   * False on ESP32-H2. Not "the interface is up".
+   *
+   * @return true if Wi-Fi station is supported in this build.
+   */
+  static bool isWiFiStationEnabled();
+  /**
+   * @brief Whether Wi-Fi AP mode is compiled in (@c CONFIG_ENABLE_WIFI_AP).
+   * @return true if Wi-Fi AP is supported in this build.
+   */
+  static bool isWiFiAccessPointEnabled();
+  /**
+   * @brief Whether Matter-over-Thread is compiled in (@c CONFIG_ENABLE_MATTER_OVER_THREAD).
+   *
+   * True on ESP32-C6 / ESP32-S31 / ESP32-H2, and on ESP32-C5 when Tools → Matter Network → Thread.
+   * Not "OpenThread is compiled in".
+   *
+   * @return true if Matter-over-Thread is enabled in this build.
+   */
+  static bool isThreadEnabled();
+  /**
+   * @brief Whether the ETH library is compiled in (@c CONFIG_ETH_ENABLED).
+   *
+   * Not "cable present".
+   *
+   * @return true if Ethernet support is built.
+   */
+  static bool isEthernetEnabled();
+  /**
+   * @brief Whether CHIPoBLE is compiled in and still enabled.
+   * @return true if BLE commissioning is available and has not been turned off.
+   */
+  static bool isBLECommissioningEnabled();
+  /**
+   * @brief Whether CHIPoBLE is on and BLE RAM will be released after commissioning.
+   * @return true if post-commission BLE reclaim is enabled.
+   */
+  static bool isBLEMemoryReleaseEnabled();
 
-  // Runtime network selection. Call selectNetwork() before any accessory begin().
-  // Records intent only: does not start Wi-Fi, Thread, or Ethernet, and does not
-  // apply a Thread dataset. Ethernet: sketch must ETH.begin() + enableIPv6().
-  // ESP32-C6: one Network Commissioning cluster on endpoint 0. selectNetwork(MATTER_NETWORK_THREAD)
-  // replaces the prebuild Wi-Fi driver so hubs that only talk to the root see Thread.
-  // Wi-Fi and Thread are alternatives, not simultaneous NC endpoints.
-  // Dual-stack images still run CHIP InitWiFiStack() (InitChipStack needs it).
-  // After start, Thread/Ethernet disable the Wi-Fi station so a leftover SSID
-  // does not join. Arduino's reduced-buffer esp_wifi_init() is Wi-Fi-only.
-  static bool isNetworkSupported(matterNetwork_t network);  // same as the is*Enabled() helpers
-  // BLE default: Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on.
-  // MATTER_NETWORK_NONE clears the selection and does not change BLE.
+  /**
+   * @brief Whether @a network is supported in this build (same as the matching @c is*Enabled()).
+   * @param network Network to query. @c MATTER_NETWORK_NONE is always false.
+   * @return true if that transport is compiled in.
+   */
+  static bool isNetworkSupported(matterNetwork_t network);
+  /**
+   * @brief Record the intended operational network. Call before any accessory @c begin().
+   *
+   * Does not start Wi-Fi, Thread, or Ethernet, and does not apply a Thread dataset.
+   * Ethernet disables CHIPoBLE; Wi-Fi and Thread leave it on. @c MATTER_NETWORK_NONE
+   * clears the selection and does not change BLE.
+   *
+   * On ESP32-C6 / ESP32-S31, @c MATTER_NETWORK_THREAD replaces the root Wi-Fi Network
+   * Commissioning cluster so hubs that only talk to endpoint 0 see Thread.
+   *
+   * @param network Network to select.
+   * @return true if the selection is valid for this build.
+   */
   static bool selectNetwork(matterNetwork_t network);
-  // disableBLECommissioning true: setBLECommissioningEnabled(false).
-  // false: does not turn CHIPoBLE back on if the sketch already disabled it.
+  /**
+   * @brief Record the intended operational network and optionally disable CHIPoBLE.
+   *
+   * @a disableBLECommissioning true turns CHIPoBLE off. false does not turn it back on
+   * if the sketch already disabled it. Do not also call @ref setBLECommissioningEnabled.
+   *
+   * @param network Network to select.
+   * @param disableBLECommissioning true to force on-network commissioning (CHIPoBLE off).
+   * @return true if the selection is valid for this build.
+   */
   static bool selectNetwork(matterNetwork_t network, bool disableBLECommissioning);
-  static matterNetwork_t getSelectedNetwork();  // last selectNetwork(), or NONE
-  // Which netif has IPv6 (link-local or global). Prefers the selection if that
-  // interface is up; else Wi-Fi, Thread, Ethernet. Not isWiFiConnected().
+  /**
+   * @brief Last successful @ref selectNetwork value, or @c MATTER_NETWORK_NONE.
+   * @return Selected network.
+   */
+  static matterNetwork_t getSelectedNetwork();
+  /**
+   * @brief Interface that currently has a usable IPv6 address.
+   *
+   * Prefers the selection if that netif is up; otherwise Wi-Fi, Thread, then Ethernet.
+   * Not the same as @ref isWiFiConnected / @ref isThreadConnected.
+   *
+   * @return Active network, or @c MATTER_NETWORK_NONE if none has IPv6.
+   */
   static matterNetwork_t getActiveNetwork();
-  // Expected Network Commissioning endpoint, even before it is created.
-  // Wi-Fi: 0, or 0xFFFF when Thread replaced the root driver (C6).
-  // Thread: 0 when Thread is on the root (selected on C6; always on H2 / C5 Thread).
-  // Ethernet / not selected / unsupported: 0xFFFF. No secondary Thread endpoint.
+  /**
+   * @brief Expected Network Commissioning endpoint id, even before the endpoint is created.
+   *
+   * Wi-Fi: 0, or 0xFFFF when Thread replaced the root driver (ESP32-C6 / ESP32-S31).
+   * Thread: 0 when Thread is on the root. Ethernet / not selected / unsupported: 0xFFFF.
+   *
+   * @param network Network to query.
+   * @return Endpoint id, or 0xFFFF if none.
+   */
   static uint16_t getNetworkEndPointId(matterNetwork_t network);
-  // Block (delay) until the selected interface has IPv6. NONE waits for any.
-  // Does not start hardware. timeoutMs 0 is a single check.
+  /**
+   * @brief Block until the selected interface has IPv6.
+   *
+   * Does not start hardware. @c MATTER_NETWORK_NONE waits for any interface.
+   * @a timeoutMs 0 is a single check.
+   *
+   * @param timeoutMs Maximum wait in milliseconds; 0 polls once.
+   * @return true if IPv6 is present, false on timeout.
+   */
   static bool waitForNetwork(uint32_t timeoutMs);
 
-  static bool isStackStarted();  // true only after a successful Matter.begin()
+  /**
+   * @brief Whether @ref begin completed successfully.
+   * @return true only after a successful @ref begin.
+   */
+  static bool isStackStarted();
+  /**
+   * @brief Whether the device is commissioned (a Matter fabric exists).
+   * @return true if a fabric is present.
+   */
   static bool isDeviceCommissioned();
+  /**
+   * @brief Whether the Wi-Fi station is associated.
+   * @return true if Wi-Fi is connected.
+   */
   static bool isWiFiConnected();
+  /**
+   * @brief Whether Thread is attached.
+   * @return true if Thread is connected.
+   */
   static bool isThreadConnected();
+  /**
+   * @brief Whether Wi-Fi, Thread, or Ethernet IPv6 is up.
+   * @return true if the device has operational IP connectivity.
+   */
   static bool isDeviceConnected();
-  static bool isOnline();  // active CASE session with a controller
+  /**
+   * @brief Whether a controller has an active CASE session with this node.
+   *
+   * Stays true until CHIP idle-evicts that session, not until the user closes a
+   * controller app. Do not gate physical outputs on this; use it for hub-discovery logs.
+   *
+   * @return true if an active CASE session exists.
+   */
+  static bool isOnline();
+  /**
+   * @brief Factory-reset the device (erase fabrics and commissioning data).
+   *
+   * The device must be commissioned again afterwards.
+   */
   static void decommission();
 
 protected:
@@ -303,6 +567,9 @@ protected:
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)
+/**
+ * @brief Global Arduino Matter singleton. Sketches use this object directly.
+ */
 extern ArduinoMatter Matter;
 #endif
 

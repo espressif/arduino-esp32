@@ -23,24 +23,56 @@
 // Not members of ArduinoMatter. Pulled in by Matter.h.
 
 #if !CONFIG_ENABLE_CHIPOBLE && (SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED)
-// setup() before Matter.begin() when this build has no CHIPoBLE (ESP32 / S2).
-// Enables STA IPv6, then waits for IPv4. CHIPoBLE builds omit this so
-// MatterHelpers.cpp does not pull in WiFi.h. On-network sketches with
-// CHIPoBLE compiled in start STA themselves.
+/**
+ * @brief Connect Wi-Fi station with IPv6 enabled (builds without CHIPoBLE).
+ *
+ * Present only when @c CONFIG_ENABLE_CHIPOBLE is off (Arduino IDE ESP32 / ESP32-S2).
+ * Enables station IPv6 before @c WiFi.begin() (Arduino does not do that by default),
+ * then waits for IPv4. CHIPoBLE / Thread builds omit this so MatterHelpers.cpp does
+ * not pull in WiFi.h. On-network sketches with CHIPoBLE compiled in include WiFi.h
+ * and call @c WiFi.begin() themselves. Not present on ESP32-H2.
+ *
+ * Call from @c setup() before @c Matter.begin(). Prints to Serial.
+ *
+ * @param ssid Wi-Fi SSID.
+ * @param password Wi-Fi password.
+ */
 void matterConnectWiFi(const char *ssid, const char *password);
 #endif
 
-// Vendor "Espressif" and Product "<SoC> <endpointName>", e.g. "ESP32-C6 Color Light".
-// Call before Matter.begin(). ProductName is capped at 32 characters.
+/**
+ * @brief Set example VendorName "Espressif" and ProductName "<SoC> <endpointName>".
+ *
+ * For example @c matterSetExampleIdentity("Color Light") yields product
+ * "ESP32-C6 Color Light". ProductName is capped at 32 characters.
+ * Call from @c setup() before @c Matter.begin().
+ *
+ * @param endpointName Endpoint / product suffix (e.g. "Color Light").
+ * @return true if identity was stored, false otherwise.
+ */
 bool matterSetExampleIdentity(const char *endpointName);
 
-// setup() after Matter.begin(): if begin() failed, prints that and halts.
-// Otherwise pairing codes if no fabric; status every 10 s and once more when
-// CASE is up; wait up to timeoutMs (0 = forever). Reboots if still no fabric.
-// If commissioned but CASE never arrives, continues.
+/**
+ * @brief Wait in @c setup() after @c Matter.begin() until commissioned (and prefer CASE).
+ *
+ * If the stack never started, prints that @c begin() failed and halts (does not
+ * return to @c loop()). Otherwise prints pairing codes if there is no fabric;
+ * one-line status every 10 s and once more when CASE is up. Waits up to
+ * @a timeoutMs for CASE. Reboots if still uncommissioned. If commissioned but
+ * CASE never arrives, continues.
+ *
+ * Prints to Serial and may reboot. Do not wait for commissioning in @c loop().
+ *
+ * @param timeoutMs Maximum wait in milliseconds. Default 5 minutes.
+ *                  0 waits forever (unlike @c Matter.waitForNetwork(0), which is a single check).
+ */
 void matterWaitUntilReady(uint32_t timeoutMs = 5 * 60 * 1000);
-// loop(): no-op if the stack never started. Reboots if the hub removed the
-// fabric. Matter.decommission() already factory-resets.
+/**
+ * @brief Reboot from @c loop() if the hub removed the fabric.
+ *
+ * No-op if the stack never started. @c Matter.decommission() already factory-resets.
+ * Prints to Serial and may reboot.
+ */
 void matterRestartIfNoFabric();
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
