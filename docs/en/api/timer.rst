@@ -245,9 +245,12 @@ This function is used to configure alarm value and autoreload of the timer. Alar
     void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
 
 * ``timer`` timer struct.
-* ``alarm_value`` alarm value to generate event.
-* ``autoreload`` enabled/disabled autorealod.
-* ``reload_count`` number of autoreloads (0 = unlimited). Has no effect if autorealod is disabled.
+* ``alarm_value`` counter value that triggers the alarm, in ticks.
+* ``autoreload`` enables reloading the counter after each alarm.
+* ``reload_count`` counter value to load after each alarm, in ticks. This value applies only when ``autoreload`` is ``true``.
+
+For a periodic alarm, set ``reload_count`` below ``alarm_value``. The period is ``alarm_value - reload_count`` ticks.
+For example, a 1 MHz timer with an alarm value of 1,000,000 and a reload value of 250,000 fires every 750 ms after the first alarm.
 
 Example Applications
 ********************

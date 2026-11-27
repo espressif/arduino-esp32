@@ -103,7 +103,7 @@ void setup() {
 
   attachMode(currentMode);
   Serial.printf("Using %s\n", modeName[currentMode]);
-  // Alarm every second, auto-reload, unlimited count
+  // Fire every second and reload the counter to 0 after each alarm.
   timerAlarm(timer, 1000000, true, 0);
 }
 

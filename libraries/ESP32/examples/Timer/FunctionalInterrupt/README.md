@@ -41,8 +41,8 @@ button to call `timerEnd()`.
 
 ### Configure the Project
 
-Timer frequency is 1 MHz. The alarm fires every 1 000 000 ticks (1 second),
-auto-reload, unlimited count:
+At 1 MHz, the alarm fires every 1 000 000 ticks (one second). The counter
+reloads to zero after each alarm.
 
 ```cpp
 timer = timerBegin(1000000);
