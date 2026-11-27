@@ -46,8 +46,8 @@ void setup() {
   // Attach onTimer function to our timer.
   timerAttachInterrupt(timer, &onTimer);
 
-  // Set alarm to call onTimer function every second (value in microseconds).
-  // Repeat the alarm (third parameter) with unlimited count = 0 (fourth parameter).
+  // At 1 MHz, the alarm fires every 1,000,000 ticks (one second).
+  // With auto-reload enabled, the counter returns to 0 after each alarm.
   timerAlarm(timer, 1000000, true, 0);
 }
 
